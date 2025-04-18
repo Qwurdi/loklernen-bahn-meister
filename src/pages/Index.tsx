@@ -46,7 +46,7 @@ export default function Index() {
                     <span className="text-loklernen-ultramarine">Lernen</span>
                   </h1>
                   <p className="max-w-[600px] text-gray-500 md:text-xl">
-                    Deine smarte Lern-App für Signale und Bahnbetrieb. Perfekt für angehende Triebfahrzeugführer*innen.
+                    Deine smarte Lern-App für Signale und Bahnbetrieb. Perfekt für angehende Triebfahrzeugführer.
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">

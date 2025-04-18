@@ -7,17 +7,20 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Register() {
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const { signUp } = useAuth();
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would integrate with Supabase auth
-    console.log("Registration attempt with:", { name, email, password, agreeTerms });
+    if (!agreeTerms) {
+      return;
+    }
+    await signUp(email, password);
   };
   
   return (
@@ -35,17 +38,6 @@ export default function Register() {
             </div>
             
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Dein Name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="email">E-Mail</Label>
                 <Input

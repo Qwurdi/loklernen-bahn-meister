@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import SignalePage from "./pages/SignalePage";
 import BetriebsdienstPage from "./pages/BetriebsdienstPage";
 import FlashcardPage from "./pages/FlashcardPage";
+import ProgressPage from "./pages/ProgressPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/signale" element={<SignalePage />} />
           <Route path="/signale/haupt-vorsignale" element={<FlashcardPage />} />
           <Route path="/betriebsdienst" element={<BetriebsdienstPage />} />
+          <Route path="/fortschritt" element={<ProgressPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

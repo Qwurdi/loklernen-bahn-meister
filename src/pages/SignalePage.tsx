@@ -60,7 +60,7 @@ export default function SignalePage() {
             <h2 className="text-lg font-medium text-loklernen-sapphire mb-2">Warum Signale wichtig sind</h2>
             <p className="mb-4 text-gray-600">
               Signale sind die Sprache der Eisenbahn. Sie regeln den Bahnverkehr und sorgen für Sicherheit. 
-              Als Triebfahrzeugführer*in musst du alle Signale sofort erkennen und richtig interpretieren können.
+              Als Triebfahrzeugführer musst du alle Signale sofort erkennen und richtig interpretieren können.
             </p>
             <div className="flex flex-col gap-2 sm:flex-row">
               <Link to="/signale/haupt-vorsignale">

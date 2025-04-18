@@ -1,25 +1,45 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { toast } from "sonner";
 
 export default function Register() {
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
-  
-  const handleSubmit = (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would integrate with Supabase auth
-    console.log("Registration attempt with:", { name, email, password, agreeTerms });
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast.success('Registrierung erfolgreich! Bitte überprüfe deine E-Mails.');
+      navigate("/");
+    } catch (error: any) {
+      toast.error(error.message || "Ein Fehler ist aufgetreten");
+    } finally {
+      setLoading(false);
+    }
   };
-  
+
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
@@ -30,22 +50,11 @@ export default function Register() {
             <div className="text-center">
               <h1 className="text-2xl font-bold">Konto erstellen</h1>
               <p className="text-muted-foreground mt-2">
-                Melde dich an, um deinen Lernfortschritt zu speichern und auf weitere Kurse zuzugreifen
+                Registriere dich, um deinen Lernfortschritt zu speichern
               </p>
             </div>
             
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Dein Name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="email">E-Mail</Label>
                 <Input
@@ -57,6 +66,7 @@ export default function Register() {
                   required
                 />
               </div>
+              
               <div className="space-y-2">
                 <Label htmlFor="password">Passwort</Label>
                 <Input
@@ -67,7 +77,7 @@ export default function Register() {
                   required
                 />
                 <p className="text-sm text-muted-foreground">
-                  Mindestens 8 Zeichen, 1 Großbuchstabe, 1 Zahl
+                  Mindestens 8 Zeichen
                 </p>
               </div>
               
@@ -76,7 +86,6 @@ export default function Register() {
                   id="terms"
                   checked={agreeTerms}
                   onCheckedChange={(checked) => setAgreeTerms(checked as boolean)}
-                  className="mt-1"
                 />
                 <label
                   htmlFor="terms"
@@ -97,13 +106,13 @@ export default function Register() {
               <Button 
                 type="submit" 
                 className="w-full bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90"
-                disabled={!agreeTerms}
+                disabled={loading || !agreeTerms}
               >
-                Registrieren
+                {loading ? "Wird registriert..." : "Registrieren"}
               </Button>
               
               <div className="text-center text-sm">
-                Du hast bereits ein Konto?{" "}
+                Bereits registriert?{" "}
                 <Link to="/login" className="text-loklernen-ultramarine hover:underline">
                   Anmelden
                 </Link>

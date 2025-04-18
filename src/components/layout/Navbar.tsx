@@ -1,13 +1,50 @@
 
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isMobile = useIsMobile();
+  const { user, loading, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
+  const AuthButtons = () => {
+    if (loading) {
+      return <div className="text-sm text-muted-foreground">Lädt...</div>;
+    }
+
+    if (user) {
+      return (
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <UserCircle className="h-5 w-5" />
+            <span className="text-sm">{user.email}</span>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleSignOut}>
+            Abmelden
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center gap-2">
+        <Link to="/login">
+          <Button variant="outline" size="sm">Anmelden</Button>
+        </Link>
+        <Link to="/register">
+          <Button size="sm">Registrieren</Button>
+        </Link>
+      </div>
+    );
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -35,14 +72,7 @@ export default function Navbar() {
               </Link>
             </div>
             
-            <div className="flex items-center gap-2">
-              <Link to="/login">
-                <Button variant="outline" size="sm">Anmelden</Button>
-              </Link>
-              <Link to="/register">
-                <Button size="sm">Registrieren</Button>
-              </Link>
-            </div>
+            <AuthButtons />
           </nav>
         )}
         
@@ -85,13 +115,8 @@ export default function Navbar() {
             >
               Mein Fortschritt
             </Link>
-            <div className="flex gap-2 pt-2">
-              <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="outline" size="sm">Anmelden</Button>
-              </Link>
-              <Link to="/register" onClick={() => setIsMenuOpen(false)}>
-                <Button size="sm">Registrieren</Button>
-              </Link>
+            <div className="pt-2">
+              <AuthButtons />
             </div>
           </nav>
         </div>

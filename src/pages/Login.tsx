@@ -1,24 +1,42 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { toast } from "sonner";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
-  
-  const handleSubmit = (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would integrate with Supabase auth
-    console.log("Login attempt with:", { email, password, rememberMe });
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      navigate("/");
+    } catch (error: any) {
+      toast.error(error.message || "Ein Fehler ist aufgetreten");
+    } finally {
+      setLoading(false);
+    }
   };
-  
+
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
@@ -45,13 +63,9 @@ export default function Login() {
                   required
                 />
               </div>
+              
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Passwort</Label>
-                  <Link to="/passwort-vergessen" className="text-sm text-loklernen-ultramarine hover:underline">
-                    Passwort vergessen?
-                  </Link>
-                </div>
+                <Label htmlFor="password">Passwort</Label>
                 <Input
                   id="password"
                   type="password"
@@ -61,22 +75,12 @@ export default function Login() {
                 />
               </div>
               
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="remember"
-                  checked={rememberMe}
-                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-                />
-                <label
-                  htmlFor="remember"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Angemeldet bleiben
-                </label>
-              </div>
-              
-              <Button type="submit" className="w-full bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90">
-                Anmelden
+              <Button 
+                type="submit" 
+                className="w-full bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90"
+                disabled={loading}
+              >
+                {loading ? "Wird angemeldet..." : "Anmelden"}
               </Button>
               
               <div className="text-center text-sm">

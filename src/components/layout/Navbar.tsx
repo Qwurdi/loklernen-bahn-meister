@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { Menu, X, UserCircle } from "lucide-react";
+import { Menu, X, UserCircle, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
@@ -27,6 +27,12 @@ export default function Navbar() {
             <UserCircle className="h-5 w-5" />
             <span className="text-sm">{user.email}</span>
           </div>
+          <Link to="/admin">
+            <Button variant="outline" size="sm" className="gap-1">
+              <Shield className="h-4 w-4" />
+              <span>Admin</span>
+            </Button>
+          </Link>
           <Button variant="outline" size="sm" onClick={handleSignOut}>
             Abmelden
           </Button>
@@ -115,6 +121,18 @@ export default function Navbar() {
             >
               Mein Fortschritt
             </Link>
+            {user && (
+              <Link 
+                to="/admin" 
+                className="py-2 text-sm font-medium transition-colors hover:text-loklernen-ultramarine"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <div className="flex items-center gap-1">
+                  <Shield className="h-4 w-4" />
+                  <span>Admin-Bereich</span>
+                </div>
+              </Link>
+            )}
             <div className="pt-2">
               <AuthButtons />
             </div>

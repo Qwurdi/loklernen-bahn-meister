@@ -13,6 +13,11 @@ import ProgressPage from "./pages/ProgressPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
+import AdminLayout from "./components/layout/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import QuestionsPage from "./pages/admin/QuestionsPage";
+import QuestionEditorPage from "./pages/admin/QuestionEditorPage";
+import DeleteQuestionPage from "./pages/admin/DeleteQuestionPage";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +36,16 @@ const App = () => (
             <Route path="/fortschritt" element={<ProgressPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="questions" element={<QuestionsPage />} />
+              <Route path="questions/create" element={<QuestionEditorPage />} />
+              <Route path="questions/edit/:id" element={<QuestionEditorPage />} />
+              <Route path="questions/delete/:id" element={<DeleteQuestionPage />} />
+            </Route>
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

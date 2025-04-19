@@ -1,8 +1,28 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import type { CreateQuestionDTO, Question } from "@/types/questions";
+import type { CreateQuestionDTO, Question, QuestionCategory, Answer } from "@/types/questions";
+import { Json } from "@/integrations/supabase/types";
 
-export async function fetchQuestions(category?: string, sub_category?: string) {
+// Helper function to convert database answers (Json) to Answer[]
+function transformAnswers(jsonAnswers: Json): Answer[] {
+  if (Array.isArray(jsonAnswers)) {
+    return jsonAnswers.map(answer => ({
+      text: String(answer.text || ''),
+      isCorrect: Boolean(answer.isCorrect)
+    }));
+  }
+  return [];
+}
+
+// Helper function to transform database questions to application questions
+function transformQuestion(dbQuestion: any): Question {
+  return {
+    ...dbQuestion,
+    answers: transformAnswers(dbQuestion.answers)
+  };
+}
+
+export async function fetchQuestions(category?: QuestionCategory, sub_category?: string) {
   let query = supabase
     .from('questions')
     .select('*');
@@ -18,18 +38,28 @@ export async function fetchQuestions(category?: string, sub_category?: string) {
   const { data, error } = await query.order('created_at', { ascending: false });
   
   if (error) throw error;
-  return data as Question[];
+  // Transform the data to match our application types
+  return (data || []).map(transformQuestion);
 }
 
 export async function createQuestion(question: CreateQuestionDTO) {
   const { data, error } = await supabase
     .from('questions')
-    .insert([question])
+    .insert([{
+      category: question.category,
+      sub_category: question.sub_category,
+      question_type: question.question_type,
+      difficulty: question.difficulty,
+      text: question.text,
+      image_url: question.image_url,
+      answers: question.answers,
+      created_by: question.created_by
+    }])
     .select()
     .single();
     
   if (error) throw error;
-  return data as Question;
+  return transformQuestion(data);
 }
 
 export async function uploadQuestionImage(file: File, userId: string) {

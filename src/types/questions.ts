@@ -1,4 +1,6 @@
 
+import { Json } from "@/integrations/supabase/types";
+
 export type QuestionCategory = 'Signale' | 'Betriebsdienst';
 export type QuestionType = 'MC_single' | 'MC_multi' | 'open';
 
@@ -30,4 +32,6 @@ export interface CreateQuestionDTO {
   text: string;
   image_url?: string | null;
   answers: Answer[];
+  created_by: string;
 }
+

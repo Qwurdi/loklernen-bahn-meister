@@ -1,222 +1,37 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+
+import React from "react";
+import { Link } from "react-router-dom";
 import { useQuestions } from "@/hooks/useQuestions";
-import { supabase } from "@/integrations/supabase/client";
-import { createQuestion, uploadQuestionImage } from "@/api/questions";
-import { useAuth } from "@/contexts/AuthContext";
-import { Question, QuestionCategory, QuestionType, Answer, CreateQuestionDTO } from "@/types/questions";
+import { useQuestionForm } from "@/hooks/useQuestionForm";
+import { signalSubCategories } from "@/api/questions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle, Save, Image, Plus, X, ArrowLeft, Trash2 } from "lucide-react";
-import { toast } from "sonner";
-import { signalSubCategories } from "@/api/questions";
+import { AnswerEditor } from "@/components/admin/question-editor/AnswerEditor";
+import { QuestionPreview } from "@/components/admin/question-editor/QuestionPreview";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { Json } from "@/integrations/supabase/types";
+import { Save, Image, Plus, ArrowLeft, Trash2 } from "lucide-react";
 
 const QuestionEditorPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const isEditMode = Boolean(id);
-  const navigate = useNavigate();
-  const { user } = useAuth();
   const { data: questions } = useQuestions();
-  
-  const [isLoading, setIsLoading] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  
-  // Form state
-  const [formData, setFormData] = useState<Partial<CreateQuestionDTO>>({
-    category: "Signale" as QuestionCategory,
-    sub_category: signalSubCategories[0],
-    question_type: "open" as QuestionType,
-    difficulty: 1,
-    text: "",
-    image_url: null,
-    answers: [{ text: "", isCorrect: true }],
-    created_by: user?.id || ""
-  });
-  
-  // Load existing question data for edit mode
-  useEffect(() => {
-    if (isEditMode && id && questions) {
-      const questionToEdit = questions.find(q => q.id === id);
-      if (questionToEdit) {
-        setFormData({
-          category: questionToEdit.category,
-          sub_category: questionToEdit.sub_category,
-          question_type: questionToEdit.question_type,
-          difficulty: questionToEdit.difficulty,
-          text: questionToEdit.text,
-          image_url: questionToEdit.image_url,
-          answers: questionToEdit.answers || [{ text: "", isCorrect: true }],
-          created_by: questionToEdit.created_by
-        });
-        
-        if (questionToEdit.image_url) {
-          setImagePreview(questionToEdit.image_url);
-        }
-      }
-    }
-  }, [isEditMode, id, questions]);
-  
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const handleDifficultyChange = (newDifficulty: number) => {
-    setFormData(prev => ({ ...prev, difficulty: newDifficulty }));
-  };
-  
-  const handleCategoryChange = (category: QuestionCategory) => {
-    setFormData(prev => ({ 
-      ...prev, 
-      category,
-      // Reset sub_category based on new category
-      sub_category: category === "Signale" ? signalSubCategories[0] : "Grundlagen"
-    }));
-  };
-  
-  const handleAnswerChange = (index: number, value: string) => {
-    const newAnswers = [...(formData.answers || [])];
-    newAnswers[index] = { ...newAnswers[index], text: value };
-    setFormData(prev => ({ ...prev, answers: newAnswers }));
-  };
-  
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setImageFile(file);
-      
-      // Create preview URL
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setImagePreview(event.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-  
-  const removeImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    setFormData(prev => ({ ...prev, image_url: null }));
-  };
-  
-  const addAnswer = () => {
-    const newAnswers = [...(formData.answers || []), { text: "", isCorrect: false }];
-    setFormData(prev => ({ ...prev, answers: newAnswers }));
-  };
-  
-  const removeAnswer = (index: number) => {
-    const newAnswers = (formData.answers || []).filter((_, i) => i !== index);
-    setFormData(prev => ({ ...prev, answers: newAnswers }));
-  };
-  
-  const toggleAnswerCorrectness = (index: number) => {
-    const newAnswers = [...(formData.answers || [])];
-    
-    // For single choice, first set all to false
-    if (formData.question_type === "MC_single") {
-      newAnswers.forEach(answer => answer.isCorrect = false);
-    }
-    
-    // Then toggle the selected one
-    newAnswers[index] = { 
-      ...newAnswers[index], 
-      isCorrect: !newAnswers[index].isCorrect 
-    };
-    
-    setFormData(prev => ({ ...prev, answers: newAnswers }));
-  };
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!user) {
-      toast.error("Sie müssen angemeldet sein, um Fragen zu erstellen.");
-      return;
-    }
-    
-    try {
-      setIsLoading(true);
-      
-      // Validate form data
-      if (!formData.text) {
-        toast.error("Bitte geben Sie einen Fragetext ein.");
-        setIsLoading(false);
-        return;
-      }
-      
-      if (!formData.answers || formData.answers.length === 0 || 
-          !formData.answers.some(a => a.text)) {
-        toast.error("Bitte geben Sie mindestens eine Antwort ein.");
-        setIsLoading(false);
-        return;
-      }
-      
-      // If there's a new image, upload it first
-      let finalImageUrl = formData.image_url;
-      if (imageFile) {
-        finalImageUrl = await uploadQuestionImage(imageFile, user.id);
-      }
-      
-      const questionData: CreateQuestionDTO = {
-        category: formData.category as QuestionCategory,
-        sub_category: formData.sub_category || "",
-        question_type: formData.question_type as QuestionType,
-        difficulty: formData.difficulty || 1,
-        text: formData.text || "",
-        image_url: finalImageUrl,
-        answers: formData.answers as Answer[],
-        created_by: user.id
-      };
-      
-      // If editing, update the question
-      if (isEditMode && id) {
-        // Convert Answer[] to Json for Supabase
-        const supabaseAnswers: Json = questionData.answers.map(answer => ({
-          text: answer.text,
-          isCorrect: answer.isCorrect
-        }));
-        
-        const { error } = await supabase
-          .from('questions')
-          .update({
-            category: questionData.category,
-            sub_category: questionData.sub_category,
-            question_type: questionData.question_type,
-            difficulty: questionData.difficulty,
-            text: questionData.text,
-            image_url: questionData.image_url,
-            answers: supabaseAnswers,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', id);
-        
-        if (error) throw error;
-        toast.success("Frage erfolgreich aktualisiert!");
-      } else {
-        // If creating, create a new question
-        await createQuestion(questionData);
-        toast.success("Frage erfolgreich erstellt!");
-      }
-      
-      // Navigate back to questions page
-      navigate("/admin/questions");
-    } catch (error) {
-      console.error("Error saving question:", error);
-      toast.error("Fehler beim Speichern der Frage. Bitte versuchen Sie es später noch einmal.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
+  const {
+    formData,
+    isLoading,
+    imagePreview,
+    isEditMode,
+    handleInputChange,
+    handleDifficultyChange,
+    handleCategoryChange,
+    handleAnswerChange,
+    handleImageChange,
+    removeImage,
+    addAnswer,
+    removeAnswer,
+    toggleAnswerCorrectness,
+    handleSubmit
+  } = useQuestionForm(questions?.[0]);
+
   return (
     <div className="space-y-6">
       <Breadcrumb>
@@ -262,7 +77,7 @@ const QuestionEditorPage: React.FC = () => {
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="category">Kategorie</Label>
+              <Label>Kategorie</Label>
               <div className="flex gap-2">
                 <Button 
                   type="button"
@@ -388,20 +203,11 @@ const QuestionEditorPage: React.FC = () => {
                   />
                 </div>
                 
-                {imagePreview && (
+                {(imagePreview || formData.image_url) && (
                   <div className="mt-2 overflow-hidden rounded-md border">
                     <img 
-                      src={imagePreview} 
+                      src={imagePreview || formData.image_url || ""} 
                       alt="Vorschau" 
-                      className="max-h-[200px] w-full object-contain" 
-                    />
-                  </div>
-                )}
-                {!imagePreview && formData.image_url && (
-                  <div className="mt-2 overflow-hidden rounded-md border">
-                    <img 
-                      src={formData.image_url} 
-                      alt="Gespeichertes Bild" 
                       className="max-h-[200px] w-full object-contain" 
                     />
                   </div>
@@ -425,102 +231,26 @@ const QuestionEditorPage: React.FC = () => {
                 </Button>
               </div>
               
-              {formData.question_type === "open" ? (
-                <div className="rounded-md border border-gray-200 p-4">
-                  <p className="mb-2 text-sm text-gray-500">Bei offenen Fragen ist nur eine Antwort möglich:</p>
-                  <div className="flex items-start gap-2">
-                    <div className="mt-2 flex h-5 items-center">
-                      <div className="h-4 w-4 rounded-full bg-green-500" />
-                    </div>
-                    <Textarea
-                      placeholder="Korrekte Antwort eingeben"
-                      value={formData.answers?.[0]?.text || ""}
-                      onChange={(e) => handleAnswerChange(0, e.target.value)}
-                      className="flex-1 min-h-[80px]"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {formData.answers?.map((answer, index) => (
-                    <div key={index} className="flex items-start gap-2 rounded-md border border-gray-200 p-2">
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant={answer.isCorrect ? "default" : "outline"}
-                        className="mt-1 h-6 w-6 shrink-0"
-                        onClick={() => toggleAnswerCorrectness(index)}
-                      >
-                        {answer.isCorrect && <span>✓</span>}
-                      </Button>
-                      <Textarea
-                        placeholder={`Antwort ${index + 1}`}
-                        value={answer.text}
-                        onChange={(e) => handleAnswerChange(index, e.target.value)}
-                        className="flex-1 min-h-[60px]"
-                      />
-                      {formData.answers.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="mt-1 h-6 w-6 shrink-0"
-                          onClick={() => removeAnswer(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+              <AnswerEditor
+                answers={formData.answers || []}
+                questionType={formData.question_type as QuestionType}
+                onAnswerChange={handleAnswerChange}
+                onToggleCorrectness={toggleAnswerCorrectness}
+                onRemoveAnswer={removeAnswer}
+                onAddAnswer={addAnswer}
+              />
               
               {formData.question_type === "MC_single" && (
-                <p className="text-xs text-gray-500">Hinweis: Bei Single Choice darf nur eine Antwort korrekt sein.</p>
+                <p className="text-xs text-gray-500">
+                  Hinweis: Bei Single Choice darf nur eine Antwort korrekt sein.
+                </p>
               )}
             </div>
             
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Vorschau</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="font-medium">{formData.text || "Fragetext erscheint hier"}</div>
-                  
-                  {(imagePreview || formData.image_url) && (
-                    <div className="overflow-hidden rounded-md border">
-                      <img 
-                        src={imagePreview || formData.image_url || ""} 
-                        alt="Vorschau" 
-                        className="max-h-[150px] w-full object-contain" 
-                      />
-                    </div>
-                  )}
-                  
-                  <div>
-                    <h4 className="mb-2 text-sm font-medium">Antworten:</h4>
-                    <ul className="space-y-1">
-                      {formData.answers?.map((answer, index) => (
-                        <li key={index} className="flex items-center gap-2">
-                          <div className={`h-3 w-3 shrink-0 rounded-full ${answer.isCorrect ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                          <span>{answer.text || `Antwort ${index + 1}`}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  
-                  <div className="pt-2 text-xs text-gray-500">
-                    <span className="rounded-full bg-gray-100 px-2 py-1">
-                      {formData.category} / {formData.sub_category}
-                    </span>
-                    <span className="ml-2 rounded-full bg-gray-100 px-2 py-1">
-                      Schwierigkeit: {formData.difficulty}/5
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <QuestionPreview 
+              question={formData}
+              imagePreview={imagePreview}
+            />
           </div>
         </div>
       </form>

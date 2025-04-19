@@ -9,7 +9,51 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      questions: {
+        Row: {
+          answers: Json
+          category: Database["public"]["Enums"]["question_category"]
+          created_at: string
+          created_by: string
+          difficulty: number
+          id: string
+          image_url: string | null
+          question_type: Database["public"]["Enums"]["question_type"]
+          revision: number
+          sub_category: string
+          text: string
+          updated_at: string
+        }
+        Insert: {
+          answers: Json
+          category: Database["public"]["Enums"]["question_category"]
+          created_at?: string
+          created_by: string
+          difficulty: number
+          id?: string
+          image_url?: string | null
+          question_type: Database["public"]["Enums"]["question_type"]
+          revision?: number
+          sub_category: string
+          text: string
+          updated_at?: string
+        }
+        Update: {
+          answers?: Json
+          category?: Database["public"]["Enums"]["question_category"]
+          created_at?: string
+          created_by?: string
+          difficulty?: number
+          id?: string
+          image_url?: string | null
+          question_type?: Database["public"]["Enums"]["question_type"]
+          revision?: number
+          sub_category?: string
+          text?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +62,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      question_category: "Signale" | "Betriebsdienst"
+      question_type: "MC_single" | "MC_multi" | "open"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +178,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      question_category: ["Signale", "Betriebsdienst"],
+      question_type: ["MC_single", "MC_multi", "open"],
+    },
   },
 } as const

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { CreateQuestionDTO, Question, QuestionCategory, Answer } from "@/types/questions";
 import { Json } from "@/integrations/supabase/types";
@@ -92,4 +91,49 @@ export async function uploadQuestionImage(file: File, userId: string) {
     .getPublicUrl(fileName);
     
   return data.publicUrl;
+}
+
+// Predefined signal subcategories
+export const signalSubCategories = [
+  "Allgemeine Bestimmungen",
+  "Hp-Signale",
+  "Kombinationssignale (Ks)",
+  "Lichthaupt- und Lichtvorsignale (Hl)",
+  "Haupt- und Vorsignalverbindungen (Sv)",
+  "Vr-Signale",
+  "Zusatzsignale (Zs)",
+  "Signale f��r Schiebelokomotiven und Sperrfahrten (Ts)",
+  "Langsamfahrsignale (Lf)",
+  "Schutzsignale (Sh)",
+  "Signale für den Rangierdienst (Ra)",
+  "Weichensignale (Wn)",
+  "Signale für das Zugpersonal (Zp)",
+  "Fahrleitungssignale (El)",
+  "Signale an Zügen (Zg)",
+  "Signale an einzelnen Fahrzeugen (Fz)",
+  "Nebensignale (Ne)",
+  "Signale für Bahnübergänge (Bü)",
+  "Orientierungszeichen",
+  "Signalkombinationen (Sk)"
+] as const;
+
+// Helper function to seed initial questions for each subcategory
+export async function seedInitialQuestions(userId: string) {
+  const sampleQuestions: CreateQuestionDTO[] = signalSubCategories.map((sub_category) => ({
+    category: "Signale",
+    sub_category,
+    question_type: "open",
+    difficulty: 1,
+    text: `Was ist die Bedeutung des wichtigsten ${sub_category}?`,
+    answers: [{ text: "Antwort wird noch hinzugefügt", isCorrect: true }],
+    created_by: userId
+  }));
+
+  for (const question of sampleQuestions) {
+    try {
+      await createQuestion(question);
+    } catch (error) {
+      console.error(`Error seeding question for ${question.sub_category}:`, error);
+    }
+  }
 }

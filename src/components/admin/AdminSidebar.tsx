@@ -1,7 +1,7 @@
 
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { SidebarBase } from "@/components/ui/sidebar/sidebar-base";
+import { Sidebar } from "@/components/ui/sidebar/sidebar-base";
 import { SidebarGroup } from "@/components/ui/sidebar/sidebar-group";
 import { SidebarMenu } from "@/components/ui/sidebar/sidebar-menu";
 import { SidebarFooter } from "@/components/ui/sidebar/sidebar-footer";
@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 const AdminSidebar: React.FC = () => {
   return (
-    <SidebarBase>
+    <Sidebar>
       <div className="flex h-14 items-center border-b px-4">
         <h2 className="text-lg font-semibold">Admin-Bereich</h2>
       </div>
@@ -89,7 +89,7 @@ const AdminSidebar: React.FC = () => {
           </NavLink>
         </div>
       </SidebarFooter>
-    </SidebarBase>
+    </Sidebar>
   );
 };
 

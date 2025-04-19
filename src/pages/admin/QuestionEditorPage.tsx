@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuestions } from "@/hooks/useQuestions";
@@ -15,6 +14,7 @@ import { AlertTriangle, Save, Image, Plus, X, ArrowLeft, Trash2 } from "lucide-r
 import { toast } from "sonner";
 import { signalSubCategories } from "@/api/questions";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { Json } from "@/integrations/supabase/types";
 
 const QuestionEditorPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -179,6 +179,12 @@ const QuestionEditorPage: React.FC = () => {
       
       // If editing, update the question
       if (isEditMode && id) {
+        // Convert Answer[] to Json for Supabase
+        const supabaseAnswers: Json = questionData.answers.map(answer => ({
+          text: answer.text,
+          isCorrect: answer.isCorrect
+        }));
+        
         const { error } = await supabase
           .from('questions')
           .update({
@@ -188,7 +194,7 @@ const QuestionEditorPage: React.FC = () => {
             difficulty: questionData.difficulty,
             text: questionData.text,
             image_url: questionData.image_url,
-            answers: questionData.answers,
+            answers: supabaseAnswers,
             updated_at: new Date().toISOString()
           })
           .eq('id', id);

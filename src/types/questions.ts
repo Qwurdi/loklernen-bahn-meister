@@ -34,4 +34,3 @@ export interface CreateQuestionDTO {
   answers: Answer[];
   created_by: string;
 }
-

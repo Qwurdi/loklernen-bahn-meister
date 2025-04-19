@@ -7,8 +7,8 @@ import { Json } from "@/integrations/supabase/types";
 function transformAnswers(jsonAnswers: Json): Answer[] {
   if (Array.isArray(jsonAnswers)) {
     return jsonAnswers.map(answer => ({
-      text: String(answer.text || ''),
-      isCorrect: Boolean(answer.isCorrect)
+      text: typeof answer === 'object' && answer !== null ? String(answer.text || '') : '',
+      isCorrect: typeof answer === 'object' && answer !== null ? Boolean(answer.isCorrect) : false
     }));
   }
   return [];
@@ -43,6 +43,12 @@ export async function fetchQuestions(category?: QuestionCategory, sub_category?:
 }
 
 export async function createQuestion(question: CreateQuestionDTO) {
+  // Convert Answer[] to a JSON structure compatible with Supabase
+  const supabaseAnswers: Json = question.answers.map(answer => ({
+    text: answer.text,
+    isCorrect: answer.isCorrect
+  }));
+
   const { data, error } = await supabase
     .from('questions')
     .insert([{
@@ -52,7 +58,7 @@ export async function createQuestion(question: CreateQuestionDTO) {
       difficulty: question.difficulty,
       text: question.text,
       image_url: question.image_url,
-      answers: question.answers,
+      answers: supabaseAnswers,
       created_by: question.created_by
     }])
     .select()

@@ -6,10 +6,17 @@ import { Json } from "@/integrations/supabase/types";
 // Helper function to convert database answers (Json) to Answer[]
 function transformAnswers(jsonAnswers: Json): Answer[] {
   if (Array.isArray(jsonAnswers)) {
-    return jsonAnswers.map(answer => ({
-      text: typeof answer === 'object' && answer !== null ? String(answer.text || '') : '',
-      isCorrect: typeof answer === 'object' && answer !== null ? Boolean(answer.isCorrect) : false
-    }));
+    return jsonAnswers.map(answer => {
+      // Safely check if answer is an object and access its properties
+      if (typeof answer === 'object' && answer !== null) {
+        return {
+          text: 'text' in answer ? String(answer.text || '') : '',
+          isCorrect: 'isCorrect' in answer ? Boolean(answer.isCorrect) : false
+        };
+      }
+      // Return default values if the answer is not an object
+      return { text: '', isCorrect: false };
+    });
   }
   return [];
 }

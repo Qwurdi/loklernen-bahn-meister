@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import type { CreateQuestionDTO, Question, QuestionCategory, Answer } from "@/types/questions";
 import { Json } from "@/integrations/supabase/types";
@@ -91,79 +92,4 @@ export async function uploadQuestionImage(file: File, userId: string) {
     .getPublicUrl(fileName);
     
   return data.publicUrl;
-}
-
-export async function createSampleQuestions(userId: string) {
-  const sampleQuestions: CreateQuestionDTO[] = [
-    {
-      category: 'Signale',
-      sub_category: 'Haupt- und Vorsignale',
-      question_type: 'MC_single',
-      difficulty: 2,
-      text: 'Was bedeutet ein Hauptsignal mit grünem Licht?',
-      answers: [
-        { text: 'Fahrt ohne Einschränkungen möglich', isCorrect: true },
-        { text: 'Langsamfahrt', isCorrect: false },
-        { text: 'Halt', isCorrect: false }
-      ]
-    },
-    {
-      category: 'Signale',
-      sub_category: 'Haupt- und Vorsignale',
-      question_type: 'MC_single',
-      difficulty: 3,
-      text: 'Was zeigt ein Vorsignal mit gelber und grüner Lichtkombination an?',
-      answers: [
-        { text: 'Erwarte Signal "Fahrt"', isCorrect: true },
-        { text: 'Sofortiger Halt', isCorrect: false },
-        { text: 'Reduktion der Geschwindigkeit', isCorrect: false }
-      ]
-    },
-    {
-      category: 'Signale',
-      sub_category: 'Haupt- und Vorsignale',
-      question_type: 'MC_multi',
-      difficulty: 4,
-      text: 'Welche Aussagen über Hauptsignale sind korrekt?',
-      answers: [
-        { text: 'Hauptsignale regeln die Zugfahrt', isCorrect: true },
-        { text: 'Hauptsignale geben Geschwindigkeitsbegrenzungen', isCorrect: true },
-        { text: 'Hauptsignale sind nur dekorativ', isCorrect: false }
-      ]
-    },
-    {
-      category: 'Signale',
-      sub_category: 'Haupt- und Vorsignale',
-      question_type: 'open',
-      difficulty: 5,
-      text: 'Erklären Sie den Unterschied zwischen einem Hauptsignal und einem Vorsignal.',
-      answers: [
-        { text: 'Korrekte Erklärung über Funktion und Unterschied der Signale', isCorrect: true }
-      ]
-    }
-  ];
-
-  try {
-    const results = await Promise.all(
-      sampleQuestions.map(async (question) => {
-        const { data, error } = await supabase
-          .from('questions')
-          .insert({
-            ...question,
-            created_by: userId,
-            answers: JSON.stringify(question.answers)
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
-        return data;
-      })
-    );
-
-    return results;
-  } catch (error) {
-    console.error('Error creating sample questions:', error);
-    throw error;
-  }
 }

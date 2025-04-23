@@ -26,53 +26,76 @@ function transformQuestion(dbQuestion: any): Question {
   };
 }
 
-export function useSpacedRepetition(category: QuestionCategory, subcategory?: string) {
+interface SpacedRepetitionOptions {
+  practiceMode?: boolean;
+}
+
+export function useSpacedRepetition(
+  category: QuestionCategory, 
+  subcategory?: string,
+  options: SpacedRepetitionOptions = {}
+) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [dueQuestions, setDueQuestions] = useState<Question[]>([]);
   const [progress, setProgress] = useState<UserProgress[]>([]);
 
   useEffect(() => {
-    if (!user) return;
     loadDueQuestions();
-  }, [user, category, subcategory]);
+  }, [user, category, subcategory, options.practiceMode]);
 
   const loadDueQuestions = async () => {
     try {
       setLoading(true);
+
+      if (options.practiceMode) {
+        // In practice mode, load all questions for the category/subcategory
+        const { data: questions, error: questionsError } = await supabase
+          .from('questions')
+          .select('*')
+          .eq('category', category)
+          .eq('sub_category', subcategory || '');
+
+        if (questionsError) throw questionsError;
+
+        setDueQuestions((questions || []).map(transformQuestion));
+        return;
+      }
       
-      // Fetch questions that are due for review
-      const { data: progressData, error: progressError } = await supabase
-        .from('user_progress')
-        .select('*, questions(*)')
-        .eq('user_id', user?.id)
-        .eq('questions.category', category as QuestionCategory)
-        .eq(subcategory ? 'questions.sub_category' : 'questions.sub_category', subcategory || '')
-        .lte('next_review_at', new Date().toISOString())
-        .order('next_review_at', { ascending: true });
+      // Regular spaced repetition mode
+      if (user) {
+        // Fetch questions that are due for review
+        const { data: progressData, error: progressError } = await supabase
+          .from('user_progress')
+          .select('*, questions(*)')
+          .eq('user_id', user.id)
+          .eq('questions.category', category)
+          .eq('questions.sub_category', subcategory || '')
+          .lte('next_review_at', new Date().toISOString());
 
-      if (progressError) throw progressError;
+        if (progressError) throw progressError;
 
-      // Also fetch questions that haven't been studied yet
-      const { data: newQuestions, error: questionsError } = await supabase
-        .from('questions')
-        .select('*')
-        .eq('category', category as QuestionCategory)
-        .eq(subcategory ? 'sub_category' : 'sub_category', subcategory || '')
-        .not('id', 'in', (progressData || []).map(p => p.question_id));
+        // Get IDs of questions with progress
+        const questionIdsWithProgress = (progressData || []).map(p => p.question_id);
 
-      if (questionsError) throw questionsError;
+        // Fetch new questions (those without progress)
+        const { data: newQuestions, error: newQuestionsError } = await supabase
+          .from('questions')
+          .select('*')
+          .eq('category', category)
+          .eq('sub_category', subcategory || '')
+          .not('id', 'in', questionIdsWithProgress.length > 0 ? questionIdsWithProgress : ['none']);
 
-      const transformedProgressQuestions = (progressData || []).map(p => transformQuestion(p.questions));
-      const transformedNewQuestions = (newQuestions || []).map(q => transformQuestion(q));
-      
-      setDueQuestions([
-        ...transformedProgressQuestions,
-        ...transformedNewQuestions
-      ]);
-      setProgress(progressData || []);
+        if (newQuestionsError) throw newQuestionsError;
+
+        const transformedProgressQuestions = (progressData || []).map(p => transformQuestion(p.questions));
+        const transformedNewQuestions = (newQuestions || []).map(q => transformQuestion(q));
+        
+        setDueQuestions([...transformedProgressQuestions, ...transformedNewQuestions]);
+        setProgress(progressData || []);
+      }
     } catch (error) {
-      console.error('Error loading due questions:', error);
+      console.error('Error loading questions:', error);
     } finally {
       setLoading(false);
     }

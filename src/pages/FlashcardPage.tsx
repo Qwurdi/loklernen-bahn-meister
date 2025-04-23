@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -19,20 +18,24 @@ export default function FlashcardPage() {
   const [answered, setAnswered] = useState(false);
   const [answer, setAnswer] = useState("");
   const [isCorrect, setIsCorrect] = useState(false);
-  
+  const [isPracticeMode] = useState(true);
+
   const {
     loading,
     dueQuestions: questions,
     submitAnswer
-  } = useSpacedRepetition("Signale" as QuestionCategory, subcategory);
+  } = useSpacedRepetition(
+    "Signale" as QuestionCategory, 
+    subcategory, 
+    { practiceMode: isPracticeMode }
+  );
 
   const currentQuestion = questions[currentIndex];
 
-  // Add the missing handleFlip function
   const handleFlip = () => {
     setFlipped(!flipped);
   };
-  
+
   const handleAnswer = async () => {
     if (!currentQuestion) return;
 
@@ -44,7 +47,6 @@ export default function FlashcardPage() {
     setAnswered(true);
 
     if (user) {
-      // Score on a scale of 0-5
       const score = isAnswerCorrect ? 5 : 0;
       await submitAnswer(currentQuestion.id, score);
     }
@@ -53,12 +55,11 @@ export default function FlashcardPage() {
       toast.success("Richtig! Weiter so!");
     }
   };
-  
+
   const handleNext = () => {
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(curr => curr + 1);
     } else {
-      // Return to category overview if we're done
       navigate('/signale');
       toast.success("Gut gemacht! Du hast alle fälligen Karten für heute geschafft!");
     }
@@ -113,16 +114,21 @@ export default function FlashcardPage() {
         <div className="container px-4 py-8 md:px-6 md:py-12">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <Link to="/signale/haupt-vorsignale">
+              <Link to="/signale">
                 <Button variant="ghost" size="sm">
                   <ChevronLeft className="h-4 w-4 mr-2" />
-                  Zurück zum Deck
+                  Zurück zur Übersicht
                 </Button>
               </Link>
-              <h1 className="text-xl font-semibold">Haupt- und Vorsignale</h1>
+              <h1 className="text-xl font-semibold">{subcategory}</h1>
             </div>
-            <div className="text-sm text-muted-foreground">
-              Karte {currentIndex + 1}/{questions.length}
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-muted-foreground">
+                Übungsmodus
+              </span>
+              <div className="text-sm text-muted-foreground">
+                Karte {currentIndex + 1}/{questions.length}
+              </div>
             </div>
           </div>
           
@@ -133,12 +139,11 @@ export default function FlashcardPage() {
               }`}
               onClick={handleFlip}
             >
-              {/* Front side */}
               <div className={`absolute inset-0 backface-hidden p-6 ${flipped ? "invisible" : ""}`}>
                 <div className="flex h-full flex-col">
-                  <h2 className="text-lg font-medium">{currentQuestion.text}</h2>
+                  <h2 className="text-lg font-medium">{currentQuestion?.text}</h2>
                   <div className="flex-1 flex items-center justify-center py-6">
-                    {currentQuestion.image_url && (
+                    {currentQuestion?.image_url && (
                       <img 
                         src={currentQuestion.image_url} 
                         alt="Signal" 
@@ -236,13 +241,12 @@ export default function FlashcardPage() {
                 </div>
               </div>
               
-              {/* Back side */}
               <div className={`absolute inset-0 backface-hidden rotate-y-180 p-6 ${!flipped ? "invisible" : ""}`}>
                 <div className="flex h-full flex-col">
                   <h2 className="text-lg font-medium">Lösung</h2>
                   <div className="flex flex-col flex-1 gap-4 pt-6">
                     <div className="flex items-center justify-center">
-                      {currentQuestion.image_url && (
+                      {currentQuestion?.image_url && (
                         <img 
                           src={currentQuestion.image_url} 
                           alt="Signal" 
@@ -251,11 +255,7 @@ export default function FlashcardPage() {
                       )}
                     </div>
                     <div>
-                      <p className="font-medium text-lg">{currentQuestion.answers[0].text}</p>
-                      <p className="text-muted-foreground mt-2">
-                        {/* Handle the missing explanation property with a fallback */}
-                        {currentQuestion.answers[0].text}
-                      </p>
+                      <p className="font-medium text-lg">{currentQuestion?.answers[0].text}</p>
                     </div>
                   </div>
                   
@@ -290,7 +290,6 @@ export default function FlashcardPage() {
               <div className="mt-6 flex justify-between">
                 <Button variant="ghost" className="text-red-500" onClick={(e) => {
                   e.stopPropagation();
-                  // In a real app, this would mark the card as difficult
                   handleNext();
                 }}>
                   <ThumbsDown className="h-5 w-5 mr-2" />
@@ -298,7 +297,6 @@ export default function FlashcardPage() {
                 </Button>
                 <Button variant="ghost" className="text-green-500" onClick={(e) => {
                   e.stopPropagation();
-                  // In a real app, this would mark the card as easy
                   handleNext();
                 }}>
                   <ThumbsUp className="h-5 w-5 mr-2" />

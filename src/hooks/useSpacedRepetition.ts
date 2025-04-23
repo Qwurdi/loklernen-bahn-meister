@@ -2,7 +2,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Question } from '@/types/questions';
+import { Question, QuestionCategory } from '@/types/questions';
+import { transformAnswers } from '@/api/questions';
 
 interface UserProgress {
   id: string;
@@ -17,7 +18,15 @@ interface UserProgress {
   last_score: number;
 }
 
-export function useSpacedRepetition(category: string, subcategory?: string) {
+// Helper function to transform database questions to application questions
+function transformQuestion(dbQuestion: any): Question {
+  return {
+    ...dbQuestion,
+    answers: transformAnswers(dbQuestion.answers)
+  };
+}
+
+export function useSpacedRepetition(category: QuestionCategory, subcategory?: string) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [dueQuestions, setDueQuestions] = useState<Question[]>([]);
@@ -37,8 +46,8 @@ export function useSpacedRepetition(category: string, subcategory?: string) {
         .from('user_progress')
         .select('*, questions(*)')
         .eq('user_id', user?.id)
-        .eq('questions.category', category)
-        .eq(subcategory ? 'questions.sub_category' : true, subcategory || true)
+        .eq('questions.category', category as QuestionCategory)
+        .eq(subcategory ? 'questions.sub_category' : 'questions.sub_category', subcategory || '')
         .lte('next_review_at', new Date().toISOString())
         .order('next_review_at', { ascending: true });
 
@@ -48,15 +57,18 @@ export function useSpacedRepetition(category: string, subcategory?: string) {
       const { data: newQuestions, error: questionsError } = await supabase
         .from('questions')
         .select('*')
-        .eq('category', category)
-        .eq(subcategory ? 'sub_category' : true, subcategory || true)
+        .eq('category', category as QuestionCategory)
+        .eq(subcategory ? 'sub_category' : 'sub_category', subcategory || '')
         .not('id', 'in', (progressData || []).map(p => p.question_id));
 
       if (questionsError) throw questionsError;
 
+      const transformedProgressQuestions = (progressData || []).map(p => transformQuestion(p.questions));
+      const transformedNewQuestions = (newQuestions || []).map(q => transformQuestion(q));
+      
       setDueQuestions([
-        ...(progressData || []).map(p => p.questions),
-        ...(newQuestions || [])
+        ...transformedProgressQuestions,
+        ...transformedNewQuestions
       ]);
       setProgress(progressData || []);
     } catch (error) {

@@ -1,9 +1,10 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import type { CreateQuestionDTO, Question, QuestionCategory, Answer } from "@/types/questions";
 import { Json } from "@/integrations/supabase/types";
 
 // Helper function to convert database answers (Json) to Answer[]
-function transformAnswers(jsonAnswers: Json): Answer[] {
+export function transformAnswers(jsonAnswers: Json): Answer[] {
   if (Array.isArray(jsonAnswers)) {
     return jsonAnswers.map(answer => {
       // Safely check if answer is an object and access its properties

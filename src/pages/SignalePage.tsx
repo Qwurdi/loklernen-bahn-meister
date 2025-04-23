@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
@@ -7,9 +6,44 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import CategoryCard from "@/components/common/CategoryCard";
 import { signalSubCategories } from "@/api/questions";
+import { useAuth } from "@/contexts/AuthContext";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function SignalePage() {
+  const { user } = useAuth();
+  
+  const { data: progressStats } = useQuery({
+    queryKey: ['signalProgress', user?.id],
+    queryFn: async () => {
+      if (!user) return {};
+      
+      const { data, error } = await supabase
+        .from('user_progress')
+        .select('questions(sub_category), correct_count, incorrect_count')
+        .eq('user_id', user.id);
+        
+      if (error) throw error;
+      
+      // Aggregate stats by subcategory
+      return (data || []).reduce((acc: Record<string, { correct: number, total: number }>, curr) => {
+        const subCategory = curr.questions?.sub_category;
+        if (!subCategory) return acc;
+        
+        if (!acc[subCategory]) {
+          acc[subCategory] = { correct: 0, total: 0 };
+        }
+        
+        acc[subCategory].correct += curr.correct_count || 0;
+        acc[subCategory].total += (curr.correct_count || 0) + (curr.incorrect_count || 0);
+        
+        return acc;
+      }, {});
+    },
+    enabled: !!user
+  });
+
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
@@ -34,35 +68,27 @@ export default function SignalePage() {
             <h1 className="text-2xl font-bold mb-4">Signale</h1>
             <p className="text-gray-500 max-w-2xl">
               Lerne die wichtigsten Signale der Eisenbahn kennen. Diese Kategorie ist kostenlos und ohne Anmeldung zugänglich. 
-              Wähle eine Signalart, um mit dem Lernen zu beginnen.
+              {!user && " Melde dich an, um deinen Lernfortschritt zu speichern."}
             </p>
           </div>
           
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {signalSubCategories.map((subcategory) => (
-              <CategoryCard
-                key={subcategory}
-                title={subcategory}
-                description="Lerne die wichtigsten Signale dieser Kategorie."
-                progress={0}
-                link={`/signale/${encodeURIComponent(subcategory.toLowerCase().replace(/[^a-z0-9]+/g, '-'))}`}
-              />
-            ))}
-          </div>
-          
-          <div className="mt-12 rounded-lg border bg-blue-50 p-6">
-            <h2 className="text-lg font-medium text-loklernen-sapphire mb-2">Die Bedeutung von Signalen</h2>
-            <p className="mb-4 text-gray-600">
-              Signale sind die Sprache der Eisenbahn. Sie regeln den Bahnverkehr und sorgen für Sicherheit. 
-              Als Triebfahrzeugführer*in musst du alle Signale sofort erkennen und richtig interpretieren können.
-            </p>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Link to="/register">
-                <Button variant="outline">
-                  Fortschritt speichern (Registrieren)
-                </Button>
-              </Link>
-            </div>
+            {signalSubCategories.map((subcategory) => {
+              const stats = progressStats?.[subcategory];
+              const progress = stats ? Math.round((stats.correct / Math.max(1, stats.total)) * 100) : 0;
+              
+              return (
+                <CategoryCard
+                  key={subcategory}
+                  title={subcategory}
+                  description={stats 
+                    ? `${stats.correct} von ${stats.total} Karten richtig beantwortet`
+                    : "Lerne die wichtigsten Signale dieser Kategorie."}
+                  progress={progress}
+                  link={`/signale/${encodeURIComponent(subcategory.toLowerCase().replace(/[^a-z0-9]+/g, '-'))}`}
+                />
+              );
+            })}
           </div>
         </div>
       </main>

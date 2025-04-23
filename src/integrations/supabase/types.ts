@@ -54,6 +54,98 @@ export type Database = {
         }
         Relationships: []
       }
+      user_progress: {
+        Row: {
+          correct_count: number
+          created_at: string
+          ease_factor: number
+          id: string
+          incorrect_count: number
+          interval_days: number
+          last_reviewed_at: string
+          last_score: number
+          next_review_at: string
+          question_id: string
+          repetition_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          correct_count?: number
+          created_at?: string
+          ease_factor?: number
+          id?: string
+          incorrect_count?: number
+          interval_days?: number
+          last_reviewed_at?: string
+          last_score?: number
+          next_review_at?: string
+          question_id: string
+          repetition_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          correct_count?: number
+          created_at?: string
+          ease_factor?: number
+          id?: string
+          incorrect_count?: number
+          interval_days?: number
+          last_reviewed_at?: string
+          last_score?: number
+          next_review_at?: string
+          question_id?: string
+          repetition_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_progress_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_stats: {
+        Row: {
+          created_at: string
+          last_activity_date: string
+          signals_mastered: number
+          streak_days: number
+          total_correct: number
+          total_incorrect: number
+          updated_at: string
+          user_id: string
+          xp: number
+        }
+        Insert: {
+          created_at?: string
+          last_activity_date?: string
+          signals_mastered?: number
+          streak_days?: number
+          total_correct?: number
+          total_incorrect?: number
+          updated_at?: string
+          user_id: string
+          xp?: number
+        }
+        Update: {
+          created_at?: string
+          last_activity_date?: string
+          signals_mastered?: number
+          streak_days?: number
+          total_correct?: number
+          total_incorrect?: number
+          updated_at?: string
+          user_id?: string
+          xp?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

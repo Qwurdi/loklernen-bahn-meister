@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,9 +9,22 @@ import { useSpacedRepetition } from "@/hooks/useSpacedRepetition";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { QuestionCategory } from "@/types/questions";
+import { signalSubCategories } from "@/api/questions";
+
+// Helper to map URL subcategory param back to original subcategory string (case sensitive)
+function mapUrlToSubcategory(urlSubcategory?: string): string | undefined {
+  if (!urlSubcategory) return undefined;
+  const normalizedParam = urlSubcategory.toLowerCase();
+
+  const found = signalSubCategories.find((subcat) => 
+    subcat.toLowerCase().replace(/[^a-z0-9]+/g, '-') === normalizedParam
+  );
+  return found;
+}
 
 export default function FlashcardPage() {
-  const { subcategory } = useParams<{ subcategory: string }>();
+  const { subcategory: urlSubcategory } = useParams<{ subcategory: string }>();
+  const subcategory = mapUrlToSubcategory(urlSubcategory); // map to original subcategory
   const { user } = useAuth();
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ThumbsUp, ThumbsDown } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { useSpacedRepetition } from "@/hooks/useSpacedRepetition";
@@ -14,6 +14,7 @@ import FlashcardItem from "@/components/flashcards/FlashcardItem";
 import FlashcardProgress from "@/components/flashcards/FlashcardProgress";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Helper to map URL subcategory param back to original subcategory string (case sensitive)
 function mapUrlToSubcategory(urlSubcategory?: string): string | undefined {
@@ -31,6 +32,7 @@ export default function FlashcardPage() {
   const subcategory = mapUrlToSubcategory(urlSubcategory); // map to original subcategory
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [isPracticeMode] = useState(true);
@@ -89,26 +91,12 @@ export default function FlashcardPage() {
     }
   };
 
-  const handleDifficultyRating = async (score: number) => {
-    if (!currentQuestion || !user) return;
-    
-    await submitAnswer(currentQuestion.id, score);
-    
-    if (score >= 4) {
-      toast.success("Als leicht markiert");
-    } else {
-      toast.success("Als schwierig markiert");
-    }
-    
-    handleNext();
-  };
-
   if (loading) {
     return (
       <div className="flex min-h-screen flex-col">
         <Navbar />
         <main className="flex-1">
-          <div className="container px-4 py-8 md:px-6 md:py-12">
+          <div className="container px-4 py-6">
             <div className="flex justify-center items-center h-60">
               <div className="text-center">
                 <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
@@ -127,7 +115,7 @@ export default function FlashcardPage() {
       <div className="flex min-h-screen flex-col">
         <Navbar />
         <main className="flex-1">
-          <div className="container px-4 py-8 md:px-6 md:py-12">
+          <div className="container px-4 py-6">
             <div className="text-center">
               <h2 className="text-2xl font-bold mb-4">Keine Karten fällig</h2>
               <p className="mb-8">Du hast aktuell keine Karten zum Wiederholen. Schau später wieder vorbei!</p>
@@ -150,56 +138,44 @@ export default function FlashcardPage() {
       <Navbar />
       
       <main className="flex-1">
-        <div className="container px-4 py-8 md:px-6 md:py-12">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
+        <div className="container px-4 py-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
               <Link to="/signale">
-                <Button variant="ghost" size="sm">
-                  <ChevronLeft className="h-4 w-4 mr-2" />
-                  Zurück zur Übersicht
+                <Button variant="ghost" size="sm" className={isMobile ? "px-2" : ""}>
+                  <ChevronLeft className="h-4 w-4" />
+                  {!isMobile && <span className="ml-2">Zurück</span>}
                 </Button>
               </Link>
-              <h1 className="text-xl font-semibold">{subcategory}</h1>
+              {!isMobile && <h1 className="text-xl font-semibold ml-2">{subcategory}</h1>}
             </div>
-            <div className="flex items-center gap-4">
-              <span className={`text-sm px-2 py-1 rounded ${isPracticeMode ? 
-                "bg-blue-100 text-blue-800" : 
-                "bg-green-100 text-green-800"
-              }`}>
-                {isPracticeMode ? "Übungsmodus" : "Wiederholungsmodus"}
-              </span>
-              <div className="text-sm text-muted-foreground">
-                Karte {currentIndex + 1}/{questions.length}
+            {!isMobile && (
+              <div className="flex items-center gap-4">
+                <span className="text-sm px-2 py-1 rounded bg-blue-100 text-blue-800">
+                  {isPracticeMode ? "Übungsmodus" : "Wiederholungsmodus"}
+                </span>
               </div>
-            </div>
+            )}
           </div>
           
-          <FlashcardProgress 
-            currentIndex={currentIndex}
-            totalCards={questions.length}
-            correctCount={correctCount}
-            remainingToday={remainingToday}
-          />
+          {isMobile && <h1 className="text-lg font-semibold mb-4">{subcategory}</h1>}
           
+          {/* Main content - flashcard first, then progress */}
           {currentQuestion && (
-            <>
+            <div className="space-y-6">
               <FlashcardItem 
                 question={currentQuestion} 
                 onAnswer={handleAnswer}
                 onNext={handleNext}
               />
               
-              <div className="mt-6 flex justify-between max-w-2xl mx-auto">
-                <Button variant="ghost" className="text-red-500" onClick={() => handleDifficultyRating(1)}>
-                  <ThumbsDown className="h-5 w-5 mr-2" />
-                  Schwierig
-                </Button>
-                <Button variant="ghost" className="text-green-500" onClick={() => handleDifficultyRating(5)}>
-                  <ThumbsUp className="h-5 w-5 mr-2" />
-                  Leicht
-                </Button>
-              </div>
-            </>
+              <FlashcardProgress 
+                currentIndex={currentIndex}
+                totalCards={questions.length}
+                correctCount={correctCount}
+                remainingToday={remainingToday}
+              />
+            </div>
           )}
         </div>
       </main>

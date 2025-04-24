@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ThumbsUp, ThumbsDown, Lightbulb, CheckCircle2, XCircle } from "lucide-react";
+import { ChevronLeft, ThumbsUp, ThumbsDown } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { useSpacedRepetition } from "@/hooks/useSpacedRepetition";
@@ -10,6 +10,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { QuestionCategory } from "@/types/questions";
 import { signalSubCategories } from "@/api/questions";
+import FlashcardItem from "@/components/flashcards/FlashcardItem";
+import FlashcardProgress from "@/components/flashcards/FlashcardProgress";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 // Helper to map URL subcategory param back to original subcategory string (case sensitive)
 function mapUrlToSubcategory(urlSubcategory?: string): string | undefined {
@@ -28,10 +32,7 @@ export default function FlashcardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [flipped, setFlipped] = useState(false);
-  const [answered, setAnswered] = useState(false);
-  const [answer, setAnswer] = useState("");
-  const [isCorrect, setIsCorrect] = useState(false);
+  const [correctCount, setCorrectCount] = useState(0);
   const [isPracticeMode] = useState(true);
 
   const {
@@ -44,28 +45,37 @@ export default function FlashcardPage() {
     { practiceMode: isPracticeMode }
   );
 
+  // Query to get total due cards count for today
+  const { data: dueTodayStats } = useQuery({
+    queryKey: ['dueTodayCount', user?.id],
+    queryFn: async () => {
+      if (!user) return { count: 0 };
+      
+      const { count, error } = await supabase
+        .from('user_progress')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .lte('next_review_at', new Date().toISOString());
+        
+      if (error) throw error;
+      
+      return { count: count || 0 };
+    },
+    enabled: !!user
+  });
+
   const currentQuestion = questions[currentIndex];
+  const remainingToday = (dueTodayStats?.count || 0) - (currentIndex > 0 ? 1 : 0);
 
-  const handleFlip = () => {
-    setFlipped(!flipped);
-  };
-
-  const handleAnswer = async () => {
+  const handleAnswer = async (score: number) => {
     if (!currentQuestion) return;
 
-    const normalizedAnswer = answer.trim().toLowerCase();
-    const normalizedCorrect = currentQuestion.answers[0].text.trim().toLowerCase();
-    const isAnswerCorrect = normalizedAnswer === normalizedCorrect;
-    
-    setIsCorrect(isAnswerCorrect);
-    setAnswered(true);
-
     if (user) {
-      const score = isAnswerCorrect ? 5 : 0;
       await submitAnswer(currentQuestion.id, score);
     }
 
-    if (isAnswerCorrect) {
+    if (score >= 4) {
+      setCorrectCount(prev => prev + 1);
       toast.success("Richtig! Weiter so!");
     }
   };
@@ -77,10 +87,20 @@ export default function FlashcardPage() {
       navigate('/signale');
       toast.success("Gut gemacht! Du hast alle fälligen Karten für heute geschafft!");
     }
-    setFlipped(false);
-    setAnswered(false);
-    setAnswer("");
-    setIsCorrect(false);
+  };
+
+  const handleDifficultyRating = async (score: number) => {
+    if (!currentQuestion || !user) return;
+    
+    await submitAnswer(currentQuestion.id, score);
+    
+    if (score >= 4) {
+      toast.success("Als leicht markiert");
+    } else {
+      toast.success("Als schwierig markiert");
+    }
+    
+    handleNext();
   };
 
   if (loading) {
@@ -89,7 +109,12 @@ export default function FlashcardPage() {
         <Navbar />
         <main className="flex-1">
           <div className="container px-4 py-8 md:px-6 md:py-12">
-            <p className="text-center">Lade Karteikarten...</p>
+            <div className="flex justify-center items-center h-60">
+              <div className="text-center">
+                <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
+                <p>Lade Karteikarten...</p>
+              </div>
+            </div>
           </div>
         </main>
         <Footer />
@@ -137,8 +162,11 @@ export default function FlashcardPage() {
               <h1 className="text-xl font-semibold">{subcategory}</h1>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">
-                Übungsmodus
+              <span className={`text-sm px-2 py-1 rounded ${isPracticeMode ? 
+                "bg-blue-100 text-blue-800" : 
+                "bg-green-100 text-green-800"
+              }`}>
+                {isPracticeMode ? "Übungsmodus" : "Wiederholungsmodus"}
               </span>
               <div className="text-sm text-muted-foreground">
                 Karte {currentIndex + 1}/{questions.length}
@@ -146,179 +174,33 @@ export default function FlashcardPage() {
             </div>
           </div>
           
-          <div className="mx-auto max-w-2xl">
-            <div 
-              className={`relative h-[400px] w-full cursor-pointer rounded-xl border bg-card p-6 shadow-sm transition-all duration-500 ${
-                flipped ? "rotate-y-180" : ""
-              }`}
-              onClick={handleFlip}
-            >
-              <div className={`absolute inset-0 backface-hidden p-6 ${flipped ? "invisible" : ""}`}>
-                <div className="flex h-full flex-col">
-                  <h2 className="text-lg font-medium">{currentQuestion?.text}</h2>
-                  <div className="flex-1 flex items-center justify-center py-6">
-                    {currentQuestion?.image_url && (
-                      <img 
-                        src={currentQuestion.image_url} 
-                        alt="Signal" 
-                        className="max-h-[200px]"
-                      />
-                    )}
-                  </div>
-                  <div className="pt-4">
-                    {!answered ? (
-                      <div className="space-y-2">
-                        <input 
-                          type="text" 
-                          className="w-full rounded-md border px-3 py-2"
-                          placeholder="Deine Antwort..."
-                          value={answer}
-                          onChange={(e) => setAnswer(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && answer.trim()) {
-                              handleAnswer();
-                            }
-                          }}
-                        />
-                        <div className="flex justify-between">
-                          <Button 
-                            variant="outline" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setFlipped(true);
-                            }}
-                          >
-                            <Lightbulb className="h-4 w-4 mr-2" />
-                            Lösung anzeigen
-                          </Button>
-                          <Button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (answer.trim()) {
-                                handleAnswer();
-                              }
-                            }}
-                            disabled={!answer.trim()}
-                          >
-                            Antwort prüfen
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        <div className={`rounded-md p-4 ${
-                          isCorrect ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
-                        }`}>
-                          <div className="flex items-center gap-2">
-                            {isCorrect ? (
-                              <CheckCircle2 className="h-5 w-5" />
-                            ) : (
-                              <XCircle className="h-5 w-5" />
-                            )}
-                            <div>
-                              <p className="font-medium">
-                                {isCorrect ? "Richtig!" : "Leider falsch."}
-                              </p>
-                              <p className="text-sm">
-                                {isCorrect 
-                                  ? "Du kennst dich aus!"
-                                  : `Die richtige Antwort ist: ${currentQuestion.answers[0].text}`
-                                }
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="outline" 
-                            className="flex-1"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setFlipped(true);
-                            }}
-                          >
-                            Details ansehen
-                          </Button>
-                          <Button 
-                            className="flex-1"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleNext();
-                            }}
-                          >
-                            Weiter
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+          <FlashcardProgress 
+            currentIndex={currentIndex}
+            totalCards={questions.length}
+            correctCount={correctCount}
+            remainingToday={remainingToday}
+          />
+          
+          {currentQuestion && (
+            <>
+              <FlashcardItem 
+                question={currentQuestion} 
+                onAnswer={handleAnswer}
+                onNext={handleNext}
+              />
               
-              <div className={`absolute inset-0 backface-hidden rotate-y-180 p-6 ${!flipped ? "invisible" : ""}`}>
-                <div className="flex h-full flex-col">
-                  <h2 className="text-lg font-medium">Lösung</h2>
-                  <div className="flex flex-col flex-1 gap-4 pt-6">
-                    <div className="flex items-center justify-center">
-                      {currentQuestion?.image_url && (
-                        <img 
-                          src={currentQuestion.image_url} 
-                          alt="Signal" 
-                          className="max-h-[150px]"
-                        />
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-medium text-lg">{currentQuestion?.answers[0].text}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="pt-4">
-                    <div className="flex gap-4">
-                      <Button 
-                        variant="outline" 
-                        className="flex-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setFlipped(false);
-                        }}
-                      >
-                        Zurück zur Frage
-                      </Button>
-                      <Button 
-                        className="flex-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleNext();
-                        }}
-                      >
-                        Weiter
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {!answered && !flipped && (
-              <div className="mt-6 flex justify-between">
-                <Button variant="ghost" className="text-red-500" onClick={(e) => {
-                  e.stopPropagation();
-                  handleNext();
-                }}>
+              <div className="mt-6 flex justify-between max-w-2xl mx-auto">
+                <Button variant="ghost" className="text-red-500" onClick={() => handleDifficultyRating(1)}>
                   <ThumbsDown className="h-5 w-5 mr-2" />
                   Schwierig
                 </Button>
-                <Button variant="ghost" className="text-green-500" onClick={(e) => {
-                  e.stopPropagation();
-                  handleNext();
-                }}>
+                <Button variant="ghost" className="text-green-500" onClick={() => handleDifficultyRating(5)}>
                   <ThumbsUp className="h-5 w-5 mr-2" />
                   Leicht
                 </Button>
               </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
       </main>
       

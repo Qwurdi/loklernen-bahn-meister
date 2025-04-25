@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { signalSubCategories } from "@/api/questions";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Json } from "@/integrations/supabase/types";
+import { SignalAnswerInput } from "@/components/admin/SignalAnswerInput"; // Add this import
 
 const QuestionEditorPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();

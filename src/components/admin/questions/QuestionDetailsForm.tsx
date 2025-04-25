@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,7 +18,7 @@ interface QuestionDetailsFormProps {
   onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   removeImage: () => void;
   handleAnswerChange: (index: number, value: string) => void;
-  toggleAnswerCorrectness: (index: number) => void;
+  toggleAnswerCorrectness: (index: number, questionType: QuestionType) => void;
   removeAnswer: (index: number) => void;
   addAnswer: () => void;
   onDifficultyChange: (value: number) => void;
@@ -151,7 +150,7 @@ export const QuestionDetailsForm = ({
                   size="icon"
                   variant={answer.isCorrect ? "default" : "outline"}
                   className="mt-1 h-6 w-6 shrink-0"
-                  onClick={() => toggleAnswerCorrectness(index)}
+                  onClick={() => toggleAnswerCorrectness(index, questionType)}
                 >
                   {answer.isCorrect && <span>✓</span>}
                 </Button>

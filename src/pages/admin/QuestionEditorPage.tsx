@@ -75,7 +75,7 @@ const QuestionEditorPage: React.FC = () => {
               onImageChange={handleImageChange}
               removeImage={removeImage}
               handleAnswerChange={handleAnswerChange}
-              toggleAnswerCorrectness={toggleAnswerCorrectness}
+              toggleAnswerCorrectness={(index) => toggleAnswerCorrectness(index, formData.question_type!)}
               removeAnswer={removeAnswer}
               addAnswer={addAnswer}
               onDifficultyChange={handleDifficultyChange}

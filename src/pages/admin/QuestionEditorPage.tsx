@@ -43,6 +43,8 @@ const QuestionEditorPage: React.FC = () => {
     created_by: user?.id || ""
   });
   
+  const isSignalQuestion = formData.category === "Signale";
+
   useEffect(() => {
     if (isEditMode && id && questions) {
       const questionToEdit = questions.find(q => q.id === id);
@@ -407,32 +409,24 @@ const QuestionEditorPage: React.FC = () => {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Antworten</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addAnswer}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Antwort hinzufügen
-                </Button>
+                {!isSignalQuestion && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addAnswer}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Antwort hinzufügen
+                  </Button>
+                )}
               </div>
               
-              {formData.question_type === "open" ? (
-                <div className="rounded-md border border-gray-200 p-4">
-                  <p className="mb-2 text-sm text-gray-500">Bei offenen Fragen ist nur eine Antwort möglich:</p>
-                  <div className="flex items-start gap-2">
-                    <div className="mt-2 flex h-5 items-center">
-                      <div className="h-4 w-4 rounded-full bg-green-500" />
-                    </div>
-                    <Textarea
-                      placeholder="Korrekte Antwort eingeben"
-                      value={formData.answers?.[0]?.text || ""}
-                      onChange={(e) => handleAnswerChange(0, e.target.value)}
-                      className="flex-1 min-h-[80px]"
-                    />
-                  </div>
-                </div>
+              {formData.question_type === "open" && isSignalQuestion ? (
+                <SignalAnswerInput
+                  value={formData.answers?.[0]?.text || ""}
+                  onChange={(text) => handleAnswerChange(0, text)}
+                />
               ) : (
                 <div className="space-y-3">
                   {formData.answers?.map((answer, index) => (

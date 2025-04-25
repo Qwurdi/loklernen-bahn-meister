@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Question } from "@/types/questions";
 import { Lightbulb, ThumbsUp, ThumbsDown } from "lucide-react";
@@ -28,17 +27,14 @@ export default function FlashcardItem({
     setAnswered(false);
   }, [question, showAnswer]);
 
-  // Add keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (flipped && !answered) {
-        // Number keys 1-4 for confidence rating
         if (e.key === "1") handleConfidenceRating(1);
         else if (e.key === "2") handleConfidenceRating(2);
         else if (e.key === "3") handleConfidenceRating(4);
         else if (e.key === "4") handleConfidenceRating(5);
       } else if (!flipped) {
-        // Space bar to flip card
         if (e.key === " " || e.key === "Enter") {
           e.preventDefault();
           handleShowAnswer();
@@ -63,7 +59,6 @@ export default function FlashcardItem({
   return (
     <div className="mx-auto max-w-md">
       <Card className={`relative p-4 ${isMobile ? 'min-h-[400px]' : 'min-h-[450px]'} flex flex-col`}>
-        {/* Card front */}
         {!flipped ? (
           <div className="flex flex-col h-full">
             <h2 className="text-lg font-medium mb-3">{question?.text}</h2>
@@ -90,7 +85,6 @@ export default function FlashcardItem({
             </div>
           </div>
         ) : (
-          // Card back with confidence rating buttons
           <div className="flex flex-col h-full">
             <div className="mb-3">
               <h2 className="text-lg font-medium">Antwort</h2>
@@ -107,7 +101,19 @@ export default function FlashcardItem({
                 )}
                 
                 <div className="bg-blue-50 p-4 rounded-md w-full">
-                  <p className="font-medium text-lg text-blue-800">{question?.answers[0].text}</p>
+                  {question.category === "Signale" ? (
+                    <div className="space-y-2">
+                      {question.answers[0].text.split('\n').map((line, i) => (
+                        <p key={i} className="font-bold text-blue-800">
+                          {line}
+                        </p>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="font-medium text-lg text-blue-800">
+                      {question?.answers[0].text}
+                    </p>
+                  )}
                 </div>
               </div>
 

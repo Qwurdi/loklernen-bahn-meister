@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuestions } from "@/hooks/useQuestions";
@@ -8,7 +9,8 @@ import {
   TableBody, 
   TableHead, 
   TableHeader, 
-  TableRow 
+  TableRow,
+  TableCell
 } from "@/components/ui/table";
 import { 
   Plus, 

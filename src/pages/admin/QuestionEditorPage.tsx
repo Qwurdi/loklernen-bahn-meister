@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import { useQuestions } from "@/hooks/useQuestions";
 import { supabase } from "@/integrations/supabase/client";
 import { createQuestion, uploadQuestionImage } from "@/api/questions";
@@ -29,12 +28,10 @@ const QuestionEditorPage: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   
-  // Get preset values from location state
   const presetCategory = location.state?.presetCategory;
   const presetText = location.state?.presetText;
   const presetType = location.state?.presetType;
   
-  // Form state with preset values
   const [formData, setFormData] = useState<Partial<CreateQuestionDTO>>({
     category: presetCategory || "Signale" as QuestionCategory,
     sub_category: signalSubCategories[0],
@@ -46,7 +43,6 @@ const QuestionEditorPage: React.FC = () => {
     created_by: user?.id || ""
   });
   
-  // Load existing question data for edit mode
   useEffect(() => {
     if (isEditMode && id && questions) {
       const questionToEdit = questions.find(q => q.id === id);
@@ -84,7 +80,6 @@ const QuestionEditorPage: React.FC = () => {
     setFormData(prev => ({ 
       ...prev, 
       category,
-      // Reset sub_category based on new category
       sub_category: category === "Signale" ? signalSubCategories[0] : "Grundlagen"
     }));
   };
@@ -100,7 +95,6 @@ const QuestionEditorPage: React.FC = () => {
       const file = e.target.files[0];
       setImageFile(file);
       
-      // Create preview URL
       const reader = new FileReader();
       reader.onload = (event) => {
         setImagePreview(event.target?.result as string);
@@ -128,12 +122,10 @@ const QuestionEditorPage: React.FC = () => {
   const toggleAnswerCorrectness = (index: number) => {
     const newAnswers = [...(formData.answers || [])];
     
-    // For single choice, first set all to false
     if (formData.question_type === "MC_single") {
       newAnswers.forEach(answer => answer.isCorrect = false);
     }
     
-    // Then toggle the selected one
     newAnswers[index] = { 
       ...newAnswers[index], 
       isCorrect: !newAnswers[index].isCorrect 
@@ -153,7 +145,6 @@ const QuestionEditorPage: React.FC = () => {
     try {
       setIsLoading(true);
       
-      // Validate form data
       if (!formData.text) {
         toast.error("Bitte geben Sie einen Fragetext ein.");
         setIsLoading(false);
@@ -167,7 +158,6 @@ const QuestionEditorPage: React.FC = () => {
         return;
       }
       
-      // If there's a new image, upload it first
       let finalImageUrl = formData.image_url;
       if (imageFile) {
         finalImageUrl = await uploadQuestionImage(imageFile, user.id);
@@ -184,9 +174,7 @@ const QuestionEditorPage: React.FC = () => {
         created_by: user.id
       };
       
-      // If editing, update the question
       if (isEditMode && id) {
-        // Convert Answer[] to Json for Supabase
         const supabaseAnswers: Json = questionData.answers.map(answer => ({
           text: answer.text,
           isCorrect: answer.isCorrect
@@ -209,12 +197,10 @@ const QuestionEditorPage: React.FC = () => {
         if (error) throw error;
         toast.success("Frage erfolgreich aktualisiert!");
       } else {
-        // If creating, create a new question
         await createQuestion(questionData);
         toast.success("Frage erfolgreich erstellt!");
       }
       
-      // Navigate back to questions page
       navigate("/admin/questions");
     } catch (error) {
       console.error("Error saving question:", error);

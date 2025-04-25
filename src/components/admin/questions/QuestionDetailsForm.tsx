@@ -3,9 +3,10 @@ import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Image, Trash2, Plus, X } from "lucide-react";
+import { Image, Trash2, Plus, X, Star } from "lucide-react";
 import { SignalAnswerInput } from "@/components/admin/SignalAnswerInput";
 import { Answer, QuestionType } from '@/types/questions';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface QuestionDetailsFormProps {
   text: string;
@@ -13,6 +14,7 @@ interface QuestionDetailsFormProps {
   questionType: QuestionType;
   answers: Answer[];
   isSignalQuestion: boolean;
+  difficulty: number;
   onTextChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   removeImage: () => void;
@@ -20,6 +22,7 @@ interface QuestionDetailsFormProps {
   toggleAnswerCorrectness: (index: number) => void;
   removeAnswer: (index: number) => void;
   addAnswer: () => void;
+  onDifficultyChange: (value: number) => void;
 }
 
 export const QuestionDetailsForm = ({
@@ -28,6 +31,7 @@ export const QuestionDetailsForm = ({
   questionType,
   answers,
   isSignalQuestion,
+  difficulty,
   onTextChange,
   onImageChange,
   removeImage,
@@ -35,6 +39,7 @@ export const QuestionDetailsForm = ({
   toggleAnswerCorrectness,
   removeAnswer,
   addAnswer,
+  onDifficultyChange,
 }: QuestionDetailsFormProps) => {
   return (
     <div className="space-y-6">
@@ -91,6 +96,29 @@ export const QuestionDetailsForm = ({
             </div>
           )}
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Schwierigkeitsgrad</Label>
+        <RadioGroup
+          value={difficulty.toString()}
+          onValueChange={(value) => onDifficultyChange(parseInt(value))}
+          className="flex space-x-4"
+        >
+          {[1, 2, 3, 4, 5].map((level) => (
+            <div key={level} className="flex items-center space-x-2">
+              <RadioGroupItem value={level.toString()} id={`difficulty-${level}`} />
+              <Label htmlFor={`difficulty-${level}`} className="flex items-center space-x-1">
+                {Array.from({ length: level }).map((_, i) => (
+                  <Star
+                    key={i}
+                    className="h-4 w-4 fill-amber-400 text-amber-400"
+                  />
+                ))}
+              </Label>
+            </div>
+          ))}
+        </RadioGroup>
       </div>
 
       <div className="space-y-2">

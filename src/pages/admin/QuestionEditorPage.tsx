@@ -70,6 +70,7 @@ const QuestionEditorPage: React.FC = () => {
               questionType={formData.question_type}
               answers={formData.answers || []}
               isSignalQuestion={isSignalQuestion}
+              difficulty={formData.difficulty || 1}
               onTextChange={handleInputChange}
               onImageChange={handleImageChange}
               removeImage={removeImage}
@@ -77,6 +78,7 @@ const QuestionEditorPage: React.FC = () => {
               toggleAnswerCorrectness={toggleAnswerCorrectness}
               removeAnswer={removeAnswer}
               addAnswer={addAnswer}
+              onDifficultyChange={handleDifficultyChange}
             />
           </div>
           

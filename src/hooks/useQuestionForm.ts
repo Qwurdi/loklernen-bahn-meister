@@ -1,12 +1,16 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { CreateQuestionDTO, Answer, QuestionCategory, QuestionType, Question } from "@/types/questions";
+import { CreateQuestionDTO, Question } from "@/types/questions";
 import { createQuestion, uploadQuestionImage } from "@/api/questions";
 import { Json } from "@/integrations/supabase/types";
 import { useQuestions } from "./useQuestions";
+import { useQuestionImage } from "./questions/useQuestionImage";
+import { useQuestionAnswers } from "./questions/useQuestionAnswers";
+import { useQuestionFormState } from "./questions/useQuestionFormState";
 
 interface UseQuestionFormProps {
   id?: string;
@@ -18,21 +22,37 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
   const { user } = useAuth();
   const isEditMode = Boolean(id);
   const [isLoading, setIsLoading] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const { data: questions } = useQuestions();
+
+  if (!user) {
+    throw new Error("User must be authenticated to use this hook");
+  }
   
-  const [formData, setFormData] = useState<Partial<CreateQuestionDTO>>({
-    category: "Signale" as QuestionCategory,
-    sub_category: "Haupt- und Vorsignale",
-    question_type: "open" as QuestionType,
-    difficulty: 1,
-    text: "",
-    image_url: null,
-    answers: [{ text: "", isCorrect: true }],
-    created_by: user?.id || "",
-    ...initialData
-  });
+  const {
+    imageFile,
+    imagePreview,
+    handleImageChange,
+    removeImage,
+    setImagePreview
+  } = useQuestionImage(initialData?.image_url);
+
+  const {
+    answers,
+    setAnswers,
+    handleAnswerChange,
+    toggleAnswerCorrectness,
+    addAnswer,
+    removeAnswer
+  } = useQuestionAnswers(initialData?.answers);
+
+  const {
+    formData,
+    setFormData,
+    handleInputChange,
+    handleCategoryChange,
+    handleSubCategoryChange,
+    handleDifficultyChange
+  } = useQuestionFormState({ initialData, userId: user.id });
 
   useEffect(() => {
     if (isEditMode && id && questions) {
@@ -46,10 +66,10 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
           difficulty: questionToEdit.difficulty,
           text: questionToEdit.text,
           image_url: questionToEdit.image_url,
-          answers: questionToEdit.answers || [{ text: "", isCorrect: true }],
+          answers: questionToEdit.answers,
           created_by: questionToEdit.created_by
         });
-        
+        setAnswers(questionToEdit.answers);
         if (questionToEdit.image_url) {
           setImagePreview(questionToEdit.image_url);
         }
@@ -57,105 +77,19 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
     }
   }, [isEditMode, id, questions]);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const handleCategoryChange = (category: QuestionCategory) => {
-    const defaultSubCategory = category === "Signale" 
-      ? "Haupt- und Vorsignale"
-      : "Grundlagen Bahnbetrieb";
-      
-    setFormData(prev => ({ 
-      ...prev, 
-      category,
-      sub_category: defaultSubCategory,
-      question_type: category === "Signale" ? "open" : prev.question_type
-    }));
-  };
-  
-  const handleSubCategoryChange = (subCategory: string) => {
-    setFormData(prev => ({ ...prev, sub_category: subCategory }));
-  };
-  
-  const handleDifficultyChange = (newDifficulty: number) => {
-    setFormData(prev => ({ ...prev, difficulty: newDifficulty }));
-  };
-  
-  const handleAnswerChange = (index: number, value: string) => {
-    const newAnswers = [...(formData.answers || [])];
-    newAnswers[index] = { ...newAnswers[index], text: value };
-    setFormData(prev => ({ ...prev, answers: newAnswers }));
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setImageFile(file);
-      
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setImagePreview(event.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-  
-  const removeImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    setFormData(prev => ({ ...prev, image_url: null }));
-  };
-  
-  const toggleAnswerCorrectness = (index: number) => {
-    const newAnswers = [...(formData.answers || [])];
-    
-    if (formData.question_type === "MC_single") {
-      newAnswers.forEach(answer => answer.isCorrect = false);
-    }
-    
-    newAnswers[index] = { 
-      ...newAnswers[index], 
-      isCorrect: !newAnswers[index].isCorrect 
-    };
-    
-    setFormData(prev => ({ ...prev, answers: newAnswers }));
-  };
-  
-  const addAnswer = () => {
-    const newAnswers = [...(formData.answers || []), { text: "", isCorrect: false }];
-    setFormData(prev => ({ ...prev, answers: newAnswers }));
-  };
-  
-  const removeAnswer = (index: number) => {
-    const newAnswers = (formData.answers || []).filter((_, i) => i !== index);
-    setFormData(prev => ({ ...prev, answers: newAnswers }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!user) {
-      toast.error("Sie müssen angemeldet sein, um Fragen zu erstellen.");
-      return;
-    }
     
     try {
       setIsLoading(true);
       
       if (!formData.text) {
         toast.error("Bitte geben Sie einen Fragetext ein.");
-        setIsLoading(false);
         return;
       }
       
-      if (!formData.answers || formData.answers.length === 0 || 
-          !formData.answers.some(a => a.text)) {
+      if (!answers || answers.length === 0 || !answers.some(a => a.text)) {
         toast.error("Bitte geben Sie mindestens eine Antwort ein.");
-        setIsLoading(false);
         return;
       }
       
@@ -165,18 +99,18 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
       }
       
       const questionData: CreateQuestionDTO = {
-        category: formData.category as QuestionCategory,
-        sub_category: formData.sub_category || "",
-        question_type: formData.question_type as QuestionType,
-        difficulty: formData.difficulty || 1,
-        text: formData.text || "",
+        category: formData.category!,
+        sub_category: formData.sub_category!,
+        question_type: formData.question_type!,
+        difficulty: formData.difficulty!,
+        text: formData.text!,
         image_url: finalImageUrl,
-        answers: formData.answers as Answer[],
+        answers: answers,
         created_by: user.id
       };
       
       if (isEditMode && id) {
-        const supabaseAnswers: Json = questionData.answers.map(answer => ({
+        const supabaseAnswers: Json = answers.map(answer => ({
           text: answer.text,
           isCorrect: answer.isCorrect
         }));
@@ -216,6 +150,7 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
     isLoading,
     formData,
     imagePreview,
+    answers,
     handleInputChange,
     handleCategoryChange,
     handleSubCategoryChange,

@@ -8,7 +8,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 interface QuestionEditorHeaderProps {
   isEditMode: boolean;
   isLoading: boolean;
-  onSave: () => void;
+  onSave: (e: React.FormEvent) => void; // Updated to accept a FormEvent parameter
 }
 
 export const QuestionEditorHeader = ({ isEditMode, isLoading, onSave }: QuestionEditorHeaderProps) => {
@@ -45,7 +45,7 @@ export const QuestionEditorHeader = ({ isEditMode, isLoading, onSave }: Question
         </div>
         <Button 
           variant="default" 
-          onClick={onSave}
+          onClick={(e) => onSave(e)}  // Update to properly pass the event
           disabled={isLoading}
         >
           <Save className="mr-2 h-4 w-4" />

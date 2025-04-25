@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuestions } from "@/hooks/useQuestions";
@@ -10,6 +9,7 @@ import { toast } from "sonner";
 import { Json } from "@/integrations/supabase/types";
 import { QuestionEditorHeader } from "@/components/admin/questions/QuestionEditorHeader";
 import { QuestionCategorySelector } from "@/components/admin/questions/QuestionCategorySelector";
+import { QuestionSubCategorySelector } from "@/components/admin/questions/QuestionSubCategorySelector";
 import { QuestionDetailsForm } from "@/components/admin/questions/QuestionDetailsForm";
 import { QuestionPreview } from "@/components/admin/questions/QuestionPreview";
 
@@ -67,12 +67,20 @@ const QuestionEditorPage: React.FC = () => {
   };
   
   const handleCategoryChange = (category: QuestionCategory) => {
+    const defaultSubCategory = category === "Signale" 
+      ? signalSubCategories[0]
+      : "Grundlagen Bahnbetrieb";
+      
     setFormData(prev => ({ 
       ...prev, 
       category,
-      sub_category: category === "Signale" ? signalSubCategories[0] : "Grundlagen",
+      sub_category: defaultSubCategory,
       question_type: category === "Signale" ? "open" : prev.question_type
     }));
+  };
+  
+  const handleSubCategoryChange = (subCategory: string) => {
+    setFormData(prev => ({ ...prev, sub_category: subCategory }));
   };
   
   const handleDifficultyChange = (newDifficulty: number) => {
@@ -219,6 +227,12 @@ const QuestionEditorPage: React.FC = () => {
             <QuestionCategorySelector
               category={formData.category as QuestionCategory}
               onCategoryChange={handleCategoryChange}
+            />
+
+            <QuestionSubCategorySelector
+              category={formData.category as QuestionCategory}
+              subCategory={formData.sub_category || ""}
+              onSubCategoryChange={handleSubCategoryChange}
             />
 
             <QuestionDetailsForm

@@ -18,7 +18,7 @@ export const QuestionCategorySelector = ({ category, onCategoryChange }: Questio
           type="button"
           variant={category === "Signale" ? "default" : "outline"}
           onClick={() => onCategoryChange("Signale")}
-          className="flex-1"
+          className="flex-1 font-medium"
         >
           Signale
         </Button>
@@ -26,7 +26,7 @@ export const QuestionCategorySelector = ({ category, onCategoryChange }: Questio
           type="button"
           variant={category === "Betriebsdienst" ? "default" : "outline"}
           onClick={() => onCategoryChange("Betriebsdienst")}
-          className="flex-1"
+          className="flex-1 font-medium"
         >
           Betriebsdienst
         </Button>

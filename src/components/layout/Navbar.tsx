@@ -1,144 +1,174 @@
 
-import { Link } from "react-router-dom";
 import { useState } from "react";
-import { Menu, X, UserCircle, Shield } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
+import { Book, Home, Menu, User, BarChart } from "lucide-react";
 
-export default function Navbar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const isMobile = useIsMobile();
-  const { user, loading, signOut } = useAuth();
+const Navbar = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const location = useLocation();
+
+  const isActive = (path: string) => {
+    return location.pathname === path ||
+      (path !== "/" && location.pathname.startsWith(path));
+  };
+
+  const navItems = [
+    { 
+      name: "Home", 
+      path: "/", 
+      icon: <Home className="h-5 w-5" /> 
+    },
+    { 
+      name: "Karteikarten", 
+      path: "/karteikarten", 
+      icon: <Book className="h-5 w-5" /> 
+    },
+    { 
+      name: "Fortschritt", 
+      path: "/fortschritt", 
+      icon: <BarChart className="h-5 w-5" />,
+      requiresAuth: true
+    }
+  ];
 
   const handleSignOut = async () => {
     await signOut();
-  };
-
-  const AuthButtons = () => {
-    if (loading) {
-      return <div className="text-sm text-muted-foreground">Lädt...</div>;
-    }
-
-    if (user) {
-      return (
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2">
-            <UserCircle className="h-5 w-5" />
-            <span className="text-sm">{user.email}</span>
-          </div>
-          <Link to="/admin">
-            <Button variant="outline" size="sm" className="gap-1">
-              <Shield className="h-4 w-4" />
-              <span>Admin</span>
-            </Button>
-          </Link>
-          <Button variant="outline" size="sm" onClick={handleSignOut}>
-            Abmelden
-          </Button>
-        </div>
-      );
-    }
-
-    return (
-      <div className="flex items-center gap-2">
-        <Link to="/login">
-          <Button variant="outline" size="sm">Anmelden</Button>
-        </Link>
-        <Link to="/register">
-          <Button size="sm">Registrieren</Button>
-        </Link>
-      </div>
-    );
+    setIsOpen(false);
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
-        <div className="mr-4 flex">
-          <Link to="/" className="flex items-center">
-            <span className="text-lg font-bold">
-              <span className="text-black">Lok</span>
-              <span className="text-loklernen-ultramarine">Lernen</span>
-            </span>
-          </Link>
-        </div>
+    <header className="sticky top-0 z-40 w-full border-b bg-background">
+      <div className="container flex h-16 items-center">
+        <Link to="/" className="flex items-center font-bold text-lg">
+          <span className="text-black">Lok</span>
+          <span className="text-loklernen-ultramarine">Lernen</span>
+        </Link>
         
-        {!isMobile && (
-          <nav className="flex flex-1 items-center justify-between">
-            <div className="flex gap-6 md:gap-10">
-              <Link to="/signale" className="text-sm font-medium transition-colors hover:text-loklernen-ultramarine">
-                Signale
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex flex-1 items-center justify-center space-x-1">
+          {navItems.map((item) => (
+            (!item.requiresAuth || user) && (
+              <Link key={item.path} to={item.path}>
+                <Button 
+                  variant={isActive(item.path) ? "default" : "ghost"} 
+                  className={isActive(item.path) ? "bg-loklernen-ultramarine text-white" : ""}
+                >
+                  {item.name}
+                </Button>
               </Link>
-              <Link to="/betriebsdienst" className="text-sm font-medium transition-colors hover:text-loklernen-ultramarine">
-                Betriebsdienst
-              </Link>
-              <Link to="/fortschritt" className="text-sm font-medium transition-colors hover:text-loklernen-ultramarine">
-                Mein Fortschritt
+            )
+          ))}
+        </nav>
+        
+        <div className="hidden md:flex ml-auto space-x-2">
+          {user ? (
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleSignOut}>
+                Abmelden
+              </Button>
+              <Link to="/admin">
+                <Button 
+                  variant={isActive("/admin") ? "default" : "outline"} 
+                  size="sm"
+                  className={isActive("/admin") ? "bg-loklernen-ultramarine" : ""}
+                >
+                  Admin
+                </Button>
               </Link>
             </div>
-            
-            <AuthButtons />
-          </nav>
-        )}
-        
-        {isMobile && (
-          <div className="flex flex-1 items-center justify-end">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="px-2"
-            >
-              {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </Button>
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link to="/login">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                >
+                  Anmelden
+                </Button>
+              </Link>
+              <Link to="/register">
+                <Button 
+                  size="sm"
+                  className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90"
+                >
+                  Registrieren
+                </Button>
+              </Link>
+            </div>
+          )}
+        </div>
 
-      {/* Mobile menu */}
-      {isMobile && isMenuOpen && (
-        <div className="container pb-4">
-          <nav className="flex flex-col space-y-3">
-            <Link 
-              to="/signale" 
-              className="py-2 text-sm font-medium transition-colors hover:text-loklernen-ultramarine"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Signale
-            </Link>
-            <Link 
-              to="/betriebsdienst" 
-              className="py-2 text-sm font-medium transition-colors hover:text-loklernen-ultramarine"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Betriebsdienst
-            </Link>
-            <Link 
-              to="/fortschritt" 
-              className="py-2 text-sm font-medium transition-colors hover:text-loklernen-ultramarine"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Mein Fortschritt
-            </Link>
-            {user && (
-              <Link 
-                to="/admin" 
-                className="py-2 text-sm font-medium transition-colors hover:text-loklernen-ultramarine"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <div className="flex items-center gap-1">
-                  <Shield className="h-4 w-4" />
-                  <span>Admin-Bereich</span>
-                </div>
-              </Link>
-            )}
-            <div className="pt-2">
-              <AuthButtons />
-            </div>
-          </nav>
+        {/* Mobile Navigation */}
+        <div className="md:hidden ml-auto">
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[250px] sm:w-[300px]">
+              <div className="flex flex-col space-y-4 py-4">
+                {navItems.map((item) => (
+                  (!item.requiresAuth || user) && (
+                    <Link 
+                      key={item.path} 
+                      to={item.path}
+                      className={`flex items-center gap-2 px-4 py-3 rounded-md ${
+                        isActive(item.path) 
+                          ? "bg-loklernen-ultramarine text-white" 
+                          : "hover:bg-muted"
+                      }`}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {item.icon}
+                      {item.name}
+                    </Link>
+                  )
+                ))}
+                
+                {user ? (
+                  <>
+                    <Link 
+                      to="/admin" 
+                      className={`flex items-center gap-2 px-4 py-3 rounded-md ${
+                        isActive("/admin") 
+                          ? "bg-loklernen-ultramarine text-white" 
+                          : "hover:bg-muted"
+                      }`}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <User className="h-5 w-5" />
+                      Admin
+                    </Link>
+                    <Button variant="outline" className="mt-4" onClick={handleSignOut}>
+                      Abmelden
+                    </Button>
+                  </>
+                ) : (
+                  <div className="flex flex-col gap-2 mt-4">
+                    <Link to="/login" onClick={() => setIsOpen(false)}>
+                      <Button variant="outline" className="w-full">
+                        Anmelden
+                      </Button>
+                    </Link>
+                    <Link to="/register" onClick={() => setIsOpen(false)}>
+                      <Button className="w-full bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90">
+                        Registrieren
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
-      )}
+      </div>
     </header>
   );
-}
+};
+
+export default Navbar;

@@ -28,6 +28,28 @@ export default function FlashcardItem({
     setAnswered(false);
   }, [question, showAnswer]);
 
+  // Add keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (flipped && !answered) {
+        // Number keys 1-4 for confidence rating
+        if (e.key === "1") handleConfidenceRating(1);
+        else if (e.key === "2") handleConfidenceRating(2);
+        else if (e.key === "3") handleConfidenceRating(4);
+        else if (e.key === "4") handleConfidenceRating(5);
+      } else if (!flipped) {
+        // Space bar to flip card
+        if (e.key === " " || e.key === "Enter") {
+          e.preventDefault();
+          handleShowAnswer();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [flipped, answered, question]);
+
   const handleShowAnswer = () => {
     setFlipped(true);
   };
@@ -62,10 +84,13 @@ export default function FlashcardItem({
                 <Lightbulb className="h-4 w-4 mr-2" />
                 Signal anzeigen
               </Button>
+              <div className="text-xs text-gray-400 text-center mt-2">
+                Drücke die Leertaste, um die Antwort anzuzeigen
+              </div>
             </div>
           </div>
         ) : (
-          // Card back with new confidence rating buttons
+          // Card back with confidence rating buttons
           <div className="flex flex-col h-full">
             <div className="mb-3">
               <h2 className="text-lg font-medium">Antwort</h2>
@@ -95,6 +120,7 @@ export default function FlashcardItem({
                   >
                     <ThumbsDown className="h-5 w-5" />
                     <span>Ratlos</span>
+                    <span className="text-xs opacity-70">(1)</span>
                   </Button>
                   <Button 
                     variant="outline"
@@ -103,6 +129,7 @@ export default function FlashcardItem({
                   >
                     <ThumbsDown className="h-5 w-5" />
                     <span>Unsicher</span>
+                    <span className="text-xs opacity-70">(2)</span>
                   </Button>
                   <Button 
                     variant="outline"
@@ -111,6 +138,7 @@ export default function FlashcardItem({
                   >
                     <ThumbsUp className="h-5 w-5" />
                     <span>Sicher</span>
+                    <span className="text-xs opacity-70">(3)</span>
                   </Button>
                   <Button 
                     variant="outline"
@@ -119,6 +147,7 @@ export default function FlashcardItem({
                   >
                     <ThumbsUp className="h-5 w-5" />
                     <span>Gewusst</span>
+                    <span className="text-xs opacity-70">(4)</span>
                   </Button>
                 </div>
               )}

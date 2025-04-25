@@ -5,36 +5,37 @@ import { useQuestions } from "@/hooks/useQuestions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
-  Table, 
-  TableBody, 
-  TableHead, 
-  TableHeader, 
-  TableRow,
-  TableCell
-} from "@/components/ui/table";
-import { 
   Plus, 
   Search, 
+  Grid3x3,
+  Table as TableIcon,
   SlidersHorizontal, 
   Book, 
   FileQuestion 
 } from "lucide-react";
-import QuestionTableRow from "@/components/admin/QuestionTableRow";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { QuestionCardGrid } from "@/components/admin/questions/QuestionCardGrid";
+import { CategoryOverviewGrid } from "@/components/admin/questions/CategoryOverviewGrid";
+import { QuestionTableView } from "@/components/admin/questions/QuestionTableView";
+import { QuestionCategory } from "@/types/questions";
 
 const QuestionsPage: React.FC = () => {
   const navigate = useNavigate();
   const { data: questions, isLoading, error } = useQuestions();
   const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<"all" | "Signale" | "Betriebsdienst">("all");
+  const [categoryFilter, setCategoryFilter] = useState<"all" | QuestionCategory>("all");
+  const [subCategoryFilter, setSubCategoryFilter] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   
-  // Filter questions based on search query and category filter
+  // Filter questions based on search query and category/subcategory filters
   const filteredQuestions = questions?.filter(question => {
     const matchesSearch = question.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         question.sub_category.toLowerCase().includes(searchQuery.toLowerCase());
+                        question.sub_category.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = categoryFilter === "all" || question.category === categoryFilter;
+    const matchesSubCategory = !subCategoryFilter || question.sub_category === subCategoryFilter;
     
-    return matchesSearch && matchesCategory;
+    return matchesSearch && matchesCategory && matchesSubCategory;
   });
 
   const handleNewSignalQuestion = () => {
@@ -45,6 +46,14 @@ const QuestionsPage: React.FC = () => {
         presetType: "open"
       }
     });
+  };
+
+  const handleEditQuestion = (id: string) => {
+    navigate(`/admin/questions/edit/${id}`);
+  };
+
+  const handleDeleteQuestion = (id: string) => {
+    navigate(`/admin/questions/delete/${id}`);
   };
   
   return (
@@ -91,29 +100,21 @@ const QuestionsPage: React.FC = () => {
         </div>
         
         <div className="flex gap-2">
-          <Button 
-            variant={categoryFilter === "all" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setCategoryFilter("all")}
+          <Button
+            variant={viewMode === "grid" ? "default" : "outline"}
+            size="icon"
+            onClick={() => setViewMode("grid")}
+            title="Grid-Ansicht"
           >
-            <FileQuestion className="mr-2 h-4 w-4" />
-            Alle
+            <Grid3x3 className="h-4 w-4" />
           </Button>
-          <Button 
-            variant={categoryFilter === "Signale" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setCategoryFilter("Signale")}
+          <Button
+            variant={viewMode === "table" ? "default" : "outline"}
+            size="icon"
+            onClick={() => setViewMode("table")}
+            title="Tabellen-Ansicht"
           >
-            <Book className="mr-2 h-4 w-4" />
-            Signale
-          </Button>
-          <Button 
-            variant={categoryFilter === "Betriebsdienst" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setCategoryFilter("Betriebsdienst")}
-          >
-            <SlidersHorizontal className="mr-2 h-4 w-4" />
-            Betriebsdienst
+            <TableIcon className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -127,38 +128,49 @@ const QuestionsPage: React.FC = () => {
           <p className="text-red-600">Fehler beim Laden der Fragen. Bitte versuchen Sie es später noch einmal.</p>
         </div>
       ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[50px]">#</TableHead>
-                <TableHead>Frage</TableHead>
-                <TableHead>Kategorie</TableHead>
-                <TableHead>Unterkategorie</TableHead>
-                <TableHead className="text-center">Typ</TableHead>
-                <TableHead className="text-center">Schwierigkeit</TableHead>
-                <TableHead className="text-right">Aktionen</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredQuestions && filteredQuestions.length > 0 ? (
-                filteredQuestions.map((question, index) => (
-                  <QuestionTableRow 
-                    key={question.id} 
-                    question={question} 
-                    index={index} 
-                  />
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
-                    Keine Fragen gefunden.
-                  </TableCell>
-                </TableRow>
+        <>
+          <CategoryOverviewGrid 
+            questions={questions || []}
+            activeCategory={categoryFilter}
+            activeSubCategory={subCategoryFilter}
+            onCategorySelect={(category) => setCategoryFilter(category)}
+            onSubCategorySelect={(subCategory) => setSubCategoryFilter(subCategory)}
+          />
+          
+          <div className="mt-6">
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="text-xl font-semibold">
+                {subCategoryFilter || (categoryFilter !== "all" ? categoryFilter : "Alle Fragen")}
+                <span className="ml-2 text-sm font-normal text-gray-500">
+                  ({filteredQuestions?.length || 0} {filteredQuestions?.length === 1 ? "Frage" : "Fragen"})
+                </span>
+              </h2>
+              {subCategoryFilter && (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setSubCategoryFilter(null)}
+                >
+                  Zurück zu allen {categoryFilter} Fragen
+                </Button>
               )}
-            </TableBody>
-          </Table>
-        </div>
+            </div>
+            
+            {viewMode === "grid" ? (
+              <QuestionCardGrid 
+                questions={filteredQuestions || []}
+                onEdit={handleEditQuestion}
+                onDelete={handleDeleteQuestion}
+              />
+            ) : (
+              <QuestionTableView 
+                questions={filteredQuestions || []}
+                onEdit={handleEditQuestion}
+                onDelete={handleDeleteQuestion}
+              />
+            )}
+          </div>
+        </>
       )}
     </div>
   );

@@ -1,12 +1,12 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { CreateQuestionDTO, Answer, QuestionCategory, QuestionType } from "@/types/questions";
+import { CreateQuestionDTO, Answer, QuestionCategory, QuestionType, Question } from "@/types/questions";
 import { createQuestion, uploadQuestionImage } from "@/api/questions";
 import { Json } from "@/integrations/supabase/types";
+import { useQuestions } from "./useQuestions";
 
 interface UseQuestionFormProps {
   id?: string;
@@ -20,6 +20,7 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
   const [isLoading, setIsLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const { data: questions } = useQuestions();
   
   const [formData, setFormData] = useState<Partial<CreateQuestionDTO>>({
     category: "Signale" as QuestionCategory,
@@ -32,6 +33,29 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
     created_by: user?.id || "",
     ...initialData
   });
+
+  useEffect(() => {
+    if (isEditMode && id && questions) {
+      const questionToEdit = questions.find(q => q.id === id);
+      if (questionToEdit) {
+        console.log("Loading question data:", questionToEdit);
+        setFormData({
+          category: questionToEdit.category,
+          sub_category: questionToEdit.sub_category,
+          question_type: questionToEdit.question_type,
+          difficulty: questionToEdit.difficulty,
+          text: questionToEdit.text,
+          image_url: questionToEdit.image_url,
+          answers: questionToEdit.answers || [{ text: "", isCorrect: true }],
+          created_by: questionToEdit.created_by
+        });
+        
+        if (questionToEdit.image_url) {
+          setImagePreview(questionToEdit.image_url);
+        }
+      }
+    }
+  }, [isEditMode, id, questions]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>

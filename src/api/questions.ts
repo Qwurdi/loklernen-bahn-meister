@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { CreateQuestionDTO, Question, QuestionCategory, Answer } from "@/types/questions";
 import { Json } from "@/integrations/supabase/types";
@@ -137,4 +136,34 @@ export async function seedInitialQuestions(userId: string) {
       console.error(`Error seeding question for ${question.sub_category}:`, error);
     }
   }
+}
+
+export async function duplicateQuestion(originalQuestion: Question): Promise<Question> {
+  const duplicateData: CreateQuestionDTO = {
+    category: originalQuestion.category,
+    sub_category: originalQuestion.sub_category,
+    question_type: originalQuestion.question_type,
+    difficulty: originalQuestion.difficulty,
+    text: originalQuestion.text,
+    image_url: originalQuestion.image_url,
+    answers: originalQuestion.answers,
+    created_by: originalQuestion.created_by,
+  };
+
+  const supabaseAnswers: Json = duplicateData.answers.map(answer => ({
+    text: answer.text,
+    isCorrect: answer.isCorrect
+  }));
+
+  const { data, error } = await supabase
+    .from('questions')
+    .insert([{
+      ...duplicateData,
+      answers: supabaseAnswers,
+    }])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return transformQuestion(data);
 }

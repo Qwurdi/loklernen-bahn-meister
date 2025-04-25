@@ -1,26 +1,26 @@
-
 import React, { useState } from "react";
 import { Question } from "@/types/questions";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, Eye, EyeOff } from "lucide-react";
+import { Edit, Trash2, Eye, EyeOff, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface QuestionCardProps {
   question: Question;
   onEdit: () => void;
   onDelete: () => void;
+  onDuplicate: () => void;
 }
 
 export const QuestionCard: React.FC<QuestionCardProps> = ({
   question,
   onEdit,
-  onDelete
+  onDelete,
+  onDuplicate
 }) => {
   const [showAnswer, setShowAnswer] = useState(false);
   const firstAnswer = question.answers.find(a => a.isCorrect)?.text || question.answers[0]?.text || "";
 
-  // Helper functions to get style variations based on question category and type
   const getCategoryColor = (category: string) => {
     return category === "Signale" ? "bg-blue-100 text-blue-800 hover:bg-blue-200" : "bg-green-100 text-green-800 hover:bg-green-200";
   };
@@ -93,11 +93,27 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         </div>
       </CardContent>
       <CardFooter className="flex justify-between bg-gray-50 px-4 py-2">
-        <Button variant="ghost" size="sm" onClick={onEdit}>
-          <Edit className="mr-1 h-4 w-4" />
-          Bearbeiten
-        </Button>
-        <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600" onClick={onDelete}>
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={onEdit}>
+            <Edit className="mr-1 h-4 w-4" />
+            Bearbeiten
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={onDuplicate}
+            title="Frage duplizieren"
+          >
+            <Copy className="mr-1 h-4 w-4" />
+            Duplizieren
+          </Button>
+        </div>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="text-red-500 hover:text-red-600" 
+          onClick={onDelete}
+        >
           <Trash2 className="mr-1 h-4 w-4" />
           Löschen
         </Button>

@@ -1,9 +1,10 @@
-
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuestions } from "@/hooks/useQuestions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { duplicateQuestion } from "@/api/questions";
 import { 
   Plus, 
   Search, 
@@ -28,7 +29,20 @@ const QuestionsPage: React.FC = () => {
   const [subCategoryFilter, setSubCategoryFilter] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   
-  // Filter questions based on search query and category/subcategory filters
+  const handleDuplicateQuestion = async (questionId: string) => {
+    const questionToDuplicate = questions?.find(q => q.id === questionId);
+    if (!questionToDuplicate) return;
+
+    try {
+      const duplicatedQuestion = await duplicateQuestion(questionToDuplicate);
+      toast.success("Frage wurde dupliziert");
+      navigate(`/admin/questions/edit/${duplicatedQuestion.id}`);
+    } catch (error) {
+      console.error("Error duplicating question:", error);
+      toast.error("Fehler beim Duplizieren der Frage");
+    }
+  };
+
   const filteredQuestions = questions?.filter(question => {
     const matchesSearch = question.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
                         question.sub_category.toLowerCase().includes(searchQuery.toLowerCase());
@@ -161,12 +175,14 @@ const QuestionsPage: React.FC = () => {
                 questions={filteredQuestions || []}
                 onEdit={handleEditQuestion}
                 onDelete={handleDeleteQuestion}
+                onDuplicate={(id) => handleDuplicateQuestion(id)}
               />
             ) : (
               <QuestionTableView 
                 questions={filteredQuestions || []}
                 onEdit={handleEditQuestion}
                 onDelete={handleDeleteQuestion}
+                onDuplicate={(id) => handleDuplicateQuestion(id)}
               />
             )}
           </div>

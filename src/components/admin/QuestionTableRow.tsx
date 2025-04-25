@@ -1,8 +1,7 @@
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Copy } from "lucide-react";
 import { 
   Tooltip,
   TooltipContent,
@@ -15,12 +14,16 @@ import { TableCell, TableRow } from "@/components/ui/table";
 interface QuestionTableRowProps {
   question: Question;
   index: number;
+  onDuplicate: () => void;
 }
 
-const QuestionTableRow: React.FC<QuestionTableRowProps> = ({ question, index }) => {
+const QuestionTableRow: React.FC<QuestionTableRowProps> = ({ 
+  question, 
+  index,
+  onDuplicate
+}) => {
   const [showAnswerTooltip, setShowAnswerTooltip] = useState(false);
   
-  // Get first answer text for preview
   const firstAnswer = question.answers?.[0]?.text || "";
   
   return (
@@ -91,6 +94,14 @@ const QuestionTableRow: React.FC<QuestionTableRowProps> = ({ question, index }) 
               <Edit className="h-4 w-4" />
             </Button>
           </Link>
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={onDuplicate}
+            title="Frage duplizieren"
+          >
+            <Copy className="h-4 w-4" />
+          </Button>
           <Link to={`/admin/questions/delete/${question.id}`}>
             <Button variant="outline" size="icon">
               <Trash2 className="h-4 w-4 text-red-500" />

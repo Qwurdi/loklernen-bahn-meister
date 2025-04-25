@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Question } from "@/types/questions";
 import { 
@@ -10,7 +9,7 @@ import {
   TableCell
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, Eye } from "lucide-react";
+import { Edit, Trash2, Eye, Copy } from "lucide-react";
 import { 
   Tooltip,
   TooltipContent,
@@ -21,13 +20,15 @@ import {
 interface QuestionTableViewProps {
   questions: Question[];
   onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
+  onDelete: (string) => void;
+  onDuplicate: (id: string) => void;
 }
 
 export const QuestionTableView: React.FC<QuestionTableViewProps> = ({
   questions,
   onEdit,
-  onDelete
+  onDelete,
+  onDuplicate
 }) => {
   if (questions.length === 0) {
     return (
@@ -123,6 +124,14 @@ export const QuestionTableView: React.FC<QuestionTableViewProps> = ({
                       onClick={() => onEdit(question.id)}
                     >
                       <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      onClick={() => onDuplicate(question.id)}
+                      title="Frage duplizieren"
+                    >
+                      <Copy className="h-4 w-4" />
                     </Button>
                     <Button 
                       variant="outline" 

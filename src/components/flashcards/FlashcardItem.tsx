@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Question } from "@/types/questions";
-import { CheckCircle2, XCircle, Lightbulb, ArrowRight } from "lucide-react";
+import { Lightbulb, ThumbsUp, ThumbsDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -21,43 +21,21 @@ export default function FlashcardItem({
 }: FlashcardItemProps) {
   const [flipped, setFlipped] = useState(showAnswer);
   const [answered, setAnswered] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
-  const [confidenceScore, setConfidenceScore] = useState<number | null>(null);
   const isMobile = useIsMobile();
-  
+
   useEffect(() => {
-    // Reset state when question changes
     setFlipped(showAnswer);
     setAnswered(false);
-    setIsCorrect(false);
-    setConfidenceScore(null);
   }, [question, showAnswer]);
 
   const handleShowAnswer = () => {
     setFlipped(true);
   };
-
-  const handleSelfAssessment = (knewAnswer: boolean) => {
-    setAnswered(true);
-    setIsCorrect(knewAnswer);
-    
-    // In self-assessment mode, user indicates if they knew the answer
-    const score = knewAnswer ? 5 : 0;
-    onAnswer(score);
-  };
   
   const handleConfidenceRating = (score: number) => {
-    setConfidenceScore(score);
+    setAnswered(true);
     onAnswer(score);
     onNext();
-  };
-
-  const confidenceLabels: Record<number, string> = {
-    1: "Nicht gewusst",
-    2: "Unsicher",
-    3: "Mit Mühe",
-    4: "Gut",
-    5: "Perfekt"
   };
 
   return (
@@ -87,19 +65,14 @@ export default function FlashcardItem({
             </div>
           </div>
         ) : (
-          // Card back
+          // Card back with new confidence rating buttons
           <div className="flex flex-col h-full">
             <div className="mb-3">
               <h2 className="text-lg font-medium">Antwort</h2>
-              {!answered && (
-                <p className="text-sm text-muted-foreground">
-                  Kanntest du die Antwort?
-                </p>
-              )}
             </div>
             
             <div className="flex-1 flex flex-col items-center justify-between gap-4">
-              <div className="flex flex-col items-center">
+              <div className="flex flex-col items-center w-full">
                 {question?.image_url && (
                   <img 
                     src={question.image_url} 
@@ -112,56 +85,40 @@ export default function FlashcardItem({
                   <p className="font-medium text-lg text-blue-800">{question?.answers[0].text}</p>
                 </div>
               </div>
-              
-              {!answered ? (
-                <div className="w-full grid grid-cols-2 gap-4 mt-2">
+
+              {!answered && (
+                <div className="w-full grid grid-cols-2 gap-3">
                   <Button 
-                    variant="outline" 
-                    className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                    onClick={() => handleSelfAssessment(false)}
+                    variant="outline"
+                    className="h-20 border-2 border-red-300 bg-red-50 text-red-700 hover:bg-red-100 hover:border-red-400 flex flex-col gap-1"
+                    onClick={() => handleConfidenceRating(1)}
                   >
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Nicht gewusst
+                    <ThumbsDown className="h-5 w-5" />
+                    <span>Ratlos</span>
                   </Button>
                   <Button 
-                    variant="outline" 
-                    className="border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700"
-                    onClick={() => handleSelfAssessment(true)}
+                    variant="outline"
+                    className="h-20 border-2 border-red-200 bg-red-50/50 text-red-600 hover:bg-red-100 hover:border-red-300 flex flex-col gap-1"
+                    onClick={() => handleConfidenceRating(2)}
                   >
-                    <CheckCircle2 className="h-4 w-4 mr-2" />
-                    Gewusst
+                    <ThumbsDown className="h-5 w-5" />
+                    <span>Unsicher</span>
                   </Button>
-                </div>
-              ) : (
-                <div className="w-full">
-                  <p className="text-sm font-medium mb-2">Wie gut kanntest du die Antwort?</p>
-                  <div className="grid grid-cols-5 gap-1">
-                    {[1, 2, 3, 4, 5].map((score) => (
-                      <Button
-                        key={score}
-                        variant="outline"
-                        size={isMobile ? "sm" : "default"}
-                        onClick={() => handleConfidenceRating(score)}
-                        className={`transition-colors ${
-                          score < 3 ? "hover:bg-red-50 hover:text-red-700" : 
-                          score === 3 ? "hover:bg-yellow-50 hover:text-yellow-700" :
-                          "hover:bg-green-50 hover:text-green-700"
-                        }`}
-                      >
-                        {score}
-                      </Button>
-                    ))}
-                  </div>
-                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                    <span>Nicht gewusst</span>
-                    <span>Perfekt</span>
-                  </div>
                   <Button 
-                    className="w-full mt-4"
-                    onClick={() => handleConfidenceRating(isCorrect ? 4 : 1)}
+                    variant="outline"
+                    className="h-20 border-2 border-green-200 bg-green-50/50 text-green-600 hover:bg-green-100 hover:border-green-300 flex flex-col gap-1"
+                    onClick={() => handleConfidenceRating(4)}
                   >
-                    <ArrowRight className="h-4 w-4 mr-2" />
-                    Weiter
+                    <ThumbsUp className="h-5 w-5" />
+                    <span>Sicher</span>
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className="h-20 border-2 border-green-300 bg-green-50 text-green-700 hover:bg-green-100 hover:border-green-400 flex flex-col gap-1"
+                    onClick={() => handleConfidenceRating(5)}
+                  >
+                    <ThumbsUp className="h-5 w-5" />
+                    <span>Gewusst</span>
                   </Button>
                 </div>
               )}

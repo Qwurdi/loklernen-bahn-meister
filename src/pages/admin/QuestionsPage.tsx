@@ -1,13 +1,11 @@
-
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuestions } from "@/hooks/useQuestions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Table, 
   TableBody, 
-  TableCell, 
   TableHead, 
   TableHeader, 
   TableRow 
@@ -15,17 +13,15 @@ import {
 import { 
   Plus, 
   Search, 
-  Edit, 
-  Trash2, 
   SlidersHorizontal, 
   Book, 
-  FileQuestion, 
-  ArrowUpDown 
+  FileQuestion 
 } from "lucide-react";
-import { Question } from "@/types/questions";
+import QuestionTableRow from "@/components/admin/QuestionTableRow";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
 const QuestionsPage: React.FC = () => {
+  const navigate = useNavigate();
   const { data: questions, isLoading, error } = useQuestions();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<"all" | "Signale" | "Betriebsdienst">("all");
@@ -38,6 +34,16 @@ const QuestionsPage: React.FC = () => {
     
     return matchesSearch && matchesCategory;
   });
+
+  const handleNewSignalQuestion = () => {
+    navigate("/admin/questions/create", {
+      state: {
+        presetCategory: "Signale",
+        presetText: "Nenne Begriff und Bedeutung",
+        presetType: "open"
+      }
+    });
+  };
   
   return (
     <div className="space-y-6">
@@ -57,12 +63,18 @@ const QuestionsPage: React.FC = () => {
       
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Fragenverwaltung</h1>
-        <Link to="/admin/questions/create">
-          <Button variant="default">
-            <Plus className="mr-2 h-4 w-4" />
-            Neue Frage
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleNewSignalQuestion}>
+            <Book className="mr-2 h-4 w-4" />
+            Neue Signalfrage
           </Button>
-        </Link>
+          <Link to="/admin/questions/create">
+            <Button variant="default">
+              <Plus className="mr-2 h-4 w-4" />
+              Neue Frage
+            </Button>
+          </Link>
+        </div>
       </div>
       
       <div className="flex flex-col gap-4 sm:flex-row">
@@ -129,52 +141,11 @@ const QuestionsPage: React.FC = () => {
             <TableBody>
               {filteredQuestions && filteredQuestions.length > 0 ? (
                 filteredQuestions.map((question, index) => (
-                  <TableRow key={question.id}>
-                    <TableCell className="font-medium">{index + 1}</TableCell>
-                    <TableCell className="max-w-[300px] truncate">
-                      {question.text}
-                    </TableCell>
-                    <TableCell>
-                      <span className={`rounded-full px-2 py-1 text-xs font-medium ${
-                        question.category === "Signale" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"
-                      }`}>
-                        {question.category}
-                      </span>
-                    </TableCell>
-                    <TableCell>{question.sub_category}</TableCell>
-                    <TableCell className="text-center">
-                      <span className="rounded-full px-2 py-1 text-xs font-medium bg-gray-100">
-                        {question.question_type === "open" ? "Offen" : 
-                          question.question_type === "MC_single" ? "Single Choice" : "Multiple Choice"}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex justify-center">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <span 
-                            key={i}
-                            className={`h-2 w-2 rounded-full mx-0.5 ${
-                              i < question.difficulty ? "bg-amber-400" : "bg-gray-200"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Link to={`/admin/questions/edit/${question.id}`}>
-                          <Button variant="outline" size="icon">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </Link>
-                        <Link to={`/admin/questions/delete/${question.id}`}>
-                          <Button variant="outline" size="icon">
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
-                        </Link>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                  <QuestionTableRow 
+                    key={question.id} 
+                    question={question} 
+                    index={index} 
+                  />
                 ))
               ) : (
                 <TableRow>

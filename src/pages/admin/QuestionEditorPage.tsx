@@ -19,6 +19,7 @@ import { Json } from "@/integrations/supabase/types";
 
 const QuestionEditorPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const isEditMode = Boolean(id);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -28,13 +29,18 @@ const QuestionEditorPage: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   
-  // Form state
+  // Get preset values from location state
+  const presetCategory = location.state?.presetCategory;
+  const presetText = location.state?.presetText;
+  const presetType = location.state?.presetType;
+  
+  // Form state with preset values
   const [formData, setFormData] = useState<Partial<CreateQuestionDTO>>({
-    category: "Signale" as QuestionCategory,
+    category: presetCategory || "Signale" as QuestionCategory,
     sub_category: signalSubCategories[0],
-    question_type: "open" as QuestionType,
+    question_type: presetType || "open" as QuestionType,
     difficulty: 1,
-    text: "",
+    text: presetText || "",
     image_url: null,
     answers: [{ text: "", isCorrect: true }],
     created_by: user?.id || ""

@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+
+import React from "react";
 import { Question } from "@/types/questions";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, Eye, EyeOff, Copy } from "lucide-react";
+import { Edit, Trash2, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface QuestionCardProps {
@@ -18,7 +19,6 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   onDelete,
   onDuplicate
 }) => {
-  const [showAnswer, setShowAnswer] = useState(false);
   const firstAnswer = question.answers.find(a => a.isCorrect)?.text || question.answers[0]?.text || "";
 
   const getCategoryColor = (category: string) => {
@@ -73,22 +73,22 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         <h3 className="mb-3 text-lg font-medium line-clamp-2">{question.text}</h3>
         <div className="mb-2 text-sm text-gray-500">{question.sub_category}</div>
         
-        <div className="mt-3 rounded-md bg-gray-50 p-3">
-          <div className="flex items-center justify-between mb-1">
+        <div className="mt-3 rounded-md bg-blue-50 p-3">
+          <div className="mb-1">
             <span className="text-sm font-medium">Antwort</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0"
-              onClick={() => setShowAnswer(!showAnswer)}
-            >
-              {showAnswer ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </Button>
           </div>
-          {showAnswer ? (
-            <p className="text-sm">{firstAnswer}</p>
+          {question.category === "Signale" ? (
+            <div className="space-y-2">
+              {firstAnswer.split('\n').map((line, i) => (
+                <p key={i} className="font-bold text-blue-800">
+                  {line}
+                </p>
+              ))}
+            </div>
           ) : (
-            <p className="text-sm text-gray-400">Klicken Sie, um die Antwort anzuzeigen</p>
+            <p className="font-medium text-blue-800">
+              {firstAnswer}
+            </p>
           )}
         </div>
       </CardContent>

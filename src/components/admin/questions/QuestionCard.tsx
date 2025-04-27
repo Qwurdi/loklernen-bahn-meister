@@ -11,13 +11,15 @@ interface QuestionCardProps {
   onEdit: () => void;
   onDelete: () => void;
   onDuplicate: () => void;
+  disabled?: boolean;
 }
 
 export const QuestionCard: React.FC<QuestionCardProps> = ({
   question,
   onEdit,
   onDelete,
-  onDuplicate
+  onDuplicate,
+  disabled = false
 }) => {
   const firstAnswer = question.answers.find(a => a.isCorrect)?.text || question.answers[0]?.text || "";
 
@@ -109,7 +111,12 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       </CardContent>
       <CardFooter className="flex justify-between bg-gray-50 px-4 py-2">
         <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={onEdit}>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={onEdit}
+            disabled={disabled}
+          >
             <Edit className="mr-1 h-4 w-4" />
             Bearbeiten
           </Button>
@@ -118,6 +125,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             size="sm" 
             onClick={onDuplicate}
             title="Frage duplizieren"
+            disabled={disabled}
           >
             <Copy className="mr-1 h-4 w-4" />
             Duplizieren
@@ -128,6 +136,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           size="sm" 
           className="text-red-500 hover:text-red-600" 
           onClick={onDelete}
+          disabled={disabled}
         >
           <Trash2 className="mr-1 h-4 w-4" />
           Löschen

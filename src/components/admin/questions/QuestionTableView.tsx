@@ -125,6 +125,7 @@ export const QuestionTableView: React.FC<QuestionTableViewProps> = ({
                       variant="outline" 
                       size="icon"
                       onClick={() => onEdit(question.id)}
+                      disabled={isLoading}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -141,6 +142,7 @@ export const QuestionTableView: React.FC<QuestionTableViewProps> = ({
                       variant="outline" 
                       size="icon"
                       onClick={() => onDelete(question.id)}
+                      disabled={isLoading}
                     >
                       <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Answer } from '@/types/questions';
+import { Answer, RegulationCategory } from '@/types/questions';
 
 interface QuestionPreviewProps {
   text: string;
@@ -10,6 +10,7 @@ interface QuestionPreviewProps {
   category: string;
   sub_category: string;
   difficulty: number;
+  regulation_category?: RegulationCategory;
 }
 
 export const QuestionPreview = ({ 
@@ -18,7 +19,8 @@ export const QuestionPreview = ({
   answers, 
   category, 
   sub_category, 
-  difficulty 
+  difficulty,
+  regulation_category
 }: QuestionPreviewProps) => {
   return (
     <Card>
@@ -58,6 +60,11 @@ export const QuestionPreview = ({
             <span className="ml-2 rounded-full bg-gray-100 px-2 py-1">
               Schwierigkeit: {difficulty}/5
             </span>
+            {regulation_category && category === "Signale" && (
+              <span className="ml-2 rounded-full bg-gray-100 px-2 py-1">
+                Regelwerk: {regulation_category}
+              </span>
+            )}
           </div>
         </div>
       </CardContent>

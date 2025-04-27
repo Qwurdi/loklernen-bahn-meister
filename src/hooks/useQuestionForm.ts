@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { CreateQuestionDTO, Question } from "@/types/questions";
+import { CreateQuestionDTO, Question, Answer } from "@/types/questions";
 import { createQuestion, uploadQuestionImage } from "@/api/questions";
 import { Json } from "@/integrations/supabase/types";
 import { useQuestions } from "./useQuestions";
@@ -71,7 +72,7 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
           answers: questionToEdit.answers,
           created_by: questionToEdit.created_by
         });
-        setAnswers(questionToEdit.answers);
+        
         if (questionToEdit.image_url) {
           setImagePreview(questionToEdit.image_url);
         }

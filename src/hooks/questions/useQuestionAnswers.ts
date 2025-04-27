@@ -1,15 +1,22 @@
 
-// No changes needed to this file, but for reference:
 import { useState } from "react";
 import { Answer, QuestionType } from "@/types/questions";
 
-export const useQuestionAnswers = (initialAnswers: Answer[] = [{ text: "", isCorrect: true }]) => {
+export const useQuestionAnswers = (
+  initialAnswers: Answer[] = [{ text: "", isCorrect: true }],
+  onAnswersChange?: (answers: Answer[]) => void
+) => {
   const [answers, setAnswers] = useState<Answer[]>(initialAnswers);
+
+  const updateAnswersWithCallback = (newAnswers: Answer[]) => {
+    setAnswers(newAnswers);
+    onAnswersChange?.(newAnswers);
+  };
 
   const handleAnswerChange = (index: number, value: string) => {
     const newAnswers = [...answers];
     newAnswers[index] = { ...newAnswers[index], text: value };
-    setAnswers(newAnswers);
+    updateAnswersWithCallback(newAnswers);
   };
 
   const toggleAnswerCorrectness = (index: number, questionType: QuestionType) => {
@@ -24,20 +31,20 @@ export const useQuestionAnswers = (initialAnswers: Answer[] = [{ text: "", isCor
       isCorrect: !newAnswers[index].isCorrect 
     };
     
-    setAnswers(newAnswers);
+    updateAnswersWithCallback(newAnswers);
   };
   
   const addAnswer = () => {
-    setAnswers([...answers, { text: "", isCorrect: false }]);
+    updateAnswersWithCallback([...answers, { text: "", isCorrect: false }]);
   };
   
   const removeAnswer = (index: number) => {
-    setAnswers(answers.filter((_, i) => i !== index));
+    updateAnswersWithCallback(answers.filter((_, i) => i !== index));
   };
 
   return {
     answers,
-    setAnswers,
+    setAnswers: updateAnswersWithCallback,
     handleAnswerChange,
     toggleAnswerCorrectness,
     addAnswer,

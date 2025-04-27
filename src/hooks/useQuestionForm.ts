@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,15 +36,6 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
   } = useQuestionImage(initialData?.image_url);
 
   const {
-    answers,
-    setAnswers,
-    handleAnswerChange,
-    toggleAnswerCorrectness,
-    addAnswer,
-    removeAnswer
-  } = useQuestionAnswers(initialData?.answers);
-
-  const {
     formData,
     setFormData,
     handleInputChange,
@@ -53,6 +43,18 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
     handleSubCategoryChange,
     handleDifficultyChange
   } = useQuestionFormState({ initialData, userId: user.id });
+
+  const handleAnswersChange = (newAnswers: Answer[]) => {
+    setFormData(prev => ({ ...prev, answers: newAnswers }));
+  };
+
+  const {
+    answers,
+    handleAnswerChange,
+    toggleAnswerCorrectness,
+    addAnswer,
+    removeAnswer
+  } = useQuestionAnswers(formData.answers, handleAnswersChange);
 
   useEffect(() => {
     if (isEditMode && id && questions) {
@@ -88,7 +90,7 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
         return;
       }
       
-      if (!answers || answers.length === 0 || !answers.some(a => a.text)) {
+      if (!formData.answers || formData.answers.length === 0 || !formData.answers.some(a => a.text)) {
         toast.error("Bitte geben Sie mindestens eine Antwort ein.");
         return;
       }
@@ -105,12 +107,12 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
         difficulty: formData.difficulty!,
         text: formData.text!,
         image_url: finalImageUrl,
-        answers: answers,
+        answers: formData.answers,
         created_by: user.id
       };
       
       if (isEditMode && id) {
-        const supabaseAnswers: Json = answers.map(answer => ({
+        const supabaseAnswers: Json = formData.answers.map(answer => ({
           text: answer.text,
           isCorrect: answer.isCorrect
         }));
@@ -150,7 +152,6 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
     isLoading,
     formData,
     imagePreview,
-    answers,
     handleInputChange,
     handleCategoryChange,
     handleSubCategoryChange,

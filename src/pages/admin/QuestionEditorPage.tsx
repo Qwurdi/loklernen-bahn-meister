@@ -22,6 +22,7 @@ const QuestionEditorPage: React.FC = () => {
     handleCategoryChange,
     handleSubCategoryChange,
     handleDifficultyChange,
+    handleRegulationCategoryChange,
     handleAnswerChange,
     handleImageChange,
     removeImage,
@@ -71,6 +72,7 @@ const QuestionEditorPage: React.FC = () => {
               answers={formData.answers || []}
               isSignalQuestion={isSignalQuestion}
               difficulty={formData.difficulty || 1}
+              regulationCategory={formData.regulation_category}
               onTextChange={handleInputChange}
               onImageChange={handleImageChange}
               removeImage={removeImage}
@@ -79,6 +81,7 @@ const QuestionEditorPage: React.FC = () => {
               removeAnswer={removeAnswer}
               addAnswer={addAnswer}
               onDifficultyChange={handleDifficultyChange}
+              onRegulationCategoryChange={isSignalQuestion ? handleRegulationCategoryChange : undefined}
             />
           </div>
           
@@ -89,6 +92,7 @@ const QuestionEditorPage: React.FC = () => {
             category={formData.category || ""}
             sub_category={formData.sub_category || ""}
             difficulty={formData.difficulty || 1}
+            regulation_category={formData.regulation_category}
           />
         </div>
       </form>

@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { QuestionCategory, QuestionType, CreateQuestionDTO } from "@/types/questions";
+import { QuestionCategory, QuestionType, CreateQuestionDTO, RegulationCategory } from "@/types/questions";
 
 interface UseQuestionFormStateProps {
   initialData?: Partial<CreateQuestionDTO>;
@@ -17,6 +17,7 @@ export const useQuestionFormState = ({ initialData, userId }: UseQuestionFormSta
     image_url: null,
     answers: [{ text: "", isCorrect: true }],
     created_by: userId,
+    regulation_category: "both" as RegulationCategory,
     ...initialData
   });
 
@@ -48,12 +49,17 @@ export const useQuestionFormState = ({ initialData, userId }: UseQuestionFormSta
     setFormData(prev => ({ ...prev, difficulty: newDifficulty }));
   };
 
+  const handleRegulationCategoryChange = (regulationCategory: RegulationCategory) => {
+    setFormData(prev => ({ ...prev, regulation_category: regulationCategory }));
+  };
+
   return {
     formData,
     setFormData,
     handleInputChange,
     handleCategoryChange,
     handleSubCategoryChange,
-    handleDifficultyChange
+    handleDifficultyChange,
+    handleRegulationCategoryChange
   };
 };

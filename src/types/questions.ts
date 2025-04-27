@@ -3,6 +3,7 @@ import { Json } from "@/integrations/supabase/types";
 
 export type QuestionCategory = 'Signale' | 'Betriebsdienst';
 export type QuestionType = 'MC_single' | 'MC_multi' | 'open';
+export type RegulationCategory = 'DS 301' | 'DV 301' | 'both';
 
 export interface Answer {
   text: string;
@@ -22,6 +23,7 @@ export interface Question {
   revision: number;
   created_at: string;
   updated_at: string;
+  regulation_category?: RegulationCategory;
 }
 
 export interface CreateQuestionDTO {
@@ -33,4 +35,5 @@ export interface CreateQuestionDTO {
   image_url?: string | null;
   answers: Answer[];
   created_by: string;
+  regulation_category?: RegulationCategory;
 }

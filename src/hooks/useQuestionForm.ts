@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { CreateQuestionDTO, Question, Answer } from "@/types/questions";
+import { CreateQuestionDTO, Question, Answer, RegulationCategory } from "@/types/questions";
 import { createQuestion, uploadQuestionImage } from "@/api/questions";
 import { Json } from "@/integrations/supabase/types";
 import { useQuestions } from "./useQuestions";
@@ -42,7 +42,8 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
     handleInputChange,
     handleCategoryChange,
     handleSubCategoryChange,
-    handleDifficultyChange
+    handleDifficultyChange,
+    handleRegulationCategoryChange
   } = useQuestionFormState({ initialData, userId: user.id });
 
   const handleAnswersChange = (newAnswers: Answer[]) => {
@@ -70,7 +71,8 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
           text: questionToEdit.text,
           image_url: questionToEdit.image_url,
           answers: questionToEdit.answers,
-          created_by: questionToEdit.created_by
+          created_by: questionToEdit.created_by,
+          regulation_category: questionToEdit.regulation_category || "both"
         });
         
         if (questionToEdit.image_url) {
@@ -109,7 +111,8 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
         text: formData.text!,
         image_url: finalImageUrl,
         answers: formData.answers,
-        created_by: user.id
+        created_by: user.id,
+        regulation_category: formData.category === "Signale" ? formData.regulation_category : undefined
       };
       
       if (isEditMode && id) {
@@ -128,7 +131,8 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
             text: questionData.text,
             image_url: questionData.image_url,
             answers: supabaseAnswers,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
+            regulation_category: questionData.regulation_category
           })
           .eq('id', id);
         
@@ -157,6 +161,7 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
     handleCategoryChange,
     handleSubCategoryChange,
     handleDifficultyChange,
+    handleRegulationCategoryChange,
     handleAnswerChange,
     handleImageChange,
     removeImage,

@@ -3,7 +3,7 @@ import React from "react";
 import { Question } from "@/types/questions";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, Copy } from "lucide-react";
+import { Edit, Trash2, Copy, Tag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface QuestionCardProps {
@@ -34,6 +34,15 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     }
   };
 
+  const getRegulationBadgeColor = (regulation?: string) => {
+    switch (regulation) {
+      case "DS 301": return "bg-purple-100 text-purple-800";
+      case "DV 301": return "bg-indigo-100 text-indigo-800";
+      case "both": return "bg-gray-100 text-gray-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
   return (
     <Card className="overflow-hidden transition-all hover:shadow-md">
       <CardHeader className="p-0">
@@ -59,6 +68,12 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           <Badge variant="outline">
             {getTypeLabel(question.question_type)}
           </Badge>
+          {question.category === "Signale" && question.regulation_category && (
+            <Badge variant="outline" className={getRegulationBadgeColor(question.regulation_category)}>
+              <Tag className="mr-1 h-3 w-3" />
+              {question.regulation_category}
+            </Badge>
+          )}
           <Badge variant="outline" className="bg-gray-100">
             {Array.from({ length: 5 }).map((_, i) => (
               <span

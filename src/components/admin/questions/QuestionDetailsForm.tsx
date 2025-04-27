@@ -1,11 +1,13 @@
+
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Image, Trash2, Plus, X, Star } from "lucide-react";
 import { SignalAnswerInput } from "@/components/admin/SignalAnswerInput";
-import { Answer, QuestionType } from '@/types/questions';
+import { Answer, QuestionType, RegulationCategory } from '@/types/questions';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { RegulationCategorySelector } from "./RegulationCategorySelector";
 
 interface QuestionDetailsFormProps {
   text: string;
@@ -14,14 +16,16 @@ interface QuestionDetailsFormProps {
   answers: Answer[];
   isSignalQuestion: boolean;
   difficulty: number;
+  regulationCategory?: RegulationCategory;
   onTextChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   removeImage: () => void;
   handleAnswerChange: (index: number, value: string) => void;
-  toggleAnswerCorrectness: (index: number, questionType: QuestionType) => void;
+  toggleAnswerCorrectness: (index: number) => void;
   removeAnswer: (index: number) => void;
   addAnswer: () => void;
   onDifficultyChange: (value: number) => void;
+  onRegulationCategoryChange?: (value: RegulationCategory) => void;
 }
 
 export const QuestionDetailsForm = ({
@@ -31,6 +35,7 @@ export const QuestionDetailsForm = ({
   answers,
   isSignalQuestion,
   difficulty,
+  regulationCategory = "both",
   onTextChange,
   onImageChange,
   removeImage,
@@ -39,6 +44,7 @@ export const QuestionDetailsForm = ({
   removeAnswer,
   addAnswer,
   onDifficultyChange,
+  onRegulationCategoryChange
 }: QuestionDetailsFormProps) => {
   return (
     <div className="space-y-6">
@@ -97,6 +103,13 @@ export const QuestionDetailsForm = ({
         </div>
       </div>
 
+      {isSignalQuestion && onRegulationCategoryChange && (
+        <RegulationCategorySelector 
+          value={regulationCategory}
+          onChange={onRegulationCategoryChange}
+        />
+      )}
+
       <div className="space-y-2">
         <Label>Schwierigkeitsgrad</Label>
         <RadioGroup
@@ -150,7 +163,7 @@ export const QuestionDetailsForm = ({
                   size="icon"
                   variant={answer.isCorrect ? "default" : "outline"}
                   className="mt-1 h-6 w-6 shrink-0"
-                  onClick={() => toggleAnswerCorrectness(index, questionType)}
+                  onClick={() => toggleAnswerCorrectness(index)}
                 >
                   {answer.isCorrect && <span>✓</span>}
                 </Button>

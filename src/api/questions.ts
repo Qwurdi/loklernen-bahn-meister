@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import type { CreateQuestionDTO, Question, QuestionCategory, Answer } from "@/types/questions";
 import { Json } from "@/integrations/supabase/types";
@@ -28,7 +29,7 @@ function transformQuestion(dbQuestion: any): Question {
   };
 }
 
-export async function fetchQuestions(category?: QuestionCategory, sub_category?: string) {
+export async function fetchQuestions(category?: QuestionCategory, sub_category?: string, regulation_category?: string) {
   let query = supabase
     .from('questions')
     .select('*');
@@ -39,6 +40,11 @@ export async function fetchQuestions(category?: QuestionCategory, sub_category?:
   
   if (sub_category) {
     query = query.eq('sub_category', sub_category);
+  }
+  
+  if (regulation_category && regulation_category !== "all") {
+    // Include both "both" category and the specific one
+    query = query.or(`regulation_category.eq.${regulation_category},regulation_category.eq.both,regulation_category.is.null`);
   }
   
   const { data, error } = await query.order('created_at', { ascending: false });
@@ -65,7 +71,8 @@ export async function createQuestion(question: CreateQuestionDTO) {
       text: question.text,
       image_url: question.image_url,
       answers: supabaseAnswers,
-      created_by: question.created_by
+      created_by: question.created_by,
+      regulation_category: question.regulation_category
     }])
     .select()
     .single();
@@ -148,6 +155,7 @@ export async function duplicateQuestion(originalQuestion: Question): Promise<Que
     image_url: originalQuestion.image_url,
     answers: originalQuestion.answers,
     created_by: originalQuestion.created_by,
+    regulation_category: originalQuestion.regulation_category
   };
 
   const supabaseAnswers: Json = duplicateData.answers.map(answer => ({
@@ -166,4 +174,9 @@ export async function duplicateQuestion(originalQuestion: Question): Promise<Que
 
   if (error) throw error;
   return transformQuestion(data);
+}
+
+// Add a function to filter questions by regulation category
+export async function fetchRegulationCategoryQuestions(regulation_category: string) {
+  return fetchQuestions(undefined, undefined, regulation_category);
 }

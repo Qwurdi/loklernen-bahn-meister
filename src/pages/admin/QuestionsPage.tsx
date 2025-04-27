@@ -1,8 +1,8 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { useQuestions } from "@/hooks/useQuestions";
+import { useQuestionFilters } from "@/hooks/useQuestionFilters";
 import { toast } from "sonner";
 import { duplicateQuestion } from "@/api/questions";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
@@ -17,11 +17,18 @@ import { QuestionCategory } from "@/types/questions";
 const QuestionsPage: React.FC = () => {
   const navigate = useNavigate();
   const { data: questions, isLoading, error } = useQuestions();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<"all" | QuestionCategory>("all");
-  const [subCategoryFilter, setSubCategoryFilter] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [isDuplicating, setIsDuplicating] = useState(false);
+  
+  const {
+    searchQuery,
+    setSearchQuery,
+    categoryFilter,
+    setCategoryFilter,
+    subCategoryFilter,
+    setSubCategoryFilter,
+    filteredQuestions
+  } = useQuestionFilters({ questions });
 
   const handleDuplicateQuestion = async (questionId: string) => {
     const questionToDuplicate = questions?.find(q => q.id === questionId);
@@ -40,15 +47,6 @@ const QuestionsPage: React.FC = () => {
       setIsDuplicating(false);
     }
   };
-
-  const filteredQuestions = questions?.filter(question => {
-    const matchesSearch = question.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        question.sub_category.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter === "all" || question.category === categoryFilter;
-    const matchesSubCategory = !subCategoryFilter || question.sub_category === subCategoryFilter;
-    
-    return matchesSearch && matchesCategory && matchesSubCategory;
-  });
 
   const handleNewSignalQuestion = () => {
     navigate("/admin/questions/create", {
@@ -123,14 +121,14 @@ const QuestionsPage: React.FC = () => {
           <div className="mt-6">
             <QuestionHeader
               title={getHeaderTitle()}
-              questionCount={filteredQuestions?.length || 0}
+              questionCount={filteredQuestions.length}
               subCategoryFilter={subCategoryFilter}
               onClearSubCategory={() => setSubCategoryFilter(null)}
             />
             
             {viewMode === "grid" ? (
               <QuestionCardGrid 
-                questions={filteredQuestions || []}
+                questions={filteredQuestions}
                 onEdit={handleEditQuestion}
                 onDelete={handleDeleteQuestion}
                 onDuplicate={handleDuplicateQuestion}
@@ -138,7 +136,7 @@ const QuestionsPage: React.FC = () => {
               />
             ) : (
               <QuestionTableView 
-                questions={filteredQuestions || []}
+                questions={filteredQuestions}
                 onEdit={handleEditQuestion}
                 onDelete={handleDeleteQuestion}
                 onDuplicate={handleDuplicateQuestion}

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Question } from "@/types/questions";
 import { 
@@ -20,15 +21,17 @@ import {
 interface QuestionTableViewProps {
   questions: Question[];
   onEdit: (id: string) => void;
-  onDelete: (string) => void;
+  onDelete: (id: string) => void;
   onDuplicate: (id: string) => void;
+  isLoading?: boolean;
 }
 
 export const QuestionTableView: React.FC<QuestionTableViewProps> = ({
   questions,
   onEdit,
   onDelete,
-  onDuplicate
+  onDuplicate,
+  isLoading = false
 }) => {
   if (questions.length === 0) {
     return (
@@ -130,6 +133,7 @@ export const QuestionTableView: React.FC<QuestionTableViewProps> = ({
                       size="icon"
                       onClick={() => onDuplicate(question.id)}
                       title="Frage duplizieren"
+                      disabled={isLoading}
                     >
                       <Copy className="h-4 w-4" />
                     </Button>

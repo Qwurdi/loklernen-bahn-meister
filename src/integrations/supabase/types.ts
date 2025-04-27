@@ -19,6 +19,7 @@ export type Database = {
           id: string
           image_url: string | null
           question_type: Database["public"]["Enums"]["question_type"]
+          regulation_category: string | null
           revision: number
           sub_category: string
           text: string
@@ -33,6 +34,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           question_type: Database["public"]["Enums"]["question_type"]
+          regulation_category?: string | null
           revision?: number
           sub_category: string
           text: string
@@ -47,6 +49,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           question_type?: Database["public"]["Enums"]["question_type"]
+          regulation_category?: string | null
           revision?: number
           sub_category?: string
           text?: string

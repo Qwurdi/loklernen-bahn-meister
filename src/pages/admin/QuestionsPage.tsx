@@ -28,18 +28,23 @@ const QuestionsPage: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState<"all" | QuestionCategory>("all");
   const [subCategoryFilter, setSubCategoryFilter] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [isDuplicating, setIsDuplicating] = useState(false);
   
   const handleDuplicateQuestion = async (questionId: string) => {
     const questionToDuplicate = questions?.find(q => q.id === questionId);
     if (!questionToDuplicate) return;
 
     try {
+      setIsDuplicating(true);
       const duplicatedQuestion = await duplicateQuestion(questionToDuplicate);
       toast.success("Frage wurde dupliziert");
       navigate(`/admin/questions/edit/${duplicatedQuestion.id}`);
     } catch (error) {
       console.error("Error duplicating question:", error);
-      toast.error("Fehler beim Duplizieren der Frage");
+      const errorMessage = error instanceof Error ? error.message : "Unbekannter Fehler";
+      toast.error(`Fehler beim Duplizieren der Frage: ${errorMessage}. Bitte stellen Sie sicher, dass Sie angemeldet sind.`);
+    } finally {
+      setIsDuplicating(false);
     }
   };
 
@@ -176,6 +181,7 @@ const QuestionsPage: React.FC = () => {
                 onEdit={handleEditQuestion}
                 onDelete={handleDeleteQuestion}
                 onDuplicate={(id) => handleDuplicateQuestion(id)}
+                isLoading={isDuplicating}
               />
             ) : (
               <QuestionTableView 
@@ -183,6 +189,7 @@ const QuestionsPage: React.FC = () => {
                 onEdit={handleEditQuestion}
                 onDelete={handleDeleteQuestion}
                 onDuplicate={(id) => handleDuplicateQuestion(id)}
+                isLoading={isDuplicating}
               />
             )}
           </div>

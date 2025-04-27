@@ -146,6 +146,14 @@ export async function seedInitialQuestions(userId: string) {
 }
 
 export async function duplicateQuestion(originalQuestion: Question): Promise<Question> {
+  // Get the current user's ID
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+  
+  // Create a duplicate of the question but with the current user as creator
   const duplicateData: CreateQuestionDTO = {
     category: originalQuestion.category,
     sub_category: originalQuestion.sub_category,
@@ -154,7 +162,7 @@ export async function duplicateQuestion(originalQuestion: Question): Promise<Que
     text: originalQuestion.text,
     image_url: originalQuestion.image_url,
     answers: originalQuestion.answers,
-    created_by: originalQuestion.created_by,
+    created_by: user.id, // Use current user's ID instead of original creator
     regulation_category: originalQuestion.regulation_category
   };
 

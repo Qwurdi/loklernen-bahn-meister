@@ -8,13 +8,15 @@ interface QuestionCardGridProps {
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onDuplicate: (id: string) => void;
+  isLoading?: boolean;
 }
 
 export const QuestionCardGrid: React.FC<QuestionCardGridProps> = ({
   questions,
   onEdit,
   onDelete,
-  onDuplicate
+  onDuplicate,
+  isLoading = false
 }) => {
   if (questions.length === 0) {
     return (
@@ -33,6 +35,7 @@ export const QuestionCardGrid: React.FC<QuestionCardGridProps> = ({
           onEdit={() => onEdit(question.id)}
           onDelete={() => onDelete(question.id)}
           onDuplicate={() => onDuplicate(question.id)}
+          disabled={isLoading}
         />
       ))}
     </div>

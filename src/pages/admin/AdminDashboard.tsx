@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PieChart, BarChart2, Users, BookOpen } from "lucide-react";
+import { PieChart, BarChart2, Users, BookOpen, FileText } from "lucide-react";
 import { useQuestions } from "@/hooks/useQuestions";
 import { Link } from "react-router-dom";
 
@@ -16,6 +16,11 @@ const AdminDashboard: React.FC = () => {
   const openQuestions = questions?.filter(q => q.question_type === "open")?.length || 0;
   const mcSingleQuestions = questions?.filter(q => q.question_type === "MC_single")?.length || 0;
   const mcMultiQuestions = questions?.filter(q => q.question_type === "MC_multi")?.length || 0;
+  
+  // Count questions by regulation
+  const ds301Questions = questions?.filter(q => q.regulation_category === "DS 301" || q.regulation_category === "both")?.length || 0;
+  const dv301Questions = questions?.filter(q => q.regulation_category === "DV 301" || q.regulation_category === "both")?.length || 0;
+  const bothRegulationQuestions = questions?.filter(q => q.regulation_category === "both")?.length || 0;
   
   return (
     <div className="space-y-6">
@@ -89,6 +94,41 @@ const AdminDashboard: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Additional card for regulation information */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Regelwerke</CardTitle>
+          <CardDescription>Übersicht der Fragen nach Regelwerk</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="flex flex-col space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">DS 301</span>
+                <span>{ds301Questions}</span>
+              </div>
+              <Progress value={(ds301Questions / (questions?.length || 1)) * 100} className="h-2" />
+            </div>
+            
+            <div className="flex flex-col space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">DV 301</span>
+                <span>{dv301Questions}</span>
+              </div>
+              <Progress value={(dv301Questions / (questions?.length || 1)) * 100} className="h-2" />
+            </div>
+            
+            <div className="flex flex-col space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">Beide Regelwerke</span>
+                <span>{bothRegulationQuestions}</span>
+              </div>
+              <Progress value={(bothRegulationQuestions / (questions?.length || 1)) * 100} className="h-2" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       
       {isLoading && (
         <div className="my-8 text-center">

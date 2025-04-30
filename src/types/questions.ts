@@ -38,3 +38,9 @@ export interface CreateQuestionDTO {
   created_by: string;
   regulation_category?: RegulationCategory;
 }
+
+// New type for category progress tracking
+export interface CategoryProgress {
+  correct: number;
+  total: number;
+}

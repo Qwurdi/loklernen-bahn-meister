@@ -5,14 +5,16 @@ import { Question, QuestionCategory, RegulationCategory, RegulationFilterType } 
 interface UseQuestionFiltersProps {
   questions: Question[] | undefined;
   initialRegulationFilter?: RegulationFilterType;
+  initialCategoryFilter?: "all" | QuestionCategory;
 }
 
 export function useQuestionFilters({ 
   questions, 
-  initialRegulationFilter = "all" 
+  initialRegulationFilter = "all",
+  initialCategoryFilter = "all"
 }: UseQuestionFiltersProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<"all" | QuestionCategory>("all");
+  const [categoryFilter, setCategoryFilter] = useState<"all" | QuestionCategory>(initialCategoryFilter);
   const [subCategoryFilter, setSubCategoryFilter] = useState<string | null>(null);
   const [regulationFilter, setRegulationFilter] = useState<RegulationFilterType>(initialRegulationFilter);
 

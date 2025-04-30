@@ -30,8 +30,8 @@ export const RegulationFilterToggle: React.FC<RegulationFilterToggleProps> = ({
   return (
     <div className={`space-y-2 ${className}`}>
       {title && (
-        <div className="flex items-center gap-2">
-          <Label>{title}</Label>
+        <div className="flex items-center justify-center gap-2 mb-1">
+          <Label className="font-medium">{title}</Label>
           {showInfoTooltip && (
             <TooltipProvider>
               <Tooltip>

@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,16 +8,21 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UserStats from "@/components/common/UserStats";
 import { RegulationFilterToggle } from "@/components/common/RegulationFilterToggle";
-import { CalendarCheck, Clock, BookOpen } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { CalendarCheck, BookOpen, Signal, TrafficCone } from "lucide-react";
 
 export default function Dashboard() {
   const { user } = useAuth();
   const { regulationPreference, setRegulationPreference } = useUserPreferences();
-  const [dueCards, setDueCards] = useState(0);
+  const [dueCards, setDueCards] = useState({ 
+    total: 0,
+    signale: 0,
+    betriebsdienst: 0
+  });
   const [userStats, setUserStats] = useState({
     xp: 0,
     level: 1,
@@ -57,33 +63,58 @@ export default function Dashboard() {
           });
         }
         
-        // Fetch due cards count
+        // Fetch due cards count with category breakdowns
         const now = new Date().toISOString();
-        const { count, error: dueError } = await supabase
+        
+        // Total due cards
+        const { count: totalCount, error: totalDueError } = await supabase
           .from('user_progress')
           .select('*', { count: 'exact', head: true })
           .eq('user_id', user.id)
           .lte('next_review_at', now);
         
-        if (dueError) {
-          console.error('Error fetching due cards:', dueError);
+        // Due cards for Signale category
+        const { count: signaleCount, error: signaleDueError } = await supabase
+          .from('user_progress')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('questions.category', 'Signale')
+          .lte('next_review_at', now);
+        
+        // Due cards for Betriebsdienst category
+        const { count: betriebsdienstCount, error: betriebsdienstDueError } = await supabase
+          .from('user_progress')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('questions.category', 'Betriebsdienst')
+          .lte('next_review_at', now);
+        
+        if (totalDueError || signaleDueError || betriebsdienstDueError) {
+          console.error('Error fetching due cards:', totalDueError || signaleDueError || betriebsdienstDueError);
         } else {
-          setDueCards(count || 0);
+          setDueCards({
+            total: totalCount || 0,
+            signale: signaleCount || 0,
+            betriebsdienst: betriebsdienstCount || 0
+          });
         }
         
         // Fetch category progress
         const { data: progressData, error: progressError } = await supabase
           .from('user_progress')
-          .select('questions(sub_category), correct_count, incorrect_count')
+          .select('questions(category,sub_category), correct_count, incorrect_count')
           .eq('user_id', user.id);
           
         if (progressError) {
           console.error('Error fetching progress:', progressError);
         } else {
           const progress = (progressData || []).reduce((acc: Record<string, { correct: number, total: number }>, curr) => {
+            const category = curr.questions?.category;
             const subCategory = curr.questions?.sub_category;
-            if (!subCategory) return acc;
             
+            if (!category || !subCategory) return acc;
+            
+            // Track by subcategory
             if (!acc[subCategory]) {
               acc[subCategory] = { correct: 0, total: 0 };
             }
@@ -108,22 +139,33 @@ export default function Dashboard() {
     return null; // Will be handled by the route guard
   }
 
-  const totalProgress = Object.values(categoryProgress).reduce(
-    (sum, category) => sum + category.correct, 
-    0
-  );
+  // Calculate totals for each main category
+  const calculateCategoryTotals = (category: 'Signale' | 'Betriebsdienst') => {
+    const subCategories = {
+      'Signale': ['Haupt- und Vorsignale', 'Zusatz- & Kennzeichen', 'Rangiersignale', 'Sonstige Signale'],
+      'Betriebsdienst': ['Grundlagen Bahnbetrieb', 'UVV & Arbeitsschutz', 'Rangieren', 'Züge fahren', 'PZB & Sicherungsanlagen']
+    };
+    
+    const subcatsForCategory = subCategories[category];
+    let totalCorrect = 0;
+    let totalCards = 0;
+    
+    subcatsForCategory.forEach(subcat => {
+      if (categoryProgress[subcat]) {
+        totalCorrect += categoryProgress[subcat].correct;
+        totalCards += categoryProgress[subcat].total;
+      }
+    });
+    
+    return { correct: totalCorrect, total: totalCards };
+  };
 
-  const totalCards = Object.values(categoryProgress).reduce(
-    (sum, category) => sum + category.total, 
-    0
-  );
-
-  const successRate = totalCards > 0 
-    ? Math.round((totalProgress / totalCards) * 100) 
-    : 0;
+  const signaleTotals = calculateCategoryTotals('Signale');
+  const betriebsdienstTotals = calculateCategoryTotals('Betriebsdienst');
   
-  // Get today's recommended learning time (5 minutes per 10 cards, minimum 5 minutes)
-  const recommendedMinutes = Math.max(5, Math.ceil(dueCards / 10) * 5);
+  const successRate = userStats.totalCorrect + userStats.totalIncorrect > 0 
+    ? Math.round((userStats.totalCorrect / (userStats.totalCorrect + userStats.totalIncorrect)) * 100) 
+    : 0;
 
   const handleRegulationChange = async (value: string) => {
     await setRegulationPreference(value as any);
@@ -143,54 +185,54 @@ export default function Dashboard() {
           </p>
         </div>
         
-        {/* Today's Learning Card */}
-        <Card className="mb-6 border-2 border-loklernen-ultramarine/20 bg-gradient-to-br from-white to-blue-50">
+        {/* Redesigned Learning Section */}
+        <Card className="mb-6">
           <CardHeader className="pb-2">
-            <CardTitle>Heute lernen</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <CalendarCheck className="h-5 w-5 text-loklernen-ultramarine" />
+              Heute lernen
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="flex flex-col space-y-4">
-                <div className="flex items-center gap-2">
+            <div className="grid gap-4 sm:grid-cols-2">
+              {/* Signale Learning Card */}
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
                   <div className="p-2 bg-loklernen-ultramarine/10 rounded-full">
-                    <CalendarCheck className="h-5 w-5 text-loklernen-ultramarine" />
+                    <Signal className="h-5 w-5 text-loklernen-ultramarine" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Fällige Karten</p>
-                    <p className="text-2xl font-semibold">{dueCards}</p>
+                    <p className="font-medium">Signale</p>
+                    <p className="text-sm text-muted-foreground">
+                      {dueCards.signale} fällige Karten
+                    </p>
                   </div>
                 </div>
-                
-                <div className="flex items-center gap-2">
-                  <div className="p-2 bg-loklernen-ultramarine/10 rounded-full">
-                    <Clock className="h-5 w-5 text-loklernen-ultramarine" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Empfohlene Zeit</p>
-                    <p className="text-2xl font-semibold">{recommendedMinutes} Min.</p>
-                  </div>
-                </div>
+                <Link to={`/karteikarten/lernen?regelwerk=${regulationPreference}&category=Signale`}>
+                  <Button className="w-full bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90">
+                    <BookOpen className="mr-2 h-4 w-4" /> Signale lernen
+                  </Button>
+                </Link>
               </div>
               
-              <div className="flex flex-col justify-between gap-4">
-                {/* Regulation Filter */}
-                <div className="bg-white/70 rounded-lg p-3">
-                  <RegulationFilterToggle 
-                    value={regulationPreference}
-                    onChange={handleRegulationChange}
-                    title="Regelwerk auswählen"
-                    variant="default"
-                    className="mb-1"
-                  />
+              {/* Betriebsdienst Learning Card */}
+              <div className="bg-amber-50 p-4 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="p-2 bg-amber-500/10 rounded-full">
+                    <TrafficCone className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Betriebsdienst</p>
+                    <p className="text-sm text-muted-foreground">
+                      {dueCards.betriebsdienst} fällige Karten
+                    </p>
+                  </div>
                 </div>
-                
-                <div className="flex items-center justify-center">
-                  <Link to={`/karteikarten/lernen?regelwerk=${regulationPreference}`}>
-                    <Button className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90 w-full">
-                      <BookOpen className="mr-2 h-4 w-4" /> Jetzt lernen
-                    </Button>
-                  </Link>
-                </div>
+                <Link to={`/karteikarten/lernen?regelwerk=${regulationPreference}&category=Betriebsdienst`}>
+                  <Button className="w-full bg-amber-600 hover:bg-amber-700">
+                    <BookOpen className="mr-2 h-4 w-4" /> Betriebsdienst lernen
+                  </Button>
+                </Link>
               </div>
             </div>
           </CardContent>
@@ -230,49 +272,128 @@ export default function Dashboard() {
             </CardContent>
           </Card>
           
-          {/* Categories Tabs */}
+          {/* Categories Tabs with Accordions */}
           <Card className="md:col-span-8">
             <CardHeader>
               <CardTitle>Kategorien</CardTitle>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="signale">
-                <TabsList className="w-full">
+                <TabsList className="w-full mb-4">
                   <TabsTrigger value="signale" className="flex-1">Signale</TabsTrigger>
                   <TabsTrigger value="betriebsdienst" className="flex-1">Betriebsdienst</TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value="signale" className="pt-4">
-                  <div className="space-y-4">
-                    <Link to={`/karteikarten/signale/haupt-vorsignale?regelwerk=${regulationPreference}`} className="block hover:bg-slate-50 rounded-lg p-2">
-                      <div className="flex justify-between items-center">
-                        <span>Haupt- und Vorsignale</span>
+                <TabsContent value="signale">
+                  <div className="space-y-2">
+                    {/* Main category progress */}
+                    <div className="p-3 rounded-lg border mb-2">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="font-medium">Signale gesamt</span>
                         <span className="text-sm text-muted-foreground">
-                          {categoryProgress['Haupt- und Vorsignale']?.correct || 0} / {categoryProgress['Haupt- und Vorsignale']?.total || 0}
+                          {signaleTotals.correct} / {signaleTotals.total}
                         </span>
                       </div>
                       <Progress 
-                        value={categoryProgress['Haupt- und Vorsignale']?.total > 0 
-                          ? (categoryProgress['Haupt- und Vorsignale'].correct / categoryProgress['Haupt- und Vorsignale'].total) * 100 
+                        value={signaleTotals.total > 0 
+                          ? (signaleTotals.correct / signaleTotals.total) * 100 
                           : 0} 
-                        className="h-1 mt-1" 
+                        className="h-2"
                       />
-                    </Link>
+                    </div>
                     
-                    <Link to={`/karteikarten/signale/zusatz-kennzeichen?regelwerk=${regulationPreference}`} className="block hover:bg-slate-50 rounded-lg p-2">
-                      <div className="flex justify-between items-center">
-                        <span>Zusatz- & Kennzeichen</span>
-                        <span className="text-sm text-muted-foreground">
-                          {categoryProgress['Zusatz- & Kennzeichen']?.correct || 0} / {categoryProgress['Zusatz- & Kennzeichen']?.total || 0}
-                        </span>
-                      </div>
-                      <Progress 
-                        value={categoryProgress['Zusatz- & Kennzeichen']?.total > 0 
-                          ? (categoryProgress['Zusatz- & Kennzeichen'].correct / categoryProgress['Zusatz- & Kennzeichen'].total) * 100 
-                          : 0} 
-                        className="h-1 mt-1" 
-                      />
-                    </Link>
+                    {/* Subcategories in accordion */}
+                    <Accordion type="multiple" className="w-full">
+                      <AccordionItem value="haupt-vorsignale">
+                        <AccordionTrigger className="py-3 hover:no-underline">
+                          <div className="flex-1 text-left">
+                            <div className="flex justify-between items-center">
+                              <span>Haupt- und Vorsignale</span>
+                              <span className="text-sm text-muted-foreground mr-2">
+                                {categoryProgress['Haupt- und Vorsignale']?.correct || 0} / {categoryProgress['Haupt- und Vorsignale']?.total || 0}
+                              </span>
+                            </div>
+                            <Progress 
+                              value={categoryProgress['Haupt- und Vorsignale']?.total > 0 
+                                ? (categoryProgress['Haupt- und Vorsignale'].correct / categoryProgress['Haupt- und Vorsignale'].total) * 100 
+                                : 0} 
+                              className="h-1 mt-1"
+                            />
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="pl-4 pr-2 py-2">
+                            <Link 
+                              to={`/karteikarten/signale/haupt-vorsignale?regelwerk=${regulationPreference}`}
+                              className="flex justify-between items-center px-2 py-3 rounded-lg hover:bg-slate-50"
+                            >
+                              <span>Zu den Karteikarten</span>
+                              <Button variant="outline" size="sm">Öffnen</Button>
+                            </Link>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                      
+                      <AccordionItem value="zusatz-kennzeichen">
+                        <AccordionTrigger className="py-3 hover:no-underline">
+                          <div className="flex-1 text-left">
+                            <div className="flex justify-between items-center">
+                              <span>Zusatz- & Kennzeichen</span>
+                              <span className="text-sm text-muted-foreground mr-2">
+                                {categoryProgress['Zusatz- & Kennzeichen']?.correct || 0} / {categoryProgress['Zusatz- & Kennzeichen']?.total || 0}
+                              </span>
+                            </div>
+                            <Progress 
+                              value={categoryProgress['Zusatz- & Kennzeichen']?.total > 0 
+                                ? (categoryProgress['Zusatz- & Kennzeichen'].correct / categoryProgress['Zusatz- & Kennzeichen'].total) * 100 
+                                : 0} 
+                              className="h-1 mt-1"
+                            />
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="pl-4 pr-2 py-2">
+                            <Link 
+                              to={`/karteikarten/signale/zusatz-kennzeichen?regelwerk=${regulationPreference}`}
+                              className="flex justify-between items-center px-2 py-3 rounded-lg hover:bg-slate-50"
+                            >
+                              <span>Zu den Karteikarten</span>
+                              <Button variant="outline" size="sm">Öffnen</Button>
+                            </Link>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                      
+                      <AccordionItem value="rangiersignale">
+                        <AccordionTrigger className="py-3 hover:no-underline">
+                          <div className="flex-1 text-left">
+                            <div className="flex justify-between items-center">
+                              <span>Rangiersignale</span>
+                              <span className="text-sm text-muted-foreground mr-2">
+                                {categoryProgress['Rangiersignale']?.correct || 0} / {categoryProgress['Rangiersignale']?.total || 0}
+                              </span>
+                            </div>
+                            <Progress 
+                              value={categoryProgress['Rangiersignale']?.total > 0 
+                                ? (categoryProgress['Rangiersignale'].correct / categoryProgress['Rangiersignale'].total) * 100 
+                                : 0} 
+                              className="h-1 mt-1"
+                            />
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="pl-4 pr-2 py-2">
+                            <Link 
+                              to={`/karteikarten/signale/rangiersignale?regelwerk=${regulationPreference}`}
+                              className="flex justify-between items-center px-2 py-3 rounded-lg hover:bg-slate-50"
+                            >
+                              <span>Zu den Karteikarten</span>
+                              <Button variant="outline" size="sm">Öffnen</Button>
+                            </Link>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
                     
                     <div className="flex justify-center mt-4">
                       <Link to={`/karteikarten/signale?regelwerk=${regulationPreference}`}>
@@ -282,37 +403,86 @@ export default function Dashboard() {
                   </div>
                 </TabsContent>
                 
-                <TabsContent value="betriebsdienst" className="pt-4">
-                  <div className="space-y-4">
-                    <Link to={`/karteikarten/betriebsdienst/grundlagen?regelwerk=${regulationPreference}`} className="block hover:bg-slate-50 rounded-lg p-2">
-                      <div className="flex justify-between items-center">
-                        <span>Grundlagen Bahnbetrieb</span>
+                <TabsContent value="betriebsdienst">
+                  <div className="space-y-2">
+                    {/* Main category progress */}
+                    <div className="p-3 rounded-lg border mb-2">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="font-medium">Betriebsdienst gesamt</span>
                         <span className="text-sm text-muted-foreground">
-                          {categoryProgress['Grundlagen Bahnbetrieb']?.correct || 0} / {categoryProgress['Grundlagen Bahnbetrieb']?.total || 0}
+                          {betriebsdienstTotals.correct} / {betriebsdienstTotals.total}
                         </span>
                       </div>
                       <Progress 
-                        value={categoryProgress['Grundlagen Bahnbetrieb']?.total > 0 
-                          ? (categoryProgress['Grundlagen Bahnbetrieb'].correct / categoryProgress['Grundlagen Bahnbetrieb'].total) * 100 
+                        value={betriebsdienstTotals.total > 0 
+                          ? (betriebsdienstTotals.correct / betriebsdienstTotals.total) * 100 
                           : 0} 
-                        className="h-1 mt-1" 
+                        className="h-2"
                       />
-                    </Link>
+                    </div>
                     
-                    <Link to={`/karteikarten/betriebsdienst/uvv?regelwerk=${regulationPreference}`} className="block hover:bg-slate-50 rounded-lg p-2">
-                      <div className="flex justify-between items-center">
-                        <span>UVV & Arbeitsschutz</span>
-                        <span className="text-sm text-muted-foreground">
-                          {categoryProgress['UVV & Arbeitsschutz']?.correct || 0} / {categoryProgress['UVV & Arbeitsschutz']?.total || 0}
-                        </span>
-                      </div>
-                      <Progress 
-                        value={categoryProgress['UVV & Arbeitsschutz']?.total > 0 
-                          ? (categoryProgress['UVV & Arbeitsschutz'].correct / categoryProgress['UVV & Arbeitsschutz'].total) * 100 
-                          : 0} 
-                        className="h-1 mt-1" 
-                      />
-                    </Link>
+                    {/* Subcategories in accordion */}
+                    <Accordion type="multiple" className="w-full">
+                      <AccordionItem value="grundlagen">
+                        <AccordionTrigger className="py-3 hover:no-underline">
+                          <div className="flex-1 text-left">
+                            <div className="flex justify-between items-center">
+                              <span>Grundlagen Bahnbetrieb</span>
+                              <span className="text-sm text-muted-foreground mr-2">
+                                {categoryProgress['Grundlagen Bahnbetrieb']?.correct || 0} / {categoryProgress['Grundlagen Bahnbetrieb']?.total || 0}
+                              </span>
+                            </div>
+                            <Progress 
+                              value={categoryProgress['Grundlagen Bahnbetrieb']?.total > 0 
+                                ? (categoryProgress['Grundlagen Bahnbetrieb'].correct / categoryProgress['Grundlagen Bahnbetrieb'].total) * 100 
+                                : 0} 
+                              className="h-1 mt-1"
+                            />
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="pl-4 pr-2 py-2">
+                            <Link 
+                              to={`/karteikarten/betriebsdienst/grundlagen?regelwerk=${regulationPreference}`}
+                              className="flex justify-between items-center px-2 py-3 rounded-lg hover:bg-slate-50"
+                            >
+                              <span>Zu den Karteikarten</span>
+                              <Button variant="outline" size="sm">Öffnen</Button>
+                            </Link>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                      
+                      <AccordionItem value="uvv">
+                        <AccordionTrigger className="py-3 hover:no-underline">
+                          <div className="flex-1 text-left">
+                            <div className="flex justify-between items-center">
+                              <span>UVV & Arbeitsschutz</span>
+                              <span className="text-sm text-muted-foreground mr-2">
+                                {categoryProgress['UVV & Arbeitsschutz']?.correct || 0} / {categoryProgress['UVV & Arbeitsschutz']?.total || 0}
+                              </span>
+                            </div>
+                            <Progress 
+                              value={categoryProgress['UVV & Arbeitsschutz']?.total > 0 
+                                ? (categoryProgress['UVV & Arbeitsschutz'].correct / categoryProgress['UVV & Arbeitsschutz'].total) * 100 
+                                : 0} 
+                              className="h-1 mt-1"
+                            />
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="pl-4 pr-2 py-2">
+                            <Link 
+                              to={`/karteikarten/betriebsdienst/uvv?regelwerk=${regulationPreference}`}
+                              className="flex justify-between items-center px-2 py-3 rounded-lg hover:bg-slate-50"
+                            >
+                              <span>Zu den Karteikarten</span>
+                              <Button variant="outline" size="sm">Öffnen</Button>
+                            </Link>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
                     
                     <div className="flex justify-center mt-4">
                       <Link to={`/karteikarten/betriebsdienst?regelwerk=${regulationPreference}`}>
@@ -325,6 +495,29 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
+        
+        {/* Settings Section with Regulation Toggle */}
+        <Card className="mt-6">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Lerneinstellungen</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="max-w-md mx-auto">
+              <RegulationFilterToggle 
+                value={regulationPreference}
+                onChange={handleRegulationChange}
+                title="Regelwerk auswählen"
+                showInfoTooltip={true}
+                variant="default"
+                showAllOption={false}
+                className="w-full"
+              />
+              <p className="text-sm text-muted-foreground mt-2 text-center">
+                Diese Einstellung wird für alle Lernkarten verwendet und muss nur selten geändert werden.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </main>
       
       <Footer />

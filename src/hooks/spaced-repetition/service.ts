@@ -1,7 +1,6 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { UserProgress } from './types';
-import { transformQuestion } from './utils';
+import { transformQuestion, calculateNextReview } from './utils';
 import { Question, QuestionCategory } from '@/types/questions';
 
 export async function fetchUserProgress(

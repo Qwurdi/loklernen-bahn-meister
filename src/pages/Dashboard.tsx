@@ -2,224 +2,254 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { useUserPreferences } from "@/contexts/UserPreferencesContext";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import UserStats from "@/components/common/UserStats";
+import { useQuestionFilters } from "@/hooks/useQuestionFilters";
+import {
+  Award,
+  BookOpen,
+  Brain,
+  Clock,
+  TrafficCone,
+  Zap,
+  ChevronRight,
+} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 import { RegulationFilterToggle } from "@/components/common/RegulationFilterToggle";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { CalendarCheck, BookOpen, Signal, TrafficCone } from "lucide-react";
+import { toast } from "sonner";
+import CoursesProgress from "@/components/progress/CoursesProgress";
+import UserStats from "@/components/common/UserStats";
 
 export default function Dashboard() {
   const { user } = useAuth();
   const { regulationPreference, setRegulationPreference } = useUserPreferences();
-  const [dueCards, setDueCards] = useState({ 
-    total: 0,
-    signale: 0,
-    betriebsdienst: 0
-  });
-  const [userStats, setUserStats] = useState({
-    xp: 0,
-    level: 1,
-    streak: 0,
-    totalCorrect: 0,
-    totalIncorrect: 0
-  });
-  const [categoryProgress, setCategoryProgress] = useState<Record<string, { correct: number, total: number }>>({});
+  const [dueTodaySignals, setDueTodaySignals] = useState(0);
+  const [dueTodayBetriebsdienst, setDueTodayBetriebsdienst] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [totalXP, setTotalXP] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // Fetch user stats and due cards - optimized with useCallback to prevent unnecessary re-fetches
-  const fetchUserData = useCallback(async () => {
-    if (!user) return;
-
+  const fetchDueCards = useCallback(async (category, regulationFilter) => {
     try {
-      setLoading(true);
+      if (!user) return 0;
       
-      // Fetch user stats
-      const { data: statsData, error: statsError } = await supabase
+      // Get current date in ISO format for comparison
+      const now = new Date().toISOString();
+      
+      // Query user_progress joined with questions to filter by category and regulation
+      const { count, error } = await supabase
+        .from('user_progress')
+        .select('question_id, questions!inner(category, regulation_category)', { count: 'exact' })
+        .eq('user_id', user.id)
+        .eq('questions.category', category)
+        .lte('next_review_at', now)
+        .or(`questions.regulation_category.eq.${regulationFilter},questions.regulation_category.eq.both,questions.regulation_category.is.null`);
+        
+      if (error) {
+        console.error(`Error fetching ${category} due cards:`, error);
+        return 0;
+      }
+      
+      return count || 0;
+    } catch (error) {
+      console.error(`Error fetching ${category} due cards:`, error);
+      return 0;
+    }
+  }, [user]);
+
+  const fetchUserStats = useCallback(async () => {
+    try {
+      if (!user) return;
+      
+      const { data, error } = await supabase
         .from('user_stats')
-        .select('*')
+        .select('streak_days, xp')
         .eq('user_id', user.id)
         .single();
         
-      if (statsError && statsError.code !== 'PGRST116') {
-        console.error('Error fetching user stats:', statsError);
+      if (error) {
+        console.error("Error fetching user stats:", error);
+        return;
       }
       
-      if (statsData) {
-        const level = Math.floor(Math.sqrt(statsData.xp / 100)) + 1;
-        setUserStats({
-          xp: statsData.xp || 0,
-          level,
-          streak: statsData.streak_days || 0,
-          totalCorrect: statsData.total_correct || 0,
-          totalIncorrect: statsData.total_incorrect || 0
-        });
-      }
-      
-      // Fetch due cards count with category breakdowns - using limit to prevent large queries
-      const now = new Date().toISOString();
-      
-      // Due cards for Signale category - limited to prevent large IN lists
-      const { count: signaleCount, error: signaleDueError } = await supabase
-        .from('user_progress')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .lte('next_review_at', now)
-        .filter('questions.category', 'eq', 'Signale')
-        .limit(1000);
-      
-      // Due cards for Betriebsdienst category
-      const { count: betriebsdienstCount, error: betriebsdienstDueError } = await supabase
-        .from('user_progress')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .lte('next_review_at', now)
-        .filter('questions.category', 'eq', 'Betriebsdienst')
-        .limit(1000);
-      
-      // Total due cards (sum of both categories)
-      const totalCount = (signaleCount || 0) + (betriebsdienstCount || 0);
-      
-      if (signaleDueError) {
-        console.error('Error fetching Signale due cards:', signaleDueError);
-      }
-      
-      if (betriebsdienstDueError) {
-        console.error('Error fetching Betriebsdienst due cards:', betriebsdienstDueError);
-      }
-      
-      setDueCards({
-        total: totalCount,
-        signale: signaleCount || 0,
-        betriebsdienst: betriebsdienstCount || 0
-      });
-      
-      // Fetch category progress - optimized to handle large datasets
-      const { data: progressData, error: progressError } = await supabase
-        .from('user_progress')
-        .select('questions(category,sub_category), correct_count, incorrect_count')
-        .eq('user_id', user.id)
-        .limit(1000);
-        
-      if (progressError) {
-        console.error('Error fetching progress:', progressError);
-      } else {
-        const progress = (progressData || []).reduce((acc: Record<string, { correct: number, total: number }>, curr) => {
-          const category = curr.questions?.category;
-          const subCategory = curr.questions?.sub_category;
-          
-          if (!category || !subCategory) return acc;
-          
-          // Track by subcategory
-          if (!acc[subCategory]) {
-            acc[subCategory] = { correct: 0, total: 0 };
-          }
-          
-          acc[subCategory].correct += curr.correct_count || 0;
-          acc[subCategory].total += (curr.correct_count || 0) + (curr.incorrect_count || 0);
-          
-          return acc;
-        }, {});
-        
-        setCategoryProgress(progress);
+      if (data) {
+        setStreak(data.streak_days);
+        setTotalXP(data.xp);
       }
     } catch (error) {
-      console.error("Error in fetchUserData:", error);
-    } finally {
-      setLoading(false);
+      console.error("Error fetching user stats:", error);
     }
   }, [user]);
-  
+
   useEffect(() => {
-    fetchUserData();
-    
-    // Set up a refresh interval, but with a reasonable time
-    // This avoids the page reloading too frequently
-    const intervalId = setInterval(() => {
-      fetchUserData();
-    }, 5 * 60 * 1000); // Refresh every 5 minutes instead of seconds
-    
-    return () => {
-      clearInterval(intervalId); // Clean up on unmount
-    };
-  }, [user, fetchUserData]);
-
-  if (!user) {
-    return null; // Will be handled by the route guard
-  }
-
-  // Calculate totals for each main category
-  const calculateCategoryTotals = (category: 'Signale' | 'Betriebsdienst') => {
-    const subCategories = {
-      'Signale': ['Haupt- und Vorsignale', 'Zusatz- & Kennzeichen', 'Rangiersignale', 'Sonstige Signale'],
-      'Betriebsdienst': ['Grundlagen Bahnbetrieb', 'UVV & Arbeitsschutz', 'Rangieren', 'Züge fahren', 'PZB & Sicherungsanlagen']
-    };
-    
-    const subcatsForCategory = subCategories[category];
-    let totalCorrect = 0;
-    let totalCards = 0;
-    
-    subcatsForCategory.forEach(subcat => {
-      if (categoryProgress[subcat]) {
-        totalCorrect += categoryProgress[subcat].correct;
-        totalCards += categoryProgress[subcat].total;
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        // Fetch due cards for both categories
+        const signalsDue = await fetchDueCards('Signale', regulationPreference);
+        const betriebsdienstDue = await fetchDueCards('Betriebsdienst', regulationPreference);
+        
+        setDueTodaySignals(signalsDue);
+        setDueTodayBetriebsdienst(betriebsdienstDue);
+        
+        await fetchUserStats();
+      } catch (error) {
+        console.error("Error loading dashboard data:", error);
+        toast.error("Fehler beim Laden der Dashboard-Daten");
+      } finally {
+        setLoading(false);
       }
-    });
+    };
     
-    return { correct: totalCorrect, total: totalCards };
-  };
+    loadData();
+  }, [fetchDueCards, fetchUserStats, regulationPreference, user]);
 
-  const signaleTotals = calculateCategoryTotals('Signale');
-  const betriebsdienstTotals = calculateCategoryTotals('Betriebsdienst');
-  
-  const successRate = userStats.totalCorrect + userStats.totalIncorrect > 0 
-    ? Math.round((userStats.totalCorrect / (userStats.totalCorrect + userStats.totalIncorrect)) * 100) 
-    : 0;
+  // Calculate the total due today
+  const totalDueToday = dueTodaySignals + dueTodayBetriebsdienst;
 
-  const handleRegulationChange = async (value: string) => {
-    await setRegulationPreference(value as any);
+  const handleRegulationChange = (value) => {
+    setRegulationPreference(value);
   };
 
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
       
-      <main className="flex-1 container py-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">
-            {user ? `Hallo ${user.email?.split('@')[0] || 'Lokführer'}!` : 'Dein Lernbereich'}
-          </h1>
-          <p className="text-muted-foreground">
-            {new Date().toLocaleDateString('de-DE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+      <main className="flex-1">
+        <div className="container px-4 py-6">
+          <h1 className="text-xl font-bold mb-1">Dein Dashboard</h1>
+          <p className="text-muted-foreground mb-6">
+            Willkommen zurück{user?.user_metadata?.full_name ? `, ${user.user_metadata.full_name}` : ''}!
           </p>
-        </div>
-        
-        {/* Redesigned Learning Section - with consistent colors */}
-        <Card className="mb-6">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2">
-              <CalendarCheck className="h-5 w-5 text-loklernen-ultramarine" />
-              Heute lernen
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2">
+          
+          <div className="mb-6">
+            <div className="flex flex-col sm:flex-row justify-between mb-2">
+              <h2 className="text-lg font-semibold mb-3 sm:mb-0">Regelwerk-Präferenz</h2>
+            </div>
+            <Card className="p-4">
+              <RegulationFilterToggle 
+                value={regulationPreference}
+                onChange={handleRegulationChange}
+                showInfoTooltip={true}
+              />
+            </Card>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
+            {/* Due Today Card */}
+            <Card className="overflow-hidden">
+              <CardHeader className="bg-amber-50 pb-2">
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-base font-medium">Heute fällig</CardTitle>
+                  <div className="bg-amber-100 p-2 rounded-full">
+                    <Clock className="h-4 w-4 text-amber-600" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <div className="flex items-baseline justify-between mb-2">
+                  <span className="text-3xl font-bold">{totalDueToday}</span>
+                  <span className="text-sm text-muted-foreground">Karten</span>
+                </div>
+                <div className="flex flex-col text-sm text-muted-foreground">
+                  <span>{dueTodaySignals} Signale</span>
+                  <span>{dueTodayBetriebsdienst} Betriebsdienst</span>
+                </div>
+              </CardContent>
+              <CardFooter className="bg-muted/40 pt-2">
+                <Link to={`/karteikarten/lernen?regelwerk=${regulationPreference}`} className="w-full">
+                  <Button variant="ghost" size="sm" className="w-full justify-between">
+                    <span>Alle wiederholen</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </CardFooter>
+            </Card>
+            
+            {/* XP Today Card */}
+            <Card className="overflow-hidden">
+              <CardHeader className="bg-purple-50 pb-2">
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-base font-medium">Gesammelte XP</CardTitle>
+                  <div className="bg-purple-100 p-2 rounded-full">
+                    <Zap className="h-4 w-4 text-purple-600" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <div className="flex items-baseline justify-between mb-2">
+                  <span className="text-3xl font-bold">{totalXP.toLocaleString()}</span>
+                  <span className="text-sm text-muted-foreground">Punkte</span>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  <span>Nächstes Level: {Math.floor(totalXP / 1000) + 1}</span>
+                </div>
+                <Progress className="mt-2 h-1" value={(totalXP % 1000) / 10} />
+              </CardContent>
+              <CardFooter className="bg-muted/40 pt-2">
+                <Link to="/fortschritt" className="w-full">
+                  <Button variant="ghost" size="sm" className="w-full justify-between">
+                    <span>Mehr Statistiken</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </CardFooter>
+            </Card>
+            
+            {/* Streak Card */}
+            <Card className="overflow-hidden">
+              <CardHeader className="bg-green-50 pb-2">
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-base font-medium">Lernserie</CardTitle>
+                  <div className="bg-green-100 p-2 rounded-full">
+                    <Award className="h-4 w-4 text-green-600" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <div className="flex items-baseline justify-between mb-2">
+                  <span className="text-3xl font-bold">{streak}</span>
+                  <span className="text-sm text-muted-foreground">Tage in Folge</span>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  <span>Weiter so! Bleib dran und lerne jeden Tag.</span>
+                </div>
+              </CardContent>
+              <CardFooter className="bg-muted/40 pt-2">
+                <Link to={`/karteikarten/lernen?regelwerk=${regulationPreference}`} className="w-full">
+                  <Button variant="ghost" size="sm" className="w-full justify-between">
+                    <span>Heute lernen</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </CardFooter>
+            </Card>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            {/* User Stats */}
+            <div className="lg:col-span-1">
+              <UserStats />
+            </div>
+            
+            {/* Quick Start Cards */}
+            <div className="lg:col-span-2 space-y-4">
+              <h2 className="font-semibold text-lg">Schnellstart</h2>
+              
               {/* Signale Learning Card */}
               <div className="bg-blue-50 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="p-2 bg-loklernen-ultramarine/10 rounded-full">
-                    <Signal className="h-5 w-5 text-loklernen-ultramarine" />
+                    <Brain className="h-5 w-5 text-loklernen-ultramarine" />
                   </div>
                   <div>
                     <p className="font-medium">Signale</p>
-                    <p className="text-sm text-muted-foreground">
-                      {dueCards.signale} fällige Karten
+                    <p className="text-sm text-gray-500">
+                      {dueTodaySignals} Karten fällig
                     </p>
                   </div>
                 </div>
@@ -238,8 +268,8 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <p className="font-medium">Betriebsdienst</p>
-                    <p className="text-sm text-muted-foreground">
-                      {dueCards.betriebsdienst} fällige Karten
+                    <p className="text-sm text-gray-500">
+                      {dueTodayBetriebsdienst} Karten fällig
                     </p>
                   </div>
                 </div>
@@ -250,289 +280,14 @@ export default function Dashboard() {
                 </Link>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        
-        {/* Stats and Categories */}
-        <div className="grid gap-6 md:grid-cols-12">
-          {/* User Stats */}
-          <Card className="md:col-span-4">
-            <CardHeader>
-              <CardTitle>Deine Statistiken</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <UserStats 
-                xp={userStats.xp} 
-                level={userStats.level} 
-                streak={userStats.streak} 
-              />
-              
-              <div className="mt-4 space-y-2">
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Erfolgsrate</span>
-                    <span>{successRate}%</span>
-                  </div>
-                  <Progress value={successRate} className="h-2" 
-                    indicatorClassName={successRate > 70 ? "bg-green-500" : successRate > 40 ? "bg-yellow-500" : "bg-red-500"}
-                  />
-                </div>
-                
-                <div className="pt-2">
-                  <p className="text-sm text-muted-foreground">
-                    Insgesamt: {userStats.totalCorrect} richtig, {userStats.totalIncorrect} falsch
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          </div>
           
-          {/* Categories Tabs with Accordions */}
-          <Card className="md:col-span-8">
-            <CardHeader>
-              <CardTitle>Kategorien</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="signale">
-                <TabsList className="w-full mb-4">
-                  <TabsTrigger value="signale" className="flex-1">Signale</TabsTrigger>
-                  <TabsTrigger value="betriebsdienst" className="flex-1">Betriebsdienst</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="signale">
-                  <div className="space-y-2">
-                    {/* Main category progress */}
-                    <div className="p-3 rounded-lg border mb-2">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="font-medium">Signale gesamt</span>
-                        <span className="text-sm text-muted-foreground">
-                          {signaleTotals.correct} / {signaleTotals.total}
-                        </span>
-                      </div>
-                      <Progress 
-                        value={signaleTotals.total > 0 
-                          ? (signaleTotals.correct / signaleTotals.total) * 100 
-                          : 0} 
-                        className="h-2"
-                      />
-                    </div>
-                    
-                    {/* Subcategories in accordion */}
-                    <Accordion type="multiple" className="w-full">
-                      <AccordionItem value="haupt-vorsignale">
-                        <AccordionTrigger className="py-3 hover:no-underline">
-                          <div className="flex-1 text-left">
-                            <div className="flex justify-between items-center">
-                              <span>Haupt- und Vorsignale</span>
-                              <span className="text-sm text-muted-foreground mr-2">
-                                {categoryProgress['Haupt- und Vorsignale']?.correct || 0} / {categoryProgress['Haupt- und Vorsignale']?.total || 0}
-                              </span>
-                            </div>
-                            <Progress 
-                              value={categoryProgress['Haupt- und Vorsignale']?.total > 0 
-                                ? (categoryProgress['Haupt- und Vorsignale'].correct / categoryProgress['Haupt- und Vorsignale'].total) * 100 
-                                : 0} 
-                              className="h-1 mt-1"
-                            />
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <div className="pl-4 pr-2 py-2">
-                            <Link 
-                              to={`/karteikarten/signale/haupt-vorsignale?regelwerk=${regulationPreference}`}
-                              className="flex justify-between items-center px-2 py-3 rounded-lg hover:bg-slate-50"
-                            >
-                              <span>Zu den Karteikarten</span>
-                              <Button variant="outline" size="sm">Öffnen</Button>
-                            </Link>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                      
-                      <AccordionItem value="zusatz-kennzeichen">
-                        <AccordionTrigger className="py-3 hover:no-underline">
-                          <div className="flex-1 text-left">
-                            <div className="flex justify-between items-center">
-                              <span>Zusatz- & Kennzeichen</span>
-                              <span className="text-sm text-muted-foreground mr-2">
-                                {categoryProgress['Zusatz- & Kennzeichen']?.correct || 0} / {categoryProgress['Zusatz- & Kennzeichen']?.total || 0}
-                              </span>
-                            </div>
-                            <Progress 
-                              value={categoryProgress['Zusatz- & Kennzeichen']?.total > 0 
-                                ? (categoryProgress['Zusatz- & Kennzeichen'].correct / categoryProgress['Zusatz- & Kennzeichen'].total) * 100 
-                                : 0} 
-                              className="h-1 mt-1"
-                            />
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <div className="pl-4 pr-2 py-2">
-                            <Link 
-                              to={`/karteikarten/signale/zusatz-kennzeichen?regelwerk=${regulationPreference}`}
-                              className="flex justify-between items-center px-2 py-3 rounded-lg hover:bg-slate-50"
-                            >
-                              <span>Zu den Karteikarten</span>
-                              <Button variant="outline" size="sm">Öffnen</Button>
-                            </Link>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                      
-                      <AccordionItem value="rangiersignale">
-                        <AccordionTrigger className="py-3 hover:no-underline">
-                          <div className="flex-1 text-left">
-                            <div className="flex justify-between items-center">
-                              <span>Rangiersignale</span>
-                              <span className="text-sm text-muted-foreground mr-2">
-                                {categoryProgress['Rangiersignale']?.correct || 0} / {categoryProgress['Rangiersignale']?.total || 0}
-                              </span>
-                            </div>
-                            <Progress 
-                              value={categoryProgress['Rangiersignale']?.total > 0 
-                                ? (categoryProgress['Rangiersignale'].correct / categoryProgress['Rangiersignale'].total) * 100 
-                                : 0} 
-                              className="h-1 mt-1"
-                            />
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <div className="pl-4 pr-2 py-2">
-                            <Link 
-                              to={`/karteikarten/signale/rangiersignale?regelwerk=${regulationPreference}`}
-                              className="flex justify-between items-center px-2 py-3 rounded-lg hover:bg-slate-50"
-                            >
-                              <span>Zu den Karteikarten</span>
-                              <Button variant="outline" size="sm">Öffnen</Button>
-                            </Link>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
-                    
-                    <div className="flex justify-center mt-4">
-                      <Link to={`/karteikarten/signale?regelwerk=${regulationPreference}`}>
-                        <Button variant="outline">Alle Signale anzeigen</Button>
-                      </Link>
-                    </div>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="betriebsdienst">
-                  <div className="space-y-2">
-                    {/* Main category progress */}
-                    <div className="p-3 rounded-lg border mb-2">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="font-medium">Betriebsdienst gesamt</span>
-                        <span className="text-sm text-muted-foreground">
-                          {betriebsdienstTotals.correct} / {betriebsdienstTotals.total}
-                        </span>
-                      </div>
-                      <Progress 
-                        value={betriebsdienstTotals.total > 0 
-                          ? (betriebsdienstTotals.correct / betriebsdienstTotals.total) * 100 
-                          : 0} 
-                        className="h-2"
-                      />
-                    </div>
-                    
-                    {/* Subcategories in accordion */}
-                    <Accordion type="multiple" className="w-full">
-                      <AccordionItem value="grundlagen">
-                        <AccordionTrigger className="py-3 hover:no-underline">
-                          <div className="flex-1 text-left">
-                            <div className="flex justify-between items-center">
-                              <span>Grundlagen Bahnbetrieb</span>
-                              <span className="text-sm text-muted-foreground mr-2">
-                                {categoryProgress['Grundlagen Bahnbetrieb']?.correct || 0} / {categoryProgress['Grundlagen Bahnbetrieb']?.total || 0}
-                              </span>
-                            </div>
-                            <Progress 
-                              value={categoryProgress['Grundlagen Bahnbetrieb']?.total > 0 
-                                ? (categoryProgress['Grundlagen Bahnbetrieb'].correct / categoryProgress['Grundlagen Bahnbetrieb'].total) * 100 
-                                : 0} 
-                              className="h-1 mt-1"
-                            />
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <div className="pl-4 pr-2 py-2">
-                            <Link 
-                              to={`/karteikarten/betriebsdienst/grundlagen?regelwerk=${regulationPreference}`}
-                              className="flex justify-between items-center px-2 py-3 rounded-lg hover:bg-slate-50"
-                            >
-                              <span>Zu den Karteikarten</span>
-                              <Button variant="outline" size="sm">Öffnen</Button>
-                            </Link>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                      
-                      <AccordionItem value="uvv">
-                        <AccordionTrigger className="py-3 hover:no-underline">
-                          <div className="flex-1 text-left">
-                            <div className="flex justify-between items-center">
-                              <span>UVV & Arbeitsschutz</span>
-                              <span className="text-sm text-muted-foreground mr-2">
-                                {categoryProgress['UVV & Arbeitsschutz']?.correct || 0} / {categoryProgress['UVV & Arbeitsschutz']?.total || 0}
-                              </span>
-                            </div>
-                            <Progress 
-                              value={categoryProgress['UVV & Arbeitsschutz']?.total > 0 
-                                ? (categoryProgress['UVV & Arbeitsschutz'].correct / categoryProgress['UVV & Arbeitsschutz'].total) * 100 
-                                : 0} 
-                              className="h-1 mt-1"
-                            />
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <div className="pl-4 pr-2 py-2">
-                            <Link 
-                              to={`/karteikarten/betriebsdienst/uvv?regelwerk=${regulationPreference}`}
-                              className="flex justify-between items-center px-2 py-3 rounded-lg hover:bg-slate-50"
-                            >
-                              <span>Zu den Karteikarten</span>
-                              <Button variant="outline" size="sm">Öffnen</Button>
-                            </Link>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
-                    
-                    <div className="flex justify-center mt-4">
-                      <Link to={`/karteikarten/betriebsdienst?regelwerk=${regulationPreference}`}>
-                        <Button variant="outline">Alle Betriebsdienst-Themen anzeigen</Button>
-                      </Link>
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
+          {/* Course Progress Section */}
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold mb-4">Mein Lernfortschritt</h2>
+            <CoursesProgress />
+          </div>
         </div>
-        
-        {/* Settings Section with Regulation Toggle */}
-        <Card className="mt-6">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Lerneinstellungen</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="max-w-md mx-auto">
-              <RegulationFilterToggle 
-                value={regulationPreference}
-                onChange={handleRegulationChange}
-                title="Regelwerk auswählen"
-                showInfoTooltip={true}
-                variant="default"
-                showAllOption={false}
-                className="w-full"
-              />
-              <p className="text-sm text-muted-foreground mt-2 text-center">
-                Diese Einstellung wird für alle Lernkarten verwendet.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
       </main>
       
       <Footer />

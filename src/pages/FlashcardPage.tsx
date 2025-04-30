@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
@@ -15,6 +15,8 @@ import FlashcardProgress from "@/components/flashcards/FlashcardProgress";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useUserPreferences } from "@/contexts/UserPreferencesContext";
+import { RegulationFilterToggle } from "@/components/common/RegulationFilterToggle";
 
 // Helper to map URL subcategory param back to original subcategory string (case sensitive)
 function mapUrlToSubcategory(urlSubcategory?: string): string | undefined {
@@ -36,7 +38,13 @@ export default function FlashcardPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [isPracticeMode] = useState(true);
+  const { regulationPreference } = useUserPreferences();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Get regulation filter from URL or default to user preference
+  const regulationParam = searchParams.get("regelwerk") || regulationPreference;
 
+  // Pass the regulation preference to the hook
   const {
     loading,
     dueQuestions: questions,
@@ -44,12 +52,23 @@ export default function FlashcardPage() {
   } = useSpacedRepetition(
     "Signale" as QuestionCategory, 
     subcategory, 
-    { practiceMode: isPracticeMode }
+    { 
+      practiceMode: isPracticeMode,
+      regulationCategory: regulationParam
+    }
   );
+
+  // Update regulation filter when it changes
+  const handleRegulationChange = (value) => {
+    setSearchParams(params => {
+      params.set("regelwerk", value);
+      return params;
+    });
+  };
 
   // Query to get total due cards count for today
   const { data: dueTodayStats } = useQuery({
-    queryKey: ['dueTodayCount', user?.id],
+    queryKey: ['dueTodayCount', user?.id, regulationParam],
     queryFn: async () => {
       if (!user) return { count: 0 };
       
@@ -86,7 +105,7 @@ export default function FlashcardPage() {
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(curr => curr + 1);
     } else {
-      navigate('/signale');
+      navigate('/karteikarten');
       toast.success("Gut gemacht! Du hast alle fälligen Karten für heute geschafft!");
     }
   };
@@ -119,7 +138,7 @@ export default function FlashcardPage() {
             <div className="text-center">
               <h2 className="text-2xl font-bold mb-4">Keine Karten fällig</h2>
               <p className="mb-8">Du hast aktuell keine Karten zum Wiederholen. Schau später wieder vorbei!</p>
-              <Link to="/signale">
+              <Link to="/karteikarten">
                 <Button>
                   <ChevronLeft className="h-4 w-4 mr-2" />
                   Zurück zur Übersicht
@@ -141,7 +160,7 @@ export default function FlashcardPage() {
         <div className="container px-4 py-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
-              <Link to="/signale">
+              <Link to="/karteikarten">
                 <Button variant="ghost" size="sm" className={isMobile ? "px-2" : ""}>
                   <ChevronLeft className="h-4 w-4" />
                   {!isMobile && <span className="ml-2">Zurück</span>}
@@ -159,6 +178,17 @@ export default function FlashcardPage() {
           </div>
           
           {isMobile && <h1 className="text-lg font-semibold mb-4">{subcategory}</h1>}
+          
+          {/* Regulation filter */}
+          <div className="mb-4">
+            <RegulationFilterToggle
+              value={regulationParam}
+              onChange={handleRegulationChange}
+              variant="outline"
+              size="sm"
+              className="mb-4"
+            />
+          </div>
           
           {/* Main content - flashcard first, then progress */}
           {currentQuestion && (

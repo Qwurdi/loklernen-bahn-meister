@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -10,23 +10,32 @@ import FlashcardItem from "@/components/flashcards/FlashcardItem";
 import FlashcardProgress from "@/components/flashcards/FlashcardProgress";
 import { useSpacedRepetition } from "@/hooks/useSpacedRepetition";
 import { useAuth } from "@/contexts/AuthContext";
-import { Question } from "@/types/questions";
+import { Question, QuestionCategory } from "@/types/questions";
 import { toast } from "sonner";
+import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 
 export default function LearningSessionPage() {
   const { user } = useAuth();
+  const { regulationPreference } = useUserPreferences();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [sessionCards, setSessionCards] = useState<Question[]>([]);
   const [sessionFinished, setSessionFinished] = useState(false);
   
-  // For spaced repetition, we don't filter by category or subcategory
-  // to get all due cards across all categories
+  // Get category and regulation preference from URL parameters
+  const categoryParam = searchParams.get("category") as QuestionCategory || "Signale";
+  const regulationParam = searchParams.get("regelwerk") || regulationPreference;
+
+  // Pass both category and regulation preference to the hook
   const { loading, dueQuestions, submitAnswer, reloadQuestions } = useSpacedRepetition(
-    "Signale", // Still need to pass a default category
+    categoryParam,
     undefined,
-    { practiceMode: false }
+    { 
+      practiceMode: false,
+      regulationCategory: regulationParam
+    }
   );
 
   useEffect(() => {
@@ -37,7 +46,7 @@ export default function LearningSessionPage() {
     }
   }, [loading, dueQuestions]);
 
-  const handleAnswer = (score: number) => {
+  const handleAnswer = async (score: number) => {
     if (currentIndex >= sessionCards.length) return;
     
     const currentCard = sessionCards[currentIndex];
@@ -49,7 +58,7 @@ export default function LearningSessionPage() {
     
     // Submit answer for spaced repetition
     if (user && currentCard) {
-      submitAnswer(currentCard.id, score);
+      await submitAnswer(currentCard.id, score);
     }
   };
 
@@ -71,6 +80,12 @@ export default function LearningSessionPage() {
 
   const handleEndSession = () => {
     navigate("/");
+  };
+
+  const getCategoryPath = () => {
+    return categoryParam === "Betriebsdienst" 
+      ? "/karteikarten/betriebsdienst" 
+      : "/karteikarten";
   };
 
   if (loading) {
@@ -95,7 +110,7 @@ export default function LearningSessionPage() {
             <p className="text-gray-600 mb-6">
               Aktuell sind keine Karten zur Wiederholung fällig. Schaue später wieder vorbei oder wähle eine Kategorie, um neue Karten zu lernen.
             </p>
-            <Button onClick={() => navigate("/karteikarten")}>
+            <Button onClick={() => navigate(getCategoryPath())}>
               Zu Kategorien
             </Button>
           </Card>
@@ -143,7 +158,7 @@ export default function LearningSessionPage() {
             variant="outline"
             size="sm"
             className="flex items-center"
-            onClick={() => navigate("/karteikarten")}
+            onClick={() => navigate(getCategoryPath())}
           >
             <ChevronLeft className="h-4 w-4 mr-1" />
             Zurück
@@ -153,7 +168,7 @@ export default function LearningSessionPage() {
             variant="ghost"
             size="sm"
             className="flex items-center"
-            onClick={() => navigate("/karteikarten")}
+            onClick={() => navigate(getCategoryPath())}
           >
             <List className="h-4 w-4 mr-1" />
             Alle Kategorien

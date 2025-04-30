@@ -40,9 +40,13 @@ export function useSpacedRepetition(
   const [dueQuestions, setDueQuestions] = useState<Question[]>([]);
   const [progress, setProgress] = useState<UserProgress[]>([]);
   const [error, setError] = useState<Error | null>(null);
+  
+  // Default to 'all' if regulationCategory is not provided
   const regulationCategory = options.regulationCategory || "all";
-  const batchSize = 50; // Limit the number of questions to process at once
-
+  
+  // Maximum number of questions to load at once
+  const batchSize = 50;
+  
   // Move loadDueQuestions to useCallback to avoid recreation on every render
   const loadDueQuestions = useCallback(async () => {
     if (!user) {
@@ -54,9 +58,10 @@ export function useSpacedRepetition(
     try {
       setLoading(true);
       setError(null);
+      console.log(`Loading questions with category=${category}, subcategory=${subcategory}, regulation=${regulationCategory}, practice=${options.practiceMode}`);
 
+      // Handle practice mode differently - just load questions without checking if they're due
       if (options.practiceMode) {
-        // In practice mode, load questions with pagination for better performance
         let query = supabase
           .from('questions')
           .select('*')
@@ -66,64 +71,88 @@ export function useSpacedRepetition(
         if (subcategory) {
           query = query.eq('sub_category', subcategory);
         }
+        
+        // Apply regulation filter if specified and not "all"
+        if (regulationCategory !== "all") {
+          query = query.or(`regulation_category.eq.${regulationCategory},regulation_category.eq.both,regulation_category.is.null`);
+        }
 
         const { data: questions, error: questionsError } = await query;
 
         if (questionsError) {
+          console.error("Error fetching practice questions:", questionsError);
           setError(new Error(`Error fetching practice questions: ${questionsError.message}`));
           return;
         }
 
-        // Filter by regulation category if specified
-        let filteredQuestions = questions || [];
-        if (regulationCategory !== "all") {
-          filteredQuestions = filteredQuestions.filter(q => 
-            q.regulation_category === regulationCategory || 
-            q.regulation_category === "both" || 
-            q.regulation_category === undefined
-          );
-        }
-
-        setDueQuestions(filteredQuestions.map(transformQuestion));
+        setDueQuestions(questions?.map(transformQuestion) || []);
         return;
       }
       
-      // Regular spaced repetition mode
-      // Fetch questions that are due for review
-      // Use safe filter approach instead of 'in' operator with large arrays
+      // Regular spaced repetition mode - Load questions that are due for review
+      console.log("Loading due questions for user", user.id, "with regulation", regulationCategory);
+      
+      // First get progress data for questions that are due
       const { data: progressData, error: progressError } = await supabase
         .from('user_progress')
         .select('*, questions(*)')
         .eq('user_id', user.id)
-        .eq('questions.category', category)
-        .lte('next_review_at', new Date().toISOString())
-        .limit(batchSize);
+        .lte('next_review_at', new Date().toISOString());
 
       if (progressError) {
+        console.error("Error fetching progress data:", progressError);
         setError(new Error(`Error fetching progress data: ${progressError.message}`));
         return;
       }
 
-      // Apply subcategory filter
+      // Filter the progress data by category and subcategory
       let filteredProgressData = progressData || [];
+      console.log("Got progress data:", filteredProgressData.length, "items");
+      
+      // Filter by category
+      filteredProgressData = filteredProgressData.filter(p => 
+        p.questions?.category === category);
+      
+      // Filter by subcategory if specified
       if (subcategory) {
         filteredProgressData = filteredProgressData.filter(p => 
-          p.questions.sub_category === subcategory);
+          p.questions?.sub_category === subcategory);
       }
-
-      // Filter by regulation category if specified
+      
+      // Apply regulation filter if not "all"
       if (regulationCategory !== "all") {
         filteredProgressData = filteredProgressData.filter(p => 
-          p.questions.regulation_category === regulationCategory || 
-          p.questions.regulation_category === "both" || 
-          p.questions.regulation_category === undefined
-        );
+          p.questions?.regulation_category === regulationCategory || 
+          p.questions?.regulation_category === "both" || 
+          !p.questions?.regulation_category);
+      }
+      
+      console.log("Filtered progress data:", filteredProgressData.length, "items");
+
+      // Transform the questions from the progress data
+      const questionsWithProgress = filteredProgressData
+        .filter(p => p.questions) // Ensure questions exist
+        .map(p => transformQuestion(p.questions));
+        
+      console.log("Questions with progress:", questionsWithProgress.length);
+
+      // If we have enough questions with progress, no need to fetch new ones
+      if (questionsWithProgress.length >= batchSize) {
+        setDueQuestions(questionsWithProgress.slice(0, batchSize));
+        setProgress(filteredProgressData);
+        setLoading(false);
+        return;
       }
 
-      // Get IDs of questions with progress
-      const questionIdsWithProgress = filteredProgressData.map(p => p.question_id);
+      // Otherwise, fetch new questions (those without progress)
+      // Get the IDs of questions that already have progress
+      const questionIdsWithProgress = filteredProgressData
+        .filter(p => p.questions?.id)
+        .map(p => p.question_id);
+        
+      console.log("Question IDs with progress:", questionIdsWithProgress.length);
 
-      // Build query for new questions (those without progress)
+      // Build the query for new questions
       let newQuestionsQuery = supabase
         .from('questions')
         .select('*')
@@ -133,41 +162,51 @@ export function useSpacedRepetition(
       if (subcategory) {
         newQuestionsQuery = newQuestionsQuery.eq('sub_category', subcategory);
       }
-
-      // Handle question IDs with progress - use a different approach for large arrays
-      if (questionIdsWithProgress.length > 0) {
-        // For small arrays, use 'not in'
-        if (questionIdsWithProgress.length < 10) {
-          newQuestionsQuery = newQuestionsQuery.not('id', 'in', questionIdsWithProgress);
-        } else {
-          // For larger arrays, fetch all and filter in memory (less efficient but more reliable)
-          // We limit the number to avoid processing too many questions
-        }
-      }
-
-      // Apply regulation category filter
+      
+      // Apply regulation filter if not "all"
       if (regulationCategory !== "all") {
         newQuestionsQuery = newQuestionsQuery.or(
           `regulation_category.eq.${regulationCategory},regulation_category.eq.both,regulation_category.is.null`
         );
       }
 
-      const { data: newQuestions, error: newQuestionsError } = await newQuestionsQuery;
+      // If there are questions with progress, exclude them from the query
+      if (questionIdsWithProgress.length > 0) {
+        // Use a different approach based on the number of IDs
+        if (questionIdsWithProgress.length < 10) {
+          // For small arrays, use 'not in'
+          newQuestionsQuery = newQuestionsQuery.not('id', 'in', questionIdsWithProgress);
+        } else {
+          // For larger arrays, we'll filter in memory after fetching
+          console.log("Too many question IDs, will filter in memory");
+        }
+      }
+
+      const { data: newQuestionsData, error: newQuestionsError } = await newQuestionsQuery;
       
       if (newQuestionsError) {
+        console.error("Error fetching new questions:", newQuestionsError);
         setError(new Error(`Error fetching new questions: ${newQuestionsError.message}`));
         return;
       }
-
-      // Filter out questions that already have progress
-      const filteredNewQuestions = newQuestions ? 
-        newQuestions.filter(q => !questionIdsWithProgress.includes(q.id)) :
-        [];
-
-      const transformedProgressQuestions = filteredProgressData.map(p => transformQuestion(p.questions));
-      const transformedNewQuestions = filteredNewQuestions.map(q => transformQuestion(q));
       
-      setDueQuestions([...transformedProgressQuestions, ...transformedNewQuestions].slice(0, batchSize));
+      console.log("Fetched new questions:", newQuestionsData?.length);
+
+      // Filter out questions that already have progress (for large arrays)
+      const newQuestions = newQuestionsData && questionIdsWithProgress.length >= 10
+        ? newQuestionsData.filter(q => !questionIdsWithProgress.includes(q.id))
+        : newQuestionsData || [];
+        
+      console.log("Filtered new questions:", newQuestions.length);
+
+      // Combine progress questions and new questions, and limit to batch size
+      const allQuestions = [
+        ...questionsWithProgress,
+        ...newQuestions.map(transformQuestion)
+      ].slice(0, batchSize);
+      
+      console.log("Final questions count:", allQuestions.length);
+      setDueQuestions(allQuestions);
       setProgress(filteredProgressData);
     } catch (error) {
       console.error('Error loading questions:', error);
@@ -217,6 +256,7 @@ export function useSpacedRepetition(
     try {
       const currentProgress = progress.find(p => p.question_id === questionId);
       const { interval_days, ease_factor, next_review_at } = calculateNextReview(score, currentProgress);
+      console.log(`Submitting answer for question ${questionId} with score ${score}, next review in ${interval_days} days`);
 
       if (currentProgress) {
         // Update existing progress
@@ -234,7 +274,10 @@ export function useSpacedRepetition(
           })
           .eq('id', currentProgress.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error updating progress:", error);
+          throw error;
+        }
       } else {
         // Create new progress entry
         const { error } = await supabase
@@ -252,24 +295,57 @@ export function useSpacedRepetition(
             last_score: score
           });
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error creating progress:", error);
+          throw error;
+        }
       }
 
-      // Update user stats
-      const { error: statsError } = await supabase.from('user_stats').upsert({
-        user_id: user.id,
-        xp: score * 10, // Award XP based on score
-        last_activity_date: new Date().toISOString(),
-        total_correct: score >= 4 ? 1 : 0,
-        total_incorrect: score < 4 ? 1 : 0
-      }, {
-        onConflict: 'user_id',
-        count: 'exact'
-      });
+      // Update user stats - first check if user has stats
+      const { data: existingStats, error: statsCheckError } = await supabase
+        .from('user_stats')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+        
+      if (statsCheckError && statsCheckError.code !== 'PGRST116') {
+        console.error("Error checking user stats:", statsCheckError);
+        throw statsCheckError;
+      }
+      
+      // Calculate XP to add (10 points per score level)
+      const xpToAdd = score * 10;
+      
+      if (existingStats) {
+        // Update existing stats
+        const { error: statsUpdateError } = await supabase.from('user_stats').update({
+          last_activity_date: new Date().toISOString(),
+          xp: existingStats.xp + xpToAdd,
+          total_correct: existingStats.total_correct + (score >= 4 ? 1 : 0),
+          total_incorrect: existingStats.total_incorrect + (score < 4 ? 1 : 0)
+        }).eq('user_id', user.id);
 
-      if (statsError) throw statsError;
+        if (statsUpdateError) {
+          console.error("Error updating stats:", statsUpdateError);
+          throw statsUpdateError;
+        }
+      } else {
+        // Create new stats record
+        const { error: statsInsertError } = await supabase.from('user_stats').insert({
+          user_id: user.id,
+          last_activity_date: new Date().toISOString(),
+          xp: xpToAdd,
+          total_correct: score >= 4 ? 1 : 0,
+          total_incorrect: score < 4 ? 1 : 0
+        });
 
-      // Reload questions
+        if (statsInsertError) {
+          console.error("Error creating stats:", statsInsertError);
+          throw statsInsertError;
+        }
+      }
+
+      // Reload questions to update the list
       await loadDueQuestions();
     } catch (error) {
       console.error('Error submitting answer:', error);

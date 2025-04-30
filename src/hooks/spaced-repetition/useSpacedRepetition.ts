@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Question, QuestionCategory } from '@/types/questions';
@@ -9,7 +10,7 @@ import {
   fetchPracticeQuestions,
   updateUserProgress,
   updateUserStats
-} from './service';
+} from './services';
 
 export function useSpacedRepetition(
   category: QuestionCategory, 

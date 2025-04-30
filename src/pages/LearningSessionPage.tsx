@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { ChevronLeft, List } from "lucide-react";
 import FlashcardItem from "@/components/flashcards/FlashcardItem";
 import FlashcardProgress from "@/components/flashcards/FlashcardProgress";
-import { useSpacedRepetition } from "@/hooks/useSpacedRepetition";
+import { useSpacedRepetition } from "@/hooks/spaced-repetition";
 import { useAuth } from "@/contexts/AuthContext";
 import { Question, QuestionCategory } from "@/types/questions";
 import { toast } from "sonner";

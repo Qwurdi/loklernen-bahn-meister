@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { useSpacedRepetition } from "@/hooks/useSpacedRepetition";
+import { useSpacedRepetition } from "@/hooks/spaced-repetition";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { QuestionCategory } from "@/types/questions";

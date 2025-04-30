@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,6 +13,8 @@ import FlashcardPage from "./pages/FlashcardPage";
 import LearningSessionPage from "./pages/LearningSessionPage";
 import BetriebsdienstPage from "./pages/BetriebsdienstPage";
 import ProgressPage from "./pages/ProgressPage";
+import SettingsPage from "./pages/SettingsPage";
+import RegulationSelectionPage from "./pages/RegulationSelectionPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
@@ -21,7 +24,17 @@ import QuestionsPage from "./pages/admin/QuestionsPage";
 import QuestionEditorPage from "./pages/admin/QuestionEditorPage";
 import DeleteQuestionPage from "./pages/admin/DeleteQuestionPage";
 
-const queryClient = new QueryClient();
+// Create a QueryClient with optimized configuration to prevent unnecessary reloads
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      cacheTime: 1000 * 60 * 30, // 30 minutes
+      refetchOnWindowFocus: false, // Don't refetch when window regains focus
+      retry: 1, // Only retry once on failure
+    },
+  },
+});
 
 // Route guard component for authenticated routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -76,6 +89,10 @@ const App = () => (
               {/* Home route - dashboard for authenticated users, landing page for others */}
               <Route path="/" element={<HomeRoute />} />
               <Route path="/welcome" element={<Index />} />
+              
+              {/* Regulation Selection Route */}
+              <Route path="/regelwerk-auswahl" element={<ProtectedRoute><RegulationSelectionPage /></ProtectedRoute>} />
+              <Route path="/einstellungen" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
               
               {/* Renamed Flashcard Routes */}
               <Route path="/karteikarten" element={<CardsPage />} />

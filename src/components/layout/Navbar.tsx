@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { Book, Home, Menu, User, BarChart } from "lucide-react";
+import { Book, Home, Menu, User, BarChart, Settings } from "lucide-react";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -31,6 +31,12 @@ const Navbar = () => {
       name: "Fortschritt", 
       path: "/fortschritt", 
       icon: <BarChart className="h-5 w-5" />,
+      requiresAuth: true
+    },
+    { 
+      name: "Einstellungen", 
+      path: "/einstellungen", 
+      icon: <Settings className="h-5 w-5" />,
       requiresAuth: true
     }
   ];

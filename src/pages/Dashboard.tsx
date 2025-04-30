@@ -7,14 +7,12 @@ import Footer from "@/components/layout/Footer";
 import UserStats from "@/components/common/UserStats";
 import CoursesProgress from "@/components/progress/CoursesProgress";
 import DashboardSummaryCards from "@/components/dashboard/DashboardSummaryCards";
-import RegulationPreferenceCard from "@/components/dashboard/RegulationPreferenceCard";
 import QuickStartSection from "@/components/dashboard/QuickStartSection";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { RegulationFilterType } from "@/types/regulation";
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { regulationPreference, setRegulationPreference } = useUserPreferences();
+  const { regulationPreference } = useUserPreferences();
   
   // Use the custom hook to fetch dashboard data
   const {
@@ -24,10 +22,6 @@ export default function Dashboard() {
     totalXP,
     isLoading
   } = useDashboardData(regulationPreference);
-
-  const handleRegulationChange = (value: RegulationFilterType) => {
-    setRegulationPreference(value);
-  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -40,12 +34,6 @@ export default function Dashboard() {
             Willkommen zurück{user?.user_metadata?.full_name ? `, ${user.user_metadata.full_name}` : ''}!
           </p>
           
-          {/* Regulation Preference Card */}
-          <RegulationPreferenceCard 
-            value={regulationPreference} 
-            onChange={handleRegulationChange} 
-          />
-
           {/* Summary Cards Section */}
           <DashboardSummaryCards
             dueTodaySignals={dueTodaySignals}

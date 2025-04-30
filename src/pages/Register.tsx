@@ -31,8 +31,11 @@ export default function Register() {
         throw error;
       }
 
+      // Set a flag to identify new users
+      localStorage.setItem('isNewSignUp', 'true');
+      
       toast.success('Registrierung erfolgreich! Bitte überprüfe deine E-Mails.');
-      navigate("/");
+      navigate("/regelwerk-auswahl"); // Redirect to regulation selection page
     } catch (error: any) {
       toast.error(error.message || "Ein Fehler ist aufgetreten");
     } finally {

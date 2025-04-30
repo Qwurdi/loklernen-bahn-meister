@@ -3,11 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { QuestionCategory } from '@/types/questions';
+import { useMemo } from 'react';
 
 export const useDashboardData = (regulationFilter: string) => {
   const { user } = useAuth();
 
-  // Fetch due cards count
+  // Fetch due cards count with better caching
   const { data: dueCardsData, isLoading: isLoadingDueCards } = useQuery({
     queryKey: ['dueCards', user?.id, regulationFilter],
     queryFn: async () => {
@@ -45,10 +46,12 @@ export const useDashboardData = (regulationFilter: string) => {
         categoryDueCards
       };
     },
-    enabled: !!user
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    cacheTime: 1000 * 60 * 30, // 30 minutes
   });
 
-  // Fetch user stats
+  // Fetch user stats with better caching
   const { data: statsData, isLoading: isLoadingStats } = useQuery({
     queryKey: ['userStats', user?.id],
     queryFn: async () => {
@@ -64,34 +67,32 @@ export const useDashboardData = (regulationFilter: string) => {
       
       if (!data) return { xp: 0, level: 1, streak_days: 0 };
       
-      // Calculate level - basic exponential curve
-      const level = Math.max(1, Math.floor(Math.sqrt(data.xp / 100)) + 1);
-      
       return {
         xp: data.xp || 0,
-        level,
+        level: Math.max(1, Math.floor(Math.sqrt(data.xp / 100)) + 1),
         streak_days: data.streak_days || 0,
         total_correct: data.total_correct || 0,
         total_incorrect: data.total_incorrect || 0,
         last_activity_date: data.last_activity_date
       };
     },
-    enabled: !!user
+    enabled: !!user,
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    cacheTime: 1000 * 60 * 60, // 60 minutes
   });
 
-  // Calculate values needed by dashboard components
-  const dueTodaySignals = dueCardsData?.categoryDueCards?.["Signale"] || 0;
-  const dueTodayBetriebsdienst = dueCardsData?.categoryDueCards?.["Betriebsdienst"] || 0;
-  const totalXP = statsData?.xp || 0;
-  const streak = statsData?.streak_days || 0;
+  // Memoize the calculated values to prevent unnecessary rerenders
+  const memoizedValues = useMemo(() => ({
+    dueTodaySignals: dueCardsData?.categoryDueCards?.["Signale"] || 0,
+    dueTodayBetriebsdienst: dueCardsData?.categoryDueCards?.["Betriebsdienst"] || 0,
+    totalXP: statsData?.xp || 0,
+    streak: statsData?.streak_days || 0,
+  }), [dueCardsData, statsData]);
 
   return {
+    ...memoizedValues,
     dueCardsData,
     statsData,
-    dueTodaySignals,
-    dueTodayBetriebsdienst,
-    totalXP,
-    streak,
     isLoading: isLoadingDueCards || isLoadingStats
   };
 };

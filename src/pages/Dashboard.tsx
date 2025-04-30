@@ -1,8 +1,8 @@
-
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UserStats from "@/components/common/UserStats";
+import { RegulationFilterToggle } from "@/components/common/RegulationFilterToggle";
 import { CalendarCheck, Clock, BookOpen } from "lucide-react";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { regulationPreference, setRegulationPreference } = useUserPreferences();
   const [dueCards, setDueCards] = useState(0);
   const [userStats, setUserStats] = useState({
     xp: 0,
@@ -123,6 +125,10 @@ export default function Dashboard() {
   // Get today's recommended learning time (5 minutes per 10 cards, minimum 5 minutes)
   const recommendedMinutes = Math.max(5, Math.ceil(dueCards / 10) * 5);
 
+  const handleRegulationChange = async (value: string) => {
+    await setRegulationPreference(value as any);
+  };
+
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
@@ -143,33 +149,48 @@ export default function Dashboard() {
             <CardTitle>Heute lernen</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-loklernen-ultramarine/10 rounded-full">
-                  <CalendarCheck className="h-5 w-5 text-loklernen-ultramarine" />
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-loklernen-ultramarine/10 rounded-full">
+                    <CalendarCheck className="h-5 w-5 text-loklernen-ultramarine" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Fällige Karten</p>
+                    <p className="text-2xl font-semibold">{dueCards}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Fällige Karten</p>
-                  <p className="text-2xl font-semibold">{dueCards}</p>
+                
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-loklernen-ultramarine/10 rounded-full">
+                    <Clock className="h-5 w-5 text-loklernen-ultramarine" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Empfohlene Zeit</p>
+                    <p className="text-2xl font-semibold">{recommendedMinutes} Min.</p>
+                  </div>
                 </div>
               </div>
               
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-loklernen-ultramarine/10 rounded-full">
-                  <Clock className="h-5 w-5 text-loklernen-ultramarine" />
+              <div className="flex flex-col justify-between gap-4">
+                {/* Regulation Filter */}
+                <div className="bg-white/70 rounded-lg p-3">
+                  <RegulationFilterToggle 
+                    value={regulationPreference}
+                    onChange={handleRegulationChange}
+                    title="Regelwerk auswählen"
+                    variant="default"
+                    className="mb-1"
+                  />
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Empfohlene Zeit</p>
-                  <p className="text-2xl font-semibold">{recommendedMinutes} Min.</p>
+                
+                <div className="flex items-center justify-center">
+                  <Link to={`/karteikarten/lernen?regelwerk=${regulationPreference}`}>
+                    <Button className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90 w-full">
+                      <BookOpen className="mr-2 h-4 w-4" /> Jetzt lernen
+                    </Button>
+                  </Link>
                 </div>
-              </div>
-              
-              <div className="flex items-center justify-end md:justify-center">
-                <Link to="/karteikarten/lernen">
-                  <Button className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90">
-                    <BookOpen className="mr-2 h-4 w-4" /> Jetzt lernen
-                  </Button>
-                </Link>
               </div>
             </div>
           </CardContent>
@@ -223,7 +244,7 @@ export default function Dashboard() {
                 
                 <TabsContent value="signale" className="pt-4">
                   <div className="space-y-4">
-                    <Link to="/karteikarten/signale/haupt-vorsignale" className="block hover:bg-slate-50 rounded-lg p-2">
+                    <Link to={`/karteikarten/signale/haupt-vorsignale?regelwerk=${regulationPreference}`} className="block hover:bg-slate-50 rounded-lg p-2">
                       <div className="flex justify-between items-center">
                         <span>Haupt- und Vorsignale</span>
                         <span className="text-sm text-muted-foreground">
@@ -238,7 +259,7 @@ export default function Dashboard() {
                       />
                     </Link>
                     
-                    <Link to="/karteikarten/signale/zusatz-kennzeichen" className="block hover:bg-slate-50 rounded-lg p-2">
+                    <Link to={`/karteikarten/signale/zusatz-kennzeichen?regelwerk=${regulationPreference}`} className="block hover:bg-slate-50 rounded-lg p-2">
                       <div className="flex justify-between items-center">
                         <span>Zusatz- & Kennzeichen</span>
                         <span className="text-sm text-muted-foreground">
@@ -254,7 +275,7 @@ export default function Dashboard() {
                     </Link>
                     
                     <div className="flex justify-center mt-4">
-                      <Link to="/karteikarten/signale">
+                      <Link to={`/karteikarten/signale?regelwerk=${regulationPreference}`}>
                         <Button variant="outline">Alle Signale anzeigen</Button>
                       </Link>
                     </div>
@@ -263,7 +284,7 @@ export default function Dashboard() {
                 
                 <TabsContent value="betriebsdienst" className="pt-4">
                   <div className="space-y-4">
-                    <Link to="/karteikarten/betriebsdienst/grundlagen" className="block hover:bg-slate-50 rounded-lg p-2">
+                    <Link to={`/karteikarten/betriebsdienst/grundlagen?regelwerk=${regulationPreference}`} className="block hover:bg-slate-50 rounded-lg p-2">
                       <div className="flex justify-between items-center">
                         <span>Grundlagen Bahnbetrieb</span>
                         <span className="text-sm text-muted-foreground">
@@ -278,7 +299,7 @@ export default function Dashboard() {
                       />
                     </Link>
                     
-                    <Link to="/karteikarten/betriebsdienst/uvv" className="block hover:bg-slate-50 rounded-lg p-2">
+                    <Link to={`/karteikarten/betriebsdienst/uvv?regelwerk=${regulationPreference}`} className="block hover:bg-slate-50 rounded-lg p-2">
                       <div className="flex justify-between items-center">
                         <span>UVV & Arbeitsschutz</span>
                         <span className="text-sm text-muted-foreground">
@@ -294,7 +315,7 @@ export default function Dashboard() {
                     </Link>
                     
                     <div className="flex justify-center mt-4">
-                      <Link to="/karteikarten/betriebsdienst">
+                      <Link to={`/karteikarten/betriebsdienst?regelwerk=${regulationPreference}`}>
                         <Button variant="outline">Alle Betriebsdienst-Themen anzeigen</Button>
                       </Link>
                     </div>

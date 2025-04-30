@@ -4,13 +4,17 @@ import { Question, QuestionCategory, RegulationCategory } from '@/types/question
 
 interface UseQuestionFiltersProps {
   questions: Question[] | undefined;
+  initialRegulationFilter?: RegulationCategory | "all";
 }
 
-export function useQuestionFilters({ questions }: UseQuestionFiltersProps) {
+export function useQuestionFilters({ 
+  questions, 
+  initialRegulationFilter = "all" 
+}: UseQuestionFiltersProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<"all" | QuestionCategory>("all");
   const [subCategoryFilter, setSubCategoryFilter] = useState<string | null>(null);
-  const [regulationFilter, setRegulationFilter] = useState<RegulationCategory | "all">("all");
+  const [regulationFilter, setRegulationFilter] = useState<RegulationCategory | "all">(initialRegulationFilter);
 
   const filteredQuestions = useMemo(() => {
     if (!questions) return [];

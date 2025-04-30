@@ -8,6 +8,7 @@ import CategoryCard from "@/components/common/CategoryCard";
 import { RegulationFilterToggle } from "@/components/common/RegulationFilterToggle";
 import { signalSubCategories } from "@/api/questions";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,10 +28,11 @@ function transformQuestion(dbQuestion: any): Question {
 
 export default function SignalePage() {
   const { user } = useAuth();
+  const { regulationPreference } = useUserPreferences();
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // Get regulation filter from URL or default to "all"
-  const initialRegulationFilter = (searchParams.get("regelwerk") as RegulationCategory | "all") || "all";
+  // Get regulation filter from URL or default to user preference
+  const initialRegulationFilter = (searchParams.get("regelwerk") as RegulationCategory) || regulationPreference;
   
   // Fetch all signal questions
   const { data: allSignalQuestions } = useQuery({
@@ -53,7 +55,8 @@ export default function SignalePage() {
     regulationFilter, 
     setRegulationFilter 
   } = useQuestionFilters({ 
-    questions: allSignalQuestions 
+    questions: allSignalQuestions,
+    initialRegulationFilter,
   });
   
   // Update filter when URL param changes
@@ -62,15 +65,11 @@ export default function SignalePage() {
   }, [initialRegulationFilter, setRegulationFilter]);
   
   // Update URL when regulation filter changes
-  const handleRegulationChange = (value: RegulationCategory | "all") => {
+  const handleRegulationChange = (value: RegulationCategory) => {
     setRegulationFilter(value);
     // Update URL
     setSearchParams(params => {
-      if (value === "all") {
-        params.delete("regelwerk");
-      } else {
-        params.set("regelwerk", value);
-      }
+      params.set("regelwerk", value);
       return params;
     });
   };
@@ -155,6 +154,7 @@ export default function SignalePage() {
               <RegulationFilterToggle 
                 value={regulationFilter} 
                 onChange={handleRegulationChange} 
+                showInfoTooltip={true}
               />
             </Card>
           </div>

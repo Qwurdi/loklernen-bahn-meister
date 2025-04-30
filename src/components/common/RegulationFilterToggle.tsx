@@ -7,39 +7,55 @@ import { Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface RegulationFilterToggleProps {
-  value: RegulationCategory | "all";
-  onChange: (value: RegulationCategory | "all") => void;
+  value: RegulationCategory;
+  onChange: (value: RegulationCategory) => void;
+  title?: string;
+  showInfoTooltip?: boolean;
+  variant?: "outline" | "default";
+  size?: "default" | "sm" | "lg";
+  className?: string;
 }
 
-export const RegulationFilterToggle: React.FC<RegulationFilterToggleProps> = ({ value, onChange }) => {
+export const RegulationFilterToggle: React.FC<RegulationFilterToggleProps> = ({ 
+  value, 
+  onChange, 
+  title = "Regelwerk",
+  showInfoTooltip = true,
+  variant = "outline",
+  size = "default",
+  className,
+}) => {
   return (
-    <div className="w-full space-y-2">
-      <div className="flex items-center gap-2">
-        <Label>Regelwerk</Label>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-            </TooltipTrigger>
-            <TooltipContent>
-              <p className="max-w-xs">
-                Wähle ob du DS 301, DV 301 oder beide Regelwerke lernen möchtest.
-                Signale der Kategorie "beide" werden immer angezeigt.
-              </p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
+    <div className={`space-y-2 ${className}`}>
+      {title && (
+        <div className="flex items-center gap-2">
+          <Label>{title}</Label>
+          {showInfoTooltip && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="max-w-xs">
+                    Wähle ob du DS 301 oder DV 301 lernen möchtest. 
+                    Signale der Kategorie "beide" werden immer angezeigt.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
+      )}
       <ToggleGroup 
         type="single" 
         value={value} 
-        onValueChange={(val) => val && onChange(val as RegulationCategory | "all")}
+        onValueChange={(val) => val && onChange(val as RegulationCategory)}
         className="justify-center w-full"
-        variant="outline"
+        variant={variant}
       >
-        <ToggleGroupItem value="DS 301" className="flex-1">DS 301</ToggleGroupItem>
-        <ToggleGroupItem value="DV 301" className="flex-1">DV 301</ToggleGroupItem>
-        <ToggleGroupItem value="all" className="flex-1">Alle</ToggleGroupItem>
+        <ToggleGroupItem value="DS 301" className="flex-1" size={size}>DS 301</ToggleGroupItem>
+        <ToggleGroupItem value="DV 301" className="flex-1" size={size}>DV 301</ToggleGroupItem>
       </ToggleGroup>
     </div>
   );

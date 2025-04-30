@@ -1,6 +1,6 @@
 
 import { useState, useMemo } from 'react';
-import { Question, QuestionCategory } from '@/types/questions';
+import { Question, QuestionCategory, RegulationCategory } from '@/types/questions';
 
 interface UseQuestionFiltersProps {
   questions: Question[] | undefined;
@@ -10,6 +10,7 @@ export function useQuestionFilters({ questions }: UseQuestionFiltersProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<"all" | QuestionCategory>("all");
   const [subCategoryFilter, setSubCategoryFilter] = useState<string | null>(null);
+  const [regulationFilter, setRegulationFilter] = useState<RegulationCategory | "all">("all");
 
   const filteredQuestions = useMemo(() => {
     if (!questions) return [];
@@ -20,9 +21,15 @@ export function useQuestionFilters({ questions }: UseQuestionFiltersProps) {
       const matchesCategory = categoryFilter === "all" || question.category === categoryFilter;
       const matchesSubCategory = !subCategoryFilter || question.sub_category === subCategoryFilter;
       
-      return matchesSearch && matchesCategory && matchesSubCategory;
+      // Handle regulation category filtering
+      const matchesRegulation = regulationFilter === "all" || 
+                              question.regulation_category === regulationFilter || 
+                              question.regulation_category === "both" ||
+                              question.regulation_category === undefined;  // For backward compatibility with older questions
+      
+      return matchesSearch && matchesCategory && matchesSubCategory && matchesRegulation;
     });
-  }, [questions, searchQuery, categoryFilter, subCategoryFilter]);
+  }, [questions, searchQuery, categoryFilter, subCategoryFilter, regulationFilter]);
 
   return {
     searchQuery,
@@ -31,6 +38,8 @@ export function useQuestionFilters({ questions }: UseQuestionFiltersProps) {
     setCategoryFilter,
     subCategoryFilter,
     setSubCategoryFilter,
+    regulationFilter,
+    setRegulationFilter,
     filteredQuestions
   };
 }

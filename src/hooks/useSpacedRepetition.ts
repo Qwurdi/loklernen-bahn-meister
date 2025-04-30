@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,6 +27,7 @@ function transformQuestion(dbQuestion: any): Question {
 
 interface SpacedRepetitionOptions {
   practiceMode?: boolean;
+  regulationCategory?: string;
 }
 
 export function useSpacedRepetition(
@@ -39,10 +39,11 @@ export function useSpacedRepetition(
   const [loading, setLoading] = useState(true);
   const [dueQuestions, setDueQuestions] = useState<Question[]>([]);
   const [progress, setProgress] = useState<UserProgress[]>([]);
+  const regulationCategory = options.regulationCategory || "all";
 
   useEffect(() => {
     loadDueQuestions();
-  }, [user, category, subcategory, options.practiceMode]);
+  }, [user, category, subcategory, options.practiceMode, regulationCategory]);
 
   const loadDueQuestions = async () => {
     try {
@@ -58,7 +59,17 @@ export function useSpacedRepetition(
 
         if (questionsError) throw questionsError;
 
-        setDueQuestions((questions || []).map(transformQuestion));
+        // Filter by regulation category if specified
+        let filteredQuestions = questions || [];
+        if (regulationCategory !== "all") {
+          filteredQuestions = filteredQuestions.filter(q => 
+            q.regulation_category === regulationCategory || 
+            q.regulation_category === "both" || 
+            q.regulation_category === undefined
+          );
+        }
+
+        setDueQuestions(filteredQuestions.map(transformQuestion));
         return;
       }
       
@@ -75,24 +86,42 @@ export function useSpacedRepetition(
 
         if (progressError) throw progressError;
 
-        // Get IDs of questions with progress
-        const questionIdsWithProgress = (progressData || []).map(p => p.question_id);
+        // Filter by regulation category if specified
+        let filteredProgressData = progressData || [];
+        if (regulationCategory !== "all") {
+          filteredProgressData = filteredProgressData.filter(p => 
+            p.questions.regulation_category === regulationCategory || 
+            p.questions.regulation_category === "both" || 
+            p.questions.regulation_category === undefined
+          );
+        }
 
-        // Fetch new questions (those without progress)
-        const { data: newQuestions, error: newQuestionsError } = await supabase
+        // Get IDs of questions with progress
+        const questionIdsWithProgress = filteredProgressData.map(p => p.question_id);
+
+        // Build query for new questions (those without progress)
+        let newQuestionsQuery = supabase
           .from('questions')
           .select('*')
           .eq('category', category)
           .eq('sub_category', subcategory || '')
           .not('id', 'in', questionIdsWithProgress.length > 0 ? questionIdsWithProgress : ['none']);
 
+        // Apply regulation category filter if specified
+        if (regulationCategory !== "all") {
+          newQuestionsQuery = newQuestionsQuery.or(
+            `regulation_category.eq.${regulationCategory},regulation_category.eq.both,regulation_category.is.null`
+          );
+        }
+
+        const { data: newQuestions, error: newQuestionsError } = await newQuestionsQuery;
         if (newQuestionsError) throw newQuestionsError;
 
-        const transformedProgressQuestions = (progressData || []).map(p => transformQuestion(p.questions));
+        const transformedProgressQuestions = filteredProgressData.map(p => transformQuestion(p.questions));
         const transformedNewQuestions = (newQuestions || []).map(q => transformQuestion(q));
         
         setDueQuestions([...transformedProgressQuestions, ...transformedNewQuestions]);
-        setProgress(progressData || []);
+        setProgress(filteredProgressData);
       }
     } catch (error) {
       console.error('Error loading questions:', error);

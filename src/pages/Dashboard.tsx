@@ -513,7 +513,7 @@ export default function Dashboard() {
                 className="w-full"
               />
               <p className="text-sm text-muted-foreground mt-2 text-center">
-                Diese Einstellung wird für alle Lernkarten verwendet und muss nur selten geändert werden.
+                Diese Einstellung wird für alle Lernkarten verwendet.
               </p>
             </div>
           </CardContent>

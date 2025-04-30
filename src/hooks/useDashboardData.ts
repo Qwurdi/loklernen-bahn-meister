@@ -48,7 +48,7 @@ export const useDashboardData = (regulationFilter: string) => {
     },
     enabled: !!user,
     staleTime: 1000 * 60 * 5, // 5 minutes
-    cacheTime: 1000 * 60 * 30, // 30 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes (renamed from cacheTime)
   });
 
   // Fetch user stats with better caching
@@ -78,7 +78,7 @@ export const useDashboardData = (regulationFilter: string) => {
     },
     enabled: !!user,
     staleTime: 1000 * 60 * 10, // 10 minutes
-    cacheTime: 1000 * 60 * 60, // 60 minutes
+    gcTime: 1000 * 60 * 60, // 60 minutes (renamed from cacheTime)
   });
 
   // Memoize the calculated values to prevent unnecessary rerenders

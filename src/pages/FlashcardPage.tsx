@@ -1,8 +1,6 @@
 
 import { useState } from "react";
-import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft } from "lucide-react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { useSpacedRepetition } from "@/hooks/useSpacedRepetition";
@@ -10,14 +8,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { QuestionCategory } from "@/types/questions";
 import { signalSubCategories } from "@/api/questions";
-import FlashcardItem from "@/components/flashcards/FlashcardItem";
-import FlashcardProgress from "@/components/flashcards/FlashcardProgress";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
-import { RegulationFilterToggle } from "@/components/common/RegulationFilterToggle";
 import { RegulationFilterType } from "@/types/regulation";
+import FlashcardLoadingState from "@/components/flashcards/FlashcardLoadingState";
+import FlashcardEmptyState from "@/components/flashcards/FlashcardEmptyState";
+import FlashcardHeader from "@/components/flashcards/FlashcardHeader";
+import FlashcardContent from "@/components/flashcards/FlashcardContent";
 
 // Helper to map URL subcategory param back to original subcategory string (case sensitive)
 function mapUrlToSubcategory(urlSubcategory?: string): string | undefined {
@@ -35,7 +33,6 @@ export default function FlashcardPage() {
   const subcategory = mapUrlToSubcategory(urlSubcategory); // map to original subcategory
   const { user } = useAuth();
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [isPracticeMode] = useState(true);
@@ -43,7 +40,7 @@ export default function FlashcardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   
   // Get regulation filter from URL or default to user preference
-  const regulationParam = searchParams.get("regelwerk") || regulationPreference;
+  const regulationParam = searchParams.get("regelwerk") as RegulationFilterType || regulationPreference;
 
   // Pass the regulation preference to the hook
   const {
@@ -58,14 +55,6 @@ export default function FlashcardPage() {
       regulationCategory: regulationParam
     }
   );
-
-  // Update regulation filter when it changes
-  const handleRegulationChange = (value: RegulationFilterType) => {
-    setSearchParams(params => {
-      params.set("regelwerk", value);
-      return params;
-    });
-  };
 
   // Query to get total due cards count for today
   const { data: dueTodayStats } = useQuery({
@@ -111,46 +100,20 @@ export default function FlashcardPage() {
     }
   };
 
+  // Update regulation filter when it changes
+  const handleRegulationChange = (value: RegulationFilterType) => {
+    setSearchParams(params => {
+      params.set("regelwerk", value);
+      return params;
+    });
+  };
+
   if (loading) {
-    return (
-      <div className="flex min-h-screen flex-col">
-        <Navbar />
-        <main className="flex-1">
-          <div className="container px-4 py-6">
-            <div className="flex justify-center items-center h-60">
-              <div className="text-center">
-                <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
-                <p>Lade Karteikarten...</p>
-              </div>
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
+    return <FlashcardLoadingState />;
   }
 
   if (!loading && questions.length === 0) {
-    return (
-      <div className="flex min-h-screen flex-col">
-        <Navbar />
-        <main className="flex-1">
-          <div className="container px-4 py-6">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold mb-4">Keine Karten fällig</h2>
-              <p className="mb-8">Du hast aktuell keine Karten zum Wiederholen. Schau später wieder vorbei!</p>
-              <Link to="/karteikarten">
-                <Button>
-                  <ChevronLeft className="h-4 w-4 mr-2" />
-                  Zurück zur Übersicht
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
+    return <FlashcardEmptyState />;
   }
 
   return (
@@ -159,54 +122,24 @@ export default function FlashcardPage() {
       
       <main className="flex-1">
         <div className="container px-4 py-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <Link to="/karteikarten">
-                <Button variant="ghost" size="sm" className={isMobile ? "px-2" : ""}>
-                  <ChevronLeft className="h-4 w-4" />
-                  {!isMobile && <span className="ml-2">Zurück</span>}
-                </Button>
-              </Link>
-              {!isMobile && <h1 className="text-xl font-semibold ml-2">{subcategory}</h1>}
-            </div>
-            {!isMobile && (
-              <div className="flex items-center gap-4">
-                <span className="text-sm px-2 py-1 rounded bg-blue-100 text-blue-800">
-                  {isPracticeMode ? "Übungsmodus" : "Wiederholungsmodus"}
-                </span>
-              </div>
-            )}
-          </div>
-          
-          {isMobile && <h1 className="text-lg font-semibold mb-4">{subcategory}</h1>}
-          
-          {/* Regulation filter */}
-          <div className="mb-4">
-            <RegulationFilterToggle
-              value={regulationParam}
-              onChange={handleRegulationChange}
-              variant="outline"
-              size="sm"
-              className="mb-4"
-            />
-          </div>
+          <FlashcardHeader 
+            subcategory={subcategory}
+            isPracticeMode={isPracticeMode}
+            regulationFilter={regulationParam}
+            onRegulationChange={handleRegulationChange}
+          />
           
           {/* Main content - flashcard first, then progress */}
           {currentQuestion && (
-            <div className="space-y-6">
-              <FlashcardItem 
-                question={currentQuestion} 
-                onAnswer={handleAnswer}
-                onNext={handleNext}
-              />
-              
-              <FlashcardProgress 
-                currentIndex={currentIndex}
-                totalCards={questions.length}
-                correctCount={correctCount}
-                remainingToday={remainingToday}
-              />
-            </div>
+            <FlashcardContent 
+              currentQuestion={currentQuestion}
+              currentIndex={currentIndex}
+              totalCards={questions.length}
+              correctCount={correctCount}
+              remainingToday={remainingToday}
+              onAnswer={handleAnswer}
+              onNext={handleNext}
+            />
           )}
         </div>
       </main>

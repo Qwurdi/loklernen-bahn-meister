@@ -1,4 +1,3 @@
-
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
@@ -14,7 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuestionFilters } from "@/hooks/useQuestionFilters";
 import { RegulationCategory, RegulationFilterType, Question } from "@/types/questions";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { transformAnswers } from "@/api/questions";
 

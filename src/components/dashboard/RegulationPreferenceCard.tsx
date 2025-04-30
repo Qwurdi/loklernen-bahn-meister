@@ -2,7 +2,7 @@
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RegulationFilterToggle } from "@/components/common/RegulationFilterToggle";
-import { RegulationFilterType } from "@/types/questions";
+import { RegulationFilterType } from "@/types/regulation";
 
 interface RegulationPreferenceCardProps {
   value: RegulationFilterType;

@@ -68,6 +68,7 @@ export default {
 					black: "#000000",
 					ultramarine: "#3F00FF",
 					sapphire: "#0F52BA",
+					betriebsdienst: "#00B8A9"
 				}
 			},
 			borderRadius: {

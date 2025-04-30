@@ -24,7 +24,9 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   const firstAnswer = question.answers.find(a => a.isCorrect)?.text || question.answers[0]?.text || "";
 
   const getCategoryColor = (category: string) => {
-    return category === "Signale" ? "bg-blue-100 text-blue-800 hover:bg-blue-200" : "bg-green-100 text-green-800 hover:bg-green-200";
+    return category === "Signale" 
+      ? "bg-blue-100 text-blue-800 hover:bg-blue-200" 
+      : "bg-[#e6fff9] text-[#00B8A9] hover:bg-[#ccfff5]";
   };
 
   const getTypeLabel = (type: string) => {
@@ -103,7 +105,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
               ))}
             </div>
           ) : (
-            <p className="font-medium text-blue-800">
+            <p className="font-medium text-[#00B8A9]">
               {firstAnswer}
             </p>
           )}
@@ -144,4 +146,4 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       </CardFooter>
     </Card>
   );
-};
+}

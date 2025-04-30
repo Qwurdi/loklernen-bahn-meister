@@ -78,7 +78,7 @@ export const CategoryOverviewGrid: React.FC<CategoryOverviewGridProps> = ({
             onCategorySelect("Betriebsdienst");
             onSubCategorySelect(null);
           }}
-          className="bg-green-100 text-green-800 border-green-200 hover:bg-green-200 hover:text-green-900"
+          className="bg-[#e6fff9] text-[#00B8A9] border-[#b3f0ea] hover:bg-[#ccfff5] hover:text-[#008d82]"
         >
           Betriebsdienst ({totalBetriebsdienst})
         </Button>
@@ -113,14 +113,14 @@ export const CategoryOverviewGrid: React.FC<CategoryOverviewGridProps> = ({
             <Card 
               key={subCategory}
               className={`cursor-pointer transition-all ${
-                activeSubCategory === subCategory ? "border-green-500 ring-1 ring-green-500" : "hover:border-green-300"
+                activeSubCategory === subCategory ? "border-[#00B8A9] ring-1 ring-[#00B8A9]" : "hover:border-[#66dcd3]"
               }`}
               onClick={() => onSubCategorySelect(subCategory)}
             >
               <CardContent className="p-4">
                 <div className="flex justify-between items-center">
                   <h3 className="font-medium line-clamp-2">{subCategory}</h3>
-                  <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                  <span className="rounded-full bg-[#e6fff9] px-2.5 py-0.5 text-xs font-medium text-[#00B8A9]">
                     {betriebsdienstCounts[subCategory] || 0}
                   </span>
                 </div>

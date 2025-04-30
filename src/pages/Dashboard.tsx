@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -230,10 +231,10 @@ export default function Dashboard() {
               </div>
               
               {/* Betriebsdienst Learning Card - updated colors to match brand */}
-              <div className="bg-blue-50 p-4 rounded-lg">
+              <div className="bg-[#e6fff9] p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="p-2 bg-loklernen-sapphire/10 rounded-full">
-                    <TrafficCone className="h-5 w-5 text-loklernen-sapphire" />
+                  <div className="p-2 bg-[#00B8A9]/10 rounded-full">
+                    <TrafficCone className="h-5 w-5 text-[#00B8A9]" />
                   </div>
                   <div>
                     <p className="font-medium">Betriebsdienst</p>
@@ -243,7 +244,7 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <Link to={`/karteikarten/lernen?regelwerk=${regulationPreference}&category=Betriebsdienst`}>
-                  <Button className="w-full bg-loklernen-sapphire hover:bg-loklernen-sapphire/90">
+                  <Button className="w-full bg-[#00B8A9] hover:bg-[#00B8A9]/90">
                     <BookOpen className="mr-2 h-4 w-4" /> Betriebsdienst lernen
                   </Button>
                 </Link>

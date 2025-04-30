@@ -13,7 +13,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuestionFilters } from "@/hooks/useQuestionFilters";
-import { RegulationCategory, Question } from "@/types/questions";
+import { RegulationCategory, RegulationFilterType, Question } from "@/types/questions";
 import { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { transformAnswers } from "@/api/questions";
@@ -32,7 +32,7 @@ export default function SignalePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   
   // Get regulation filter from URL or default to user preference
-  const initialRegulationFilter = (searchParams.get("regelwerk") as RegulationCategory) || regulationPreference;
+  const initialRegulationFilter = (searchParams.get("regelwerk") as RegulationFilterType) || regulationPreference;
   
   // Fetch all signal questions
   const { data: allSignalQuestions } = useQuery({
@@ -65,7 +65,7 @@ export default function SignalePage() {
   }, [initialRegulationFilter, setRegulationFilter]);
   
   // Update URL when regulation filter changes
-  const handleRegulationChange = (value: RegulationCategory) => {
+  const handleRegulationChange = (value: RegulationFilterType) => {
     setRegulationFilter(value);
     // Update URL
     setSearchParams(params => {
@@ -152,9 +152,10 @@ export default function SignalePage() {
             
             <Card className="p-4 mb-6">
               <RegulationFilterToggle 
-                value={regulationFilter} 
-                onChange={handleRegulationChange} 
+                value={regulationFilter}
+                onChange={handleRegulationChange}
                 showInfoTooltip={true}
+                showAllOption={true}
               />
             </Card>
           </div>

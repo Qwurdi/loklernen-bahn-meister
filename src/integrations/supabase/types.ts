@@ -117,6 +117,7 @@ export type Database = {
         Row: {
           created_at: string
           last_activity_date: string
+          regulation_preference: string | null
           signals_mastered: number
           streak_days: number
           total_correct: number
@@ -128,6 +129,7 @@ export type Database = {
         Insert: {
           created_at?: string
           last_activity_date?: string
+          regulation_preference?: string | null
           signals_mastered?: number
           streak_days?: number
           total_correct?: number
@@ -139,6 +141,7 @@ export type Database = {
         Update: {
           created_at?: string
           last_activity_date?: string
+          regulation_preference?: string | null
           signals_mastered?: number
           streak_days?: number
           total_correct?: number

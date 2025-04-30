@@ -1,19 +1,20 @@
 
 import React from 'react';
-import { RegulationCategory } from '@/types/questions';
+import { RegulationCategory, RegulationFilterType } from '@/types/questions';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Label } from "@/components/ui/label";
 import { Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface RegulationFilterToggleProps {
-  value: RegulationCategory;
-  onChange: (value: RegulationCategory) => void;
+  value: RegulationFilterType;
+  onChange: (value: RegulationFilterType) => void;
   title?: string;
   showInfoTooltip?: boolean;
   variant?: "outline" | "default";
   size?: "default" | "sm" | "lg";
   className?: string;
+  showAllOption?: boolean;
 }
 
 export const RegulationFilterToggle: React.FC<RegulationFilterToggleProps> = ({ 
@@ -24,6 +25,7 @@ export const RegulationFilterToggle: React.FC<RegulationFilterToggleProps> = ({
   variant = "outline",
   size = "default",
   className,
+  showAllOption = false,
 }) => {
   return (
     <div className={`space-y-2 ${className}`}>
@@ -50,10 +52,13 @@ export const RegulationFilterToggle: React.FC<RegulationFilterToggleProps> = ({
       <ToggleGroup 
         type="single" 
         value={value} 
-        onValueChange={(val) => val && onChange(val as RegulationCategory)}
+        onValueChange={(val) => val && onChange(val as RegulationFilterType)}
         className="justify-center w-full"
         variant={variant}
       >
+        {showAllOption && (
+          <ToggleGroupItem value="all" className="flex-1" size={size}>Alle</ToggleGroupItem>
+        )}
         <ToggleGroupItem value="DS 301" className="flex-1" size={size}>DS 301</ToggleGroupItem>
         <ToggleGroupItem value="DV 301" className="flex-1" size={size}>DV 301</ToggleGroupItem>
       </ToggleGroup>

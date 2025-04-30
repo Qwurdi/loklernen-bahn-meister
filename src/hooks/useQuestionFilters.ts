@@ -1,10 +1,10 @@
 
 import { useState, useMemo } from 'react';
-import { Question, QuestionCategory, RegulationCategory } from '@/types/questions';
+import { Question, QuestionCategory, RegulationCategory, RegulationFilterType } from '@/types/questions';
 
 interface UseQuestionFiltersProps {
   questions: Question[] | undefined;
-  initialRegulationFilter?: RegulationCategory | "all";
+  initialRegulationFilter?: RegulationFilterType;
 }
 
 export function useQuestionFilters({ 
@@ -14,7 +14,7 @@ export function useQuestionFilters({
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<"all" | QuestionCategory>("all");
   const [subCategoryFilter, setSubCategoryFilter] = useState<string | null>(null);
-  const [regulationFilter, setRegulationFilter] = useState<RegulationCategory | "all">(initialRegulationFilter);
+  const [regulationFilter, setRegulationFilter] = useState<RegulationFilterType>(initialRegulationFilter);
 
   const filteredQuestions = useMemo(() => {
     if (!questions) return [];

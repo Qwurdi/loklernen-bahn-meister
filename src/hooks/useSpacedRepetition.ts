@@ -170,18 +170,8 @@ export function useSpacedRepetition(
         );
       }
 
-      // If there are questions with progress, exclude them from the query
-      if (questionIdsWithProgress.length > 0) {
-        // Use a different approach based on the number of IDs
-        if (questionIdsWithProgress.length < 10) {
-          // For small arrays, use 'not in'
-          newQuestionsQuery = newQuestionsQuery.not('id', 'in', questionIdsWithProgress);
-        } else {
-          // For larger arrays, we'll filter in memory after fetching
-          console.log("Too many question IDs, will filter in memory");
-        }
-      }
-
+      // FIXED: Instead of using the 'not in' operator which has limitations,
+      // we'll fetch all questions and filter in memory
       const { data: newQuestionsData, error: newQuestionsError } = await newQuestionsQuery;
       
       if (newQuestionsError) {
@@ -192,10 +182,10 @@ export function useSpacedRepetition(
       
       console.log("Fetched new questions:", newQuestionsData?.length);
 
-      // Filter out questions that already have progress (for large arrays)
-      const newQuestions = newQuestionsData && questionIdsWithProgress.length >= 10
+      // Filter out questions that already have progress
+      const newQuestions = newQuestionsData 
         ? newQuestionsData.filter(q => !questionIdsWithProgress.includes(q.id))
-        : newQuestionsData || [];
+        : [];
         
       console.log("Filtered new questions:", newQuestions.length);
 

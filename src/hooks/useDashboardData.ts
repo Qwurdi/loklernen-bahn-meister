@@ -52,7 +52,7 @@ export const useDashboardData = (regulationFilter: string) => {
   const { data: statsData, isLoading: isLoadingStats } = useQuery({
     queryKey: ['userStats', user?.id],
     queryFn: async () => {
-      if (!user) return { xp: 0, level: 1, streak: 0 };
+      if (!user) return { xp: 0, level: 1, streak_days: 0 };
 
       const { data, error } = await supabase
         .from('user_stats')
@@ -62,7 +62,7 @@ export const useDashboardData = (regulationFilter: string) => {
         
       if (error && error.code !== 'PGRST116') throw error;
       
-      if (!data) return { xp: 0, level: 1, streak: 0 };
+      if (!data) return { xp: 0, level: 1, streak_days: 0 };
       
       // Calculate level - basic exponential curve
       const level = Math.max(1, Math.floor(Math.sqrt(data.xp / 100)) + 1);
@@ -70,7 +70,7 @@ export const useDashboardData = (regulationFilter: string) => {
       return {
         xp: data.xp || 0,
         level,
-        streak: data.streak || 0,
+        streak_days: data.streak_days || 0,
         total_correct: data.total_correct || 0,
         total_incorrect: data.total_incorrect || 0,
         last_activity_date: data.last_activity_date
@@ -79,9 +79,19 @@ export const useDashboardData = (regulationFilter: string) => {
     enabled: !!user
   });
 
+  // Calculate values needed by dashboard components
+  const dueTodaySignals = dueCardsData?.categoryDueCards?.["Signale"] || 0;
+  const dueTodayBetriebsdienst = dueCardsData?.categoryDueCards?.["Betriebsdienst"] || 0;
+  const totalXP = statsData?.xp || 0;
+  const streak = statsData?.streak_days || 0;
+
   return {
     dueCardsData,
     statsData,
+    dueTodaySignals,
+    dueTodayBetriebsdienst,
+    totalXP,
+    streak,
     isLoading: isLoadingDueCards || isLoadingStats
   };
 };

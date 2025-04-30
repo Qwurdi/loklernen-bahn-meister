@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Award, Clock, Zap, ChevronRight } from "lucide-react";
-import { RegulationFilterType } from "@/types/questions";
+import { RegulationFilterType } from "@/types/regulation";
 
 interface DashboardSummaryCardsProps {
   dueTodaySignals: number;
@@ -15,10 +15,10 @@ interface DashboardSummaryCardsProps {
 }
 
 export default function DashboardSummaryCards({ 
-  dueTodaySignals, 
-  dueTodayBetriebsdienst, 
-  totalXP, 
-  streak,
+  dueTodaySignals = 0, 
+  dueTodayBetriebsdienst = 0, 
+  totalXP = 0, 
+  streak = 0,
   regulationPreference 
 }: DashboardSummaryCardsProps) {
   const totalDueToday = dueTodaySignals + dueTodayBetriebsdienst;

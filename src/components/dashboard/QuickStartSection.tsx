@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Brain, BookOpen, TrafficCone } from "lucide-react";
-import { RegulationFilterType } from "@/types/questions";
+import { RegulationFilterType } from "@/types/regulation";
 
 interface QuickStartSectionProps {
   dueTodaySignals: number;
@@ -11,8 +11,8 @@ interface QuickStartSectionProps {
 }
 
 export default function QuickStartSection({ 
-  dueTodaySignals, 
-  dueTodayBetriebsdienst,
+  dueTodaySignals = 0, 
+  dueTodayBetriebsdienst = 0,
   regulationPreference
 }: QuickStartSectionProps) {
   return (

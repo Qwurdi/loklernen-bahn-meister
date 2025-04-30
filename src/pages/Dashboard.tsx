@@ -10,6 +10,7 @@ import DashboardSummaryCards from "@/components/dashboard/DashboardSummaryCards"
 import RegulationPreferenceCard from "@/components/dashboard/RegulationPreferenceCard";
 import QuickStartSection from "@/components/dashboard/QuickStartSection";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { RegulationFilterType } from "@/types/regulation";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -21,10 +22,10 @@ export default function Dashboard() {
     dueTodayBetriebsdienst,
     streak,
     totalXP,
-    loading
+    isLoading
   } = useDashboardData(regulationPreference);
 
-  const handleRegulationChange = (value) => {
+  const handleRegulationChange = (value: RegulationFilterType) => {
     setRegulationPreference(value);
   };
 

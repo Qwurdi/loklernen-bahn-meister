@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { RegulationCategory } from '@/types/questions';
+import { RegulationFilterType } from '@/types/regulation';
 import { toast } from 'sonner';
 
 type UserPreferencesContextType = {
-  regulationPreference: RegulationCategory;
-  setRegulationPreference: (preference: RegulationCategory) => Promise<void>;
+  regulationPreference: RegulationFilterType;
+  setRegulationPreference: (preference: RegulationFilterType) => Promise<void>;
   loading: boolean;
 };
 
@@ -17,7 +17,7 @@ const REGULATION_PREFERENCE_KEY = 'loklernen-regulation-preference';
 
 export function UserPreferencesProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [regulationPreference, setRegulationPreferenceState] = useState<RegulationCategory>('DS 301');
+  const [regulationPreference, setRegulationPreferenceState] = useState<RegulationFilterType>('DS 301');
   const [loading, setLoading] = useState(true);
 
   // Load preference from storage/database on component mount
@@ -40,15 +40,15 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
           
           // If user has a preference stored in DB, use it
           if (data?.regulation_preference) {
-            setRegulationPreferenceState(data.regulation_preference as RegulationCategory);
+            setRegulationPreferenceState(data.regulation_preference as RegulationFilterType);
           } else {
             // Otherwise use local storage or default
-            const storedPreference = localStorage.getItem(REGULATION_PREFERENCE_KEY) as RegulationCategory | null;
+            const storedPreference = localStorage.getItem(REGULATION_PREFERENCE_KEY) as RegulationFilterType | null;
             setRegulationPreferenceState(storedPreference || 'DS 301');
           }
         } else {
           // For non-authenticated users, use local storage
-          const storedPreference = localStorage.getItem(REGULATION_PREFERENCE_KEY) as RegulationCategory | null;
+          const storedPreference = localStorage.getItem(REGULATION_PREFERENCE_KEY) as RegulationFilterType | null;
           setRegulationPreferenceState(storedPreference || 'DS 301');
         }
       } catch (error) {
@@ -62,7 +62,7 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
   }, [user]);
   
   // Function to update preference
-  const setRegulationPreference = async (preference: RegulationCategory) => {
+  const setRegulationPreference = async (preference: RegulationFilterType) => {
     try {
       // Always store in local storage
       localStorage.setItem(REGULATION_PREFERENCE_KEY, preference);

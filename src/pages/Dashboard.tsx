@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -33,107 +32,122 @@ export default function Dashboard() {
   const [categoryProgress, setCategoryProgress] = useState<Record<string, { correct: number, total: number }>>({});
   const [loading, setLoading] = useState(true);
 
-  // Fetch user stats and due cards
-  useEffect(() => {
+  // Fetch user stats and due cards - optimized with useCallback to prevent unnecessary re-fetches
+  const fetchUserData = useCallback(async () => {
     if (!user) return;
 
-    const fetchUserData = async () => {
-      try {
-        setLoading(true);
+    try {
+      setLoading(true);
+      
+      // Fetch user stats
+      const { data: statsData, error: statsError } = await supabase
+        .from('user_stats')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
         
-        // Fetch user stats
-        const { data: statsData, error: statsError } = await supabase
-          .from('user_stats')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-          
-        if (statsError && statsError.code !== 'PGRST116') {
-          console.error('Error fetching user stats:', statsError);
-        }
-        
-        if (statsData) {
-          const level = Math.floor(Math.sqrt(statsData.xp / 100)) + 1;
-          setUserStats({
-            xp: statsData.xp || 0,
-            level,
-            streak: statsData.streak_days || 0,
-            totalCorrect: statsData.total_correct || 0,
-            totalIncorrect: statsData.total_incorrect || 0
-          });
-        }
-        
-        // Fetch due cards count with category breakdowns
-        const now = new Date().toISOString();
-        
-        // Total due cards
-        const { count: totalCount, error: totalDueError } = await supabase
-          .from('user_progress')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .lte('next_review_at', now);
-        
-        // Due cards for Signale category
-        const { count: signaleCount, error: signaleDueError } = await supabase
-          .from('user_progress')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .eq('questions.category', 'Signale')
-          .lte('next_review_at', now);
-        
-        // Due cards for Betriebsdienst category
-        const { count: betriebsdienstCount, error: betriebsdienstDueError } = await supabase
-          .from('user_progress')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .eq('questions.category', 'Betriebsdienst')
-          .lte('next_review_at', now);
-        
-        if (totalDueError || signaleDueError || betriebsdienstDueError) {
-          console.error('Error fetching due cards:', totalDueError || signaleDueError || betriebsdienstDueError);
-        } else {
-          setDueCards({
-            total: totalCount || 0,
-            signale: signaleCount || 0,
-            betriebsdienst: betriebsdienstCount || 0
-          });
-        }
-        
-        // Fetch category progress
-        const { data: progressData, error: progressError } = await supabase
-          .from('user_progress')
-          .select('questions(category,sub_category), correct_count, incorrect_count')
-          .eq('user_id', user.id);
-          
-        if (progressError) {
-          console.error('Error fetching progress:', progressError);
-        } else {
-          const progress = (progressData || []).reduce((acc: Record<string, { correct: number, total: number }>, curr) => {
-            const category = curr.questions?.category;
-            const subCategory = curr.questions?.sub_category;
-            
-            if (!category || !subCategory) return acc;
-            
-            // Track by subcategory
-            if (!acc[subCategory]) {
-              acc[subCategory] = { correct: 0, total: 0 };
-            }
-            
-            acc[subCategory].correct += curr.correct_count || 0;
-            acc[subCategory].total += (curr.correct_count || 0) + (curr.incorrect_count || 0);
-            
-            return acc;
-          }, {});
-          
-          setCategoryProgress(progress);
-        }
-      } finally {
-        setLoading(false);
+      if (statsError && statsError.code !== 'PGRST116') {
+        console.error('Error fetching user stats:', statsError);
       }
-    };
-    
-    fetchUserData();
+      
+      if (statsData) {
+        const level = Math.floor(Math.sqrt(statsData.xp / 100)) + 1;
+        setUserStats({
+          xp: statsData.xp || 0,
+          level,
+          streak: statsData.streak_days || 0,
+          totalCorrect: statsData.total_correct || 0,
+          totalIncorrect: statsData.total_incorrect || 0
+        });
+      }
+      
+      // Fetch due cards count with category breakdowns - using limit to prevent large queries
+      const now = new Date().toISOString();
+      
+      // Due cards for Signale category - limited to prevent large IN lists
+      const { count: signaleCount, error: signaleDueError } = await supabase
+        .from('user_progress')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .lte('next_review_at', now)
+        .filter('questions.category', 'eq', 'Signale')
+        .limit(1000);
+      
+      // Due cards for Betriebsdienst category
+      const { count: betriebsdienstCount, error: betriebsdienstDueError } = await supabase
+        .from('user_progress')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .lte('next_review_at', now)
+        .filter('questions.category', 'eq', 'Betriebsdienst')
+        .limit(1000);
+      
+      // Total due cards (sum of both categories)
+      const totalCount = (signaleCount || 0) + (betriebsdienstCount || 0);
+      
+      if (signaleDueError) {
+        console.error('Error fetching Signale due cards:', signaleDueError);
+      }
+      
+      if (betriebsdienstDueError) {
+        console.error('Error fetching Betriebsdienst due cards:', betriebsdienstDueError);
+      }
+      
+      setDueCards({
+        total: totalCount,
+        signale: signaleCount || 0,
+        betriebsdienst: betriebsdienstCount || 0
+      });
+      
+      // Fetch category progress - optimized to handle large datasets
+      const { data: progressData, error: progressError } = await supabase
+        .from('user_progress')
+        .select('questions(category,sub_category), correct_count, incorrect_count')
+        .eq('user_id', user.id)
+        .limit(1000);
+        
+      if (progressError) {
+        console.error('Error fetching progress:', progressError);
+      } else {
+        const progress = (progressData || []).reduce((acc: Record<string, { correct: number, total: number }>, curr) => {
+          const category = curr.questions?.category;
+          const subCategory = curr.questions?.sub_category;
+          
+          if (!category || !subCategory) return acc;
+          
+          // Track by subcategory
+          if (!acc[subCategory]) {
+            acc[subCategory] = { correct: 0, total: 0 };
+          }
+          
+          acc[subCategory].correct += curr.correct_count || 0;
+          acc[subCategory].total += (curr.correct_count || 0) + (curr.incorrect_count || 0);
+          
+          return acc;
+        }, {});
+        
+        setCategoryProgress(progress);
+      }
+    } catch (error) {
+      console.error("Error in fetchUserData:", error);
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
+  
+  useEffect(() => {
+    fetchUserData();
+    
+    // Set up a refresh interval, but with a reasonable time
+    // This avoids the page reloading too frequently
+    const intervalId = setInterval(() => {
+      fetchUserData();
+    }, 5 * 60 * 1000); // Refresh every 5 minutes instead of seconds
+    
+    return () => {
+      clearInterval(intervalId); // Clean up on unmount
+    };
+  }, [user, fetchUserData]);
 
   if (!user) {
     return null; // Will be handled by the route guard
@@ -185,7 +199,7 @@ export default function Dashboard() {
           </p>
         </div>
         
-        {/* Redesigned Learning Section */}
+        {/* Redesigned Learning Section - with consistent colors */}
         <Card className="mb-6">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2">
@@ -215,11 +229,11 @@ export default function Dashboard() {
                 </Link>
               </div>
               
-              {/* Betriebsdienst Learning Card */}
-              <div className="bg-amber-50 p-4 rounded-lg">
+              {/* Betriebsdienst Learning Card - updated colors to match brand */}
+              <div className="bg-blue-50 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="p-2 bg-amber-500/10 rounded-full">
-                    <TrafficCone className="h-5 w-5 text-amber-600" />
+                  <div className="p-2 bg-loklernen-sapphire/10 rounded-full">
+                    <TrafficCone className="h-5 w-5 text-loklernen-sapphire" />
                   </div>
                   <div>
                     <p className="font-medium">Betriebsdienst</p>
@@ -229,7 +243,7 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <Link to={`/karteikarten/lernen?regelwerk=${regulationPreference}&category=Betriebsdienst`}>
-                  <Button className="w-full bg-amber-600 hover:bg-amber-700">
+                  <Button className="w-full bg-loklernen-sapphire hover:bg-loklernen-sapphire/90">
                     <BookOpen className="mr-2 h-4 w-4" /> Betriebsdienst lernen
                   </Button>
                 </Link>

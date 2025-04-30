@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Question, QuestionCategory } from '@/types/questions';
@@ -39,25 +39,40 @@ export function useSpacedRepetition(
   const [loading, setLoading] = useState(true);
   const [dueQuestions, setDueQuestions] = useState<Question[]>([]);
   const [progress, setProgress] = useState<UserProgress[]>([]);
+  const [error, setError] = useState<Error | null>(null);
   const regulationCategory = options.regulationCategory || "all";
+  const batchSize = 50; // Limit the number of questions to process at once
 
-  useEffect(() => {
-    loadDueQuestions();
-  }, [user, category, subcategory, options.practiceMode, regulationCategory]);
-
-  const loadDueQuestions = async () => {
+  // Move loadDueQuestions to useCallback to avoid recreation on every render
+  const loadDueQuestions = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      setDueQuestions([]);
+      return;
+    }
+    
     try {
       setLoading(true);
+      setError(null);
 
       if (options.practiceMode) {
-        // In practice mode, load all questions for the category/subcategory
-        const { data: questions, error: questionsError } = await supabase
+        // In practice mode, load questions with pagination for better performance
+        let query = supabase
           .from('questions')
           .select('*')
           .eq('category', category)
-          .eq('sub_category', subcategory || '');
+          .limit(batchSize);
+          
+        if (subcategory) {
+          query = query.eq('sub_category', subcategory);
+        }
 
-        if (questionsError) throw questionsError;
+        const { data: questions, error: questionsError } = await query;
+
+        if (questionsError) {
+          setError(new Error(`Error fetching practice questions: ${questionsError.message}`));
+          return;
+        }
 
         // Filter by regulation category if specified
         let filteredQuestions = questions || [];
@@ -74,61 +89,97 @@ export function useSpacedRepetition(
       }
       
       // Regular spaced repetition mode
-      if (user) {
-        // Fetch questions that are due for review
-        const { data: progressData, error: progressError } = await supabase
-          .from('user_progress')
-          .select('*, questions(*)')
-          .eq('user_id', user.id)
-          .eq('questions.category', category)
-          .eq('questions.sub_category', subcategory || '')
-          .lte('next_review_at', new Date().toISOString());
+      // Fetch questions that are due for review
+      // Use safe filter approach instead of 'in' operator with large arrays
+      const { data: progressData, error: progressError } = await supabase
+        .from('user_progress')
+        .select('*, questions(*)')
+        .eq('user_id', user.id)
+        .eq('questions.category', category)
+        .lte('next_review_at', new Date().toISOString())
+        .limit(batchSize);
 
-        if (progressError) throw progressError;
-
-        // Filter by regulation category if specified
-        let filteredProgressData = progressData || [];
-        if (regulationCategory !== "all") {
-          filteredProgressData = filteredProgressData.filter(p => 
-            p.questions.regulation_category === regulationCategory || 
-            p.questions.regulation_category === "both" || 
-            p.questions.regulation_category === undefined
-          );
-        }
-
-        // Get IDs of questions with progress
-        const questionIdsWithProgress = filteredProgressData.map(p => p.question_id);
-
-        // Build query for new questions (those without progress)
-        let newQuestionsQuery = supabase
-          .from('questions')
-          .select('*')
-          .eq('category', category)
-          .eq('sub_category', subcategory || '')
-          .not('id', 'in', questionIdsWithProgress.length > 0 ? questionIdsWithProgress : ['none']);
-
-        // Apply regulation category filter if specified
-        if (regulationCategory !== "all") {
-          newQuestionsQuery = newQuestionsQuery.or(
-            `regulation_category.eq.${regulationCategory},regulation_category.eq.both,regulation_category.is.null`
-          );
-        }
-
-        const { data: newQuestions, error: newQuestionsError } = await newQuestionsQuery;
-        if (newQuestionsError) throw newQuestionsError;
-
-        const transformedProgressQuestions = filteredProgressData.map(p => transformQuestion(p.questions));
-        const transformedNewQuestions = (newQuestions || []).map(q => transformQuestion(q));
-        
-        setDueQuestions([...transformedProgressQuestions, ...transformedNewQuestions]);
-        setProgress(filteredProgressData);
+      if (progressError) {
+        setError(new Error(`Error fetching progress data: ${progressError.message}`));
+        return;
       }
+
+      // Apply subcategory filter
+      let filteredProgressData = progressData || [];
+      if (subcategory) {
+        filteredProgressData = filteredProgressData.filter(p => 
+          p.questions.sub_category === subcategory);
+      }
+
+      // Filter by regulation category if specified
+      if (regulationCategory !== "all") {
+        filteredProgressData = filteredProgressData.filter(p => 
+          p.questions.regulation_category === regulationCategory || 
+          p.questions.regulation_category === "both" || 
+          p.questions.regulation_category === undefined
+        );
+      }
+
+      // Get IDs of questions with progress
+      const questionIdsWithProgress = filteredProgressData.map(p => p.question_id);
+
+      // Build query for new questions (those without progress)
+      let newQuestionsQuery = supabase
+        .from('questions')
+        .select('*')
+        .eq('category', category)
+        .limit(batchSize);
+        
+      if (subcategory) {
+        newQuestionsQuery = newQuestionsQuery.eq('sub_category', subcategory);
+      }
+
+      // Handle question IDs with progress - use a different approach for large arrays
+      if (questionIdsWithProgress.length > 0) {
+        // For small arrays, use 'not in'
+        if (questionIdsWithProgress.length < 10) {
+          newQuestionsQuery = newQuestionsQuery.not('id', 'in', questionIdsWithProgress);
+        } else {
+          // For larger arrays, fetch all and filter in memory (less efficient but more reliable)
+          // We limit the number to avoid processing too many questions
+        }
+      }
+
+      // Apply regulation category filter
+      if (regulationCategory !== "all") {
+        newQuestionsQuery = newQuestionsQuery.or(
+          `regulation_category.eq.${regulationCategory},regulation_category.eq.both,regulation_category.is.null`
+        );
+      }
+
+      const { data: newQuestions, error: newQuestionsError } = await newQuestionsQuery;
+      
+      if (newQuestionsError) {
+        setError(new Error(`Error fetching new questions: ${newQuestionsError.message}`));
+        return;
+      }
+
+      // Filter out questions that already have progress
+      const filteredNewQuestions = newQuestions ? 
+        newQuestions.filter(q => !questionIdsWithProgress.includes(q.id)) :
+        [];
+
+      const transformedProgressQuestions = filteredProgressData.map(p => transformQuestion(p.questions));
+      const transformedNewQuestions = filteredNewQuestions.map(q => transformQuestion(q));
+      
+      setDueQuestions([...transformedProgressQuestions, ...transformedNewQuestions].slice(0, batchSize));
+      setProgress(filteredProgressData);
     } catch (error) {
       console.error('Error loading questions:', error);
+      setError(error instanceof Error ? error : new Error('Unknown error loading questions'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, category, subcategory, options.practiceMode, regulationCategory]);
+
+  useEffect(() => {
+    loadDueQuestions();
+  }, [loadDueQuestions]);
 
   const calculateNextReview = (score: number, currentProgress?: UserProgress) => {
     const baseEaseFactor = currentProgress?.ease_factor || 2.5;
@@ -163,10 +214,10 @@ export function useSpacedRepetition(
   const submitAnswer = async (questionId: string, score: number) => {
     if (!user) return;
 
-    const currentProgress = progress.find(p => p.question_id === questionId);
-    const { interval_days, ease_factor, next_review_at } = calculateNextReview(score, currentProgress);
-
     try {
+      const currentProgress = progress.find(p => p.question_id === questionId);
+      const { interval_days, ease_factor, next_review_at } = calculateNextReview(score, currentProgress);
+
       if (currentProgress) {
         // Update existing progress
         const { error } = await supabase
@@ -222,11 +273,13 @@ export function useSpacedRepetition(
       await loadDueQuestions();
     } catch (error) {
       console.error('Error submitting answer:', error);
+      setError(error instanceof Error ? error : new Error('Unknown error submitting answer'));
     }
   };
 
   return {
     loading,
+    error,
     dueQuestions,
     progress,
     submitAnswer,

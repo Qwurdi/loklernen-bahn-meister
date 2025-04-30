@@ -2,6 +2,7 @@
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import ProgressRing from "./ProgressRing";
+import { RegulationCategory } from "@/types/questions";
 
 interface CategoryCardProps {
   title: string;
@@ -11,6 +12,7 @@ interface CategoryCardProps {
   isPro?: boolean;
   isLocked?: boolean;
   className?: string;
+  badge?: RegulationCategory | string;
 }
 
 export default function CategoryCard({
@@ -21,6 +23,7 @@ export default function CategoryCard({
   isPro = false,
   isLocked = false,
   className,
+  badge,
 }: CategoryCardProps) {
   return (
     <Link to={isLocked ? "/login" : link} className={cn("block", className)}>
@@ -31,11 +34,16 @@ export default function CategoryCard({
       )}>
         <div className="flex items-start justify-between">
           <div className="space-y-1">
-            <h3 className="font-medium leading-none tracking-tight">
+            <h3 className="font-medium leading-none tracking-tight flex items-center gap-2">
               {title}
               {isPro && (
                 <span className="ml-2 inline-flex items-center rounded-full bg-loklernen-sapphire px-2 py-1 text-xs text-white">
                   Pro
+                </span>
+              )}
+              {badge && (
+                <span className="inline-flex items-center rounded-full bg-indigo-100 text-indigo-800 px-2 py-1 text-xs">
+                  {badge}
                 </span>
               )}
             </h3>

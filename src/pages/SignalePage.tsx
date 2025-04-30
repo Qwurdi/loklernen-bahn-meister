@@ -12,9 +12,18 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuestionFilters } from "@/hooks/useQuestionFilters";
-import { RegulationCategory } from "@/types/questions";
+import { RegulationCategory, Question } from "@/types/questions";
 import { useEffect } from "react";
 import { Card } from "@/components/ui/card";
+import { transformAnswers } from "@/api/questions";
+
+// Helper function to transform database questions to application questions
+function transformQuestion(dbQuestion: any): Question {
+  return {
+    ...dbQuestion,
+    answers: transformAnswers(dbQuestion.answers)
+  };
+}
 
 export default function SignalePage() {
   const { user } = useAuth();
@@ -33,7 +42,8 @@ export default function SignalePage() {
         .eq('category', 'Signale');
         
       if (error) throw error;
-      return data || [];
+      // Transform the data to match our application types
+      return (data || []).map(transformQuestion);
     }
   });
   
@@ -46,7 +56,7 @@ export default function SignalePage() {
     questions: allSignalQuestions 
   });
   
-  // Update URL when regulation filter changes
+  // Update filter when URL param changes
   useEffect(() => {
     setRegulationFilter(initialRegulationFilter);
   }, [initialRegulationFilter, setRegulationFilter]);

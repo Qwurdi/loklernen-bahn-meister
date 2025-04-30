@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -59,7 +58,7 @@ export default function FlashcardPage() {
   );
 
   // Update regulation filter when it changes
-  const handleRegulationChange = (value) => {
+  const handleRegulationChange = (value: RegulationFilterType) => {
     setSearchParams(params => {
       params.set("regelwerk", value);
       return params;

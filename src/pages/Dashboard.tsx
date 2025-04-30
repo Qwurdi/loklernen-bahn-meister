@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -233,7 +232,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             {/* User Stats */}
             <div className="lg:col-span-1">
-              <UserStats />
+              <UserStats xp={totalXP} level={Math.floor(totalXP / 1000) + 1} streak={streak} />
             </div>
             
             {/* Quick Start Cards */}

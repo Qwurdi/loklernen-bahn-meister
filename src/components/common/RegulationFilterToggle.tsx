@@ -1,10 +1,11 @@
 
 import React from 'react';
-import { RegulationCategory, RegulationFilterType } from '@/types/questions';
+import { RegulationCategory } from '@/types/questions';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Label } from "@/components/ui/label";
 import { Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { RegulationFilterType } from '@/types/regulation';
 
 interface RegulationFilterToggleProps {
   value: RegulationFilterType;

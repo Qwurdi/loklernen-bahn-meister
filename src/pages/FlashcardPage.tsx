@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
@@ -16,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 import { RegulationFilterToggle } from "@/components/common/RegulationFilterToggle";
+import { RegulationFilterType } from "@/types/regulation";
 
 // Helper to map URL subcategory param back to original subcategory string (case sensitive)
 function mapUrlToSubcategory(urlSubcategory?: string): string | undefined {

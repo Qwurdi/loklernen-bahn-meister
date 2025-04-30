@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { PieChart, BarChart2, Users, BookOpen, FileText } from "lucide-react";
 import { useQuestions } from "@/hooks/useQuestions";
 import { Link } from "react-router-dom";
+import { Progress } from "@/components/ui/progress";
 
 const AdminDashboard: React.FC = () => {
   const { data: questions, isLoading, error } = useQuestions();

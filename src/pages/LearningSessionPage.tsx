@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import FlashcardLoadingState from "@/components/flashcards/FlashcardLoadingState";
+import BottomNavigation from "@/components/layout/BottomNavigation";
 
 export default function LearningSessionPage() {
   const { user } = useAuth();
@@ -81,7 +82,7 @@ export default function LearningSessionPage() {
   };
 
   const handleEndSession = () => {
-    navigate("/");
+    navigate("/karteikarten");
   };
 
   const getCategoryPath = () => {
@@ -111,7 +112,8 @@ export default function LearningSessionPage() {
             </Button>
           </Card>
         </main>
-        <Footer />
+        {!isMobile && <Footer />}
+        {isMobile && <BottomNavigation />}
       </div>
     );
   }
@@ -138,7 +140,8 @@ export default function LearningSessionPage() {
             </div>
           </Card>
         </main>
-        <Footer />
+        {!isMobile && <Footer />}
+        {isMobile && <BottomNavigation />}
       </div>
     );
   }
@@ -150,7 +153,7 @@ export default function LearningSessionPage() {
     <div className="flex min-h-screen flex-col">
       <Navbar />
       
-      <main className={`flex-1 ${isMobile ? 'px-2 py-2' : 'container px-4 py-8'}`}>
+      <main className={`flex-1 ${isMobile ? 'px-2 py-2 pb-20' : 'container px-4 py-8'}`}>
         {!isMobile && (
           <div className="flex items-center justify-between mb-6">
             <Button
@@ -184,37 +187,10 @@ export default function LearningSessionPage() {
           onAnswer={handleAnswer}
           onNext={handleNext}
         />
-
-        {isMobile && (
-          <div className="fixed bottom-0 left-0 right-0 flex justify-between bg-white border-t border-gray-200 p-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center"
-              onClick={() => navigate(getCategoryPath())}
-            >
-              <ChevronLeft className="h-4 w-4" />
-              <span className="sr-only">Zurück</span>
-            </Button>
-            
-            <div className="text-xs text-gray-500">
-              {currentIndex + 1} / {sessionCards.length}
-            </div>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center"
-              onClick={() => navigate(getCategoryPath())}
-            >
-              <List className="h-4 w-4" />
-              <span className="sr-only">Kategorien</span>
-            </Button>
-          </div>
-        )}
       </main>
       
       {!isMobile && <Footer />}
+      {isMobile && <BottomNavigation />}
     </div>
   );
 }

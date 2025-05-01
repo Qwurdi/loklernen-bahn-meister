@@ -11,9 +11,12 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useIsMobile } from "@/hooks/use-mobile";
+import BottomNavigation from "@/components/layout/BottomNavigation";
 
 export default function CardsPage() {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   
   const { data: progressStats } = useQuery({
     queryKey: ['signalProgress', user?.id],
@@ -50,20 +53,22 @@ export default function CardsPage() {
       <Navbar />
       
       <main className="flex-1">
-        <div className="container px-4 py-8 md:px-6 md:py-12">
-          <Breadcrumb className="mb-6">
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to="/">Home</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Karteikarten</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+        <div className={`${isMobile ? 'px-3 py-4 pb-20' : 'container px-4 py-8 md:px-6 md:py-12'}`}>
+          {!isMobile && (
+            <Breadcrumb className="mb-6">
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/">Home</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Karteikarten</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          )}
           
           <div className="mb-8">
             <h1 className="text-2xl font-bold mb-4">Karteikarten</h1>
@@ -151,7 +156,8 @@ export default function CardsPage() {
         </div>
       </main>
       
-      <Footer />
+      {!isMobile && <Footer />}
+      {isMobile && <BottomNavigation />}
     </div>
   );
 }

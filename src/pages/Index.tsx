@@ -5,6 +5,8 @@ import { Check, Award, Target, Clock, Brain } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import CategoryCard from "@/components/common/CategoryCard";
+import { useIsMobile } from "@/hooks/use-mobile";
+import BottomNavigation from "@/components/layout/BottomNavigation";
 
 const features = [
   {
@@ -30,6 +32,8 @@ const features = [
 ];
 
 export default function Index() {
+  const isMobile = useIsMobile();
+  
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
@@ -50,7 +54,7 @@ export default function Index() {
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  <Link to="/signale">
+                  <Link to="/karteikarten">
                     <Button size="lg" className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90">
                       Jetzt starten
                     </Button>
@@ -111,25 +115,25 @@ export default function Index() {
                     title="Haupt- und Vorsignale"
                     description="Lerne die grundlegenden Signale kennen."
                     progress={0}
-                    link="/signale/haupt-vorsignale"
+                    link="/karteikarten/signale/haupt-vorsignale"
                   />
                   <CategoryCard
                     title="Zusatz- & Kennzeichen"
                     description="Zs, Ne, Bü, Ra und mehr."
                     progress={0}
-                    link="/signale/zusatz-kennzeichen"
+                    link="/karteikarten/signale/zusatz-kennzeichen"
                   />
                   <CategoryCard
                     title="Rangiersignale"
                     description="Sh und Ra Signale für das Rangieren."
                     progress={0}
-                    link="/signale/rangiersignale"
+                    link="/karteikarten/signale/rangiersignale"
                   />
                   <CategoryCard
                     title="Sonstige Signale"
                     description="Lf-, El-, und So-Tafeln."
                     progress={0}
-                    link="/signale/sonstige"
+                    link="/karteikarten/signale/sonstige"
                   />
                 </div>
               </div>
@@ -141,21 +145,21 @@ export default function Index() {
                     title="Grundlagen Bahnbetrieb"
                     description="Einstieg in den Bahnbetrieb."
                     progress={0}
-                    link="/betriebsdienst/grundlagen"
+                    link="/karteikarten/betriebsdienst/grundlagen"
                     isLocked
                   />
                   <CategoryCard
                     title="UVV & Arbeitsschutz"
                     description="Sicherheit am Arbeitsplatz."
                     progress={0}
-                    link="/betriebsdienst/uvv"
+                    link="/karteikarten/betriebsdienst/uvv"
                     isLocked
                   />
                   <CategoryCard
                     title="Rangieren"
                     description="Alles zum Thema Rangieren."
                     progress={0}
-                    link="/betriebsdienst/rangieren"
+                    link="/karteikarten/betriebsdienst/rangieren"
                     isPro
                     isLocked
                   />
@@ -163,7 +167,7 @@ export default function Index() {
                     title="Züge fahren"
                     description="Von der Abfahrt bis zur Ankunft."
                     progress={0}
-                    link="/betriebsdienst/zuege-fahren"
+                    link="/karteikarten/betriebsdienst/zuege-fahren"
                     isPro
                     isLocked
                   />
@@ -212,7 +216,7 @@ export default function Index() {
                 </p>
               </div>
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                <Link to="/signale">
+                <Link to="/karteikarten">
                   <Button size="lg" className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90">
                     Mit Signalen starten
                   </Button>
@@ -228,7 +232,8 @@ export default function Index() {
         </section>
       </main>
       
-      <Footer />
+      {!isMobile && <Footer />}
+      {isMobile && <BottomNavigation />}
     </div>
   );
 }

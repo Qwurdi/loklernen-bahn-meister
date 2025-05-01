@@ -16,6 +16,8 @@ import FlashcardLoadingState from "@/components/flashcards/FlashcardLoadingState
 import FlashcardEmptyState from "@/components/flashcards/FlashcardEmptyState";
 import FlashcardHeader from "@/components/flashcards/FlashcardHeader";
 import FlashcardContent from "@/components/flashcards/FlashcardContent";
+import { useIsMobile } from "@/hooks/use-mobile";
+import BottomNavigation from "@/components/layout/BottomNavigation";
 
 // Helper to map URL subcategory param back to original subcategory string (case sensitive)
 function mapUrlToSubcategory(urlSubcategory?: string): string | undefined {
@@ -38,6 +40,7 @@ export default function FlashcardPage() {
   const [isPracticeMode] = useState(true);
   const { regulationPreference } = useUserPreferences();
   const [searchParams, setSearchParams] = useSearchParams();
+  const isMobile = useIsMobile();
   
   // Get regulation filter from URL or default to user preference
   const regulationParam = searchParams.get("regelwerk") as RegulationFilterType || regulationPreference;
@@ -121,7 +124,7 @@ export default function FlashcardPage() {
       <Navbar />
       
       <main className="flex-1">
-        <div className="container px-4 py-6">
+        <div className={`${isMobile ? 'px-3 py-3 pb-20' : 'container px-4 py-6'}`}>
           <FlashcardHeader 
             subcategory={subcategory}
             isPracticeMode={isPracticeMode}
@@ -144,7 +147,8 @@ export default function FlashcardPage() {
         </div>
       </main>
       
-      <Footer />
+      {!isMobile && <Footer />}
+      {isMobile && <BottomNavigation />}
     </div>
   );
 }

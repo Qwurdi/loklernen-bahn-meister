@@ -11,10 +11,13 @@ import WelcomeHeader from "@/components/dashboard/WelcomeHeader";
 import UpcomingReviews from "@/components/dashboard/UpcomingReviews";
 import RecentActivities from "@/components/dashboard/RecentActivities";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useIsMobile } from "@/hooks/use-mobile";
+import BottomNavigation from "@/components/layout/BottomNavigation";
 
 export default function Dashboard() {
   const { user } = useAuth();
   const { regulationPreference } = useUserPreferences();
+  const isMobile = useIsMobile();
   
   // Use the custom hook to fetch dashboard data
   const {
@@ -32,7 +35,7 @@ export default function Dashboard() {
     <div className="flex min-h-screen flex-col">
       <Navbar />
       
-      <main className="flex-1 bg-gray-50">
+      <main className={`flex-1 bg-gray-50 ${isMobile ? 'pb-20' : ''}`}>
         <div className="container px-4 py-8">
           {/* Welcome Header with Date and Activity */}
           <WelcomeHeader completedToday={completedToday} />
@@ -94,7 +97,8 @@ export default function Dashboard() {
         </div>
       </main>
       
-      <Footer />
+      {!isMobile && <Footer />}
+      {isMobile && <BottomNavigation />}
     </div>
   );
 }

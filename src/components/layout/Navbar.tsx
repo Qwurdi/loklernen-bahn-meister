@@ -4,12 +4,20 @@ import { Link, useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { Book, Home, Menu, User, BarChart, Settings } from "lucide-react";
+import { Book, Home, Menu, User, BarChart, Settings, ChevronLeft } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, signOut } = useAuth();
   const location = useLocation();
+  const isMobile = useIsMobile();
+
+  // Check if we're on a subpage that needs a back button
+  const showBackButton = location.pathname !== "/" && 
+                         location.pathname !== "/karteikarten" && 
+                         location.pathname !== "/fortschritt" &&
+                         location.pathname !== "/einstellungen";
 
   const isActive = (path: string) => {
     return location.pathname === path ||
@@ -46,10 +54,30 @@ const Navbar = () => {
     setIsOpen(false);
   };
 
+  // Get previous page for back button
+  const getPreviousPath = () => {
+    if (location.pathname.includes("/karteikarten/lernen")) return "/karteikarten";
+    if (location.pathname.includes("/karteikarten/signale/")) return "/karteikarten";
+    if (location.pathname.includes("/karteikarten/betriebsdienst/")) return "/karteikarten/betriebsdienst";
+    return "/";
+  };
+
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background">
       <div className="container flex h-16 items-center">
-        <Link to="/" className="flex items-center font-bold text-lg">
+        {isMobile && showBackButton ? (
+          <Link to={getPreviousPath()} className="mr-3">
+            <Button variant="ghost" size="icon" className="h-9 w-9">
+              <ChevronLeft className="h-5 w-5" />
+              <span className="sr-only">Zurück</span>
+            </Button>
+          </Link>
+        ) : null}
+        
+        <Link to="/" className={cn(
+          "flex items-center font-bold text-lg",
+          isMobile ? "text-base" : ""
+        )}>
           <span className="text-black">Lok</span>
           <span className="text-loklernen-ultramarine">Lernen</span>
         </Link>
@@ -112,12 +140,24 @@ const Navbar = () => {
         <div className="md:hidden ml-auto">
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="h-9 w-9">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[250px] sm:w-[300px]">
               <div className="flex flex-col space-y-4 py-4">
+                <div className="text-lg font-bold mb-4">
+                  <span className="text-black">Lok</span>
+                  <span className="text-loklernen-ultramarine">Lernen</span>
+                </div>
+                
+                {user ? (
+                  <div className="mb-4 pb-4 border-b">
+                    <p className="text-sm text-gray-500">Angemeldet als</p>
+                    <p className="font-medium">{user.email}</p>
+                  </div>
+                ) : null}
+                
                 {navItems.map((item) => (
                   (!item.requiresAuth || user) && (
                     <Link 
@@ -176,5 +216,8 @@ const Navbar = () => {
     </header>
   );
 };
+
+// Add missing import for cn
+import { cn } from "@/lib/utils";
 
 export default Navbar;

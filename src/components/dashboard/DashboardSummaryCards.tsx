@@ -27,11 +27,11 @@ export default function DashboardSummaryCards({
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
       {/* Due Today Card */}
       <Card className="overflow-hidden">
-        <CardHeader className="bg-amber-50 pb-2">
+        <CardHeader className="bg-blue-50 pb-2">
           <div className="flex justify-between items-start">
             <CardTitle className="text-base font-medium">Heute fällig</CardTitle>
-            <div className="bg-amber-100 p-2 rounded-full">
-              <Clock className="h-4 w-4 text-amber-600" />
+            <div className="bg-blue-100 p-2 rounded-full">
+              <Clock className="h-4 w-4 text-loklernen-ultramarine" />
             </div>
           </div>
         </CardHeader>
@@ -57,11 +57,11 @@ export default function DashboardSummaryCards({
       
       {/* XP Today Card */}
       <Card className="overflow-hidden">
-        <CardHeader className="bg-purple-50 pb-2">
+        <CardHeader className="bg-blue-50 pb-2">
           <div className="flex justify-between items-start">
             <CardTitle className="text-base font-medium">Gesammelte XP</CardTitle>
-            <div className="bg-purple-100 p-2 rounded-full">
-              <Zap className="h-4 w-4 text-purple-600" />
+            <div className="bg-blue-100 p-2 rounded-full">
+              <Zap className="h-4 w-4 text-loklernen-ultramarine" />
             </div>
           </div>
         </CardHeader>
@@ -73,7 +73,7 @@ export default function DashboardSummaryCards({
           <div className="text-sm text-muted-foreground">
             <span>Nächstes Level: {Math.floor(totalXP / 1000) + 1}</span>
           </div>
-          <Progress className="mt-2 h-1" value={(totalXP % 1000) / 10} />
+          <Progress className="mt-2 h-1" value={(totalXP % 1000) / 10} indicatorClassName="bg-loklernen-ultramarine" />
         </CardContent>
         <CardFooter className="bg-muted/40 pt-2">
           <Link to="/fortschritt" className="w-full">
@@ -87,11 +87,11 @@ export default function DashboardSummaryCards({
       
       {/* Streak Card */}
       <Card className="overflow-hidden">
-        <CardHeader className="bg-green-50 pb-2">
+        <CardHeader className="bg-zinc-50 pb-2">
           <div className="flex justify-between items-start">
             <CardTitle className="text-base font-medium">Lernserie</CardTitle>
-            <div className="bg-green-100 p-2 rounded-full">
-              <Award className="h-4 w-4 text-green-600" />
+            <div className="bg-zinc-100 p-2 rounded-full">
+              <Award className="h-4 w-4 text-loklernen-black" />
             </div>
           </div>
         </CardHeader>

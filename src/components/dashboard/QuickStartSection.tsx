@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Brain, BookOpen, TrafficCone } from "lucide-react";
+import { Brain, BookOpen, BookCopy, Zap } from "lucide-react";
 import { RegulationFilterType } from "@/types/regulation";
 
 interface QuickStartSectionProps {
@@ -20,7 +20,7 @@ export default function QuickStartSection({
       <h2 className="font-semibold text-lg">Schnellstart</h2>
       
       {/* Signale Learning Card */}
-      <div className="bg-blue-50 p-4 rounded-lg">
+      <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
         <div className="flex items-center gap-2 mb-3">
           <div className="p-2 bg-loklernen-ultramarine/10 rounded-full">
             <Brain className="h-5 w-5 text-loklernen-ultramarine" />
@@ -40,10 +40,10 @@ export default function QuickStartSection({
       </div>
       
       {/* Betriebsdienst Learning Card */}
-      <div className="bg-[#e6fff9] p-4 rounded-lg">
+      <div className="bg-zinc-50 p-4 rounded-lg border border-zinc-100">
         <div className="flex items-center gap-2 mb-3">
-          <div className="p-2 bg-[#00B8A9]/10 rounded-full">
-            <TrafficCone className="h-5 w-5 text-[#00B8A9]" />
+          <div className="p-2 bg-loklernen-black/10 rounded-full">
+            <BookCopy className="h-5 w-5 text-loklernen-black" />
           </div>
           <div>
             <p className="font-medium">Betriebsdienst</p>
@@ -53,7 +53,7 @@ export default function QuickStartSection({
           </div>
         </div>
         <Link to={`/karteikarten/lernen?regelwerk=${regulationPreference}&category=Betriebsdienst`}>
-          <Button className="w-full bg-[#00B8A9] hover:bg-[#00B8A9]/90">
+          <Button className="w-full bg-loklernen-black hover:bg-loklernen-black/90">
             <BookOpen className="mr-2 h-4 w-4" /> Betriebsdienst lernen
           </Button>
         </Link>

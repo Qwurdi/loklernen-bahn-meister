@@ -7,12 +7,32 @@ import { transformQuestion } from '../../utils';
 // Mock Supabase client
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    or: vi.fn().mockReturnThis(),
-    lte: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnThis()
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          lte: vi.fn(() => ({
+            data: [],
+            error: null
+          })),
+          or: vi.fn(() => ({
+            limit: vi.fn(() => ({
+              data: [],
+              error: null
+            }))
+          }))
+        })),
+        or: vi.fn(() => ({
+          limit: vi.fn(() => ({
+            data: [],
+            error: null
+          }))
+        })),
+        limit: vi.fn(() => ({
+          data: [],
+          error: null
+        }))
+      }))
+    }))
   }
 }));
 
@@ -47,7 +67,19 @@ describe('questions service', () => {
         error: null
       };
       
-      supabase.from().select().eq().lte = vi.fn().mockResolvedValue(mockProgressData);
+      // Update supabase mock with our test scenario
+      const mockSupabaseSelect = vi.fn(() => ({
+        eq: vi.fn(() => ({
+          lte: vi.fn(() => mockProgressData)
+        }))
+      }));
+      
+      const mockSupabaseFrom = vi.fn(() => ({
+        select: mockSupabaseSelect
+      }));
+      
+      // @ts-ignore - Override the mock for this test
+      supabase.from = mockSupabaseFrom;
 
       const userId = 'test-user-id';
       const category = 'Signale';
@@ -57,13 +89,13 @@ describe('questions service', () => {
       const result = await fetchUserProgress(userId, category, subcategory, regulationCategory);
 
       // Check if we're querying the right table
-      expect(supabase.from).toHaveBeenCalledWith('user_progress');
+      expect(mockSupabaseFrom).toHaveBeenCalledWith('user_progress');
       
       // Verify filtering logic works - should only return progress entries for the specified category, subcategory, and regulation
       expect(result.length).toBeLessThanOrEqual(2); // Should exclude the Betriebsdienst entry
       
       // Verify we're selecting progress with questions data joined
-      expect(supabase.from().select).toHaveBeenCalledWith('*, questions(*)');
+      expect(mockSupabaseSelect).toHaveBeenCalledWith('*, questions(*)');
     });
   });
 
@@ -79,7 +111,15 @@ describe('questions service', () => {
         error: null
       };
       
-      supabase.from().select().eq().or().limit = vi.fn().mockResolvedValue(mockQuestionsData);
+      // Update supabase mock for this test
+      const mockLimit = vi.fn(() => mockQuestionsData);
+      const mockOr = vi.fn(() => ({ limit: mockLimit }));
+      const mockEq = vi.fn(() => ({ or: mockOr }));
+      const mockSelect = vi.fn(() => ({ eq: mockEq }));
+      const mockFrom = vi.fn(() => ({ select: mockSelect }));
+      
+      // @ts-ignore - Override the mock
+      supabase.from = mockFrom;
 
       const category = 'Signale';
       const subcategory = 'Hauptsignale';
@@ -96,13 +136,13 @@ describe('questions service', () => {
       );
 
       // Check if we're querying the right table
-      expect(supabase.from).toHaveBeenCalledWith('questions');
+      expect(mockFrom).toHaveBeenCalledWith('questions');
       
       // Verify filtering logic works - should filter out questions with ids in questionIdsWithProgress
       expect(result.length).toBeLessThanOrEqual(2); // Should exclude q2
       
       // Verify we're limiting the query to batchSize
-      expect(supabase.from().select().eq().limit).toHaveBeenCalledWith(batchSize);
+      expect(mockLimit).toHaveBeenCalledWith(batchSize);
     });
   });
 
@@ -117,7 +157,15 @@ describe('questions service', () => {
         error: null
       };
       
-      supabase.from().select().eq().or().limit = vi.fn().mockResolvedValue(mockQuestionsData);
+      // Update supabase mock for this test
+      const mockLimit = vi.fn(() => mockQuestionsData);
+      const mockOr = vi.fn(() => ({ limit: mockLimit }));
+      const mockEq = vi.fn(() => ({ or: mockOr }));
+      const mockSelect = vi.fn(() => ({ eq: mockEq }));
+      const mockFrom = vi.fn(() => ({ select: mockSelect }));
+      
+      // @ts-ignore - Override the mock
+      supabase.from = mockFrom;
 
       const category = 'Signale';
       const subcategory = 'Hauptsignale';
@@ -132,14 +180,14 @@ describe('questions service', () => {
       );
 
       // Check if we're querying the right table
-      expect(supabase.from).toHaveBeenCalledWith('questions');
+      expect(mockFrom).toHaveBeenCalledWith('questions');
       
       // Verify we're transforming questions
       expect(transformQuestion).toHaveBeenCalledTimes(2);
       
-      // Verify we're getting transformed questions back
-      expect(result[0].transformed).toBeTruthy();
-      expect(result[1].transformed).toBeTruthy();
+      // Verify each result has the transformed property from our mock
+      expect(result[0]).toHaveProperty('transformed', true);
+      expect(result[1]).toHaveProperty('transformed', true);
     });
   });
 });

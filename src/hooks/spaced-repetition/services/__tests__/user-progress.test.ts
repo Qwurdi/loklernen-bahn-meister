@@ -7,12 +7,24 @@ import { supabase } from '@/integrations/supabase/client';
 // Mock Supabase client
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    single: vi.fn().mockReturnThis()
+    from: vi.fn(() => ({
+      update: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          error: null
+        }))
+      })),
+      insert: vi.fn(() => ({
+        error: null
+      })),
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          single: vi.fn(() => ({
+            data: null,
+            error: null
+          }))
+        }))
+      }))
+    }))
   }
 }));
 
@@ -34,7 +46,12 @@ describe('user-progress service', () => {
     it('should update existing progress correctly', async () => {
       // Mock the supabase response for update
       const mockUpdateResponse = { error: null };
-      supabase.from().update().eq = vi.fn().mockResolvedValue(mockUpdateResponse);
+      const mockEq = vi.fn(() => mockUpdateResponse);
+      const mockUpdate = vi.fn(() => ({ eq: mockEq }));
+      const mockFrom = vi.fn(() => ({ update: mockUpdate }));
+      
+      // @ts-ignore - Override the mock
+      supabase.from = mockFrom;
 
       const userId = 'test-user-id';
       const questionId = 'test-question-id';
@@ -58,19 +75,23 @@ describe('user-progress service', () => {
       expect(calculateNextReview).toHaveBeenCalledWith(score, currentProgress);
       
       // Check if supabase update was called with the right table
-      expect(supabase.from).toHaveBeenCalledWith('user_progress');
+      expect(mockFrom).toHaveBeenCalledWith('user_progress');
       
       // Check if the update method was called
-      expect(supabase.from().update).toHaveBeenCalled();
+      expect(mockUpdate).toHaveBeenCalled();
       
       // Check if we're updating the correct record
-      expect(supabase.from().update().eq).toHaveBeenCalledWith('id', 'progress-id');
+      expect(mockEq).toHaveBeenCalledWith('id', 'progress-id');
     });
 
     it('should create new progress when no existing progress is provided', async () => {
       // Mock the supabase response for insert
       const mockInsertResponse = { error: null };
-      supabase.from().insert = vi.fn().mockResolvedValue(mockInsertResponse);
+      const mockInsert = vi.fn(() => mockInsertResponse);
+      const mockFrom = vi.fn(() => ({ insert: mockInsert }));
+      
+      // @ts-ignore - Override the mock
+      supabase.from = mockFrom;
 
       const userId = 'test-user-id';
       const questionId = 'test-question-id';
@@ -82,16 +103,21 @@ describe('user-progress service', () => {
       expect(calculateNextReview).toHaveBeenCalledWith(score, undefined);
       
       // Check if supabase insert was called with the right table
-      expect(supabase.from).toHaveBeenCalledWith('user_progress');
+      expect(mockFrom).toHaveBeenCalledWith('user_progress');
       
       // Check if the insert method was called
-      expect(supabase.from().insert).toHaveBeenCalled();
+      expect(mockInsert).toHaveBeenCalled();
     });
 
     it('should throw an error when Supabase update fails', async () => {
       // Mock the supabase response for update failure
       const mockUpdateError = { error: new Error('Update failed') };
-      supabase.from().update().eq = vi.fn().mockResolvedValue(mockUpdateError);
+      const mockEq = vi.fn(() => mockUpdateError);
+      const mockUpdate = vi.fn(() => ({ eq: mockEq }));
+      const mockFrom = vi.fn(() => ({ update: mockUpdate }));
+      
+      // @ts-ignore - Override the mock
+      supabase.from = mockFrom;
 
       const userId = 'test-user-id';
       const questionId = 'test-question-id';
@@ -129,8 +155,20 @@ describe('user-progress service', () => {
       // Mock update response
       const mockUpdateResponse = { error: null };
       
-      supabase.from().select().eq().single = vi.fn().mockResolvedValue(mockExistingStats);
-      supabase.from().update().eq = vi.fn().mockResolvedValue(mockUpdateResponse);
+      const mockSingle = vi.fn(() => mockExistingStats);
+      const mockEqSelect = vi.fn(() => ({ single: mockSingle }));
+      const mockSelect = vi.fn(() => ({ eq: mockEqSelect }));
+      
+      const mockEqUpdate = vi.fn(() => mockUpdateResponse);
+      const mockUpdate = vi.fn(() => ({ eq: mockEqUpdate }));
+      
+      const mockFrom = vi.fn(() => ({
+        select: mockSelect,
+        update: mockUpdate
+      }));
+      
+      // @ts-ignore - Override the mock
+      supabase.from = mockFrom;
 
       const userId = 'test-user-id';
       const score = 5;
@@ -138,10 +176,10 @@ describe('user-progress service', () => {
       await updateUserStats(userId, score);
 
       // Check if we're querying the right table
-      expect(supabase.from).toHaveBeenCalledWith('user_stats');
+      expect(mockFrom).toHaveBeenCalledWith('user_stats');
       
       // Check if we're updating the correct user stats
-      expect(supabase.from().update().eq).toHaveBeenCalledWith('user_id', userId);
+      expect(mockEqUpdate).toHaveBeenCalledWith('user_id', userId);
     });
 
     it('should create new user stats when they do not exist', async () => {
@@ -154,8 +192,19 @@ describe('user-progress service', () => {
       // Mock insert response
       const mockInsertResponse = { error: null };
       
-      supabase.from().select().eq().single = vi.fn().mockResolvedValue(mockNoExistingStats);
-      supabase.from().insert = vi.fn().mockResolvedValue(mockInsertResponse);
+      const mockSingle = vi.fn(() => mockNoExistingStats);
+      const mockEqSelect = vi.fn(() => ({ single: mockSingle }));
+      const mockSelect = vi.fn(() => ({ eq: mockEqSelect }));
+      
+      const mockInsert = vi.fn(() => mockInsertResponse);
+      
+      const mockFrom = vi.fn(() => ({
+        select: mockSelect,
+        insert: mockInsert
+      }));
+      
+      // @ts-ignore - Override the mock
+      supabase.from = mockFrom;
 
       const userId = 'test-user-id';
       const score = 2;
@@ -163,10 +212,10 @@ describe('user-progress service', () => {
       await updateUserStats(userId, score);
 
       // Check if we're querying the right table
-      expect(supabase.from).toHaveBeenCalledWith('user_stats');
+      expect(mockFrom).toHaveBeenCalledWith('user_stats');
       
       // Check if the insert method was called
-      expect(supabase.from().insert).toHaveBeenCalled();
+      expect(mockInsert).toHaveBeenCalled();
     });
   });
 });

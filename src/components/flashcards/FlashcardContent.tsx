@@ -26,31 +26,27 @@ export default function FlashcardContent({
 }: FlashcardContentProps) {
   const isMobile = useIsMobile();
   
+  // Apply PWA-specific styles for mobile
+  const containerClasses = isMobile 
+    ? 'flex flex-col h-full w-full pt-2 pb-16' // Full height for PWA-like experience
+    : 'space-y-6';
+  
   return (
-    <div className={`space-y-${isMobile ? '2' : '6'}`}>
-      {!isMobile && (
-        <FlashcardProgress 
-          currentIndex={currentIndex}
-          totalCards={totalCards}
-          correctCount={correctCount}
-          remainingToday={remainingToday}
-        />
-      )}
-      
-      {isMobile && (
-        <FlashcardProgress 
-          currentIndex={currentIndex}
-          totalCards={totalCards}
-          correctCount={correctCount}
-          remainingToday={remainingToday}
-        />
-      )}
-      
-      <FlashcardItem 
-        question={currentQuestion} 
-        onAnswer={onAnswer}
-        onNext={onNext}
+    <div className={containerClasses}>
+      <FlashcardProgress 
+        currentIndex={currentIndex}
+        totalCards={totalCards}
+        correctCount={correctCount}
+        remainingToday={remainingToday}
       />
+      
+      <div className={isMobile ? 'flex-1 flex items-center justify-center' : ''}>
+        <FlashcardItem 
+          question={currentQuestion} 
+          onAnswer={onAnswer}
+          onNext={onNext}
+        />
+      </div>
     </div>
   );
 }

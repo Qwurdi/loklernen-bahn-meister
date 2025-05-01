@@ -21,23 +21,23 @@ export default function FlashcardProgress({
   const correctPercentage = totalCards > 0 ? Math.round((correctCount / Math.max(1, currentIndex)) * 100) : 0;
 
   if (isMobile) {
-    // More compact mobile view with minimal but useful info
+    // Super compact mobile view optimized for PWA experience
     return (
-      <div className="mb-2">
-        <div className="flex items-center justify-between mb-1.5">
-          <div className="flex items-center gap-1.5">
-            <div className="w-8 h-8 rounded-full bg-loklernen-sapphire flex items-center justify-center text-white font-medium text-sm">
+      <div className="px-1 mb-2">
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-1">
+            <div className="w-7 h-7 rounded-full bg-loklernen-sapphire flex items-center justify-center text-white font-medium text-xs">
               {currentIndex + 1}
             </div>
-            <span className="text-sm text-gray-600">/{totalCards}</span>
+            <span className="text-xs text-gray-600">/{totalCards}</span>
           </div>
-          <div className="text-xs py-1 px-2 bg-gray-100 rounded-full text-gray-600">
-            {remainingToday} heute
+          <div className="text-xs py-0.5 px-2 bg-gray-100 rounded-full text-gray-600">
+            {remainingToday} übrig
           </div>
         </div>
         <Progress 
           value={progressPercentage} 
-          className="h-1.5" 
+          className="h-1" 
           indicatorClassName={
             correctPercentage > 70 ? "bg-green-500" : 
             correctPercentage > 40 ? "bg-yellow-500" : 

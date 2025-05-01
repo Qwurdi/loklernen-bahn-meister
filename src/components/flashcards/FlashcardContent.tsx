@@ -3,6 +3,7 @@ import React from 'react';
 import { Question } from "@/types/questions";
 import FlashcardItem from "@/components/flashcards/FlashcardItem";
 import FlashcardProgress from "@/components/flashcards/FlashcardProgress";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FlashcardContentProps {
   currentQuestion: Question;
@@ -23,19 +24,32 @@ export default function FlashcardContent({
   onAnswer,
   onNext
 }: FlashcardContentProps) {
+  const isMobile = useIsMobile();
+  
   return (
-    <div className="space-y-6">
+    <div className={`space-y-${isMobile ? '2' : '6'}`}>
+      {!isMobile && (
+        <FlashcardProgress 
+          currentIndex={currentIndex}
+          totalCards={totalCards}
+          correctCount={correctCount}
+          remainingToday={remainingToday}
+        />
+      )}
+      
+      {isMobile && (
+        <FlashcardProgress 
+          currentIndex={currentIndex}
+          totalCards={totalCards}
+          correctCount={correctCount}
+          remainingToday={remainingToday}
+        />
+      )}
+      
       <FlashcardItem 
         question={currentQuestion} 
         onAnswer={onAnswer}
         onNext={onNext}
-      />
-      
-      <FlashcardProgress 
-        currentIndex={currentIndex}
-        totalCards={totalCards}
-        correctCount={correctCount}
-        remainingToday={remainingToday}
       />
     </div>
   );

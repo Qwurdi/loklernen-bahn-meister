@@ -151,4 +151,71 @@
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
   }
+
+  /* Mobile swipe animations */
+  .swipe-right {
+    transform: translateX(100%) rotate(10deg);
+    opacity: 0;
+    transition: all 0.3s ease-out;
+  }
+
+  .swipe-left {
+    transform: translateX(-100%) rotate(-10deg);
+    opacity: 0;
+    transition: all 0.3s ease-out;
+  }
+
+  .card-tilt {
+    transition: transform 0.2s ease-out;
+  }
+
+  .card-tilt:active {
+    transform: scale(0.98);
+  }
+
+  /* Bottom sheet for mobile */
+  .bottom-sheet-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-25 z-40;
+  }
+
+  .bottom-sheet {
+    @apply fixed bottom-0 left-0 right-0 bg-white rounded-t-xl z-50 shadow-xl transform transition-transform duration-300;
+  }
+
+  .bottom-sheet-closed {
+    transform: translateY(100%);
+  }
+
+  .bottom-sheet-open {
+    transform: translateY(0);
+  }
+
+  /* Touch drag indicator colors */
+  .drag-right {
+    @apply border-r-8 border-green-500;
+  }
+  
+  .drag-left {
+    @apply border-l-8 border-red-500;
+  }
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+  .flashcard-container {
+    height: calc(100vh - 180px);
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .mobile-full-bleed {
+    margin-left: -1rem;
+    margin-right: -1rem;
+    width: calc(100% + 2rem);
+  }
+  
+  /* Mobile touch feedback */
+  .touch-highlight {
+    -webkit-tap-highlight-color: transparent;
+  }
 }

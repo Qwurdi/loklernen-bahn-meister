@@ -21,18 +21,28 @@ export default function FlashcardProgress({
   const correctPercentage = totalCards > 0 ? Math.round((correctCount / Math.max(1, currentIndex)) * 100) : 0;
 
   if (isMobile) {
-    // Compact mobile view
+    // More compact mobile view with minimal but useful info
     return (
-      <div className="mb-4">
-        <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-          <span>{currentIndex + 1}/{totalCards}</span>
-          <span>{correctPercentage}% richtig</span>
-          <span>Heute: {remainingToday} fällig</span>
+      <div className="mb-2">
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-1.5">
+            <div className="w-8 h-8 rounded-full bg-loklernen-sapphire flex items-center justify-center text-white font-medium text-sm">
+              {currentIndex + 1}
+            </div>
+            <span className="text-sm text-gray-600">/{totalCards}</span>
+          </div>
+          <div className="text-xs py-1 px-2 bg-gray-100 rounded-full text-gray-600">
+            {remainingToday} heute
+          </div>
         </div>
         <Progress 
           value={progressPercentage} 
           className="h-1.5" 
-          indicatorClassName={correctPercentage > 70 ? "bg-green-500" : correctPercentage > 40 ? "bg-yellow-500" : "bg-red-500"}
+          indicatorClassName={
+            correctPercentage > 70 ? "bg-green-500" : 
+            correctPercentage > 40 ? "bg-yellow-500" : 
+            "bg-red-500"
+          }
         />
       </div>
     );

@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Question, QuestionCategory } from "@/types/questions";
 import { toast } from "sonner";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function LearningSessionPage() {
   const { user } = useAuth();
@@ -23,6 +24,7 @@ export default function LearningSessionPage() {
   const [correctCount, setCorrectCount] = useState(0);
   const [sessionCards, setSessionCards] = useState<Question[]>([]);
   const [sessionFinished, setSessionFinished] = useState(false);
+  const isMobile = useIsMobile();
   
   // Get category and regulation preference from URL parameters
   const categoryParam = searchParams.get("category") as QuestionCategory || "Signale";
@@ -152,28 +154,30 @@ export default function LearningSessionPage() {
     <div className="flex min-h-screen flex-col">
       <Navbar />
       
-      <main className="container flex-1 px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center"
-            onClick={() => navigate(getCategoryPath())}
-          >
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Zurück
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            className="flex items-center"
-            onClick={() => navigate(getCategoryPath())}
-          >
-            <List className="h-4 w-4 mr-1" />
-            Alle Kategorien
-          </Button>
-        </div>
+      <main className={`flex-1 ${isMobile ? 'px-2 py-2' : 'container px-4 py-8'}`}>
+        {!isMobile && (
+          <div className="flex items-center justify-between mb-6">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center"
+              onClick={() => navigate(getCategoryPath())}
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Zurück
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center"
+              onClick={() => navigate(getCategoryPath())}
+            >
+              <List className="h-4 w-4 mr-1" />
+              Alle Kategorien
+            </Button>
+          </div>
+        )}
 
         <FlashcardProgress 
           currentIndex={currentIndex}
@@ -189,9 +193,37 @@ export default function LearningSessionPage() {
             onNext={handleNext}
           />
         </div>
+
+        {isMobile && (
+          <div className="fixed bottom-0 left-0 right-0 flex justify-between bg-white border-t border-gray-200 p-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center"
+              onClick={() => navigate(getCategoryPath())}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="sr-only">Zurück</span>
+            </Button>
+            
+            <div className="text-xs text-gray-500">
+              {currentIndex + 1} / {sessionCards.length}
+            </div>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center"
+              onClick={() => navigate(getCategoryPath())}
+            >
+              <List className="h-4 w-4" />
+              <span className="sr-only">Kategorien</span>
+            </Button>
+          </div>
+        )}
       </main>
       
-      <Footer />
+      {!isMobile && <Footer />}
     </div>
   );
 }

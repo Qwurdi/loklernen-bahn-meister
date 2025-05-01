@@ -103,13 +103,33 @@ export default {
 				'focus-in': {
 					'0%': { boxShadow: '0 0 0 0 rgba(15, 82, 186, 0)' },
 					'100%': { boxShadow: '0 0 0 4px rgba(15, 82, 186, 0.1)' }
+				},
+				'swipe-right': {
+					'0%': { transform: 'translateX(0) rotate(0)' },
+					'100%': { transform: 'translateX(120%) rotate(10deg)', opacity: '0' }
+				},
+				'swipe-left': {
+					'0%': { transform: 'translateX(0) rotate(0)' },
+					'100%': { transform: 'translateX(-120%) rotate(-10deg)', opacity: '0' }
+				},
+				'fade-in-up': {
+					'0%': { opacity: '0', transform: 'translateY(10px)' },
+					'100%': { opacity: '1', transform: 'translateY(0)' }
+				},
+				'scale-in': {
+					'0%': { opacity: '0', transform: 'scale(0.95)' },
+					'100%': { opacity: '1', transform: 'scale(1)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'pulse-subtle': 'pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-				'focus-in': 'focus-in 0.5s ease-out forwards'
+				'focus-in': 'focus-in 0.5s ease-out forwards',
+				'swipe-right': 'swipe-right 0.5s ease-out forwards',
+				'swipe-left': 'swipe-left 0.5s ease-out forwards',
+				'fade-in-up': 'fade-in-up 0.3s ease-out',
+				'scale-in': 'scale-in 0.3s ease-out'
 			}
 		}
 	},

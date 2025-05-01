@@ -37,6 +37,15 @@ export default function Dashboard() {
           {/* Welcome Header with Date and Activity */}
           <WelcomeHeader completedToday={completedToday} />
           
+          {/* Quick Start Section - Moved to top position */}
+          <div className="mb-8 bg-white rounded-lg border p-5 shadow-sm">
+            <QuickStartSection
+              dueTodaySignals={dueTodaySignals}
+              dueTodayBetriebsdienst={dueTodayBetriebsdienst}
+              regulationPreference={regulationPreference}
+            />
+          </div>
+          
           {/* Summary Cards Section */}
           <DashboardSummaryCards
             dueTodaySignals={dueTodaySignals}
@@ -53,13 +62,10 @@ export default function Dashboard() {
               <UserStats xp={totalXP} level={Math.floor(totalXP / 1000) + 1} streak={streak} />
             </div>
             
-            {/* Quick Start Cards */}
+            {/* Removed Quick Start Cards from here */}
             <div className="lg:col-span-2 bg-white rounded-lg border p-5 shadow-sm">
-              <QuickStartSection
-                dueTodaySignals={dueTodaySignals}
-                dueTodayBetriebsdienst={dueTodayBetriebsdienst}
-                regulationPreference={regulationPreference}
-              />
+              <h3 className="font-semibold text-lg mb-4">Fortschrittsübersicht</h3>
+              <p className="text-muted-foreground">Hier siehst du einen schnellen Überblick deiner Fortschritte in den verschiedenen Kategorien.</p>
             </div>
           </div>
           

@@ -6,14 +6,14 @@ import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ChevronLeft, List } from "lucide-react";
-import FlashcardItem from "@/components/flashcards/FlashcardItem";
-import FlashcardProgress from "@/components/flashcards/FlashcardProgress";
+import FlashcardContent from "@/components/flashcards/FlashcardContent";
 import { useSpacedRepetition } from "@/hooks/spaced-repetition";
 import { useAuth } from "@/contexts/AuthContext";
 import { Question, QuestionCategory } from "@/types/questions";
 import { toast } from "sonner";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import FlashcardLoadingState from "@/components/flashcards/FlashcardLoadingState";
 
 export default function LearningSessionPage() {
   const { user } = useAuth();
@@ -90,18 +90,12 @@ export default function LearningSessionPage() {
       : "/karteikarten";
   };
 
+  // Render loading state
   if (loading) {
-    return (
-      <div className="flex min-h-screen flex-col">
-        <Navbar />
-        <main className="flex-1 flex items-center justify-center">
-          <p className="text-center text-lg">Lade Karteikarten...</p>
-        </main>
-        <Footer />
-      </div>
-    );
+    return <FlashcardLoadingState />;
   }
 
+  // Render empty state when no cards are available
   if (!sessionCards.length) {
     return (
       <div className="flex min-h-screen flex-col">
@@ -122,6 +116,7 @@ export default function LearningSessionPage() {
     );
   }
 
+  // Render finished session state
   if (sessionFinished) {
     return (
       <div className="flex min-h-screen flex-col">
@@ -148,6 +143,7 @@ export default function LearningSessionPage() {
     );
   }
 
+  // Render main learning session UI
   const currentCard = sessionCards[currentIndex];
   
   return (
@@ -179,20 +175,15 @@ export default function LearningSessionPage() {
           </div>
         )}
 
-        <FlashcardProgress 
+        <FlashcardContent 
+          currentQuestion={currentCard}
           currentIndex={currentIndex}
           totalCards={sessionCards.length}
           correctCount={correctCount}
           remainingToday={dueQuestions.length - currentIndex}
+          onAnswer={handleAnswer}
+          onNext={handleNext}
         />
-        
-        <div className="flex justify-center">
-          <FlashcardItem
-            question={currentCard}
-            onAnswer={handleAnswer}
-            onNext={handleNext}
-          />
-        </div>
 
         {isMobile && (
           <div className="fixed bottom-0 left-0 right-0 flex justify-between bg-white border-t border-gray-200 p-2">

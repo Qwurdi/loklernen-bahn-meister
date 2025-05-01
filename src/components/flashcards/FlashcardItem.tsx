@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from "react";
 import { Question } from "@/types/questions";
 import { Lightbulb, ThumbsUp, ThumbsDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Badge } from "@/components/ui/badge";
 
 interface FlashcardItemProps {
   question: Question;
@@ -100,7 +102,7 @@ export default function FlashcardItem({
                   />
                 )}
                 
-                <div className="bg-blue-50 p-4 rounded-md w-full">
+                <div className="bg-blue-50 p-4 rounded-md w-full shadow-sm border border-blue-100 mb-8">
                   {question.category === "Signale" ? (
                     <div className="space-y-2">
                       {question.answers[0].text.split('\n').map((line, i) => (
@@ -118,42 +120,38 @@ export default function FlashcardItem({
               </div>
 
               {!answered && (
-                <div className="w-full grid grid-cols-2 gap-3">
+                <div className="w-full flex flex-row gap-2 justify-center items-center mt-auto">
                   <Button 
                     variant="outline"
-                    className="h-20 border-2 border-red-300 bg-red-50 text-red-700 hover:bg-red-100 hover:border-red-400 flex flex-col gap-1"
+                    className="flex-1 py-2 px-2 text-xs border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300"
                     onClick={() => handleConfidenceRating(1)}
                   >
-                    <ThumbsDown className="h-5 w-5" />
                     <span>Ratlos</span>
-                    <span className="text-xs opacity-70">(1)</span>
+                    <Badge variant="outline" className="ml-1 text-[10px] bg-gray-100">1</Badge>
                   </Button>
                   <Button 
                     variant="outline"
-                    className="h-20 border-2 border-red-200 bg-red-50/50 text-red-600 hover:bg-red-100 hover:border-red-300 flex flex-col gap-1"
+                    className="flex-1 py-2 px-2 text-xs border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300"
                     onClick={() => handleConfidenceRating(2)}
                   >
-                    <ThumbsDown className="h-5 w-5" />
                     <span>Unsicher</span>
-                    <span className="text-xs opacity-70">(2)</span>
+                    <Badge variant="outline" className="ml-1 text-[10px] bg-gray-100">2</Badge>
                   </Button>
                   <Button 
                     variant="outline"
-                    className="h-20 border-2 border-green-200 bg-green-50/50 text-green-600 hover:bg-green-100 hover:border-green-300 flex flex-col gap-1"
+                    className="flex-1 py-2 px-2 text-xs border border-loklernen-sapphire/20 bg-white text-loklernen-sapphire hover:bg-blue-50 hover:border-loklernen-sapphire/30"
                     onClick={() => handleConfidenceRating(4)}
                   >
-                    <ThumbsUp className="h-5 w-5" />
                     <span>Sicher</span>
-                    <span className="text-xs opacity-70">(3)</span>
+                    <Badge variant="outline" className="ml-1 text-[10px] bg-blue-50">3</Badge>
                   </Button>
                   <Button 
                     variant="outline"
-                    className="h-20 border-2 border-green-300 bg-green-50 text-green-700 hover:bg-green-100 hover:border-green-400 flex flex-col gap-1"
+                    className="flex-1 py-2 px-2 text-xs border border-loklernen-ultramarine/20 bg-white text-loklernen-ultramarine hover:bg-indigo-50 hover:border-loklernen-ultramarine/30"
                     onClick={() => handleConfidenceRating(5)}
                   >
-                    <ThumbsUp className="h-5 w-5" />
                     <span>Gewusst</span>
-                    <span className="text-xs opacity-70">(4)</span>
+                    <Badge variant="outline" className="ml-1 text-[10px] bg-indigo-50">4</Badge>
                   </Button>
                 </div>
               )}

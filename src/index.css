@@ -152,25 +152,42 @@
     -webkit-backface-visibility: hidden;
   }
 
-  /* Mobile swipe animations */
+  /* Mobile swipe animations - improved */
   .swipe-right {
-    transform: translateX(100%) rotate(10deg);
+    transform: translateX(120%) rotate(10deg);
     opacity: 0;
-    transition: all 0.3s ease-out;
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
   .swipe-left {
-    transform: translateX(-100%) rotate(-10deg);
+    transform: translateX(-120%) rotate(-10deg);
     opacity: 0;
-    transition: all 0.3s ease-out;
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
   .card-tilt {
-    transition: transform 0.2s ease-out;
+    transition: transform 0.2s ease-out, background-color 0.2s ease;
   }
 
   .card-tilt:active {
     transform: scale(0.98);
+  }
+
+  /* Animation for swiping cards */
+  .animate-swipe-right {
+    animation: swipe-right 0.3s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  
+  .animate-swipe-left {
+    animation: swipe-left 0.3s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  /* Touch feedback for cards */
+  .touch-none {
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   /* Bottom sheet for mobile */
@@ -206,6 +223,7 @@
     height: calc(100vh - 180px);
     width: 100%;
     margin: 0 auto;
+    touch-action: none;
   }
 
   .mobile-full-bleed {
@@ -218,4 +236,32 @@
   .touch-highlight {
     -webkit-tap-highlight-color: transparent;
   }
+}
+
+/* Keyframes for swipe animations */
+@keyframes swipe-right {
+  from {
+    transform: translateX(0) rotate(0deg);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(200%) rotate(20deg);
+    opacity: 0;
+  }
+}
+
+@keyframes swipe-left {
+  from {
+    transform: translateX(0) rotate(0deg);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-200%) rotate(-20deg);
+    opacity: 0;
+  }
+}
+
+/* Add smooth inertia to card movements */
+.card-with-inertia {
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }

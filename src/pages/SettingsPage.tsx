@@ -8,24 +8,55 @@ import { RegulationFilterToggle } from '@/components/common/RegulationFilterTogg
 import { RegulationFilterType } from '@/types/regulation';
 import { useIsMobile } from '@/hooks/use-mobile';
 import BottomNavigation from '@/components/layout/BottomNavigation';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 export default function SettingsPage() {
   const { regulationPreference, setRegulationPreference } = useUserPreferences();
+  const { user, signOut } = useAuth();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   const handleRegulationChange = (value: RegulationFilterType) => {
     setRegulationPreference(value);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
   };
 
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
       
-      <main className={`flex-1 ${isMobile ? 'pb-20' : ''}`}>
+      <main className="flex-1 pb-24">
         <div className="container px-4 py-6">
           <h1 className="text-xl font-bold mb-6">Einstellungen</h1>
           
           <div className="space-y-6">
+            {/* User Email Info if logged in */}
+            {user && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Account</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">
+                    Angemeldet als: {user.email}
+                  </p>
+                  <Button 
+                    onClick={handleSignOut}
+                    variant="outline" 
+                    className="mt-4"
+                  >
+                    Abmelden
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+            
             {/* Regulation Preference Section */}
             <Card>
               <CardHeader>
@@ -48,7 +79,7 @@ export default function SettingsPage() {
       </main>
       
       {!isMobile && <Footer />}
-      {isMobile && <BottomNavigation />}
+      <BottomNavigation />
     </div>
   );
 }

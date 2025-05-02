@@ -2,9 +2,11 @@
 import { Link, useLocation } from "react-router-dom";
 import { Home, Book, BarChart, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function BottomNavigation() {
   const location = useLocation();
+  const { user } = useAuth();
 
   const isActive = (path: string) => {
     return location.pathname === path ||
@@ -28,8 +30,8 @@ export default function BottomNavigation() {
       icon: <BarChart className="h-6 w-6" />,
     },
     {
-      name: "Profil",
-      path: "/einstellungen",
+      name: user ? "Profil" : "Anmelden",
+      path: user ? "/einstellungen" : "/login",
       icon: <User className="h-6 w-6" />,
     }
   ];

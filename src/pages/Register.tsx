@@ -50,7 +50,7 @@ export default function Register() {
     <div className="flex min-h-screen flex-col">
       <Navbar />
       
-      <main className="flex-1 flex items-center justify-center py-12">
+      <main className="flex-1 flex items-center justify-center py-12 pb-24">
         <div className="container max-w-md px-4">
           <div className="space-y-6">
             <div className="text-center">
@@ -129,7 +129,7 @@ export default function Register() {
       </main>
       
       {!isMobile && <Footer />}
-      {isMobile && <BottomNavigation />}
+      <BottomNavigation />
     </div>
   );
 }

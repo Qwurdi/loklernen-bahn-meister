@@ -21,7 +21,7 @@ export default function ProgressPage() {
     <div className="flex min-h-screen flex-col">
       <Navbar />
       
-      <main className={`${isMobile ? 'pb-20' : ''} container flex-1 py-12`}>
+      <main className="container flex-1 py-12 pb-24">
         <h1 className="mb-8 text-3xl font-bold tracking-tight">Dein Fortschritt</h1>
         
         {/* User Stats Section */}
@@ -54,7 +54,7 @@ export default function ProgressPage() {
       </main>
 
       {!isMobile && <Footer />}
-      {isMobile && <BottomNavigation />}
+      <BottomNavigation />
     </div>
   );
 }

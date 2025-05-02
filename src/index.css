@@ -95,41 +95,43 @@
   body {
     @apply bg-background text-foreground font-sans;
   }
-
-  .progress-ring-container {
-    position: relative;
-    display: inline-block;
-  }
-
-  .progress-ring {
-    transform: rotate(-90deg);
-    transform-origin: 50% 50%;
-  }
-
-  .progress-ring__circle {
-    transition: stroke-dashoffset 0.35s;
-    transform-origin: 50% 50%;
-  }
-
-  .card-hover {
-    @apply transition-all duration-200 hover:shadow-md hover:-translate-y-1;
-  }
-  
-  /* Mobile app behavior for fixed positioning */
-  .mobile-app-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
-    height: 100%;
-    width: 100%;
-    touch-action: none;
-  }
 }
 
-/* Flashcard transformations */
+/* Progress Ring Component */
+.progress-ring-container {
+  position: relative;
+  display: inline-block;
+}
+
+.progress-ring {
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+.progress-ring__circle {
+  transition: stroke-dashoffset 0.35s;
+  transform-origin: 50% 50%;
+}
+
+/* Card Hover Effects */
+.card-hover {
+  @apply transition-all duration-200 hover:shadow-md hover:-translate-y-1;
+}
+
+/* ===== 3D Card Transformations ===== */
+.card-flip {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  transition: transform 0.6s;
+}
+
+.transform-gpu {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  will-change: transform;
+}
+
 .rotate-y-180 {
   transform: rotateY(180deg);
 }
@@ -137,120 +139,98 @@
 .backface-hidden {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  -moz-backface-visibility: hidden;
 }
 
-/* CSS for card flipping */
-.card-flip {
-  perspective: 1000px;
-  transform-style: preserve-3d;
-  transition: transform 0.6s;
+/* ===== Mobile Swipe Animations ===== */
+.card-tilt {
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+              background-color 0.2s ease;
 }
 
-/* Enhanced 3D effects */
-@layer utilities {
-  .transform-gpu {
-    transform-style: preserve-3d;
-    perspective: 1000px;
-    transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    will-change: transform;
-  }
-  
-  .rotate-y-180 {
-    transform: rotateY(180deg);
-  }
-  
-  .backface-hidden {
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-  }
-
-  /* Mobile swipe animations - improved */
-  .swipe-right {
-    transform: translateX(120%) rotate(15deg);
-    opacity: 0;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  .swipe-left {
-    transform: translateX(-120%) rotate(-15deg);
-    opacity: 0;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  .card-tilt {
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.2s ease;
-  }
-
-  .card-tilt:active {
-    transform: scale(0.98);
-  }
-
-  /* Animation for swiping cards */
-  .animate-swipe-right {
-    animation: swipe-right 0.4s forwards cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-  
-  .animate-swipe-left {
-    animation: swipe-left 0.4s forwards cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  /* Touch feedback for cards */
-  .touch-none {
-    touch-action: none;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    user-select: none;
-  }
-
-  /* Bottom sheet for mobile */
-  .bottom-sheet-overlay {
-    @apply fixed inset-0 bg-black bg-opacity-25 z-40;
-  }
-
-  .bottom-sheet {
-    @apply fixed bottom-0 left-0 right-0 bg-white rounded-t-xl z-50 shadow-xl transform transition-transform duration-300;
-  }
-
-  .bottom-sheet-closed {
-    transform: translateY(100%);
-  }
-
-  .bottom-sheet-open {
-    transform: translateY(0);
-  }
-
-  /* Touch drag indicator colors */
-  .drag-right {
-    @apply border-r-8 border-green-500;
-  }
-  
-  .drag-left {
-    @apply border-l-8 border-red-500;
-  }
-  
-  /* Override scrolling for flashcard pages */
-  .flashcard-page {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
-    height: 100vh;
-    width: 100vw;
-  }
-  
-  /* Card with inertia for smoother swiping */
-  .card-with-inertia {
-    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    will-change: transform;
-    user-select: none;
-    -webkit-user-select: none;
-  }
+.card-tilt:active {
+  transform: scale(0.98);
 }
 
-/* Mobile optimization */
+.card-with-inertia {
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform;
+}
+
+/* Swipe direction animations */
+.swipe-right {
+  transform: translateX(120%) rotate(15deg);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.swipe-left {
+  transform: translateX(-120%) rotate(-15deg);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-swipe-right {
+  animation: swipe-right 0.4s forwards cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-swipe-left {
+  animation: swipe-left 0.4s forwards cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ===== Mobile App Layout ===== */
+.mobile-app-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+  touch-action: none;
+}
+
+.touch-none {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.touch-highlight {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ===== Bottom Sheet Component ===== */
+.bottom-sheet-overlay {
+  @apply fixed inset-0 bg-black bg-opacity-25 z-40;
+}
+
+.bottom-sheet {
+  @apply fixed bottom-0 left-0 right-0 bg-white rounded-t-xl z-50 shadow-xl transform transition-transform duration-300;
+}
+
+.bottom-sheet-closed {
+  transform: translateY(100%);
+}
+
+.bottom-sheet-open {
+  transform: translateY(0);
+}
+
+/* ===== Flashcard Page Layout ===== */
+.flashcard-page {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* ===== Mobile Optimizations ===== */
 @media (max-width: 768px) {
   body.flashcard-mode {
     overflow: hidden !important;
@@ -271,14 +251,9 @@
     margin-right: -1rem;
     width: calc(100% + 2rem);
   }
-  
-  /* Mobile touch feedback */
-  .touch-highlight {
-    -webkit-tap-highlight-color: transparent;
-  }
 }
 
-/* Keyframes for swipe animations */
+/* ===== Animation Keyframes ===== */
 @keyframes swipe-right {
   from {
     transform: translateX(0) rotate(0deg);
@@ -299,9 +274,4 @@
     transform: translateX(-200%) rotate(-20deg);
     opacity: 0;
   }
-}
-
-/* Add smooth inertia to card movements */
-.card-with-inertia {
-  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }

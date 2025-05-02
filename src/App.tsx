@@ -29,6 +29,7 @@ const App = () => {
       <AuthProvider>
         <UserPreferencesProvider>
           <TooltipProvider delayDuration={300}>
+            {/* AppRoutes component contains all route definitions */}
             <AppRoutes />
             <Toaster />
             <Sonner />

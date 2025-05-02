@@ -10,6 +10,12 @@ interface EmptyStackMessageProps {
 export default function EmptyStackMessage({ isCompleted = false }: EmptyStackMessageProps) {
   const navigate = useNavigate();
   
+  const handleResetLesson = () => {
+    // Navigate to the same page with a reset parameter to trigger a fresh state
+    const currentPath = window.location.pathname;
+    navigate(currentPath, { state: { reset: true } });
+  };
+  
   return (
     <div className="flex flex-col items-center justify-center h-full p-6 text-center">
       {isCompleted ? (
@@ -27,7 +33,7 @@ export default function EmptyStackMessage({ isCompleted = false }: EmptyStackMes
             </Button>
             <Button
               variant="outline"
-              onClick={() => window.location.reload()}
+              onClick={handleResetLesson}
               className="w-full"
             >
               Lektion wiederholen

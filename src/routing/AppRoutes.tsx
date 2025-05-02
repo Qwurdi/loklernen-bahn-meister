@@ -1,6 +1,6 @@
 
-import { Suspense, lazy } from "react";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Suspense, lazy, useEffect } from "react";
+import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 
@@ -73,6 +73,12 @@ const HomeRoute = () => {
 
 const AppRoutes = () => {
   console.log("AppRoutes: Rendering routes configuration");
+  const location = useLocation();
+  
+  // Add debug logging for route changes
+  useEffect(() => {
+    console.log("AppRoutes: Route changed to:", location.pathname);
+  }, [location]);
   
   return (
     <Suspense fallback={<LoadingSpinner />}>

@@ -15,27 +15,27 @@ export default function BottomNavigation() {
     {
       name: "Home",
       path: "/",
-      icon: <Home className="h-5 w-5" />,
+      icon: <Home className="h-6 w-6" />,
     },
     {
       name: "Karten",
       path: "/karteikarten",
-      icon: <Book className="h-5 w-5" />,
+      icon: <Book className="h-6 w-6" />,
     },
     {
       name: "Fortschritt",
       path: "/fortschritt",
-      icon: <BarChart className="h-5 w-5" />,
+      icon: <BarChart className="h-6 w-6" />,
     },
     {
       name: "Profil",
       path: "/einstellungen",
-      icon: <User className="h-5 w-5" />,
+      icon: <User className="h-6 w-6" />,
     }
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 flex justify-around items-center bg-white border-t border-gray-200 z-50 h-16">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 flex justify-around items-center bg-white border-t border-gray-200 z-50 h-18 py-2">
       {navItems.map((item) => (
         <Link
           key={item.path}
@@ -48,7 +48,7 @@ export default function BottomNavigation() {
           )}
         >
           <div className={cn(
-            "rounded-full p-1.5 mb-1",
+            "rounded-full p-2 mb-1",
             isActive(item.path) ? "bg-blue-100" : ""
           )}>
             {item.icon}

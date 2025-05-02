@@ -1,3 +1,4 @@
+
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
@@ -12,10 +13,13 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuestionFilters } from "@/hooks/useQuestionFilters";
-import { RegulationCategory, RegulationFilterType, Question } from "@/types/questions";
-import { useEffect, useState } from "react";
+import { RegulationFilterType } from "@/types/regulation";
+import { Question } from "@/types/questions";
+import { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { transformAnswers } from "@/api/questions";
+import { useIsMobile } from "@/hooks/use-mobile";
+import BottomNavigation from "@/components/layout/BottomNavigation";
 
 // Helper function to transform database questions to application questions
 function transformQuestion(dbQuestion: any): Question {
@@ -29,6 +33,7 @@ export default function SignalePage() {
   const { user } = useAuth();
   const { regulationPreference } = useUserPreferences();
   const [searchParams, setSearchParams] = useSearchParams();
+  const isMobile = useIsMobile();
   
   // Get regulation filter from URL or default to user preference
   const initialRegulationFilter = (searchParams.get("regelwerk") as RegulationFilterType) || regulationPreference;
@@ -126,21 +131,23 @@ export default function SignalePage() {
     <div className="flex min-h-screen flex-col">
       <Navbar />
       
-      <main className="flex-1">
+      <main className={`flex-1 ${isMobile ? 'pb-20' : ''}`}>
         <div className="container px-4 py-8 md:px-6 md:py-12">
-          <Breadcrumb className="mb-6">
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to="/">Home</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Signale</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+          {!isMobile && (
+            <Breadcrumb className="mb-6">
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/">Home</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Signale</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          )}
           
           <div className="mb-8">
             <h1 className="text-2xl font-bold mb-4">Signale</h1>
@@ -193,7 +200,8 @@ export default function SignalePage() {
         </div>
       </main>
       
-      <Footer />
+      {!isMobile && <Footer />}
+      {isMobile && <BottomNavigation />}
     </div>
   );
 }

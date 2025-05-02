@@ -5,13 +5,17 @@ import { ChevronLeft, Lock } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import CategoryCard from "@/components/common/CategoryCard";
+import { useIsMobile } from "@/hooks/use-mobile";
+import BottomNavigation from "@/components/layout/BottomNavigation";
 
 export default function BetriebsdienstPage() {
+  const isMobile = useIsMobile();
+  
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
       
-      <main className="flex-1">
+      <main className={`flex-1 ${isMobile ? 'pb-20' : ''}`}>
         <div className="container px-4 py-8 md:px-6 md:py-12">
           <div className="flex items-center gap-2 mb-6">
             <Link to="/">
@@ -122,7 +126,8 @@ export default function BetriebsdienstPage() {
         </div>
       </main>
       
-      <Footer />
+      {!isMobile && <Footer />}
+      {isMobile && <BottomNavigation />}
     </div>
   );
 }

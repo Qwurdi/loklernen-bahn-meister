@@ -4,8 +4,9 @@ import { Link, useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { Book, Home, Menu, User, BarChart, Settings, ChevronLeft } from "lucide-react";
+import { Menu, User, Settings, ChevronLeft } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,23 +29,19 @@ const Navbar = () => {
     { 
       name: "Home", 
       path: "/", 
-      icon: <Home className="h-5 w-5" /> 
     },
     { 
       name: "Karteikarten", 
       path: "/karteikarten", 
-      icon: <Book className="h-5 w-5" /> 
     },
     { 
       name: "Fortschritt", 
       path: "/fortschritt", 
-      icon: <BarChart className="h-5 w-5" />,
       requiresAuth: true
     },
     { 
       name: "Einstellungen", 
       path: "/einstellungen", 
-      icon: <Settings className="h-5 w-5" />,
       requiresAuth: true
     }
   ];
@@ -67,19 +64,21 @@ const Navbar = () => {
       <div className="container flex h-16 items-center">
         {isMobile && showBackButton ? (
           <Link to={getPreviousPath()} className="mr-3">
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <ChevronLeft className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="h-10 w-10">
+              <ChevronLeft className="h-6 w-6" />
               <span className="sr-only">Zurück</span>
             </Button>
           </Link>
         ) : null}
         
-        <Link to="/" className={cn(
-          "flex items-center font-bold text-lg",
-          isMobile ? "text-base" : ""
-        )}>
-          <span className="text-black">Lok</span>
-          <span className="text-loklernen-ultramarine">Lernen</span>
+        <Link to="/" className="flex items-center">
+          <span className={cn(
+            "font-bold text-center",
+            isMobile ? "text-xl" : "text-2xl"
+          )}>
+            <span className="text-black">Lok</span>
+            <span className="text-loklernen-ultramarine">Lernen</span>
+          </span>
         </Link>
         
         {/* Desktop Navigation */}
@@ -136,17 +135,17 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation - Only Show Menu Button (No Bottom Nav Duplication) */}
         <div className="md:hidden ml-auto">
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9">
-                <Menu className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="h-10 w-10">
+                <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[250px] sm:w-[300px]">
               <div className="flex flex-col space-y-4 py-4">
-                <div className="text-lg font-bold mb-4">
+                <div className="text-xl font-bold mb-4">
                   <span className="text-black">Lok</span>
                   <span className="text-loklernen-ultramarine">Lernen</span>
                 </div>
@@ -158,25 +157,7 @@ const Navbar = () => {
                   </div>
                 ) : null}
                 
-                {navItems.map((item) => (
-                  (!item.requiresAuth || user) && (
-                    <Link 
-                      key={item.path} 
-                      to={item.path}
-                      className={`flex items-center gap-2 px-4 py-3 rounded-md ${
-                        isActive(item.path) 
-                          ? "bg-loklernen-ultramarine text-white" 
-                          : "hover:bg-muted"
-                      }`}
-                      onClick={() => setIsOpen(false)}
-                    >
-                      {item.icon}
-                      {item.name}
-                    </Link>
-                  )
-                ))}
-                
-                {user ? (
+                {user && (
                   <>
                     <Link 
                       to="/admin" 
@@ -194,7 +175,9 @@ const Navbar = () => {
                       Abmelden
                     </Button>
                   </>
-                ) : (
+                )}
+                
+                {!user && (
                   <div className="flex flex-col gap-2 mt-4">
                     <Link to="/login" onClick={() => setIsOpen(false)}>
                       <Button variant="outline" className="w-full">
@@ -216,8 +199,5 @@ const Navbar = () => {
     </header>
   );
 };
-
-// Add missing import for cn
-import { cn } from "@/lib/utils";
 
 export default Navbar;

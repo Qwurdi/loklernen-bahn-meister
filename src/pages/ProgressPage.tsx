@@ -1,10 +1,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import UserStats from "@/components/common/UserStats";
 import CoursesProgress from "@/components/progress/CoursesProgress";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { useIsMobile } from "@/hooks/use-mobile";
+import BottomNavigation from "@/components/layout/BottomNavigation";
 
 // Temporary mock data - will be replaced with Supabase data
 const mockUserData = {
@@ -14,11 +15,13 @@ const mockUserData = {
 };
 
 export default function ProgressPage() {
+  const isMobile = useIsMobile();
+  
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
       
-      <main className="container flex-1 py-12">
+      <main className={`${isMobile ? 'pb-20' : ''} container flex-1 py-12`}>
         <h1 className="mb-8 text-3xl font-bold tracking-tight">Dein Fortschritt</h1>
         
         {/* User Stats Section */}
@@ -50,7 +53,8 @@ export default function ProgressPage() {
         </section>
       </main>
 
-      <Footer />
+      {!isMobile && <Footer />}
+      {isMobile && <BottomNavigation />}
     </div>
   );
 }

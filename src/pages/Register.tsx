@@ -9,6 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
+import BottomNavigation from "@/components/layout/BottomNavigation";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -16,6 +18,7 @@ export default function Register() {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,7 +128,8 @@ export default function Register() {
         </div>
       </main>
       
-      <Footer />
+      {!isMobile && <Footer />}
+      {isMobile && <BottomNavigation />}
     </div>
   );
 }

@@ -6,9 +6,12 @@ import Footer from '@/components/layout/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RegulationFilterToggle } from '@/components/common/RegulationFilterToggle';
 import { RegulationFilterType } from '@/types/regulation';
+import { useIsMobile } from '@/hooks/use-mobile';
+import BottomNavigation from '@/components/layout/BottomNavigation';
 
 export default function SettingsPage() {
   const { regulationPreference, setRegulationPreference } = useUserPreferences();
+  const isMobile = useIsMobile();
 
   const handleRegulationChange = (value: RegulationFilterType) => {
     setRegulationPreference(value);
@@ -18,7 +21,7 @@ export default function SettingsPage() {
     <div className="flex min-h-screen flex-col">
       <Navbar />
       
-      <main className="flex-1">
+      <main className={`flex-1 ${isMobile ? 'pb-20' : ''}`}>
         <div className="container px-4 py-6">
           <h1 className="text-xl font-bold mb-6">Einstellungen</h1>
           
@@ -44,7 +47,8 @@ export default function SettingsPage() {
         </div>
       </main>
       
-      <Footer />
+      {!isMobile && <Footer />}
+      {isMobile && <BottomNavigation />}
     </div>
   );
 }

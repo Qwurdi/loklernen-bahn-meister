@@ -6,7 +6,6 @@ import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ChevronLeft, List } from "lucide-react";
-import FlashcardContent from "@/components/flashcards/FlashcardContent";
 import { useSpacedRepetition } from "@/hooks/spaced-repetition";
 import { useAuth } from "@/contexts/AuthContext";
 import { Question, QuestionCategory } from "@/types/questions";
@@ -15,6 +14,7 @@ import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import FlashcardLoadingState from "@/components/flashcards/FlashcardLoadingState";
 import BottomNavigation from "@/components/layout/BottomNavigation";
+import CardStack from "@/components/flashcards/stack/CardStack";
 
 export default function LearningSessionPage() {
   const { user } = useAuth();
@@ -27,6 +27,10 @@ export default function LearningSessionPage() {
   const [sessionFinished, setSessionFinished] = useState(false);
   const isMobile = useIsMobile();
   
+  // Get category and regulation preference from URL parameters
+  const categoryParam = searchParams.get("category") as QuestionCategory || "Signale";
+  const regulationParam = searchParams.get("regelwerk") || regulationPreference;
+
   // Prevent scrolling on mobile devices
   useEffect(() => {
     if (isMobile) {
@@ -44,10 +48,6 @@ export default function LearningSessionPage() {
       };
     }
   }, [isMobile]);
-  
-  // Get category and regulation preference from URL parameters
-  const categoryParam = searchParams.get("category") as QuestionCategory || "Signale";
-  const regulationParam = searchParams.get("regelwerk") || regulationPreference;
 
   // Pass both category and regulation preference to the hook
   const { loading, dueQuestions, submitAnswer, reloadQuestions } = useSpacedRepetition(
@@ -67,29 +67,21 @@ export default function LearningSessionPage() {
     }
   }, [loading, dueQuestions]);
 
-  const handleAnswer = async (score: number) => {
-    if (currentIndex >= sessionCards.length) return;
-    
-    const currentCard = sessionCards[currentIndex];
-    
+  const handleAnswer = async (questionId: string, score: number) => {
     // Consider scores >= 4 as correct
     if (score >= 4) {
       setCorrectCount(prev => prev + 1);
     }
     
     // Submit answer for spaced repetition
-    if (user && currentCard) {
-      await submitAnswer(currentCard.id, score);
+    if (user) {
+      await submitAnswer(questionId, score);
     }
   };
 
-  const handleNext = () => {
-    if (currentIndex < sessionCards.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    } else {
-      setSessionFinished(true);
-      toast.success("Lernsession abgeschlossen! Gut gemacht!");
-    }
+  const handleComplete = () => {
+    setSessionFinished(true);
+    toast.success("Lernsession abgeschlossen! Gut gemacht!");
   };
 
   const handleRestart = async () => {
@@ -164,14 +156,12 @@ export default function LearningSessionPage() {
     );
   }
 
-  // Render main learning session UI
-  const currentCard = sessionCards[currentIndex];
-  
+  // Render main learning session UI with our new card stack
   return (
     <div className={`flex flex-col ${isMobile ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
       <Navbar />
       
-      <main className={`flex-1 ${isMobile ? 'px-2 pt-2 pb-20 overflow-hidden flex flex-col' : 'container px-4 py-8'}`}>
+      <main className={`flex-1 ${isMobile ? 'px-0 pt-2 pb-16 overflow-hidden flex flex-col' : 'container px-4 py-8'}`}>
         {!isMobile && (
           <div className="flex items-center justify-between mb-6">
             <Button
@@ -196,15 +186,15 @@ export default function LearningSessionPage() {
           </div>
         )}
 
-        <FlashcardContent 
-          currentQuestion={currentCard}
-          currentIndex={currentIndex}
-          totalCards={sessionCards.length}
-          correctCount={correctCount}
-          remainingToday={dueQuestions.length - currentIndex}
-          onAnswer={handleAnswer}
-          onNext={handleNext}
-        />
+        <div className="h-full w-full flex-1 flex flex-col">
+          <CardStack 
+            questions={sessionCards}
+            onAnswer={handleAnswer}
+            onComplete={handleComplete}
+            currentIndex={currentIndex}
+            setCurrentIndex={setCurrentIndex}
+          />
+        </div>
       </main>
       
       {!isMobile && <Footer />}

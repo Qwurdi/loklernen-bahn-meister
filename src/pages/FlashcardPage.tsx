@@ -15,9 +15,9 @@ import { RegulationFilterType } from "@/types/regulation";
 import FlashcardLoadingState from "@/components/flashcards/FlashcardLoadingState";
 import FlashcardEmptyState from "@/components/flashcards/FlashcardEmptyState";
 import FlashcardHeader from "@/components/flashcards/FlashcardHeader";
-import FlashcardContent from "@/components/flashcards/FlashcardContent";
 import { useIsMobile } from "@/hooks/use-mobile";
 import BottomNavigation from "@/components/layout/BottomNavigation";
+import CardStack from "@/components/flashcards/stack/CardStack";
 
 // Helper to map URL subcategory param back to original subcategory string (case sensitive)
 function mapUrlToSubcategory(urlSubcategory?: string): string | undefined {
@@ -37,6 +37,7 @@ export default function FlashcardPage() {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
+  const [sessionFinished, setSessionFinished] = useState(false);
   const [isPracticeMode] = useState(true);
   const { regulationPreference } = useUserPreferences();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -78,29 +79,21 @@ export default function FlashcardPage() {
     enabled: !!user
   });
 
-  const currentQuestion = questions[currentIndex];
-  const remainingToday = (dueTodayStats?.count || 0) - (currentIndex > 0 ? 1 : 0);
+  const remainingToday = (dueTodayStats?.count || 0);
 
-  const handleAnswer = async (score: number) => {
-    if (!currentQuestion) return;
-
+  const handleAnswer = async (questionId: string, score: number) => {
     if (user) {
-      await submitAnswer(currentQuestion.id, score);
+      await submitAnswer(questionId, score);
     }
 
     if (score >= 4) {
       setCorrectCount(prev => prev + 1);
-      toast.success("Richtig! Weiter so!");
     }
   };
 
-  const handleNext = () => {
-    if (currentIndex < questions.length - 1) {
-      setCurrentIndex(curr => curr + 1);
-    } else {
-      navigate('/karteikarten');
-      toast.success("Gut gemacht! Du hast alle fälligen Karten für heute geschafft!");
-    }
+  const handleComplete = () => {
+    setSessionFinished(true);
+    toast.success("Gut gemacht! Du hast alle Karten dieser Kategorie bearbeitet!");
   };
 
   // Update regulation filter when it changes
@@ -111,6 +104,19 @@ export default function FlashcardPage() {
     });
   };
 
+  // Apply mobile mode styles
+  useEffect(() => {
+    if (isMobile) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.classList.add('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
+      
+      return () => {
+        document.body.style.overflow = '';
+        document.documentElement.classList.remove('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
+      };
+    }
+  }, [isMobile]);
+
   if (loading) {
     return <FlashcardLoadingState />;
   }
@@ -119,12 +125,40 @@ export default function FlashcardPage() {
     return <FlashcardEmptyState />;
   }
 
+  // Handle session completion
+  if (sessionFinished) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <Navbar />
+        <main className="flex-1 container py-12 flex flex-col items-center justify-center">
+          <div className="p-6 max-w-md text-center bg-white rounded-xl shadow-lg">
+            <h2 className="text-2xl font-bold mb-4">Kategorie abgeschlossen!</h2>
+            <p className="text-gray-600 mb-6">
+              Du hast {correctCount} von {questions.length} Karten richtig beantwortet.
+              ({Math.round((correctCount / questions.length) * 100)}%)
+            </p>
+            <div className="flex justify-center">
+              <Button 
+                onClick={() => navigate('/karteikarten')}
+                className="bg-loklernen-ultramarine"
+              >
+                Zurück zur Übersicht
+              </Button>
+            </div>
+          </div>
+        </main>
+        {!isMobile && <Footer />}
+        {isMobile && <BottomNavigation />}
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className={`flex flex-col ${isMobile ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
       <Navbar />
       
       <main className="flex-1">
-        <div className={`${isMobile ? 'px-3 py-3 pb-20' : 'container px-4 py-6'}`}>
+        <div className={`${isMobile ? 'px-0 pt-0 pb-16 h-full' : 'container px-4 py-6'}`}>
           <FlashcardHeader 
             subcategory={subcategory}
             isPracticeMode={isPracticeMode}
@@ -132,18 +166,16 @@ export default function FlashcardPage() {
             onRegulationChange={handleRegulationChange}
           />
           
-          {/* Main content - flashcard first, then progress */}
-          {currentQuestion && (
-            <FlashcardContent 
-              currentQuestion={currentQuestion}
-              currentIndex={currentIndex}
-              totalCards={questions.length}
-              correctCount={correctCount}
-              remainingToday={remainingToday}
+          {/* Card Stack */}
+          <div className="h-full pt-2">
+            <CardStack 
+              questions={questions}
               onAnswer={handleAnswer}
-              onNext={handleNext}
+              onComplete={handleComplete}
+              currentIndex={currentIndex}
+              setCurrentIndex={setCurrentIndex}
             />
-          )}
+          </div>
         </div>
       </main>
       

@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
@@ -87,6 +86,7 @@
   }
 }
 
+/* Base Element Styles */
 @layer base {
   * {
     @apply border-border;
@@ -96,6 +96,8 @@
     @apply bg-background text-foreground font-sans;
   }
 }
+
+/* ===== Component Styles ===== */
 
 /* Progress Ring Component */
 .progress-ring-container {
@@ -113,27 +115,28 @@
   transform-origin: 50% 50%;
 }
 
-/* Card Hover Effects */
+/* Card Component Styles */
 .card-hover {
   @apply transition-all duration-200 hover:shadow-md hover:-translate-y-1;
 }
 
-/* ===== 3D Card Transformations ===== */
-.card-flip {
-  perspective: 1000px;
-  transform-style: preserve-3d;
-  transition: transform 0.6s;
+/* ===== Flashcard Stack Styles ===== */
+
+/* Stack Container */
+.stack-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  overflow: hidden;
 }
 
+/* Card Transform Styles */
 .transform-gpu {
   transform-style: preserve-3d;
-  perspective: 1000px;
-  transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   will-change: transform;
-}
-
-.rotate-y-180 {
-  transform: rotateY(180deg);
 }
 
 .backface-hidden {
@@ -141,40 +144,13 @@
   -webkit-backface-visibility: hidden;
 }
 
-/* ===== Mobile Swipe Animations ===== */
-.card-tilt {
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
-              background-color 0.2s ease;
-}
-
-.card-tilt:active {
-  transform: scale(0.98);
-}
-
-.card-with-inertia {
-  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  will-change: transform;
-}
-
-/* Swipe direction animations */
-.swipe-right {
-  transform: translateX(120%) rotate(15deg);
-  opacity: 0;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.swipe-left {
-  transform: translateX(-120%) rotate(-15deg);
-  opacity: 0;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.animate-swipe-right {
-  animation: swipe-right 0.4s forwards cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.animate-swipe-left {
-  animation: swipe-left 0.4s forwards cubic-bezier(0.34, 1.56, 0.64, 1);
+/* Mobile-Optimized Touch Behaviors */
+.touch-none {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ===== Mobile App Layout ===== */
@@ -187,63 +163,15 @@
   overflow: hidden;
   height: 100%;
   width: 100%;
-  touch-action: none;
 }
 
-.touch-none {
-  touch-action: none;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-.touch-highlight {
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* ===== Bottom Sheet Component ===== */
-.bottom-sheet-overlay {
-  @apply fixed inset-0 bg-black bg-opacity-25 z-40;
-}
-
-.bottom-sheet {
-  @apply fixed bottom-0 left-0 right-0 bg-white rounded-t-xl z-50 shadow-xl transform transition-transform duration-300;
-}
-
-.bottom-sheet-closed {
-  transform: translateY(100%);
-}
-
-.bottom-sheet-open {
-  transform: translateY(0);
-}
-
-/* ===== Flashcard Page Layout ===== */
-.flashcard-page {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow: hidden;
-  height: 100vh;
-  width: 100vw;
-}
-
-/* ===== Mobile Optimizations ===== */
+/* ===== Mobile Full-Screen Mode ===== */
 @media (max-width: 768px) {
   body.flashcard-mode {
     overflow: hidden !important;
     position: fixed;
     height: 100%;
     width: 100%;
-  }
-
-  .flashcard-container {
-    height: calc(100vh - 180px);
-    width: 100%;
-    margin: 0 auto;
-    touch-action: none;
   }
 
   .mobile-full-bleed {
@@ -253,25 +181,18 @@
   }
 }
 
-/* ===== Animation Keyframes ===== */
-@keyframes swipe-right {
-  from {
-    transform: translateX(0) rotate(0deg);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(200%) rotate(20deg);
-    opacity: 0;
-  }
+/* ===== Framer Motion Helpers ===== */
+.animate-entrance {
+  animation: card-entrance 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes swipe-left {
+@keyframes card-entrance {
   from {
-    transform: translateX(0) rotate(0deg);
-    opacity: 1;
+    opacity: 0;
+    transform: translateY(40px) scale(0.8);
   }
   to {
-    transform: translateX(-200%) rotate(-20deg);
-    opacity: 0;
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }

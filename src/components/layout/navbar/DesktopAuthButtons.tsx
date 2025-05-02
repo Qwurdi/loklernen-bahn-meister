@@ -14,7 +14,12 @@ const DesktopAuthButtons = ({ isActive }: DesktopAuthButtonsProps) => {
     <div className="hidden md:flex ml-auto space-x-2">
       {user ? (
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={signOut} className="border-gray-600 text-white hover:bg-gray-800">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={signOut} 
+            className="border-gray-600 text-white hover:bg-gray-800 hover:text-white"
+          >
             Abmelden
           </Button>
           <Link to="/admin">
@@ -22,8 +27,8 @@ const DesktopAuthButtons = ({ isActive }: DesktopAuthButtonsProps) => {
               variant={isActive("/admin") ? "default" : "outline"} 
               size="sm"
               className={isActive("/admin") 
-                ? "bg-loklernen-ultramarine" 
-                : "border-gray-600 text-white hover:bg-gray-800"
+                ? "bg-loklernen-ultramarine text-white" 
+                : "border-gray-600 text-white hover:bg-gray-800 hover:text-white"
               }
             >
               Admin
@@ -36,7 +41,7 @@ const DesktopAuthButtons = ({ isActive }: DesktopAuthButtonsProps) => {
             <Button 
               variant="outline" 
               size="sm"
-              className="border-gray-600 text-white hover:bg-gray-800"
+              className="border-gray-600 text-white hover:bg-gray-800 hover:text-white"
             >
               Anmelden
             </Button>
@@ -44,7 +49,7 @@ const DesktopAuthButtons = ({ isActive }: DesktopAuthButtonsProps) => {
           <Link to="/register">
             <Button 
               size="sm"
-              className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/80"
+              className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/80 text-white"
             >
               Registrieren
             </Button>

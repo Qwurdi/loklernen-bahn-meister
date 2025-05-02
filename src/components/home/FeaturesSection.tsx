@@ -116,7 +116,7 @@ function SpacedRepetitionChart() {
             </Button>
           </Link>
           <Link to="/karteikarten">
-            <Button variant="outline" className="border-gray-700 text-white hover:bg-gray-800">
+            <Button variant="outline" className="border-gray-500 bg-gray-800 text-white hover:bg-gray-700">
               Oder direkt kostenlos starten
             </Button>
           </Link>

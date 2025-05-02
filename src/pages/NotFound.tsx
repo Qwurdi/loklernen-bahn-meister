@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import Navbar from "@/components/layout/Navbar";
+import { Link } from "react-router-dom";
 
 const NotFound = () => {
   const location = useLocation();
@@ -24,9 +25,9 @@ const NotFound = () => {
         <div className="text-center">
           <h1 className="text-4xl font-bold mb-4">404</h1>
           <p className="text-xl text-gray-600 mb-4">Seite nicht gefunden</p>
-          <a href="/" className="text-blue-500 hover:text-blue-700 underline">
+          <Link to="/" className="text-blue-500 hover:text-blue-700 underline">
             Zurück zur Startseite
-          </a>
+          </Link>
         </div>
       </div>
       

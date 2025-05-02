@@ -23,13 +23,14 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // You can also log the error to an error reporting service
+    // Log the error to an error reporting service
     console.error("ErrorBoundary caught an error:", error);
     console.error("Component stack trace:", errorInfo.componentStack);
     
     // Log specific router-related errors
-    if (error.message && error.message.includes("router")) {
+    if (error.message && error.message.includes("Router")) {
       console.error("Router-related error detected:", error.message);
+      console.error("This may indicate multiple router instances or navigation outside router context");
     }
   }
 

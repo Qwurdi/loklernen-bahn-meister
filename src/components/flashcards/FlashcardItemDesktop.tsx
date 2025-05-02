@@ -5,6 +5,7 @@ import { Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import FlashcardActionButton from "./FlashcardActionButton";
+import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
 
 interface FlashcardItemDesktopProps {
   question: Question;
@@ -23,13 +24,22 @@ export default function FlashcardItemDesktop({
   onKnown,
   onNotKnown
 }: FlashcardItemDesktopProps) {
+  // Use dynamic text sizing
+  const questionTextClass = useDynamicTextSize(question?.text || '', 'question');
+  const answerTextClass = useDynamicTextSize(question?.answers?.[0]?.text || '', 'answer');
+  
   return (
     <div className="mx-auto max-w-md">
       <Card className="relative p-4 min-h-[450px] flex flex-col">
         {!flipped ? (
           <div className="flex flex-col h-full">
-            <h2 className="text-lg font-medium mb-3">{question?.text}</h2>
-            <div className="flex-1 flex items-center justify-center py-4">
+            {/* Dynamic question text size */}
+            <h2 className={`${questionTextClass} font-medium mb-3 overflow-y-auto max-h-[25%]`}>
+              {question?.text}
+            </h2>
+            
+            {/* Fixed space for images */}
+            <div className="flex-1 flex items-center justify-center py-4 min-h-[200px]">
               {question?.image_url && (
                 <img 
                   src={question.image_url} 
@@ -38,6 +48,7 @@ export default function FlashcardItemDesktop({
                 />
               )}
             </div>
+            
             <div className="mt-4">
               <Button 
                 className="w-full"
@@ -59,26 +70,30 @@ export default function FlashcardItemDesktop({
             
             <div className="flex-1 flex flex-col items-center justify-between gap-4">
               <div className="flex flex-col items-center w-full">
+                {/* Fixed height for the image */}
                 {question?.image_url && (
-                  <img 
-                    src={question.image_url} 
-                    alt="Signal" 
-                    className="max-h-[140px] object-contain mb-4"
-                  />
+                  <div className="min-h-[140px] flex items-center justify-center mb-4">
+                    <img 
+                      src={question.image_url} 
+                      alt="Signal" 
+                      className="max-h-[140px] object-contain"
+                    />
+                  </div>
                 )}
                 
-                <div className="bg-blue-50 p-4 rounded-md w-full shadow-sm border border-blue-100 mb-8">
-                  {question.category === "Signale" ? (
+                {/* Answer with dynamic text size */}
+                <div className="bg-blue-50 p-4 rounded-md w-full shadow-sm border border-blue-100 mb-8 overflow-y-auto max-h-[40%]">
+                  {question?.category === "Signale" ? (
                     <div className="space-y-2">
-                      {question.answers[0].text.split('\n').map((line, i) => (
-                        <p key={i} className="font-bold text-blue-800">
+                      {question?.answers?.[0]?.text.split('\n').map((line, i) => (
+                        <p key={i} className={`${answerTextClass} font-bold text-blue-800`}>
                           {line}
                         </p>
                       ))}
                     </div>
                   ) : (
-                    <p className="font-medium text-lg text-blue-800">
-                      {question?.answers[0].text}
+                    <p className={`${answerTextClass} font-medium text-blue-800`}>
+                      {question?.answers?.[0]?.text}
                     </p>
                   )}
                 </div>

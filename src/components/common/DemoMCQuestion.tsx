@@ -9,19 +9,19 @@ interface DemoMCQuestionProps {
   question?: string;
   answers?: string[];
   correctAnswer?: number;
-  signalColor?: string;
+  signalImage?: string;
 }
 
 export default function DemoMCQuestion({
-  question = "Was bedeutet ein rotes Hauptsignal?",
+  question = "Was bedeutet dieses Hauptsignal?",
   answers = [
-    "Halt! Zug muss vor dem Signal anhalten",
+    "Halt.",
     "Langsam fahren, Geschwindigkeitsbegrenzung beachten",
     "Fahrt frei mit der zulässigen Geschwindigkeit",
     "Signal außer Betrieb"
   ],
   correctAnswer = 0,
-  signalColor = "bg-red-600"
+  signalImage = "/lovable-uploads/4675c32d-5934-4bf8-9d66-0d95c76f9a00.png"
 }: DemoMCQuestionProps) {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -36,7 +36,11 @@ export default function DemoMCQuestion({
       <h3 className="text-xl font-bold mb-4">{question}</h3>
       
       <div className="mb-6 flex justify-center">
-        <div className={`w-24 h-24 ${signalColor} rounded-full shadow-lg shadow-red-600/30`}></div>
+        <img 
+          src={signalImage} 
+          alt="Hauptsignal" 
+          className="h-64 object-contain"
+        />
       </div>
       
       <div className="space-y-3">
@@ -78,9 +82,9 @@ export default function DemoMCQuestion({
       {showFeedback && (
         <div className="mt-4 p-3 rounded-md bg-gray-800">
           {selectedAnswer === correctAnswer ? (
-            <p className="text-green-400">Korrekt! Ein rotes Hauptsignal bedeutet Halt.</p>
+            <p className="text-green-400">Korrekt! Das Hauptsignal zeigt "Halt".</p>
           ) : (
-            <p className="text-red-400">Falsch. Die richtige Antwort ist: Halt! Zug muss vor dem Signal anhalten.</p>
+            <p className="text-red-400">Falsch. Die richtige Antwort ist: Halt.</p>
           )}
           
           <div className="mt-3 flex justify-between items-center">

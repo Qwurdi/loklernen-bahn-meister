@@ -1,10 +1,9 @@
 
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import Navbar from "@/components/layout/Navbar";
-import { Link } from "react-router-dom";
 
 const NotFound = () => {
   const location = useLocation();

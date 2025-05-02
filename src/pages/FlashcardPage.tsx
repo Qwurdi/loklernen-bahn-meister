@@ -32,6 +32,8 @@ function mapUrlToSubcategory(urlSubcategory?: string): string | undefined {
 }
 
 export default function FlashcardPage() {
+  console.log("FlashcardPage: Initializing component");
+  
   const { subcategory: urlSubcategory } = useParams<{ subcategory: string }>();
   const subcategory = mapUrlToSubcategory(urlSubcategory); // map to original subcategory
   const { user } = useAuth();
@@ -60,6 +62,8 @@ export default function FlashcardPage() {
       regulationCategory: regulationParam
     }
   );
+
+  console.log("FlashcardPage: Loaded questions count:", questions?.length || 0);
 
   // Query to get total due cards count for today
   const { data: dueTodayStats } = useQuery({

@@ -17,6 +17,8 @@ import BottomNavigation from "@/components/layout/BottomNavigation";
 import CardStack from "@/components/flashcards/stack/CardStack";
 
 export default function LearningSessionPage() {
+  console.log("LearningSessionPage: Initializing component");
+  
   const { user } = useAuth();
   const { regulationPreference } = useUserPreferences();
   const navigate = useNavigate();
@@ -58,6 +60,8 @@ export default function LearningSessionPage() {
       regulationCategory: regulationParam
     }
   );
+
+  console.log("LearningSessionPage: Loaded questions count:", dueQuestions?.length || 0);
 
   useEffect(() => {
     if (!loading && dueQuestions.length > 0) {

@@ -25,6 +25,8 @@ const QuestionsPage = lazy(() => import("@/pages/admin/QuestionsPage"));
 const QuestionEditorPage = lazy(() => import("@/pages/admin/QuestionEditorPage"));
 const DeleteQuestionPage = lazy(() => import("@/pages/admin/DeleteQuestionPage"));
 
+console.log("AppRoutes: Initializing routes");
+
 // Route guard component for authenticated routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -34,6 +36,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (!user) {
+    console.log("ProtectedRoute: No user, redirecting to login");
     return <Navigate to="/login" replace />;
   }
   
@@ -49,6 +52,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (user) {
+    console.log("PublicRoute: User detected, redirecting to dashboard");
     return <Navigate to="/" replace />;
   }
   
@@ -63,10 +67,13 @@ const HomeRoute = () => {
     return <LoadingSpinner />;
   }
   
+  console.log("HomeRoute: Rendering appropriate component based on auth", { isLoggedIn: !!user });
   return user ? <Dashboard /> : <Index />;
 };
 
 const AppRoutes = () => {
+  console.log("AppRoutes: Rendering routes configuration");
+  
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <Routes>

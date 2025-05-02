@@ -26,6 +26,11 @@ class ErrorBoundary extends Component<Props, State> {
     // You can also log the error to an error reporting service
     console.error("ErrorBoundary caught an error:", error);
     console.error("Component stack trace:", errorInfo.componentStack);
+    
+    // Log specific router-related errors
+    if (error.message && error.message.includes("router")) {
+      console.error("Router-related error detected:", error.message);
+    }
   }
 
   render(): ReactNode {

@@ -62,17 +62,71 @@
 
 /* Dark theme specific card styles */
 .card-glow {
-  box-shadow: 0 0 15px rgba(63, 0, 255, 0.1);
+  box-shadow: 0 0 15px rgba(63, 0, 255, 0.2);
   transition: box-shadow 0.3s ease;
 }
 
 .card-glow:hover {
-  box-shadow: 0 0 25px rgba(63, 0, 255, 0.2);
+  box-shadow: 0 0 25px rgba(63, 0, 255, 0.3);
 }
 
 /* Dark glass effect for card backgrounds */
 .dark-glass {
-  background: rgba(30, 30, 30, 0.6);
+  background: rgba(30, 30, 30, 0.8);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Dark mode card styles */
+.dark-card {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  color: #fff;
+}
+
+.dark-card-content {
+  background: #2a2a2a;
+  border: 1px solid #444;
+}
+
+/* Card shimmer effect */
+.card-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.05), transparent);
+  animation: shimmer 2.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 200%;
+  }
+}
+
+/* Improved card border glow effects */
+.card-border-glow {
+  border: 1px solid rgba(63, 0, 255, 0.2);
+  box-shadow: 
+    0 0 5px rgba(63, 0, 255, 0.1),
+    0 0 10px rgba(63, 0, 255, 0.05) inset;
+  transition: all 0.3s ease;
+}
+
+.card-border-glow:hover {
+  border-color: rgba(63, 0, 255, 0.4);
+  box-shadow: 
+    0 0 10px rgba(63, 0, 255, 0.2),
+    0 0 15px rgba(63, 0, 255, 0.1) inset;
 }

@@ -14,14 +14,17 @@ const DesktopAuthButtons = ({ isActive }: DesktopAuthButtonsProps) => {
     <div className="hidden md:flex ml-auto space-x-2">
       {user ? (
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={signOut}>
+          <Button variant="outline" size="sm" onClick={signOut} className="border-gray-600 text-white hover:bg-gray-800">
             Abmelden
           </Button>
           <Link to="/admin">
             <Button 
               variant={isActive("/admin") ? "default" : "outline"} 
               size="sm"
-              className={isActive("/admin") ? "bg-loklernen-ultramarine" : ""}
+              className={isActive("/admin") 
+                ? "bg-loklernen-ultramarine" 
+                : "border-gray-600 text-white hover:bg-gray-800"
+              }
             >
               Admin
             </Button>
@@ -33,6 +36,7 @@ const DesktopAuthButtons = ({ isActive }: DesktopAuthButtonsProps) => {
             <Button 
               variant="outline" 
               size="sm"
+              className="border-gray-600 text-white hover:bg-gray-800"
             >
               Anmelden
             </Button>

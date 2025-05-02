@@ -24,7 +24,10 @@ const DesktopNavigation = ({ navItems, isActive }: DesktopNavigationProps) => {
           <Link key={item.path} to={item.path}>
             <Button 
               variant={isActive(item.path) ? "default" : "ghost"} 
-              className={isActive(item.path) ? "bg-loklernen-ultramarine text-white" : ""}
+              className={isActive(item.path) 
+                ? "bg-loklernen-ultramarine text-white" 
+                : "text-white hover:bg-gray-800"
+              }
             >
               {item.name}
             </Button>

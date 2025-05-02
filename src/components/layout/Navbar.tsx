@@ -23,7 +23,7 @@ const Navbar = () => {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background">
+    <header className="sticky top-0 z-40 w-full border-b border-gray-800 bg-black text-white">
       <div className="container flex h-16 items-center">
         {isMobile && showBackButton ? (
           <BackButton previousPath={getPreviousPath(location.pathname)} />

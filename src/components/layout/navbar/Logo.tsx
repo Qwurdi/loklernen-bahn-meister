@@ -10,9 +10,9 @@ const Logo = () => {
     <Link to="/" className="flex items-center">
       <span className={cn(
         "font-bold text-center",
-        isMobile ? "text-2xl" : "text-2xl"
+        isMobile ? "text-3xl" : "text-4xl"
       )}>
-        <span className="text-black">Lok</span>
+        <span className="text-white">Lok</span>
         <span className="text-loklernen-ultramarine">Lernen</span>
       </span>
     </Link>

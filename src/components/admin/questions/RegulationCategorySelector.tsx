@@ -4,7 +4,11 @@ import { Label } from "@/components/ui/label";
 import { RegulationCategory } from '@/types/questions';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Info } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
 
 interface RegulationCategorySelectorProps {
   value: RegulationCategory | undefined;
@@ -21,19 +25,17 @@ export const RegulationCategorySelector = ({
     <div className="space-y-2">
       <div className="flex items-center gap-2">
         <Label htmlFor="regulation_category">Regelwerk</Label>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-            </TooltipTrigger>
-            <TooltipContent>
-              <p className="max-w-xs">
-                Legt fest, in welchem Regelwerk dieses Signal vorkommt. Dies erlaubt Lernenden, 
-                nur die für ihre Strecken relevanten Signale zu lernen.
-              </p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="max-w-xs">
+              Legt fest, in welchem Regelwerk dieses Signal vorkommt. Dies erlaubt Lernenden, 
+              nur die für ihre Strecken relevanten Signale zu lernen.
+            </p>
+          </TooltipContent>
+        </Tooltip>
       </div>
       <ToggleGroup 
         type="single" 

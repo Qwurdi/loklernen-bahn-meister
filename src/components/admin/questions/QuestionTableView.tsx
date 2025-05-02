@@ -14,7 +14,6 @@ import { Edit, Trash2, Eye, Copy } from "lucide-react";
 import { 
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
@@ -84,22 +83,20 @@ export const QuestionTableView: React.FC<QuestionTableViewProps> = ({
                   </span>
                 </TableCell>
                 <TableCell>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          className="h-auto p-0 text-left font-normal"
-                        >
-                          <span className="line-clamp-1">{question.sub_category}</span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom" className="max-w-sm">
-                        <p className="font-semibold">Antwort:</p>
-                        <p className="mt-1">{firstAnswer}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        className="h-auto p-0 text-left font-normal"
+                      >
+                        <span className="line-clamp-1">{question.sub_category}</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-sm">
+                      <p className="font-semibold">Antwort:</p>
+                      <p className="mt-1">{firstAnswer}</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </TableCell>
                 <TableCell className="text-center">
                   <span className="rounded-full px-2 py-1 text-xs font-medium bg-gray-100">
@@ -155,4 +152,4 @@ export const QuestionTableView: React.FC<QuestionTableViewProps> = ({
       </Table>
     </div>
   );
-};
+}

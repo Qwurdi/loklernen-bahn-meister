@@ -4,7 +4,11 @@ import { RegulationCategory } from '@/types/questions';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Label } from "@/components/ui/label";
 import { Info } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
 import { RegulationFilterType } from '@/types/regulation';
 
 interface RegulationFilterToggleProps {
@@ -34,19 +38,17 @@ export const RegulationFilterToggle: React.FC<RegulationFilterToggleProps> = ({
         <div className="flex items-center justify-center gap-2 mb-1">
           <Label className="font-medium">{title}</Label>
           {showInfoTooltip && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="max-w-xs">
-                    Wähle ob du DS 301 oder DV 301 lernen möchtest. 
-                    Signale der Kategorie "beide" werden immer angezeigt.
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs">
+                  Wähle ob du DS 301 oder DV 301 lernen möchtest. 
+                  Signale der Kategorie "beide" werden immer angezeigt.
+                </p>
+              </TooltipContent>
+            </Tooltip>
           )}
         </div>
       )}

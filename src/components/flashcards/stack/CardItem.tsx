@@ -71,24 +71,36 @@ export default function CardItem({
       onClick={handleCardTap}
       {...(!isPreview && !swipeDisabled ? handlers : {})}
     >
-      <div className="w-full h-full relative overflow-hidden rounded-2xl">
+      <div className="w-full h-full relative overflow-hidden rounded-2xl" style={{ perspective: '1000px' }}>
+        {/* Front card face */}
         <div 
-          className="w-full h-full transition-transform duration-500 transform-gpu backface-hidden"
+          className="w-full h-full transition-transform duration-500 transform-gpu"
           style={{
             transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
             position: 'absolute',
-            backfaceVisibility: 'hidden'
+            backfaceVisibility: 'hidden',
+            transformStyle: 'preserve-3d',
+            zIndex: isFlipped ? 0 : 1,
+            opacity: isFlipped ? 0 : 1,
+            width: '100%',
+            height: '100%'
           }}
         >
           <CardFront question={question} />
         </div>
         
+        {/* Back card face */}
         <div 
-          className="w-full h-full transition-transform duration-500 transform-gpu backface-hidden"
+          className="w-full h-full transition-transform duration-500 transform-gpu"
           style={{
-            transform: isFlipped ? 'rotateY(0deg)' : 'rotateY(180deg)',
+            transform: isFlipped ? 'rotateY(0deg)' : 'rotateY(-180deg)',
             position: 'absolute',
-            backfaceVisibility: 'hidden'
+            backfaceVisibility: 'hidden',
+            transformStyle: 'preserve-3d',
+            zIndex: isFlipped ? 1 : 0,
+            opacity: isFlipped ? 1 : 0,
+            width: '100%',
+            height: '100%'
           }}
         >
           <CardBack question={question} />

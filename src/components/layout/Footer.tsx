@@ -3,55 +3,55 @@ import { Link } from "react-router-dom";
 
 export default function Footer() {
   return (
-    <footer className="border-t bg-muted/40">
+    <footer className="border-t border-gray-800 bg-black">
       <div className="container py-8 md:py-12">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           <div>
             <div className="text-lg font-bold">
-              <span className="text-black">Lok</span>
+              <span className="text-white">Lok</span>
               <span className="text-loklernen-ultramarine">Lernen</span>
             </div>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="mt-2 text-sm text-gray-400">
               Die Lern-App für angehende Triebfahrzeugführer*innen
             </p>
           </div>
           
           <div className="grid grid-cols-2 gap-4 md:gap-8">
             <div className="space-y-3">
-              <h4 className="text-sm font-medium">Lernen</h4>
+              <h4 className="text-sm font-medium text-white">Lernen</h4>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <Link to="/signale" className="text-muted-foreground transition-colors hover:text-foreground">
+                  <Link to="/signale" className="text-gray-400 transition-colors hover:text-white">
                     Signale
                   </Link>
                 </li>
                 <li>
-                  <Link to="/betriebsdienst" className="text-muted-foreground transition-colors hover:text-foreground">
+                  <Link to="/betriebsdienst" className="text-gray-400 transition-colors hover:text-white">
                     Betriebsdienst
                   </Link>
                 </li>
                 <li>
-                  <Link to="/fortschritt" className="text-muted-foreground transition-colors hover:text-foreground">
+                  <Link to="/fortschritt" className="text-gray-400 transition-colors hover:text-white">
                     Mein Fortschritt
                   </Link>
                 </li>
               </ul>
             </div>
             <div className="space-y-3">
-              <h4 className="text-sm font-medium">Rechtliches</h4>
+              <h4 className="text-sm font-medium text-white">Rechtliches</h4>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <Link to="/datenschutz" className="text-muted-foreground transition-colors hover:text-foreground">
+                  <Link to="/datenschutz" className="text-gray-400 transition-colors hover:text-white">
                     Datenschutz
                   </Link>
                 </li>
                 <li>
-                  <Link to="/impressum" className="text-muted-foreground transition-colors hover:text-foreground">
+                  <Link to="/impressum" className="text-gray-400 transition-colors hover:text-white">
                     Impressum
                   </Link>
                 </li>
                 <li>
-                  <Link to="/agb" className="text-muted-foreground transition-colors hover:text-foreground">
+                  <Link to="/agb" className="text-gray-400 transition-colors hover:text-white">
                     AGB
                   </Link>
                 </li>
@@ -60,8 +60,8 @@ export default function Footer() {
           </div>
           
           <div className="space-y-3">
-            <h4 className="text-sm font-medium">Kontakt</h4>
-            <p className="text-sm text-muted-foreground">
+            <h4 className="text-sm font-medium text-white">Kontakt</h4>
+            <p className="text-sm text-gray-400">
               Fragen oder Anregungen? Schreib uns eine Mail an 
               <a href="mailto:info@loklernen.de" className="ml-1 text-loklernen-ultramarine hover:underline">
                 info@loklernen.de
@@ -70,7 +70,7 @@ export default function Footer() {
           </div>
         </div>
         
-        <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
+        <div className="mt-8 border-t border-gray-800 pt-8 text-center text-sm text-gray-400">
           &copy; {new Date().getFullYear()} LokLernen. Alle Rechte vorbehalten.
         </div>
       </div>

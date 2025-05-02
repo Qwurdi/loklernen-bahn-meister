@@ -8,20 +8,21 @@ import { motion } from "framer-motion";
 
 export default function LearningPathSection() {
   return (
-    <section className="py-12 md:py-24 bg-gray-50">
+    <section className="py-12 md:py-24 bg-black text-white">
       <div className="container px-4 md:px-6">
         <div className="space-y-2 text-center mb-8">
           <h2 className="text-3xl font-bold tracking-tighter md:text-4xl">
             Dein Lernweg zum Triebfahrzeugführer
           </h2>
-          <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl">
+          <p className="mx-auto max-w-[700px] text-gray-400 md:text-xl">
             Schritt für Schritt zum Expertenwissen
           </p>
         </div>
         
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
           <div className="space-y-4">
-            <h3 className="text-xl font-bold">Signale <span className="text-sm font-normal text-green-600">(Kostenlos)</span></h3>
+            <h3 className="text-xl font-bold">Signale <span className="text-sm font-normal text-green-500">
+              (Kostenlos)</span></h3>
             <div className="grid gap-4">
               <CategoryCard
                 title="Haupt- und Vorsignale"
@@ -45,11 +46,11 @@ export default function LearningPathSection() {
                   progress={0}
                   link="/karteikarten/signale/rangiersignale"
                 />
-                <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/50 backdrop-blur-sm">
+                <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/70 backdrop-blur-sm">
                   <div className="text-center p-4">
                     <p className="text-white font-bold mb-2">Mit Anmeldung: Speichere deinen Fortschritt</p>
                     <Link to="/register">
-                      <Button size="sm" className="bg-loklernen-ultramarine">
+                      <Button size="sm" className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/80">
                         Jetzt anmelden <ChevronRight className="h-4 w-4" />
                       </Button>
                     </Link>
@@ -66,7 +67,8 @@ export default function LearningPathSection() {
           </div>
           
           <div className="space-y-4">
-            <h3 className="text-xl font-bold">Betriebsdienst <span className="text-sm font-normal text-amber-600">(Premium)</span></h3>
+            <h3 className="text-xl font-bold">Betriebsdienst <span className="text-sm font-normal text-amber-500">
+              (Premium)</span></h3>
             <div className="grid gap-4">
               <CategoryCard
                 title="Grundlagen Bahnbetrieb"
@@ -102,9 +104,11 @@ export default function LearningPathSection() {
                   isPro
                   isLocked
                 />
-                <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/70 backdrop-blur-sm">
+                <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/80 backdrop-blur-sm">
                   <div className="text-center p-4">
-                    <div className="bg-amber-500 text-black text-xs px-2 py-1 rounded-full font-bold inline-block mb-2">PREMIUM</div>
+                    <div className="bg-amber-500 text-black text-xs px-2 py-1 rounded-full font-bold inline-block mb-2">
+                      PREMIUM
+                    </div>
                     <p className="text-white font-bold mb-2">Schalte alle Betriebsdienstkurse frei</p>
                     <Link to="/register">
                       <Button size="sm" className="bg-amber-500 text-black hover:bg-amber-600">

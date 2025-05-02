@@ -111,12 +111,12 @@ function SpacedRepetitionChart() {
         
         <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
           <Link to="/register">
-            <Button className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90">
+            <Button className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/80 text-white">
               Kostenloses Konto erstellen
             </Button>
           </Link>
           <Link to="/karteikarten">
-            <Button variant="outline" className="border-gray-700 hover:bg-gray-800">
+            <Button variant="outline" className="border-gray-700 text-white hover:bg-gray-800">
               Oder direkt kostenlos starten
             </Button>
           </Link>

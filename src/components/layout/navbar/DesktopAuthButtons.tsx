@@ -44,7 +44,7 @@ const DesktopAuthButtons = ({ isActive }: DesktopAuthButtonsProps) => {
           <Link to="/register">
             <Button 
               size="sm"
-              className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90"
+              className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/80"
             >
               Registrieren
             </Button>

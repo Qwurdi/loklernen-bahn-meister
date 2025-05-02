@@ -28,7 +28,7 @@ export default function FlashcardContent({
   
   // Apply PWA-specific styles for mobile
   const containerClasses = isMobile 
-    ? 'flex flex-col h-full w-full pt-2 pb-16' // Full height for PWA-like experience
+    ? 'flex flex-col h-full w-full overflow-hidden' // Full height for PWA-like experience with no scrolling
     : 'space-y-6';
   
   return (
@@ -40,7 +40,7 @@ export default function FlashcardContent({
         remainingToday={remainingToday}
       />
       
-      <div className={isMobile ? 'flex-1 flex items-center justify-center' : ''}>
+      <div className={isMobile ? 'flex-1 flex items-center justify-center overflow-hidden' : ''}>
         <FlashcardItem 
           question={currentQuestion} 
           onAnswer={onAnswer}

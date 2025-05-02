@@ -31,13 +31,14 @@ export default function FlashcardItemMobile({
   const cardRef = useRef<HTMLDivElement>(null);
   
   // Constants for swipe behavior
-  const SWIPE_THRESHOLD = 70; // Lower threshold for easier swiping
-  const VERTICAL_DEADZONE = 20; // Pixels of vertical movement to still consider a horizontal swipe
-  const MAX_ROTATION = 15; // Maximum rotation in degrees
+  const SWIPE_THRESHOLD = 60; // Lower threshold for easier swiping
+  const VERTICAL_DEADZONE = 40; // Increased deadzone to prevent accidental scroll
+  const MAX_ROTATION = 12; // Maximum rotation in degrees
   
   // Touch handling for swipe gestures with improved mechanics
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (answered) return;
+    // Immediately prevent default to stop scrolling
+    e.preventDefault();
     
     // Always capture start position, even if not flipped
     setDragStartX(e.touches[0].clientX);
@@ -47,6 +48,9 @@ export default function FlashcardItemMobile({
   };
   
   const handleTouchMove = (e: React.TouchEvent) => {
+    // Always prevent default for touch move on cards
+    e.preventDefault();
+    
     if (dragStartX === null || answered) return;
     
     const currentX = e.touches[0].clientX;
@@ -54,27 +58,24 @@ export default function FlashcardItemMobile({
     const deltaX = currentX - dragStartX;
     const deltaY = Math.abs(currentY - (dragStartY || 0));
     
-    // Check if more vertical than horizontal movement (scrolling attempt)
-    if (deltaY > VERTICAL_DEADZONE && !isDragging) {
-      return; // Let the page scroll
-    }
-    
-    // Prevent page scrolling while swiping horizontally
-    if (Math.abs(deltaX) > 10) {
-      e.preventDefault();
-    }
-    
-    // Only allow swiping while flipped (looking at answer)
-    if (flipped) {
+    // Allow swiping regardless of card side (flip status)
+    if (deltaY <= VERTICAL_DEADZONE) {
       setDragDelta(deltaX);
       setSwipeDirection(deltaX > 0 ? "right" : "left");
+      
+      // Provide haptic feedback at threshold points
+      if (Math.abs(deltaX) > SWIPE_THRESHOLD / 2 && 
+          Math.abs(deltaX) < SWIPE_THRESHOLD / 2 + 5 && 
+          navigator.vibrate) {
+        navigator.vibrate(5); // subtle haptic feedback
+      }
     }
   };
   
   const handleTouchEnd = () => {
     if (dragStartX === null || answered) return;
     
-    // Only process swipe actions if card is flipped
+    // Only process swipe actions if card is flipped (looking at answer)
     if (flipped) {
       const threshold = SWIPE_THRESHOLD;
       
@@ -82,36 +83,55 @@ export default function FlashcardItemMobile({
         // Swipe right = known, add animation before callback
         setSwipeDirection("right");
         animateSwipe("right");
-        setTimeout(() => onKnown(), 150);
+        if (navigator.vibrate) navigator.vibrate([10, 30, 10]);
+        setTimeout(() => onKnown(), 300);
       } else if (dragDelta < -threshold) {
         // Swipe left = not known, add animation before callback
         setSwipeDirection("left");
         animateSwipe("left");
-        setTimeout(() => onNotKnown(), 150);
+        if (navigator.vibrate) navigator.vibrate([10, 30, 10]);
+        setTimeout(() => onNotKnown(), 300);
+      } else {
+        // Return to center with spring effect
+        resetCardPosition();
       }
+    } else if (Math.abs(dragDelta) > SWIPE_THRESHOLD && !flipped) {
+      // If swiping significantly on question side, show answer
+      onShowAnswer();
+    } else {
+      // Return to center
+      resetCardPosition();
     }
     
-    // Reset
+    // Reset touch tracking variables
     setDragStartX(null);
     setDragStartY(null);
     setDragDelta(0);
     setIsDragging(false);
   };
 
-  // Add effect for vibration feedback on significant drag
-  useEffect(() => {
-    if (Math.abs(dragDelta) > SWIPE_THRESHOLD / 2 && navigator.vibrate) {
-      navigator.vibrate(10); // subtle haptic feedback
-    }
-  }, [dragDelta]);
+  // Reset card position with animation
+  const resetCardPosition = () => {
+    if (!cardRef.current) return;
+    
+    cardRef.current.style.transition = "transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+    cardRef.current.style.transform = "translateX(0) rotate(0deg)";
+    
+    // Reset bg color after animation
+    setTimeout(() => {
+      if (cardRef.current) {
+        cardRef.current.style.backgroundColor = "";
+      }
+    }, 300);
+  };
 
   // Function to animate card flying away
   const animateSwipe = (direction: "left" | "right") => {
     if (!cardRef.current) return;
     
-    cardRef.current.style.transition = "transform 0.3s ease-out, opacity 0.3s ease-out";
-    cardRef.current.style.transform = `translateX(${direction === "right" ? 150 : -150}%) rotate(${direction === "right" ? 10 : -10}deg)`;
-    cardRef.current.style.opacity = "0";
+    cardRef.current.style.transition = "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease-out";
+    cardRef.current.style.transform = `translateX(${direction === "right" ? 150 : -150}%) rotate(${direction === "right" ? 15 : -15}deg)`;
+    cardRef.current.style.opacity = "0.8";
   };
 
   // Calculate card styles during drag
@@ -119,29 +139,29 @@ export default function FlashcardItemMobile({
     if (dragDelta === 0) {
       return {
         transform: "none",
-        transition: isDragging ? "none" : "transform 0.3s ease-out, background-color 0.2s ease"
+        transition: isDragging ? "none" : "transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.2s ease"
       };
     }
     
     // Calculate rotation based on drag distance, capped at MAX_ROTATION degrees
-    const rotation = Math.min(Math.abs(dragDelta) * 0.1, MAX_ROTATION) * (dragDelta > 0 ? 1 : -1);
+    const rotation = Math.min(Math.abs(dragDelta) * 0.08, MAX_ROTATION) * (dragDelta > 0 ? 1 : -1);
     
     // Calculate background color based on drag direction and distance
     const dragPercentage = Math.min(Math.abs(dragDelta) / SWIPE_THRESHOLD, 1); 
     const backgroundColor = dragDelta > 0 
-      ? `rgba(209, 250, 229, ${dragPercentage * 0.9})` 
-      : `rgba(254, 226, 226, ${dragPercentage * 0.9})`;
+      ? `rgba(209, 250, 229, ${dragPercentage * 0.7})` 
+      : `rgba(254, 226, 226, ${dragPercentage * 0.7})`;
     
     return {
-      transform: `translateX(${dragDelta * 1.2}px) rotate(${rotation}deg)`,
+      transform: `translateX(${dragDelta * 1.1}px) rotate(${rotation}deg)`,
       backgroundColor,
-      transition: isDragging ? "none" : "transform 0.3s ease-out, background-color 0.2s ease"
+      transition: isDragging ? "none" : "transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.2s ease"
     };
   };
 
   // Get appropriate card classes
   const getCardClasses = () => {
-    return `relative p-4 min-h-[calc(100vh-230px)] flex flex-col bg-white rounded-xl shadow-md touch-none ${
+    return `relative p-4 min-h-[calc(100vh-230px)] flex flex-col bg-white rounded-xl shadow-md touch-none card-with-inertia ${
       swipeDirection === "right" ? "animate-swipe-right" : 
       swipeDirection === "left" ? "animate-swipe-left" : ""
     }`;
@@ -183,7 +203,7 @@ export default function FlashcardItemMobile({
             <div className="bg-blue-50 px-3 py-1.5 rounded-full text-xs text-blue-600 self-start mb-2">Antwort</div>
             
             <div className="flex-1 flex flex-col justify-between overflow-y-auto">
-              <div className="flex flex-col items-center w-full pb-16"> {/* Add padding to make room for buttons */}
+              <div className="flex flex-col items-center w-full pb-16">
                 {question?.image_url && (
                   <img 
                     src={question.image_url} 
@@ -233,11 +253,11 @@ export default function FlashcardItemMobile({
       </Card>
 
       {/* Visual swipe direction indicator overlay */}
-      {flipped && dragDelta !== 0 && (
+      {dragDelta !== 0 && (
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
           <div 
             className={`text-4xl font-bold transition-opacity ${
-              Math.abs(dragDelta) < 30 ? 'opacity-0' : 'opacity-70'
+              Math.abs(dragDelta) < SWIPE_THRESHOLD / 2 ? 'opacity-0' : 'opacity-70'
             } ${
               dragDelta > 0 ? 'text-green-600' : 'text-red-500'
             }`}

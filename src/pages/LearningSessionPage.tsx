@@ -27,6 +27,24 @@ export default function LearningSessionPage() {
   const [sessionFinished, setSessionFinished] = useState(false);
   const isMobile = useIsMobile();
   
+  // Prevent scrolling on mobile devices
+  useEffect(() => {
+    if (isMobile) {
+      // Save the original style to restore it later
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      
+      // Prevent scrolling on the body
+      document.body.style.overflow = 'hidden';
+      document.documentElement.classList.add('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
+      
+      // Cleanup function to restore original style
+      return () => {
+        document.body.style.overflow = originalStyle;
+        document.documentElement.classList.remove('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
+      };
+    }
+  }, [isMobile]);
+  
   // Get category and regulation preference from URL parameters
   const categoryParam = searchParams.get("category") as QuestionCategory || "Signale";
   const regulationParam = searchParams.get("regelwerk") || regulationPreference;
@@ -150,10 +168,10 @@ export default function LearningSessionPage() {
   const currentCard = sessionCards[currentIndex];
   
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className={`flex flex-col ${isMobile ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
       <Navbar />
       
-      <main className={`flex-1 ${isMobile ? 'px-2 py-2 pb-20' : 'container px-4 py-8'}`}>
+      <main className={`flex-1 ${isMobile ? 'px-2 pt-2 pb-20 overflow-hidden flex flex-col' : 'container px-4 py-8'}`}>
         {!isMobile && (
           <div className="flex items-center justify-between mb-6">
             <Button

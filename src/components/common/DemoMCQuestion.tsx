@@ -21,7 +21,7 @@ export default function DemoMCQuestion({
     "Signal außer Betrieb"
   ],
   correctAnswer = 0,
-  signalImage = "/lovable-uploads/4675c32d-5934-4bf8-9d66-0d95c76f9a00.png"
+  signalImage = "/lovable-uploads/abbb1845-1d85-4158-aa4e-10a35a8da12d.png"
 }: DemoMCQuestionProps) {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);

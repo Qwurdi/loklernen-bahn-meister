@@ -26,7 +26,7 @@ const DesktopNavigation = ({ navItems, isActive }: DesktopNavigationProps) => {
               variant={isActive(item.path) ? "default" : "ghost"} 
               className={isActive(item.path) 
                 ? "bg-loklernen-ultramarine text-white" 
-                : "text-white hover:bg-gray-800"
+                : "text-white hover:text-white hover:bg-gray-800"
               }
             >
               {item.name}

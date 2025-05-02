@@ -18,7 +18,7 @@ const DesktopAuthButtons = ({ isActive }: DesktopAuthButtonsProps) => {
             variant="outline" 
             size="sm" 
             onClick={signOut} 
-            className="border-gray-600 text-white hover:text-white hover:bg-gray-800"
+            className="border-gray-600 text-white bg-black hover:text-white hover:bg-gray-800"
           >
             Abmelden
           </Button>
@@ -28,7 +28,7 @@ const DesktopAuthButtons = ({ isActive }: DesktopAuthButtonsProps) => {
               size="sm"
               className={isActive("/admin") 
                 ? "bg-loklernen-ultramarine text-white" 
-                : "border-gray-600 text-white hover:text-white hover:bg-gray-800"
+                : "border-gray-600 text-white bg-black hover:text-white hover:bg-gray-800"
               }
             >
               Admin
@@ -41,7 +41,7 @@ const DesktopAuthButtons = ({ isActive }: DesktopAuthButtonsProps) => {
             <Button 
               variant="outline" 
               size="sm"
-              className="border-gray-600 text-white hover:text-white hover:bg-gray-800"
+              className="border-gray-600 text-white bg-black hover:text-white hover:bg-gray-800"
             >
               Anmelden
             </Button>

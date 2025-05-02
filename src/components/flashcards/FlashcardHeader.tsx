@@ -27,23 +27,23 @@ export default function FlashcardHeader({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center">
           <Link to="/karteikarten">
-            <Button variant="ghost" size="sm" className={isMobile ? "px-2" : ""}>
+            <Button variant="ghost" size="sm" className={`${isMobile ? "px-2" : ""} text-white hover:bg-gray-800`}>
               <ChevronLeft className="h-4 w-4" />
               {!isMobile && <span className="ml-2">Zurück</span>}
             </Button>
           </Link>
-          {!isMobile && <h1 className="text-xl font-semibold ml-2">{subcategory}</h1>}
+          {!isMobile && <h1 className="text-xl font-semibold ml-2 text-white">{subcategory}</h1>}
         </div>
         {!isMobile && (
           <div className="flex items-center gap-4">
-            <span className="text-sm px-2 py-1 rounded bg-blue-100 text-blue-800">
+            <span className="text-sm px-2 py-1 rounded bg-blue-900/40 text-blue-200 border border-blue-800/50">
               {isPracticeMode ? "Übungsmodus" : "Wiederholungsmodus"}
             </span>
           </div>
         )}
       </div>
       
-      {isMobile && <h1 className="text-lg font-semibold mb-4">{subcategory}</h1>}
+      {isMobile && <h1 className="text-lg font-semibold mb-4 text-white">{subcategory}</h1>}
       
       {/* Regulation filter */}
       <div className="mb-4">
@@ -52,7 +52,7 @@ export default function FlashcardHeader({
           onChange={onRegulationChange}
           variant="outline"
           size="sm"
-          className="mb-4"
+          className="mb-4 border-gray-700 bg-gray-800/50 text-gray-200"
         />
       </div>
     </>

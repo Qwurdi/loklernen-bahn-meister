@@ -19,7 +19,7 @@ export default function CardFront({ question }: CardFrontProps) {
       </div>
       
       {/* Dynamic text size for the question */}
-      <h2 className={`${textSizeClass} font-medium mb-4 overflow-y-auto max-h-[25%]`}>
+      <h2 className={`${textSizeClass} font-medium mb-4 overflow-y-auto max-h-[25%] text-gray-800`}>
         {question.text}
       </h2>
       

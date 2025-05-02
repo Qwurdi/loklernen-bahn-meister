@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
@@ -35,20 +34,18 @@ export default function LearningSessionPage() {
 
   // Prevent scrolling on mobile devices
   useEffect(() => {
-    if (isMobile) {
-      // Save the original style to restore it later
-      const originalStyle = window.getComputedStyle(document.body).overflow;
-      
-      // Prevent scrolling on the body
-      document.body.style.overflow = 'hidden';
-      document.documentElement.classList.add('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
-      
-      // Cleanup function to restore original style
-      return () => {
-        document.body.style.overflow = originalStyle;
-        document.documentElement.classList.remove('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
-      };
-    }
+    // Save the original style to restore it later
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    
+    // Prevent scrolling on the body
+    document.body.style.overflow = 'hidden';
+    document.documentElement.classList.add('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
+    
+    // Cleanup function to restore original style
+    return () => {
+      document.body.style.overflow = originalStyle;
+      document.documentElement.classList.remove('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
+    };
   }, [isMobile]);
 
   // Pass both category and regulation preference to the hook
@@ -113,15 +110,15 @@ export default function LearningSessionPage() {
   // Render empty state when no cards are available
   if (!sessionCards.length) {
     return (
-      <div className="flex min-h-screen flex-col">
+      <div className="flex min-h-screen flex-col bg-black text-white">
         <Navbar />
         <main className="flex-1 container py-12 flex flex-col items-center justify-center">
-          <Card className="p-6 max-w-md text-center">
-            <h2 className="text-2xl font-bold mb-4">Keine Karten fällig!</h2>
-            <p className="text-gray-600 mb-6">
+          <Card className="p-6 max-w-md text-center bg-gray-900 border-gray-800">
+            <h2 className="text-2xl font-bold mb-4 text-white">Keine Karten fällig!</h2>
+            <p className="text-gray-300 mb-6">
               Aktuell sind keine Karten zur Wiederholung fällig. Schaue später wieder vorbei oder wähle eine Kategorie, um neue Karten zu lernen.
             </p>
-            <Button onClick={() => navigate(getCategoryPath())}>
+            <Button onClick={() => navigate(getCategoryPath())} className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90">
               Zu Kategorien
             </Button>
           </Card>
@@ -135,20 +132,20 @@ export default function LearningSessionPage() {
   // Render finished session state
   if (sessionFinished) {
     return (
-      <div className="flex min-h-screen flex-col">
+      <div className="flex min-h-screen flex-col bg-black text-white">
         <Navbar />
         <main className="flex-1 container py-12 flex flex-col items-center justify-center">
-          <Card className="p-6 max-w-md text-center">
-            <h2 className="text-2xl font-bold mb-4">Session abgeschlossen!</h2>
-            <p className="text-gray-600 mb-6">
+          <Card className="p-6 max-w-md text-center bg-gray-900 border-gray-800">
+            <h2 className="text-2xl font-bold mb-4 text-white">Session abgeschlossen!</h2>
+            <p className="text-gray-300 mb-6">
               Du hast {correctCount} von {sessionCards.length} Karten richtig beantwortet.
               ({Math.round((correctCount / sessionCards.length) * 100)}%)
             </p>
             <div className="flex flex-col sm:flex-row gap-2 justify-center">
-              <Button onClick={handleRestart} variant="outline">
+              <Button onClick={handleRestart} variant="outline" className="border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800">
                 Neu starten
               </Button>
-              <Button onClick={handleEndSession} className="bg-loklernen-ultramarine">
+              <Button onClick={handleEndSession} className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90">
                 Zum Dashboard
               </Button>
             </div>
@@ -162,7 +159,7 @@ export default function LearningSessionPage() {
 
   // Render main learning session UI with our new card stack
   return (
-    <div className={`flex flex-col ${isMobile ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
+    <div className={`flex flex-col ${isMobile ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-black text-white`}>
       <Navbar />
       
       <main className={`flex-1 ${isMobile ? 'px-0 pt-2 pb-16 overflow-hidden flex flex-col' : 'container px-4 py-8'}`}>
@@ -171,7 +168,7 @@ export default function LearningSessionPage() {
             <Button
               variant="outline"
               size="sm"
-              className="flex items-center"
+              className="flex items-center border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800"
               onClick={() => navigate(getCategoryPath())}
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
@@ -181,7 +178,7 @@ export default function LearningSessionPage() {
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center"
+              className="flex items-center text-white hover:bg-gray-800"
               onClick={() => navigate(getCategoryPath())}
             >
               <List className="h-4 w-4 mr-1" />

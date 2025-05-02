@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Check, X } from 'lucide-react';
@@ -90,7 +90,7 @@ export default function DemoMCQuestion({
           <div className="mt-3 flex justify-between items-center">
             <p className="text-sm text-gray-400">Mit Anmeldung: Dein Fortschritt wird gespeichert</p>
             <Link to="/register">
-              <Button size="sm" variant="outline">
+              <Button size="sm" className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90 text-white">
                 Jetzt anmelden
               </Button>
             </Link>

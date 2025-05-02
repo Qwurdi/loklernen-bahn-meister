@@ -29,9 +29,9 @@ export default function FlashcardProgress({
             <div className="w-7 h-7 rounded-full bg-loklernen-sapphire flex items-center justify-center text-white font-medium text-xs">
               {currentIndex + 1}
             </div>
-            <span className="text-xs text-gray-600">/{totalCards}</span>
+            <span className="text-xs text-gray-400">/{totalCards}</span>
           </div>
-          <div className="text-xs py-0.5 px-2 bg-gray-100 rounded-full text-gray-600">
+          <div className="text-xs py-0.5 px-2 bg-gray-800 rounded-full text-gray-300 border border-gray-700">
             {remainingToday} übrig
           </div>
         </div>
@@ -50,7 +50,7 @@ export default function FlashcardProgress({
 
   // Desktop view remains more detailed
   return (
-    <div className="mb-6 bg-card rounded-lg border p-4">
+    <div className="mb-6 rounded-lg border border-gray-800 p-4 bg-gray-900">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <p className="text-sm font-medium mb-1">Fortschritt</p>

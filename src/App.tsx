@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, BrowserRouter } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { UserPreferencesProvider } from "@/contexts/UserPreferencesContext";
 
@@ -85,55 +85,57 @@ const HomeRoute = () => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <UserPreferencesProvider>
-        <TooltipProvider delayDuration={300}>
-          <Toaster />
-          <Sonner />
-          <Suspense fallback={<LoadingSpinner />}>
-            <Routes>
-              {/* Home route - dashboard for authenticated users, landing page for others */}
-              <Route path="/" element={<HomeRoute />} />
-              <Route path="/welcome" element={<Index />} />
-              
-              {/* Regulation Selection Route */}
-              <Route path="/regelwerk-auswahl" element={<ProtectedRoute><RegulationSelectionPage /></ProtectedRoute>} />
-              <Route path="/einstellungen" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-              
-              {/* Renamed Flashcard Routes */}
-              <Route path="/karteikarten" element={<CardsPage />} />
-              <Route path="/karteikarten/signale/:subcategory" element={<FlashcardPage />} />
-              <Route path="/karteikarten/lernen" element={<ProtectedRoute><LearningSessionPage /></ProtectedRoute>} />
-              <Route path="/karteikarten/betriebsdienst" element={<BetriebsdienstPage />} />
-              <Route path="/karteikarten/betriebsdienst/:subcategory" element={<FlashcardPage />} />
-              
-              {/* Legacy redirect routes */}
-              <Route path="/signale" element={<Navigate to="/karteikarten" replace />} />
-              <Route path="/signale/:subcategory" element={<Navigate to="/karteikarten/signale/:subcategory" replace />} />
-              <Route path="/betriebsdienst" element={<Navigate to="/karteikarten/betriebsdienst" replace />} />
-              
-              {/* Progress Page */}
-              <Route path="/fortschritt" element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
-              
-              {/* Auth Routes */}
-              <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-              <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-              
-              {/* Admin Routes */}
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<AdminDashboard />} />
-                <Route path="questions" element={<QuestionsPage />} />
-                <Route path="questions/create" element={<QuestionEditorPage />} />
-                <Route path="questions/edit/:id" element={<QuestionEditorPage />} />
-                <Route path="questions/delete/:id" element={<DeleteQuestionPage />} />
-              </Route>
-              
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </TooltipProvider>
-      </UserPreferencesProvider>
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <UserPreferencesProvider>
+          <TooltipProvider delayDuration={300}>
+            <Toaster />
+            <Sonner />
+            <Suspense fallback={<LoadingSpinner />}>
+              <Routes>
+                {/* Home route - dashboard for authenticated users, landing page for others */}
+                <Route path="/" element={<HomeRoute />} />
+                <Route path="/welcome" element={<Index />} />
+                
+                {/* Regulation Selection Route */}
+                <Route path="/regelwerk-auswahl" element={<ProtectedRoute><RegulationSelectionPage /></ProtectedRoute>} />
+                <Route path="/einstellungen" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+                
+                {/* Renamed Flashcard Routes */}
+                <Route path="/karteikarten" element={<CardsPage />} />
+                <Route path="/karteikarten/signale/:subcategory" element={<FlashcardPage />} />
+                <Route path="/karteikarten/lernen" element={<ProtectedRoute><LearningSessionPage /></ProtectedRoute>} />
+                <Route path="/karteikarten/betriebsdienst" element={<BetriebsdienstPage />} />
+                <Route path="/karteikarten/betriebsdienst/:subcategory" element={<FlashcardPage />} />
+                
+                {/* Legacy redirect routes */}
+                <Route path="/signale" element={<Navigate to="/karteikarten" replace />} />
+                <Route path="/signale/:subcategory" element={<Navigate to="/karteikarten/signale/:subcategory" replace />} />
+                <Route path="/betriebsdienst" element={<Navigate to="/karteikarten/betriebsdienst" replace />} />
+                
+                {/* Progress Page */}
+                <Route path="/fortschritt" element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
+                
+                {/* Auth Routes */}
+                <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+                <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+                
+                {/* Admin Routes */}
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="questions" element={<QuestionsPage />} />
+                  <Route path="questions/create" element={<QuestionEditorPage />} />
+                  <Route path="questions/edit/:id" element={<QuestionEditorPage />} />
+                  <Route path="questions/delete/:id" element={<DeleteQuestionPage />} />
+                </Route>
+                
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </TooltipProvider>
+        </UserPreferencesProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 

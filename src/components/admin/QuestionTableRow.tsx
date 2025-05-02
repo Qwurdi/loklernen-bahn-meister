@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,6 @@ import { Edit, Trash2, Copy } from "lucide-react";
 import { 
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Question } from "@/types/questions";
@@ -51,23 +51,21 @@ const QuestionTableRow: React.FC<QuestionTableRowProps> = ({
         </span>
       </TableCell>
       <TableCell>
-        <TooltipProvider>
-          <Tooltip open={showAnswerTooltip} onOpenChange={setShowAnswerTooltip}>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="ghost" 
-                className="h-auto p-0 text-left font-normal"
-                onClick={() => setShowAnswerTooltip(!showAnswerTooltip)}
-              >
-                <span className="line-clamp-1">{question.sub_category}</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-sm">
-              <p className="font-semibold">Erste Antwort:</p>
-              <p className="mt-1">{firstAnswer}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Tooltip open={showAnswerTooltip} onOpenChange={setShowAnswerTooltip}>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="ghost" 
+              className="h-auto p-0 text-left font-normal"
+              onClick={() => setShowAnswerTooltip(!showAnswerTooltip)}
+            >
+              <span className="line-clamp-1">{question.sub_category}</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-sm">
+            <p className="font-semibold">Erste Antwort:</p>
+            <p className="mt-1">{firstAnswer}</p>
+          </TooltipContent>
+        </Tooltip>
       </TableCell>
       <TableCell className="text-center">
         <span className="rounded-full px-2 py-1 text-xs font-medium bg-gray-100">

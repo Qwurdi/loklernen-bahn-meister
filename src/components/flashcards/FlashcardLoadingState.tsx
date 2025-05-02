@@ -12,7 +12,7 @@ export default function FlashcardLoadingState() {
           <div className="flex justify-center items-center h-60">
             <div className="text-center">
               <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-loklernen-ultramarine border-t-transparent mx-auto"></div>
-              <p className="text-white">Lade Karteikarten...</p>
+              <p>Lade Karteikarten...</p>
             </div>
           </div>
         </div>

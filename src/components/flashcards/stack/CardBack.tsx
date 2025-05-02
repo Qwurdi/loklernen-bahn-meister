@@ -15,8 +15,8 @@ export default function CardBack({ question }: CardBackProps) {
   const textSizeClass = useDynamicTextSize(correctAnswer, 'answer');
   
   return (
-    <div className="w-full h-full bg-gray-900 p-6 flex flex-col rounded-2xl border border-gray-800">
-      <div className="bg-loklernen-ultramarine/30 px-3 py-1.5 rounded-full text-xs text-blue-300 self-start mb-2">
+    <div className="w-full h-full bg-blue-50 p-6 flex flex-col rounded-2xl">
+      <div className="bg-blue-100 px-3 py-1.5 rounded-full text-xs text-blue-600 self-start mb-2">
         Antwort
       </div>
       
@@ -33,17 +33,17 @@ export default function CardBack({ question }: CardBackProps) {
             </div>
           )}
           
-          <div className="bg-gray-800 p-5 rounded-xl w-full shadow-sm border border-gray-700 mb-4 overflow-y-auto max-h-[50%]">
+          <div className="bg-blue-100 p-5 rounded-xl w-full shadow-sm border border-blue-200 mb-4 overflow-y-auto max-h-[50%]">
             {question.category === "Signale" ? (
               <div className="space-y-2">
                 {correctAnswer.split('\n').map((line, i) => (
-                  <p key={i} className={`${textSizeClass} font-bold text-blue-300`}>
+                  <p key={i} className={`${textSizeClass} font-bold text-blue-800`}>
                     {line}
                   </p>
                 ))}
               </div>
             ) : (
-              <p className={`${textSizeClass} font-medium text-blue-300`}>
+              <p className={`${textSizeClass} font-medium text-blue-800`}>
                 {correctAnswer}
               </p>
             )}
@@ -51,15 +51,15 @@ export default function CardBack({ question }: CardBackProps) {
         </div>
       </div>
       
-      <div className="swipe-instructions mt-auto flex flex-row items-center justify-between text-sm text-gray-400">
+      <div className="swipe-instructions mt-auto flex flex-row items-center justify-between text-sm text-gray-600">
         <div className="flex items-center">
-          <ArrowLeft size={16} className="mr-1 text-red-400" /> 
+          <ArrowLeft size={16} className="mr-1 text-red-500" /> 
           <span>Nicht gewusst</span>
         </div>
         
         <div className="flex items-center">
           <span>Gewusst</span>
-          <ArrowRight size={16} className="ml-1 text-green-400" />
+          <ArrowRight size={16} className="ml-1 text-green-500" />
         </div>
       </div>
     </div>

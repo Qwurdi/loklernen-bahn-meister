@@ -1,0 +1,15 @@
+
+/* Import base styles */
+@import './base.css';
+
+/* Import component styles */
+@import './components.css';
+
+/* Import flashcard styles */
+@import './flashcards.css';
+
+/* Import mobile styles */
+@import './mobile.css';
+
+/* Import animation styles */
+@import './animations.css';

@@ -1,0 +1,28 @@
+
+/* ===== Mobile App Layout ===== */
+.mobile-app-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+
+/* ===== Mobile Full-Screen Mode ===== */
+@media (max-width: 768px) {
+  body.flashcard-mode {
+    overflow: hidden !important;
+    position: fixed;
+    height: 100%;
+    width: 100%;
+  }
+
+  .mobile-full-bleed {
+    margin-left: -1rem;
+    margin-right: -1rem;
+    width: calc(100% + 2rem);
+  }
+}

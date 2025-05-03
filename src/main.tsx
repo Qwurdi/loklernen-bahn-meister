@@ -5,6 +5,7 @@ import App from "./App";
 import "./styles/main.css";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 import { BrowserRouter } from "react-router-dom";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 console.log("Main: Starting application initialization");
 
@@ -26,7 +27,9 @@ if (!rootElement) {
     <React.StrictMode>
       <ErrorBoundary>
         <BrowserRouter>
-          <App />
+          <TooltipProvider delayDuration={300}>
+            <App />
+          </TooltipProvider>
         </BrowserRouter>
       </ErrorBoundary>
     </React.StrictMode>

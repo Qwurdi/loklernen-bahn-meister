@@ -2,7 +2,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { UserPreferencesProvider } from "@/contexts/UserPreferencesContext";
 import AppRoutes from "@/routing/AppRoutes";
@@ -28,12 +27,11 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <UserPreferencesProvider>
-          <TooltipProvider delayDuration={300}>
-            {/* AppRoutes component contains all route definitions */}
-            <AppRoutes />
-            <Toaster />
-            <Sonner />
-          </TooltipProvider>
+          {/* TooltipProvider moved to main.tsx */}
+          {/* AppRoutes component contains all route definitions */}
+          <AppRoutes />
+          <Toaster />
+          <Sonner />
         </UserPreferencesProvider>
       </AuthProvider>
     </QueryClientProvider>

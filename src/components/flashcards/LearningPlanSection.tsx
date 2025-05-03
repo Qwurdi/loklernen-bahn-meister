@@ -2,21 +2,23 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RegulationFilterType } from "@/types/regulation";
+import { Link } from "react-router-dom";
+import { Settings } from "lucide-react";
+import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 
 interface LearningPlanSectionProps {
   selectedCategories: string[];
-  regulationFilter: RegulationFilterType;
   onStartLearning: () => void;
   onRemoveCategory: (category: string) => void;
 }
 
 export default function LearningPlanSection({
   selectedCategories,
-  regulationFilter,
   onStartLearning,
   onRemoveCategory
 }: LearningPlanSectionProps) {
+  const { regulationPreference } = useUserPreferences();
+  
   if (selectedCategories.length === 0) {
     return null;
   }
@@ -40,9 +42,7 @@ export default function LearningPlanSection({
             ))}
           </div>
           <p className="text-sm text-gray-400">
-            {regulationFilter !== "all" ? 
-              `Regelwerk: ${regulationFilter}` : 
-              "Alle Regelwerke"}
+            Regelwerk: {regulationPreference}
           </p>
         </div>
         <Button

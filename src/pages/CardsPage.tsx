@@ -15,6 +15,7 @@ import LearningPlanSection from "@/components/flashcards/LearningPlanSection";
 import RecommendedCardsSection from "@/components/flashcards/RecommendedCardsSection";
 import { useCardsPageData } from "@/hooks/useCardsPageData";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
+import { Settings } from "lucide-react";
 
 export default function CardsPage() {
   const { user } = useAuth();
@@ -23,12 +24,10 @@ export default function CardsPage() {
   
   const {
     selectedCategories,
-    regulationFilter,
     activeTab,
     progressStats,
     categoryCardCounts,
     setActiveTab,
-    setRegulationFilter,
     handleSelectCategory,
     clearSelection
   } = useCardsPageData(user);
@@ -45,9 +44,8 @@ export default function CardsPage() {
       queryParams.append('categories', cat);
     });
     
-    if (regulationFilter !== "all") {
-      queryParams.append('regulation', regulationFilter);
-    }
+    // Always include the global regulation preference
+    queryParams.append('regulation', regulationPreference);
     
     window.location.href = `/karteikarten/lernen?${queryParams.toString()}`;
   };
@@ -79,8 +77,6 @@ export default function CardsPage() {
             selectedCategories={selectedCategories}
             onClearSelection={clearSelection}
             onStartLearningSelected={handleStartLearningSelected}
-            regulationFilter={regulationFilter}
-            onRegulationFilterChange={setRegulationFilter}
           />
           
           {/* Learning Boxes Overview */}
@@ -92,15 +88,12 @@ export default function CardsPage() {
             onTabChange={(value) => setActiveTab(value as "signale" | "betriebsdienst")}
             selectedCategories={selectedCategories}
             onSelectCategory={handleSelectCategory}
-            regulationFilter={regulationFilter}
-            onRegulationFilterChange={setRegulationFilter}
             progressStats={progressStats}
             categoryCardCounts={categoryCardCounts}
           />
           
           <LearningPlanSection 
             selectedCategories={selectedCategories}
-            regulationFilter={regulationFilter}
             onStartLearning={handleStartLearningSelected}
             onRemoveCategory={handleSelectCategory}
           />
@@ -108,6 +101,17 @@ export default function CardsPage() {
           {user && selectedCategories.length === 0 && (
             <RecommendedCardsSection user={user} />
           )}
+          
+          {/* Settings Hint */}
+          <div className="text-center text-sm text-gray-500 mt-8 border-t border-gray-800 pt-4">
+            <p className="flex items-center justify-center gap-2">
+              <Settings className="h-4 w-4" />
+              Aktives Regelwerk: <span className="font-semibold">{regulationPreference}</span>
+              <Link to="/einstellungen" className="text-loklernen-ultramarine hover:underline ml-2">
+                Regelwerk in Einstellungen ändern
+              </Link>
+            </p>
+          </div>
         </div>
       </main>
       

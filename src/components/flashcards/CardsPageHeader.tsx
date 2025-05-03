@@ -3,25 +3,19 @@ import React from "react";
 import { FilterX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RegulationFilterToggle } from "@/components/common/RegulationFilterToggle";
-import { RegulationFilterType } from "@/types/regulation";
 
 interface CardsPageHeaderProps {
   user: any;
   selectedCategories: string[];
   onClearSelection: () => void;
   onStartLearningSelected: () => void;
-  regulationFilter: RegulationFilterType;
-  onRegulationFilterChange: (value: RegulationFilterType) => void;
 }
 
 export default function CardsPageHeader({
   user,
   selectedCategories,
   onClearSelection,
-  onStartLearningSelected,
-  regulationFilter,
-  onRegulationFilterChange
+  onStartLearningSelected
 }: CardsPageHeaderProps) {
   return (
     <div className="mb-6 flex flex-col sm:flex-row justify-between items-start gap-4">

@@ -51,11 +51,12 @@ export default function CardItem<T extends Question = Question>({
     onSwipe?.(known ? 'right' : 'left');
   };
 
+  // Enhanced background color feedback
   const bgColor = swipeDirection === 'right' 
-    ? 'rgba(209, 250, 229, 0.6)' // Green tint for right swipe
+    ? 'rgba(199, 240, 189, 0.2)' // Neo-Mint for correct
     : swipeDirection === 'left' 
-      ? 'rgba(254, 226, 226, 0.6)' // Red tint for left swipe
-      : 'white';
+      ? 'rgba(255, 109, 112, 0.2)' // Digital Coral for incorrect
+      : 'transparent';
 
   // Calculate rotation based on drag
   const rotation = dragState.dragDelta * 0.05; // Reduced rotation effect
@@ -64,7 +65,7 @@ export default function CardItem<T extends Question = Question>({
     <motion.div
       ref={cardRef}
       className={`flashcard-item relative w-[90vw] max-w-md aspect-[3/4] rounded-2xl
-                  shadow-lg touch-none transform-gpu ${isPreview ? 'pointer-events-none' : ''}`}
+                  shadow-lg touch-none transform-gpu ${isPreview ? 'pointer-events-none' : ''} ${isFlipped ? 'animate-glow-pulse' : ''}`}
       style={{
         backgroundColor: bgColor,
         WebkitTapHighlightColor: 'transparent'
@@ -82,7 +83,7 @@ export default function CardItem<T extends Question = Question>({
       {...(isMobile && !isPreview && !swipeDisabled ? handlers : {})}
     >
       <div className="w-full h-full relative overflow-hidden rounded-2xl" style={{ perspective: '1000px' }}>
-        {/* Front card face */}
+        {/* Front card face with improved animation */}
         <div 
           className="w-full h-full transition-transform duration-500 transform-gpu"
           style={{
@@ -99,7 +100,7 @@ export default function CardItem<T extends Question = Question>({
           <CardFront question={question} />
         </div>
         
-        {/* Back card face */}
+        {/* Back card face with improved animation */}
         <div 
           className="w-full h-full transition-transform duration-500 transform-gpu"
           style={{
@@ -120,13 +121,20 @@ export default function CardItem<T extends Question = Question>({
         </div>
       </div>
       
-      {/* Show swipe hints for mobile only */}
+      {/* Enhanced swipe hints for mobile */}
       {isFlipped && !isPreview && isMobile && (
         <SwipeHint
           direction={swipeDirection}
           dragDelta={dragState.dragDelta}
         />
       )}
+
+      {/* Add subtle card reflection effect for depth */}
+      <div className="absolute inset-0 pointer-events-none rounded-2xl opacity-30"
+           style={{
+             background: 'linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.05) 100%)'
+           }}
+      />
     </motion.div>
   );
 }

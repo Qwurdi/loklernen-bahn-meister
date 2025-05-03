@@ -50,6 +50,7 @@ export default function CardsPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-black text-white">
+      <div className="fixed inset-0 bg-gradient-to-br from-gray-900 to-black -z-10"></div>
       <Navbar />
       
       <main className="flex-1">
@@ -59,7 +60,7 @@ export default function CardsPage() {
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <Link to="/">Home</Link>
+                    <Link to="/" className="text-loklernen-lavender hover:text-white transition-colors">Home</Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
@@ -77,7 +78,7 @@ export default function CardsPage() {
             onStartLearningSelected={handleStartLearningSelected}
           />
           
-          {/* Box System Overview - New Component */}
+          {/* Box System Overview - Enhanced Component */}
           <BoxSystemOverview />
 
           <CardDecksSection 
@@ -96,12 +97,12 @@ export default function CardsPage() {
             onRemoveCategory={handleSelectCategory}
           />
           
-          {/* Settings Hint */}
-          <div className="text-center text-sm text-gray-500 mt-8 border-t border-gray-800 pt-4">
+          {/* Settings Hint with Enhanced Styling */}
+          <div className="text-center text-sm text-gray-400 mt-8 border-t border-gray-800 pt-4">
             <p className="flex items-center justify-center gap-2">
-              <Settings className="h-4 w-4" />
-              Aktives Regelwerk: <span className="font-semibold">{regulationPreference}</span>
-              <Link to="/einstellungen" className="text-loklernen-ultramarine hover:underline ml-2">
+              <Settings className="h-4 w-4 text-loklernen-lavender" />
+              Aktives Regelwerk: <span className="font-semibold text-loklernen-lavender">{regulationPreference}</span>
+              <Link to="/einstellungen" className="text-loklernen-tranquil hover:text-loklernen-ultramarine hover:underline ml-2 transition-colors">
                 Regelwerk in Einstellungen ändern
               </Link>
             </p>

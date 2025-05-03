@@ -68,7 +68,12 @@ export default {
 					black: "#000000",
 					ultramarine: "#3F00FF",
 					sapphire: "#0F52BA",
-					betriebsdienst: "#00B8A9"
+					betriebsdienst: "#00B8A9",
+					// New trend colors that complement our brand
+					lavender: "#9683EC",      // Digital Lavender
+					mint: "#C7F0BD",          // Neo-Mint
+					tranquil: "#5080FF",      // Tranquil Blue
+					coral: "#FF6D70"          // Digital Coral
 				}
 			},
 			borderRadius: {
@@ -119,6 +124,20 @@ export default {
 				'scale-in': {
 					'0%': { opacity: '0', transform: 'scale(0.95)' },
 					'100%': { opacity: '1', transform: 'scale(1)' }
+				},
+				// New animations
+				'float': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-5px)' },
+				},
+				'gradient-shift': {
+					'0%': { backgroundPosition: '0% 50%' },
+					'50%': { backgroundPosition: '100% 50%' },
+					'100%': { backgroundPosition: '0% 50%' },
+				},
+				'glow-pulse': {
+					'0%, 100%': { boxShadow: '0 0 5px rgba(63, 0, 255, 0.5)' },
+					'50%': { boxShadow: '0 0 15px rgba(63, 0, 255, 0.8)' },
 				}
 			},
 			animation: {
@@ -129,7 +148,18 @@ export default {
 				'swipe-right': 'swipe-right 0.5s ease-out forwards',
 				'swipe-left': 'swipe-left 0.5s ease-out forwards',
 				'fade-in-up': 'fade-in-up 0.3s ease-out',
-				'scale-in': 'scale-in 0.3s ease-out'
+				'scale-in': 'scale-in 0.3s ease-out',
+				// New animations
+				'float': 'float 3s ease-in-out infinite',
+				'gradient-shift': 'gradient-shift 3s ease infinite',
+				'glow-pulse': 'glow-pulse 2s ease-in-out infinite'
+			},
+			backgroundImage: {
+				'gradient-ultramarine': 'linear-gradient(135deg, #3F00FF 0%, #5080FF 100%)',
+				'gradient-lavender': 'linear-gradient(135deg, #9683EC 0%, #C5B8FF 100%)',
+				'gradient-coral-mint': 'linear-gradient(135deg, #FF6D70 0%, #C7F0BD 100%)',
+				'gradient-card': 'linear-gradient(145deg, rgba(80, 128, 255, 0.1) 0%, rgba(63, 0, 255, 0.2) 100%)',
+				'glassmorphism': 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
 			}
 		}
 	},

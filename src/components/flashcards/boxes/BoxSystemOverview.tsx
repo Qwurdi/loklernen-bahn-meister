@@ -41,14 +41,14 @@ export default function BoxSystemOverview() {
   // Show login prompt if user is not authenticated
   if (!user) {
     return (
-      <Card className="p-4 bg-gray-900 border-gray-800 mb-6">
-        <h3 className="text-lg font-bold mb-2">Lernboxen-System</h3>
-        <p className="text-sm text-gray-400 mb-4">
+      <Card className="p-6 bg-gradient-card backdrop-blur-sm border-gray-800/50 mb-6 shadow-lg rounded-xl">
+        <h3 className="text-lg font-bold mb-2 bg-gradient-lavender bg-clip-text text-transparent">Lernboxen-System</h3>
+        <p className="text-sm text-gray-300 mb-4">
           Melde dich an, um deinen persönlichen Lernfortschritt zu speichern und das Boxen-System zu nutzen.
         </p>
         <Button 
           onClick={() => navigate('/login')}
-          className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90"
+          className="bg-gradient-ultramarine hover:bg-loklernen-ultramarine/90 shadow-md"
         >
           Anmelden
         </Button>
@@ -59,48 +59,48 @@ export default function BoxSystemOverview() {
   // Show loading state
   if (loading) {
     return (
-      <Card className="p-4 bg-gray-900 border-gray-800 mb-6">
-        <h3 className="text-lg font-bold mb-2">Lernboxen-System</h3>
-        <div className="grid grid-cols-5 gap-2 mb-4">
+      <Card className="p-6 bg-gradient-card backdrop-blur-sm border-gray-800/50 mb-6 shadow-lg rounded-xl">
+        <h3 className="text-lg font-bold mb-2 bg-gradient-lavender bg-clip-text text-transparent">Lernboxen-System</h3>
+        <div className="grid grid-cols-5 gap-3 mb-6">
           {[1, 2, 3, 4, 5].map(i => (
-            <Skeleton key={i} className="h-24 bg-gray-800" />
+            <Skeleton key={i} className="h-32 bg-gray-800/60" />
           ))}
         </div>
-        <Skeleton className="h-40 bg-gray-800" />
+        <Skeleton className="h-48 bg-gray-800/60" />
       </Card>
     );
   }
 
   return (
-    <div className="mb-6 space-y-4">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+    <div className="mb-8 space-y-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h3 className="text-lg font-bold">Lernboxen-System</h3>
-          <p className="text-sm text-gray-400">Dein persönlicher Lernfortschritt</p>
+          <h3 className="text-xl font-bold bg-gradient-lavender bg-clip-text text-transparent">Lernboxen-System</h3>
+          <p className="text-sm text-gray-300">Dein persönlicher Lernfortschritt</p>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           {totalDueCards > 0 && (
             <Button
               onClick={() => handleStartLearning()}
-              className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90"
+              className="bg-gradient-ultramarine hover:opacity-90 shadow-md transition-all duration-200"
             >
-              <Play className="h-4 w-4 mr-1" /> Alle fälligen Karten lernen
+              <Play className="h-4 w-4 mr-2" /> Alle fälligen Karten lernen
             </Button>
           )}
           
           <Button
             variant="outline"
             onClick={refreshBoxData}
-            className="border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800"
+            className="border-gray-700 bg-black/20 backdrop-blur-sm text-gray-300 hover:bg-gray-800 transition-all duration-200"
           >
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      {/* Boxes Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+      {/* Boxes Grid with enhanced visuals */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {boxStats.map((box) => (
           <LearningBoxItem
             key={box.boxNumber}
@@ -113,7 +113,7 @@ export default function BoxSystemOverview() {
         ))}
       </div>
 
-      {/* Box Content View */}
+      {/* Box Content View with enhanced design */}
       {activeBox && (
         <BoxContentView
           boxNumber={activeBox}

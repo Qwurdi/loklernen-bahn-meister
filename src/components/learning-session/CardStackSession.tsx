@@ -42,7 +42,7 @@ export default function CardStackSession<T extends Question = Question>({
   
   return (
     <div className="h-full w-full flex-1 flex flex-col">
-      <CardStack<T> 
+      <CardStack 
         questions={sessionCards}
         onAnswer={onAnswer}
         onComplete={onComplete}

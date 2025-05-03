@@ -1,28 +1,28 @@
 
+import React from "react";
 import { Link } from "react-router-dom";
+import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { ExternalLink, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import ProgressRing from "./ProgressRing";
-import { RegulationCategory } from "@/types/questions";
-import { CheckCircle, Clock, Radiation } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+
+interface CategoryStats {
+  totalCards: number;
+  dueCards?: number;
+  masteredCards?: number;
+}
 
 interface CategoryCardProps {
   title: string;
-  description: string;
+  description?: string;
   progress: number;
-  link: string;
-  isPro?: boolean;
-  isLocked?: boolean;
-  className?: string;
-  badge?: RegulationCategory | string;
+  link?: string;
   isSelected?: boolean;
   onSelect?: () => void;
   selectable?: boolean;
-  stats?: {
-    totalCards?: number;
-    dueCards?: number;
-    masteredCards?: number;
-  };
+  isLocked?: boolean;
+  isPro?: boolean;
+  stats?: CategoryStats;
 }
 
 export default function CategoryCard({
@@ -30,120 +30,130 @@ export default function CategoryCard({
   description,
   progress,
   link,
-  isPro = false,
-  isLocked = false,
-  className,
-  badge,
   isSelected = false,
   onSelect,
   selectable = false,
+  isLocked = false,
+  isPro = false,
   stats
 }: CategoryCardProps) {
-  const handleClick = (e: React.MouseEvent) => {
+  const handleCardClick = (e: React.MouseEvent) => {
     if (selectable && onSelect) {
       e.preventDefault();
       onSelect();
     }
   };
-  
-  const cardContent = (
-    <div className={cn(
-      "relative rounded-lg border p-6 transition-all duration-200",
-      selectable ? "cursor-pointer" : "card-hover",
-      isSelected ? "category-card selected ring-2 ring-loklernen-ultramarine" : "category-card",
-      isLocked ? "bg-muted/50" : "bg-card",
-      className
-    )} onClick={handleClick}>
-      <div className="flex items-start justify-between">
-        <div className="space-y-1">
-          <h3 className="font-medium leading-none tracking-tight flex items-center gap-2">
-            {title}
-            {isPro && (
-              <Badge variant="outline" className="ml-2 bg-loklernen-sapphire text-white border-loklernen-sapphire">
-                Pro
-              </Badge>
-            )}
-            {badge && (
-              <Badge variant="outline" className="bg-indigo-100 text-indigo-800 border-indigo-200">
-                {badge}
-              </Badge>
-            )}
-          </h3>
-          <p className="text-sm text-muted-foreground">{description}</p>
 
-          {stats && (
-            <div className="mt-3 space-y-1 pt-2 border-t border-gray-800">
-              {stats.totalCards !== undefined && (
-                <div className="stat-item">
-                  <span>Karten:</span> 
-                  <span className="stat-value">{stats.totalCards}</span>
-                </div>
-              )}
-              {stats.dueCards !== undefined && stats.dueCards > 0 && (
-                <div className="stat-item text-amber-400">
-                  <Clock className="h-3.5 w-3.5" />
-                  <span>{stats.dueCards} fällig</span>
-                </div>
-              )}
-              {stats.masteredCards !== undefined && (
-                <div className="stat-item text-emerald-400">
-                  <CheckCircle className="h-3.5 w-3.5" />
-                  <span>{stats.masteredCards} gemeistert</span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-        <div className="relative">
-          <ProgressRing 
-            progress={progress} 
-            size={40} 
-            strokeWidth={4}
-            showPercentage 
-            color={progress > 80 ? "stroke-emerald-500" : 
-                 progress > 50 ? "stroke-amber-500" : 
-                 "stroke-loklernen-ultramarine"}
-          />
-          {isSelected && (
-            <div className="absolute -top-2 -right-2 bg-loklernen-ultramarine rounded-full w-5 h-5 flex items-center justify-center text-white">
-              <CheckCircle className="h-3 w-3" />
-            </div>
-          )}
-        </div>
-      </div>
-
-      {isLocked && (
-        <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/80 backdrop-blur-sm">
-          <div className="flex flex-col items-center text-center p-4">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="mb-2"
-            >
-              <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
-            <p className="text-sm font-medium">Anmelden zum Freischalten</p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  if (selectable) {
-    return cardContent;
-  }
+  // Determine progress bar color based on progress percentage
+  const progressColorClass = progress >= 75 
+    ? "bg-loklernen-mint" 
+    : progress >= 40 
+      ? "bg-loklernen-lavender" 
+      : "bg-loklernen-ultramarine";
 
   return (
-    <Link to={isLocked ? "/login" : link} className={cn("block", className)}>
-      {cardContent}
-    </Link>
+    <Card 
+      className={cn(
+        "category-card relative overflow-hidden transition-all duration-200 border",
+        isSelected 
+          ? "border-loklernen-ultramarine/80 shadow-md shadow-loklernen-ultramarine/20" 
+          : "border-gray-800 shadow-md shadow-black/20 hover:shadow-lg hover:shadow-black/30", 
+        isLocked ? "opacity-80" : ""
+      )}
+      onClick={handleCardClick}
+    >
+      {isSelected && (
+        <div className="absolute top-3 right-3 h-5 w-5 rounded-full bg-loklernen-ultramarine flex items-center justify-center">
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="3" fill="none" className="text-white">
+            <polyline points="6 12 10 16 18 8"></polyline>
+          </svg>
+        </div>
+      )}
+      
+      <div className="p-4 flex flex-col h-full">
+        {/* Title and stats section */}
+        <div className="mb-2 flex justify-between items-center">
+          <h3 className="font-medium text-lg text-white line-clamp-1">{title}</h3>
+          
+          {isPro && (
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-black">
+              PRO
+            </span>
+          )}
+        </div>
+        
+        {/* Progress bar - slimmer and more subtle */}
+        <div className="mb-3">
+          <Progress 
+            value={progress} 
+            className="h-1.5 bg-gray-800" 
+            indicatorClassName={progressColorClass}
+          />
+        </div>
+        
+        {/* Stats with improved layout */}
+        {stats && (
+          <div className="flex items-center text-sm text-gray-300 space-x-4 mb-2">
+            <div className="flex items-center">
+              <span className="text-white font-medium">{stats.totalCards}</span>
+              <span className="text-gray-400 ml-1 text-xs">Karten</span>
+            </div>
+            
+            {stats.dueCards !== undefined && (
+              <div className="flex items-center">
+                <span className={cn(
+                  "font-medium",
+                  stats.dueCards > 0 ? "text-loklernen-coral" : "text-gray-400"
+                )}>
+                  {stats.dueCards}
+                </span>
+                <span className="text-gray-400 ml-1 text-xs">fällig</span>
+              </div>
+            )}
+            
+            {stats.masteredCards !== undefined && stats.masteredCards > 0 && (
+              <div className="flex items-center">
+                <span className="text-loklernen-mint font-medium">{stats.masteredCards}</span>
+                <span className="text-gray-400 ml-1 text-xs">gemeistert</span>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Description - shorter with ellipsis */}
+        {description && (
+          <p className="text-xs text-gray-400 line-clamp-2 mb-4">{description}</p>
+        )}
+        
+        {/* Card footer - Link or Locked status */}
+        <div className="mt-auto">
+          {isLocked ? (
+            <div className="flex items-center text-sm text-gray-400">
+              <Lock size={14} className="mr-1" />
+              <span>
+                {isPro ? "Pro-Funktion" : "Bitte anmelden"}
+              </span>
+            </div>
+          ) : link ? (
+            <Link
+              to={link}
+              className={cn(
+                "text-sm flex items-center text-loklernen-lavender hover:text-white transition-colors",
+                selectable ? "pointer-events-none" : ""
+              )}
+            >
+              {selectable ? (
+                "Klicken zum Auswählen"
+              ) : (
+                <>
+                  Karten ansehen
+                  <ExternalLink size={14} className="ml-1" />
+                </>
+              )}
+            </Link>
+          ) : null}
+        </div>
+      </div>
+    </Card>
   );
 }

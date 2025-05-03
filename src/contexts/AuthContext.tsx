@@ -22,68 +22,72 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isNewUser, setIsNewUser] = useState(false);
 
   useEffect(() => {
-    // Create a stable reference to loading state for closures
-    let isInitializing = true;
+    let isMounted = true;
     
-    // First check for existing session to initialize state
-    const getInitialSession = async () => {
+    async function initializeAuth() {
       try {
-        const { data } = await supabase.auth.getSession();
-        setSession(data.session);
-        setUser(data.session?.user ?? null);
-      } catch (error) {
-        console.error("Error getting initial session:", error);
-      } finally {
-        setLoading(false);
-        isInitializing = false;
-      }
-    };
-
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        if (event === 'SIGNED_IN') {
-          // Only show toast for non-initial loads
-          if (!isInitializing) {
-            toast.success('Erfolgreich angemeldet!');
-          }
-          
-          // Check if this is a new sign up
-          if (!user) {
-            const isSignUp = localStorage.getItem('isNewSignUp') === 'true';
-            if (isSignUp) {
-              setIsNewUser(true);
-              localStorage.removeItem('isNewSignUp');
+        // First set up auth state listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          (event, currentSession) => {
+            if (!isMounted) return;
+            
+            if (event === 'SIGNED_IN' && !loading) {
+              toast.success('Erfolgreich angemeldet!');
+              
+              // Check if this is a new sign up
+              if (!user) {
+                const isSignUp = localStorage.getItem('isNewSignUp') === 'true';
+                if (isSignUp) {
+                  setIsNewUser(true);
+                  localStorage.removeItem('isNewSignUp');
+                }
+              }
+            } else if (event === 'SIGNED_OUT') {
+              toast.success('Erfolgreich abgemeldet!');
             }
+            
+            setSession(currentSession);
+            setUser(currentSession?.user ?? null);
+            setLoading(false);
           }
-        } else if (event === 'SIGNED_OUT') {
-          toast.success('Erfolgreich abgemeldet!');
+        );
+
+        // Then check for existing session to initialize state
+        const { data } = await supabase.auth.getSession();
+        if (isMounted) {
+          setSession(data.session);
+          setUser(data.session?.user ?? null);
+          setLoading(false);
         }
-        
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        setLoading(false);
+
+        return () => {
+          isMounted = false;
+          subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error("Error initializing auth:", error);
+        if (isMounted) {
+          setLoading(false);
+        }
+        return () => { isMounted = false; };
       }
-    );
+    }
 
-    // Initialize session
-    getInitialSession();
-
-    // Clean up subscription on unmount
+    const cleanup = initializeAuth();
     return () => {
-      subscription.unsubscribe();
+      // Call the cleanup function returned by initializeAuth
+      cleanup.then(cleanupFn => cleanupFn && cleanupFn());
     };
-  }, []);  // No dependencies required here
+  }, []);  // Empty dependency array means this effect runs once on mount
 
   const signOut = async () => {
     await supabase.auth.signOut();
   };
 
-  // Create context value object outside of JSX to improve readability
-  const contextValue: AuthContextType = {
-    session, 
-    user, 
-    loading, 
+  const contextValue = {
+    session,
+    user,
+    loading,
     signOut,
     isNewUser,
     setIsNewUser

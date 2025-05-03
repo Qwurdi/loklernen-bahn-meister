@@ -13,7 +13,7 @@ export const LEARNING_BOXES = [
 ];
 
 export interface BoxStats {
-  boxId: number;
+  boxNumber: number;  // Changed from boxId to boxNumber for consistency
   count: number;
   color: string;
   border: string;
@@ -41,7 +41,7 @@ export default function LearningBoxesDisplay({ boxStats, isLoading = false }: Le
   return (
     <div className="grid grid-cols-5 gap-2">
       {boxStats.map((box: BoxStats) => (
-        <div key={box.boxId} className="flex flex-col items-center">
+        <div key={box.boxNumber} className="flex flex-col items-center">
           <div className="relative w-full">
             <div 
               className={`${box.color} w-full rounded-t-md border-t border-l border-r ${box.border}`} 
@@ -53,7 +53,7 @@ export default function LearningBoxesDisplay({ boxStats, isLoading = false }: Le
           </div>
           <div className="text-center mt-1 bg-gray-800 w-full rounded-b-md border-b border-l border-r border-gray-700 py-1">
             <span className={`text-xs ${isMobile ? '' : 'font-semibold'} text-gray-200`}>
-              {isMobile ? `B${box.boxId}` : box.name}
+              {isMobile ? `B${box.boxNumber}` : box.name}
             </span>
           </div>
         </div>

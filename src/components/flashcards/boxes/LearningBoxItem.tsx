@@ -1,8 +1,7 @@
 
 import React from 'react';
-import { Card } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import { Progress } from "@/components/ui/progress";
+import { Card } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 interface LearningBoxItemProps {
   boxNumber: number;
@@ -10,80 +9,77 @@ interface LearningBoxItemProps {
   dueCards: number;
   isActive: boolean;
   onClick: () => void;
-  showPreview?: boolean;
 }
 
 export default function LearningBoxItem({
-  boxNumber, 
-  totalCards, 
+  boxNumber,
+  totalCards,
   dueCards,
   isActive,
-  onClick,
-  showPreview = false
+  onClick
 }: LearningBoxItemProps) {
-  // Display names for boxes
-  const boxNames = [
-    "Neu/Schwierig",
-    "Etwas gelernt",
-    "Gut gelernt",
-    "Fast gemeistert",
-    "Gemeistert"
-  ];
+  // Box color based on number
+  const getBoxColor = () => {
+    switch (boxNumber) {
+      case 1: return "bg-red-500";
+      case 2: return "bg-amber-500";
+      case 3: return "bg-yellow-400";
+      case 4: return "bg-lime-500";
+      case 5: return "bg-green-600";
+      default: return "bg-gray-500";
+    }
+  };
   
-  // Streak requirements for each box
-  const streakRequired = [2, 3, 4, 5, 0];
-
-  // Color schemes for each box
-  const boxColors = [
-    "bg-red-800 border-red-700 hover:bg-red-700",
-    "bg-orange-800 border-orange-700 hover:bg-orange-700",
-    "bg-yellow-800 border-yellow-700 hover:bg-yellow-700",
-    "bg-blue-800 border-blue-700 hover:bg-blue-700",
-    "bg-green-800 border-green-700 hover:bg-green-700"
-  ];
-
-  // Progress bar colors
-  const progressColors = [
-    "bg-red-500",
-    "bg-orange-500",
-    "bg-yellow-500", 
-    "bg-blue-500",
-    "bg-green-500"
-  ];
+  // Box border color based on number
+  const getBoxBorder = () => {
+    switch (boxNumber) {
+      case 1: return "border-red-400";
+      case 2: return "border-amber-400";
+      case 3: return "border-yellow-300";
+      case 4: return "border-lime-400";
+      case 5: return "border-green-500";
+      default: return "border-gray-400";
+    }
+  };
+  
+  // Get review interval text
+  const getIntervalText = () => {
+    switch (boxNumber) {
+      case 1: return "1 Tag";
+      case 2: return "6 Tage";
+      case 3: return "7-14 Tage";
+      case 4: return "15-30 Tage";
+      case 5: return "31+ Tage";
+      default: return "";
+    }
+  };
 
   return (
     <Card 
       className={cn(
-        "flex flex-col justify-between p-3 cursor-pointer transition-all border",
-        boxColors[boxNumber - 1],
-        isActive ? "ring-2 ring-loklernen-ultramarine ring-offset-2 ring-offset-black" : "",
+        "cursor-pointer transition-all hover:shadow-md border p-3 flex flex-col",
+        isActive ? "bg-gray-800 border-loklernen-ultramarine shadow-loklernen-ultramarine/20 shadow-sm" : "bg-gray-900 border-gray-800"
       )}
       onClick={onClick}
-      data-testid={`learning-box-${boxNumber}`}
     >
-      <div className="mb-2">
-        <div className="text-sm font-bold mb-1 text-white">Box {boxNumber}</div>
-        <div className="text-xs text-gray-300">{boxNames[boxNumber - 1]}</div>
+      <div className="flex justify-between items-start mb-1">
+        <span className="text-sm font-medium">Box {boxNumber}</span>
+        {dueCards > 0 && (
+          <span className="text-xs bg-amber-500 text-black px-1.5 rounded-full">{dueCards}</span>
+        )}
       </div>
       
-      <div className="flex flex-col gap-1">
-        {/* Box progress */}
-        <div className="flex flex-row items-center justify-between gap-2">
-          <Progress 
-            value={(totalCards > 0 ? (totalCards - dueCards) / totalCards * 100 : 0)} 
-            className={cn("h-2", progressColors[boxNumber - 1])}
-          />
-          <span className="text-xs text-gray-300 whitespace-nowrap">
-            {dueCards}/{totalCards}
-          </span>
-        </div>
-        
-        {/* Info about required streak */}
-        {boxNumber < 5 && (
-          <div className="text-[10px] text-gray-300 text-center">
-            {streakRequired[boxNumber - 1]}x richtig für nächste Box
-          </div>
-        )}
+      {/* Bar visualization */}
+      <div className="h-2 bg-gray-800 rounded-full overflow-hidden mt-1">
+        <div 
+          className={`h-full ${getBoxColor()}`}
+          style={{ width: `${totalCards > 0 ? 100 : 0}%` }} 
+        />
+      </div>
+      
+      <div className="flex justify-between items-baseline mt-2">
+        <span className="text-lg font-bold">{totalCards}</span>
+        <span className="text-xs text-gray-400">{getIntervalText()}</span>
       </div>
     </Card>
   );

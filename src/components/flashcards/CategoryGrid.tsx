@@ -37,6 +37,9 @@ export default function CategoryGrid({
   regulationFilter,
   isPro = false,
 }: CategoryGridProps) {
+  console.log(`CategoryGrid - Rendering with ${categories.length} categories, filter: ${regulationFilter}`);
+  console.log(`CategoryGrid - Category card counts:`, categoryCardCounts);
+  
   return (
     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {categories.map((subcategory) => {
@@ -51,13 +54,26 @@ export default function CategoryGrid({
         const dueCards = stats?.due || 0;
         const masteredCards = stats?.mastered || 0;
         
-        // Filter by regulation if needed
+        // Filter by regulation if needed - improved logic
         let shouldDisplay = true;
         if (regulationFilter !== "all" && cardCounts) {
-          const hasCardsForRegulation = cardCounts.byRegulation[regulationFilter] > 0 || 
-                                     cardCounts.byRegulation["Beide"] > 0;
+          // Include cards if they match the regulation OR have "Beide"/"both" regulation OR have no specific regulation set
+          const hasCardsForRegulation = 
+            (cardCounts.byRegulation[regulationFilter] > 0) || 
+            (cardCounts.byRegulation["Beide"] > 0) || 
+            (cardCounts.byRegulation["both"] > 0) ||
+            (cardCounts.byRegulation["Allgemein"] > 0);
+            
           shouldDisplay = hasCardsForRegulation;
         }
+        
+        // If no cardCounts available but we have a category, show it anyway
+        if (!cardCounts) {
+          console.log(`No card counts for category ${subcategory}`);
+          shouldDisplay = true;
+        }
+        
+        console.log(`Category ${subcategory} - Display: ${shouldDisplay}, Total: ${totalCards}, Due: ${dueCards}`);
         
         if (!shouldDisplay) return null;
         

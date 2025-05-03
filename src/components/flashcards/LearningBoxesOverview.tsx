@@ -66,8 +66,10 @@ export default function LearningBoxesOverview() {
         return card.questions?.category === category;
       }) || [];
       
+      console.log(`Progress data: Found ${progressData?.length} cards, filtered due cards: ${filteredDueCards.length}`);
+      
       // Calculate counts for each learning box
-      const boxStats = LEARNING_BOXES.map(box => {
+      const boxStats: BoxStats[] = LEARNING_BOXES.map(box => {
         const count = progressData?.filter(record => {
           const interval = record.interval_days;
           const min = Math.min(...box.days);
@@ -76,7 +78,7 @@ export default function LearningBoxesOverview() {
         }).length || 0;
         
         return {
-          boxId: box.id,
+          boxNumber: box.id,
           count,
           color: box.color,
           border: box.border,

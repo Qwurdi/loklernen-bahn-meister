@@ -23,7 +23,7 @@ export default function BoxSystemOverview() {
   } = useBoxSystem();
 
   // Total due cards across all boxes
-  const totalDueCards = boxStats.reduce((sum, box) => sum + box.due, 0);
+  const totalDueCards = boxStats.reduce((sum, box) => sum + (box.due || 0), 0);
   
   // Get stats for currently active box
   const activeBoxStats = activeBox ? boxStats.find(b => b.boxNumber === activeBox) : null;
@@ -104,8 +104,8 @@ export default function BoxSystemOverview() {
           <LearningBoxItem
             key={box.boxNumber}
             boxNumber={box.boxNumber}
-            totalCards={box.total}
-            dueCards={box.due}
+            totalCards={box.count}
+            dueCards={box.due || 0}
             isActive={activeBox === box.boxNumber}
             onClick={() => handleSelectBox(box.boxNumber)}
           />

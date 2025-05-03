@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { CreateQuestionDTO, Question, QuestionCategory, Answer } from "@/types/questions";
 import { Json } from "@/integrations/supabase/types";
@@ -100,7 +99,7 @@ export async function uploadQuestionImage(file: File, userId: string) {
   return data.publicUrl;
 }
 
-// Predefined signal subcategories
+// Predefined signal subcategories (fixed encoding)
 export const signalSubCategories = [
   "Allgemeine Bestimmungen",
   "Hp-Signale",
@@ -109,7 +108,7 @@ export const signalSubCategories = [
   "Haupt- und Vorsignalverbindungen (Sv)",
   "Vr-Signale",
   "Zusatzsignale (Zs)",
-  "Signale f��r Schiebelokomotiven und Sperrfahrten (Ts)",
+  "Signale für Schiebelokomotiven und Sperrfahrten (Ts)",
   "Langsamfahrsignale (Lf)",
   "Schutzsignale (Sh)",
   "Signale für den Rangierdienst (Ra)",

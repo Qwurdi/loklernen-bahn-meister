@@ -1,96 +1,136 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Question } from '@/types/questions';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
-import { getBoxesStats } from '@/hooks/spaced-repetition/services/user-progress';
-import { transformQuestion } from '@/hooks/spaced-repetition/utils';
-import { BoxStats } from '@/hooks/spaced-repetition/types';
+import { BoxStats } from '@/components/flashcards/boxes/LearningBoxesDisplay';
+import { Question } from '@/types/questions';
+import { transformAnswers } from '@/api/questions';
 
 export function useBoxSystem() {
   const { user } = useAuth();
-  const [boxStats, setBoxStats] = useState<BoxStats[]>([]);
   const [activeBox, setActiveBox] = useState<number | null>(null);
-  const [boxQuestions, setBoxQuestions] = useState<Question[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (user) {
-      loadBoxStats();
-    } else {
-      setBoxStats([]);
-      setLoading(false);
-    }
-  }, [user]);
-
-  // Load stats for all boxes
-  const loadBoxStats = async () => {
-    try {
-      setLoading(true);
-      if (!user) return;
-
-      const stats = await getBoxesStats(user.id);
-      setBoxStats(stats);
+  
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['boxSystem', user?.id],
+    queryFn: async () => {
+      if (!user) return { boxStats: [], boxQuestions: [] };
       
-      // Automatically select the first box with due cards
-      const firstBoxWithDueCards = stats.find(box => box.due > 0);
-      if (firstBoxWithDueCards) {
-        setActiveBox(firstBoxWithDueCards.boxNumber);
-        await loadBoxQuestions(firstBoxWithDueCards.boxNumber);
-      } else if (stats.some(box => box.total > 0)) {
-        setActiveBox(1);
-        await loadBoxQuestions(1);
-      }
-    } catch (error) {
-      console.error("Error loading box stats:", error);
-      toast.error("Fehler beim Laden der Box-Statistiken");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Load questions for a specific box
-  const loadBoxQuestions = async (boxNumber: number) => {
-    if (!user) return;
-    
-    try {
-      setLoading(true);
+      // Fetch box statistics
+      const { data: progressData, error: statsError } = await supabase
+        .from('user_progress')
+        .select('box_number')
+        .eq('user_id', user.id);
+        
+      if (statsError) throw statsError;
+      
+      // Fetch due cards counts
+      const { data: dueData, error: dueError } = await supabase
+        .from('user_progress')
+        .select('box_number')
+        .eq('user_id', user.id)
+        .lte('next_review_at', new Date().toISOString());
+        
+      if (dueError) throw dueError;
+      
+      // Create box statistics with total and due counts
+      const boxStats: BoxStats[] = Array.from({ length: 5 }, (_, i) => {
+        const boxNumber = i + 1;
+        // Count total cards in this box
+        const totalCount = progressData?.filter(item => item.box_number === boxNumber).length || 0;
+        // Count due cards in this box
+        const dueCount = dueData?.filter(item => item.box_number === boxNumber).length || 0;
+        
+        return {
+          boxNumber,
+          count: totalCount,
+          due: dueCount,
+          name: `Box ${boxNumber}`,
+          color: getBoxColor(boxNumber),
+          border: getBoxBorder(boxNumber)
+        };
+      });
+      
+      // Initial fetch without box questions (they'll be loaded when a box is selected)
+      return { boxStats, boxQuestions: [] };
+    },
+    enabled: !!user
+  });
+  
+  // Query for questions in the selected box
+  const { data: boxQuestionsData, isLoading: questionsLoading } = useQuery({
+    queryKey: ['boxQuestions', user?.id, activeBox],
+    queryFn: async () => {
+      if (!user || !activeBox) return [];
+      
       const { data, error } = await supabase
         .from('user_progress')
-        .select('*, questions(*)')
+        .select(`
+          *,
+          questions(*)
+        `)
         .eq('user_id', user.id)
-        .eq('box_number', boxNumber)
-        .limit(10);
-
+        .eq('box_number', activeBox)
+        .order('next_review_at', { ascending: true });
+        
       if (error) throw error;
-
-      const questions = (data || [])
-        .filter(item => item.questions) // Filter out null questions
-        .map(item => transformQuestion(item.questions));
       
-      setBoxQuestions(questions);
-    } catch (error) {
-      console.error(`Error loading questions for box ${boxNumber}:`, error);
-      toast.error(`Fehler beim Laden der Karten für Box ${boxNumber}`);
-      setBoxQuestions([]);
-    } finally {
-      setLoading(false);
-    }
+      // Transform the questions data to match our Question type
+      return (data || []).map(item => ({
+        ...item.questions,
+        answers: transformAnswers(item.questions.answers),
+        progress: {
+          next_review_at: item.next_review_at,
+          box_number: item.box_number,
+          streak: item.streak,
+          repetition_count: item.repetition_count
+        }
+      }));
+    },
+    enabled: !!user && activeBox !== null
+  });
+  
+  const handleSelectBox = (boxNumber: number) => {
+    setActiveBox(prev => prev === boxNumber ? null : boxNumber);
   };
-
-  // Handle box selection
-  const handleSelectBox = async (boxNumber: number) => {
-    setActiveBox(boxNumber);
-    await loadBoxQuestions(boxNumber);
+  
+  const refreshBoxData = () => {
+    refetch();
   };
-
+  
+  const loading = isLoading || questionsLoading;
+  const boxStats = data?.boxStats || [];
+  const boxQuestions = boxQuestionsData || [];
+  
   return {
     boxStats,
     activeBox,
     boxQuestions,
     loading,
     handleSelectBox,
-    refreshBoxData: loadBoxStats
+    refreshBoxData
   };
+}
+
+// Helper functions to get box colors and borders
+function getBoxColor(boxNumber: number): string {
+  switch (boxNumber) {
+    case 1: return "bg-red-500";
+    case 2: return "bg-amber-500";
+    case 3: return "bg-yellow-400";
+    case 4: return "bg-lime-500";
+    case 5: return "bg-green-600";
+    default: return "bg-gray-500";
+  }
+}
+
+function getBoxBorder(boxNumber: number): string {
+  switch (boxNumber) {
+    case 1: return "border-red-400";
+    case 2: return "border-amber-400";
+    case 3: return "border-yellow-300";
+    case 4: return "border-lime-400";
+    case 5: return "border-green-500";
+    default: return "border-gray-400";
+  }
 }

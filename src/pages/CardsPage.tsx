@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { BookOpen, CheckCircle, ChevronDown, ChevronUp, Clock, Filter, FilterX, Signal, Square } from "lucide-react";
@@ -20,13 +19,14 @@ import { Badge } from "@/components/ui/badge";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { toast } from "sonner";
 import { RegulationFilterToggle } from "@/components/common/RegulationFilterToggle";
+import { RegulationFilterType } from "@/types/regulation";
 
 export default function CardsPage() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [regulationFilter, setRegulationFilter] = useState<"all" | "DS 301" | "DV 301">("all");
+  const [regulationFilter, setRegulationFilter] = useState<RegulationFilterType>("all");
   const [activeTab, setActiveTab] = useState<"signale" | "betriebsdienst">("signale");
   
   // Reset selections when changing tabs

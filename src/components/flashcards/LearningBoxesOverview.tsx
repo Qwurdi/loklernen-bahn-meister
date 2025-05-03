@@ -9,6 +9,7 @@ import { BookOpen, Clock, BookUp } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import SpacedRepetitionTooltip from './stack/SpacedRepetitionTooltip';
 import LearningBoxHelp from './LearningBoxHelp';
+import { QuestionCategory } from '@/types/questions';
 
 // Define learning box intervals
 const LEARNING_BOXES = [
@@ -27,10 +28,12 @@ interface BoxStats {
   name: string;
 }
 
+type CategoryFilterType = "all" | QuestionCategory;
+
 export default function LearningBoxesOverview() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  const [category, setCategory] = React.useState<string>("all");
+  const [category, setCategory] = React.useState<CategoryFilterType>("all");
 
   // Query to fetch user progress data
   const { data, isLoading } = useQuery({
@@ -45,7 +48,7 @@ export default function LearningBoxesOverview() {
       
       // Filter by category if needed
       if (category !== "all") {
-        query = query.eq('questions.category', category);
+        query = query.eq('questions.category', category as QuestionCategory);
       }
         
       const { data: progressData, error } = await query;
@@ -122,7 +125,7 @@ export default function LearningBoxesOverview() {
           <LearningBoxHelp />
         </div>
         
-        <Tabs value={category} onValueChange={setCategory} className="w-full md:w-auto">
+        <Tabs value={category} onValueChange={(value) => setCategory(value as CategoryFilterType)} className="w-full md:w-auto">
           <TabsList className="bg-gray-900">
             <TabsTrigger value="all" className="text-xs md:text-sm">Alle</TabsTrigger>
             <TabsTrigger value="Signale" className="text-xs md:text-sm">Signale</TabsTrigger>

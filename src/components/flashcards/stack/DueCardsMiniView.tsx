@@ -66,10 +66,10 @@ export default function DueCardsMiniView({ dueCards }: DueCardsMiniViewProps) {
           </div>
           
           {Object.entries(subcategories).map(([subcategory, cards]) => (
-            <div key={subcategory} className="space-y-2 pl-1 border-l-2 border-gray-800">
+            <div key={subcategory} className="space-y-2 pl-1 border-l-2 border-gray-700">
               <div className="flex items-center justify-between">
                 <h5 className="text-xs font-medium text-gray-300">{subcategory}</h5>
-                <Badge variant="outline" className="text-xs bg-gray-800 text-gray-300">
+                <Badge variant="outline" className="text-xs bg-gray-800 text-gray-300 border-gray-700">
                   <Clock className="h-3 w-3 mr-1" /> {cards.length}
                 </Badge>
               </div>
@@ -90,25 +90,27 @@ export default function DueCardsMiniView({ dueCards }: DueCardsMiniViewProps) {
                         className="shrink-0"
                       >
                         <Card 
-                          className={`w-36 h-24 transition-all ${
+                          className={`w-20 h-20 transition-all ${
                             hoverCard === card.id ? 
                             'border-loklernen-ultramarine shadow-md shadow-loklernen-ultramarine/20' : 
-                            'border-gray-800'
-                          } dark-card`}
+                            'border-gray-700'
+                          } bg-gray-800`}
                           onMouseEnter={() => setHoverCard(card.id)}
                           onMouseLeave={() => setHoverCard(null)}
                         >
-                          <CardContent className="p-2 overflow-hidden h-full flex flex-col">
+                          <CardContent className="p-1 overflow-hidden h-full flex flex-col justify-center items-center">
                             {question.image_url && (
                               <div 
-                                className="h-10 bg-center bg-cover bg-no-repeat rounded mb-1" 
+                                className="h-16 w-16 bg-contain bg-center bg-no-repeat rounded" 
                                 style={{ backgroundImage: `url(${question.image_url})` }}
                               />
                             )}
-                            <div className="text-xs line-clamp-2 overflow-hidden">
-                              {question.text}
-                            </div>
-                            <div className="mt-auto pt-1 text-[10px] text-gray-400">
+                            {!question.image_url && (
+                              <div className="text-xs line-clamp-2 overflow-hidden text-center text-gray-300">
+                                {question.text.length > 30 ? `${question.text.substring(0, 30)}...` : question.text}
+                              </div>
+                            )}
+                            <div className="mt-auto pt-1 text-[8px] text-gray-400 text-center w-full truncate">
                               {question.regulation_category || "Allgemein"}
                             </div>
                           </CardContent>

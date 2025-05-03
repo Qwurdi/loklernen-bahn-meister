@@ -17,11 +17,11 @@ import DueCardsMiniView from './stack/DueCardsMiniView';
 
 // Define learning box intervals
 const LEARNING_BOXES = [
-  { id: 1, name: "Box 1", days: [1], color: "bg-red-500" },
-  { id: 2, name: "Box 2", days: [6], color: "bg-amber-500" },
-  { id: 3, name: "Box 3", days: [7, 14], color: "bg-yellow-400" },
-  { id: 4, name: "Box 4", days: [15, 30], color: "bg-lime-500" },
-  { id: 5, name: "Box 5", days: [31, 999], color: "bg-green-600" }
+  { id: 1, name: "Box 1", days: [1], color: "bg-red-500", border: "border-red-400" },
+  { id: 2, name: "Box 2", days: [6], color: "bg-amber-500", border: "border-amber-400" },
+  { id: 3, name: "Box 3", days: [7, 14], color: "bg-yellow-400", border: "border-yellow-300" },
+  { id: 4, name: "Box 4", days: [15, 30], color: "bg-lime-500", border: "border-lime-400" },
+  { id: 5, name: "Box 5", days: [31, 999], color: "bg-green-600", border: "border-green-500" }
 ];
 
 // Types for our component
@@ -86,6 +86,7 @@ export default function LearningBoxesOverview() {
           boxId: box.id,
           count,
           color: box.color,
+          border: box.border,
           name: box.name
         };
       });
@@ -104,7 +105,7 @@ export default function LearningBoxesOverview() {
   if (!user) {
     return (
       <SpacedRepetitionTooltip>
-        <div className="bg-black border border-gray-800 rounded-lg p-4 mb-6 text-center">
+        <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-6 text-center">
           <h3 className="text-lg font-semibold mb-2 text-white">Lernfortschritt</h3>
           <p className="text-gray-400">Melde dich an, um deinen Lernfortschritt zu sehen</p>
         </div>
@@ -114,7 +115,7 @@ export default function LearningBoxesOverview() {
 
   if (isLoading) {
     return (
-      <div className="bg-black border border-gray-800 rounded-lg p-4 mb-6">
+      <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-6">
         <Skeleton className="h-6 w-40 mb-4" />
         <div className="flex justify-between gap-2">
           {[1, 2, 3, 4, 5].map(i => (
@@ -131,7 +132,7 @@ export default function LearningBoxesOverview() {
   const dueCards = data?.dueCards || [];
 
   return (
-    <div className="bg-black border border-gray-800 rounded-lg p-4 mb-6">
+    <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-6">
       <div className="flex flex-col md:flex-row justify-between mb-4 gap-2">
         <div className="flex items-center">
           <h3 className="text-lg font-semibold text-white">Lernfortschritt</h3>
@@ -139,28 +140,28 @@ export default function LearningBoxesOverview() {
         </div>
         
         <Tabs value={category} onValueChange={(value) => setCategory(value as CategoryFilterType)} className="w-full md:w-auto">
-          <TabsList className="bg-gray-900">
-            <TabsTrigger value="all" className="text-xs md:text-sm">Alle</TabsTrigger>
-            <TabsTrigger value="Signale" className="text-xs md:text-sm">Signale</TabsTrigger>
-            <TabsTrigger value="Betriebsdienst" className="text-xs md:text-sm">Betriebsdienst</TabsTrigger>
+          <TabsList className="bg-gray-800 border border-gray-700">
+            <TabsTrigger value="all" className="text-xs md:text-sm data-[state=active]:bg-gray-700">Alle</TabsTrigger>
+            <TabsTrigger value="Signale" className="text-xs md:text-sm data-[state=active]:bg-gray-700">Signale</TabsTrigger>
+            <TabsTrigger value="Betriebsdienst" className="text-xs md:text-sm data-[state=active]:bg-gray-700">Betriebsdienst</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
 
       <div className="grid grid-cols-5 gap-2">
-        {boxStats.map((box) => (
+        {boxStats.map((box: any) => (
           <div key={box.boxId} className="flex flex-col items-center">
             <div className="relative w-full">
               <div 
-                className={`${box.color} h-${Math.max(3, Math.min(20, Math.ceil(box.count/2)))} min-h-[24px] w-full rounded-t-md`} 
+                className={`${box.color} h-${Math.max(3, Math.min(20, Math.ceil(box.count/2)))} min-h-[24px] w-full rounded-t-md border-t border-l border-r ${box.border}`} 
                 style={{ height: `${Math.max(24, Math.min(80, box.count * 4))}px` }}
               />
-              <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-black px-1 rounded">
+              <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-gray-900 px-1 rounded">
                 <span className="text-xs font-medium">{box.count}</span>
               </div>
             </div>
-            <div className="text-center mt-1">
-              <span className={`text-xs ${isMobile ? '' : 'font-semibold'}`}>
+            <div className="text-center mt-1 bg-gray-800 w-full rounded-b-md border-b border-l border-r border-gray-700 py-1">
+              <span className={`text-xs ${isMobile ? '' : 'font-semibold'} text-gray-200`}>
                 {isMobile ? `B${box.boxId}` : box.name}
               </span>
             </div>
@@ -168,7 +169,7 @@ export default function LearningBoxesOverview() {
         ))}
       </div>
 
-      <div className="flex flex-col sm:flex-row justify-between mt-4 text-sm text-gray-400 border-t border-gray-800 pt-3">
+      <div className="flex flex-col sm:flex-row justify-between mt-4 text-sm text-gray-400 border-t border-gray-700 pt-3">
         <div className="flex items-center gap-1">
           <BookOpen className="h-4 w-4" />
           <span>{totalCards} Karten insgesamt</span>
@@ -176,7 +177,7 @@ export default function LearningBoxesOverview() {
         
         <div className="flex items-center gap-1 mt-2 sm:mt-0">
           <Clock className="h-4 w-4" />
-          <span className="text-loklernen-ultramarine">{dueToday} Karten heute fällig</span>
+          <span className="text-loklernen-ultramarine font-medium">{dueToday} Karten heute fällig</span>
         </div>
       </div>
 
@@ -184,15 +185,15 @@ export default function LearningBoxesOverview() {
         <Collapsible 
           open={isOpen} 
           onOpenChange={setIsOpen}
-          className="mt-4 border-t border-gray-800 pt-3"
+          className="mt-4 border-t border-gray-700 pt-3"
         >
           <div className="flex justify-between items-center">
-            <span className="text-sm font-medium">Fällige Karten</span>
+            <span className="text-sm font-medium text-white">Fällige Karten</span>
             <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <Button variant="outline" size="sm" className="h-8 w-8 p-0 border-gray-700 bg-gray-800 hover:bg-gray-700">
                 {isOpen ? 
-                  <ChevronUp className="h-4 w-4" /> : 
-                  <ChevronDown className="h-4 w-4" />
+                  <ChevronUp className="h-4 w-4 text-gray-300" /> : 
+                  <ChevronDown className="h-4 w-4 text-gray-300" />
                 }
               </Button>
             </CollapsibleTrigger>

@@ -13,3 +13,38 @@
 
 /* Import animation styles */
 @import './animations.css';
+
+/* Add enhanced styling for dark UI elements */
+:root {
+  --bg-dark-primary: #121212;
+  --bg-dark-secondary: #1a1a1a;
+  --bg-dark-tertiary: #222222;
+  --border-dark: #333333;
+  --border-dark-hover: #444444;
+  --text-dark-primary: #e0e0e0;
+  --text-dark-secondary: #b0b0b0;
+  --text-dark-tertiary: #808080;
+}
+
+.dark-theme-bg {
+  background-color: var(--bg-dark-primary);
+}
+
+.dark-theme-card {
+  background-color: var(--bg-dark-secondary);
+  border: 1px solid var(--border-dark);
+}
+
+.dark-theme-card:hover {
+  border-color: var(--border-dark-hover);
+}
+
+.dark-theme-button {
+  background-color: var(--bg-dark-tertiary);
+  color: var(--text-dark-primary);
+  border: 1px solid var(--border-dark);
+}
+
+.dark-theme-button:hover {
+  background-color: var(--border-dark);
+}

@@ -72,7 +72,7 @@
 
 /* Dark glass effect for card backgrounds */
 .dark-glass {
-  background: rgba(30, 30, 30, 0.8);
+  background: rgba(30, 30, 30, 0.9);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -80,7 +80,7 @@
 /* Dark mode card styles */
 .dark-card {
   background: #1a1a1a;
-  border: 1px solid #333;
+  border: 1px solid #444;
   color: #fff;
 }
 
@@ -185,4 +185,25 @@
 .stat-value {
   font-weight: 500;
   color: white;
+}
+
+/* Better visibility for cards against black backgrounds */
+.card-on-dark {
+  background-color: #1e1e1e;
+  border: 1px solid #444;
+}
+
+.card-header-on-dark {
+  background-color: #2c2c2c;
+  border-bottom: 1px solid #444;
+}
+
+.btn-on-dark {
+  background-color: #2c2c2c;
+  color: #e0e0e0;
+  border: 1px solid #444;
+}
+
+.btn-on-dark:hover {
+  background-color: #3c3c3c;
 }

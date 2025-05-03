@@ -4,10 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { RegulationFilterType } from "@/types/regulation";
 import { QuestionCategory } from "@/types/questions";
+import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 
 export function useCardsPageData(user: any) {
+  const { regulationPreference } = useUserPreferences();
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [regulationFilter, setRegulationFilter] = useState<RegulationFilterType>("all");
+  const [regulationFilter, setRegulationFilter] = useState<RegulationFilterType>(regulationPreference);
   const [activeTab, setActiveTab] = useState<"signale" | "betriebsdienst">("signale");
   
   // Reset selections when changing tabs
@@ -15,9 +17,14 @@ export function useCardsPageData(user: any) {
     setSelectedCategories([]);
   }, [activeTab]);
 
+  // Synchronize with user preferences when they change
+  useEffect(() => {
+    setRegulationFilter(regulationPreference);
+  }, [regulationPreference]);
+
   // Fetch progress stats for each subcategory
   const { data: progressStats } = useQuery({
-    queryKey: ['signalProgress', user?.id],
+    queryKey: ['signalProgress', user?.id, regulationFilter],
     queryFn: async () => {
       if (!user) return {};
       
@@ -80,7 +87,7 @@ export function useCardsPageData(user: any) {
 
   // Query to get total cards per category
   const { data: categoryCardCounts } = useQuery({
-    queryKey: ['categoryCardCounts'],
+    queryKey: ['categoryCardCounts', regulationFilter],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('questions')

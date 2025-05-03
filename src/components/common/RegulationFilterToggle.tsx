@@ -64,7 +64,10 @@ export const RegulationFilterToggle: React.FC<RegulationFilterToggleProps> = ({
         )}
         <ToggleGroupItem value="DS 301" className="flex-1" size={size}>DS 301</ToggleGroupItem>
         <ToggleGroupItem value="DV 301" className="flex-1" size={size}>DV 301</ToggleGroupItem>
+        {showAllOption && (
+          <ToggleGroupItem value="both" className="flex-1" size={size}>Beide</ToggleGroupItem>
+        )}
       </ToggleGroup>
     </div>
   );
-};
+}

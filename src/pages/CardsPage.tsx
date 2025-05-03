@@ -14,9 +14,11 @@ import CardDecksSection from "@/components/flashcards/CardDecksSection";
 import LearningPlanSection from "@/components/flashcards/LearningPlanSection";
 import RecommendedCardsSection from "@/components/flashcards/RecommendedCardsSection";
 import { useCardsPageData } from "@/hooks/useCardsPageData";
+import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 
 export default function CardsPage() {
   const { user } = useAuth();
+  const { regulationPreference } = useUserPreferences();
   const isMobile = useIsMobile();
   
   const {

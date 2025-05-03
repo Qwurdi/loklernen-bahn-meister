@@ -2,6 +2,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,16 +12,18 @@ import { QuestionCategory } from '@/types/questions';
 import LearningBoxesDisplay, { LEARNING_BOXES, BoxStats } from './boxes/LearningBoxesDisplay';
 import LearningBoxStats from './boxes/LearningBoxStats';
 import DueCardsCollapsible from './boxes/DueCardsCollapsible';
+import { RegulationFilterType } from '@/types/regulation';
 
 type CategoryFilterType = "all" | QuestionCategory;
 
 export default function LearningBoxesOverview() {
   const { user } = useAuth();
+  const { regulationPreference } = useUserPreferences();
   const [category, setCategory] = React.useState<CategoryFilterType>("all");
 
   // Query to fetch user progress data
   const { data, isLoading } = useQuery({
-    queryKey: ['learningBoxes', user?.id, category],
+    queryKey: ['learningBoxes', user?.id, category, regulationPreference],
     queryFn: async () => {
       if (!user) return { boxStats: [], totalCards: 0, dueToday: 0, dueCards: [] };
 
@@ -33,18 +36,30 @@ export default function LearningBoxesOverview() {
       if (category !== "all") {
         query = query.eq('questions.category', category as QuestionCategory);
       }
+
+      // Apply regulation filter if it's not "all"
+      if (regulationPreference !== "all") {
+        query = query.or(`questions.regulation_category.eq.${regulationPreference},questions.regulation_category.eq.both,questions.regulation_category.is.null`);
+      }
         
       const { data: progressData, error } = await query;
       
       if (error) throw error;
 
       // Get due today count and cards
-      const { data: dueCards } = await supabase
+      let dueCardsQuery = supabase
         .from('user_progress')
         .select('*, questions(*)')
         .eq('user_id', user.id)
         .lte('next_review_at', new Date().toISOString())
         .order('next_review_at', { ascending: true });
+      
+      // Apply regulation filter to due cards as well  
+      if (regulationPreference !== "all") {
+        dueCardsQuery = dueCardsQuery.or(`questions.regulation_category.eq.${regulationPreference},questions.regulation_category.eq.both,questions.regulation_category.is.null`);
+      }
+      
+      const { data: dueCards } = await dueCardsQuery;
       
       const filteredDueCards = dueCards?.filter(card => {
         if (category === "all") return true;

@@ -1,6 +1,6 @@
 
 import { describe, it, expect } from 'vitest';
-import { calculateNextReview, transformQuestion } from '../utils';
+import { calculateNextReviewDate, transformQuestion } from '../utils';
 
 describe('spaced repetition utils', () => {
   describe('transformQuestion', () => {
@@ -19,95 +19,50 @@ describe('spaced repetition utils', () => {
     });
   });
 
-  describe('calculateNextReview', () => {
-    it('should calculate next review for a new question with high score', () => {
-      const score = 5; // Excellent response
+  describe('calculateNextReviewDate', () => {
+    it('should calculate next review date for Box 1', () => {
+      const result = calculateNextReviewDate(1);
       
-      const result = calculateNextReview(score);
+      // Should return date one day in future
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
       
-      expect(result).toHaveProperty('interval_days', 1);
-      expect(result).toHaveProperty('ease_factor');
-      expect(result.ease_factor).toBeGreaterThanOrEqual(2.5);
-      expect(result).toHaveProperty('next_review_at');
+      const resultDate = new Date(result);
+      
+      // Compare only the date part (year, month, day)
+      expect(resultDate.getFullYear()).toBe(tomorrow.getFullYear());
+      expect(resultDate.getMonth()).toBe(tomorrow.getMonth());
+      expect(resultDate.getDate()).toBe(tomorrow.getDate());
     });
     
-    it('should calculate next review for a new question with low score', () => {
-      const score = 1; // Poor response
+    it('should calculate next review date for Box 3', () => {
+      const result = calculateNextReviewDate(3);
       
-      const result = calculateNextReview(score);
+      // Should return date 7 days in future
+      const future = new Date();
+      future.setDate(future.getDate() + 7);
       
-      expect(result).toHaveProperty('interval_days', 1); // Should reset to 1 day
-      expect(result).toHaveProperty('ease_factor');
-      expect(result.ease_factor).toBeLessThan(2.5); // Should decrease the ease factor
-      expect(result).toHaveProperty('next_review_at');
+      const resultDate = new Date(result);
+      
+      // Compare only the date part (year, month, day)
+      expect(resultDate.getFullYear()).toBe(future.getFullYear());
+      expect(resultDate.getMonth()).toBe(future.getMonth());
+      expect(resultDate.getDate()).toBe(future.getDate());
     });
     
-    it('should calculate next review for an existing question with high score', () => {
-      const score = 5; // Excellent response
-      const currentProgress = {
-        id: 'progress-id',
-        question_id: 'test-question-id',
-        repetition_count: 2,
-        correct_count: 1,
-        incorrect_count: 0,
-        last_score: 4,
-        ease_factor: 2.3,
-        interval_days: 6,
-        last_reviewed_at: '2025-05-01T00:00:00.000Z',
-        next_review_at: '2025-05-07T00:00:00.000Z',
-      };
+    it('should handle default case (invalid box number)', () => {
+      const result = calculateNextReviewDate(10); // Non-existent box
       
-      const result = calculateNextReview(score, currentProgress);
+      // Should default to 1 day
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
       
-      expect(result).toHaveProperty('interval_days');
-      expect(result.interval_days).toBeGreaterThan(currentProgress.interval_days); // Should increase the interval
-      expect(result).toHaveProperty('ease_factor');
-      expect(result.ease_factor).toBeGreaterThanOrEqual(currentProgress.ease_factor); // Should increase or maintain ease factor
-      expect(result).toHaveProperty('next_review_at');
-    });
-    
-    it('should handle first repetition correctly', () => {
-      const score = 5; // Excellent response
-      const currentProgress = {
-        id: 'progress-id',
-        question_id: 'test-question-id',
-        repetition_count: 0, // First repetition
-        correct_count: 0,
-        incorrect_count: 0,
-        last_score: 0,
-        ease_factor: 2.5,
-        interval_days: 1,
-        last_reviewed_at: '2025-05-01T00:00:00.000Z',
-        next_review_at: '2025-05-02T00:00:00.000Z',
-      };
+      const resultDate = new Date(result);
       
-      const result = calculateNextReview(score, currentProgress);
-      
-      expect(result).toHaveProperty('interval_days', 1); // Should be 1 day for first rep
-      expect(result).toHaveProperty('ease_factor');
-      expect(result).toHaveProperty('next_review_at');
-    });
-    
-    it('should handle second repetition correctly', () => {
-      const score = 5; // Excellent response
-      const currentProgress = {
-        id: 'progress-id',
-        question_id: 'test-question-id',
-        repetition_count: 1, // Second repetition
-        correct_count: 1,
-        incorrect_count: 0,
-        last_score: 5,
-        ease_factor: 2.5,
-        interval_days: 1,
-        last_reviewed_at: '2025-05-01T00:00:00.000Z',
-        next_review_at: '2025-05-02T00:00:00.000Z',
-      };
-      
-      const result = calculateNextReview(score, currentProgress);
-      
-      expect(result).toHaveProperty('interval_days', 6); // Should be 6 days for second rep
-      expect(result).toHaveProperty('ease_factor');
-      expect(result).toHaveProperty('next_review_at');
+      // Compare only the date part
+      expect(resultDate.getFullYear()).toBe(tomorrow.getFullYear());
+      expect(resultDate.getMonth()).toBe(tomorrow.getMonth());
+      expect(resultDate.getDate()).toBe(tomorrow.getDate());
     });
   });
 });

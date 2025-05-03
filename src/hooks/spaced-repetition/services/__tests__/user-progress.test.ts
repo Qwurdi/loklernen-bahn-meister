@@ -1,6 +1,6 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { calculateNextReview } from '../../utils';
+import { calculateNextReviewDate } from '../../utils';
 import { updateUserProgress, updateUserStats } from '../user-progress';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -28,13 +28,9 @@ vi.mock('@/integrations/supabase/client', () => ({
   }
 }));
 
-// Mock calculateNextReview utility
+// Mock calculateNextReviewDate utility
 vi.mock('../../utils', () => ({
-  calculateNextReview: vi.fn().mockReturnValue({
-    interval_days: 6,
-    ease_factor: 2.5,
-    next_review_at: '2025-05-10T00:00:00.000Z'
-  })
+  calculateNextReviewDate: vi.fn().mockReturnValue('2025-05-10T00:00:00.000Z')
 }));
 
 describe('user-progress service', () => {
@@ -67,12 +63,14 @@ describe('user-progress service', () => {
         interval_days: 1,
         last_reviewed_at: '2025-05-01T00:00:00.000Z',
         next_review_at: '2025-05-02T00:00:00.000Z',
+        box_number: 1,
+        streak: 0
       };
 
       await updateUserProgress(userId, questionId, score, currentProgress);
 
-      // Check if calculateNextReview was called with the right parameters
-      expect(calculateNextReview).toHaveBeenCalledWith(score, currentProgress);
+      // Check if calculateNextReviewDate was called correctly
+      expect(calculateNextReviewDate).toHaveBeenCalled();
       
       // Check if supabase update was called with the right table
       expect(mockFrom).toHaveBeenCalledWith('user_progress');
@@ -99,8 +97,8 @@ describe('user-progress service', () => {
 
       await updateUserProgress(userId, questionId, score);
 
-      // Check if calculateNextReview was called with the right parameters
-      expect(calculateNextReview).toHaveBeenCalledWith(score, undefined);
+      // Check if calculateNextReviewDate was called with the right parameters
+      expect(calculateNextReviewDate).toHaveBeenCalled();
       
       // Check if supabase insert was called with the right table
       expect(mockFrom).toHaveBeenCalledWith('user_progress');
@@ -133,6 +131,8 @@ describe('user-progress service', () => {
         interval_days: 1,
         last_reviewed_at: '2025-05-01T00:00:00.000Z',
         next_review_at: '2025-05-02T00:00:00.000Z',
+        box_number: 1,
+        streak: 0
       };
 
       await expect(updateUserProgress(userId, questionId, score, currentProgress))

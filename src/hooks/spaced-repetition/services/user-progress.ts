@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { UserProgress } from '../types';
 import { processAnswer } from '../utils';
@@ -138,12 +137,11 @@ export async function fetchQuestionsByBox(userId: string, boxNumber: number) {
  * Get statistics about all boxes
  */
 export async function getBoxesStats(userId: string) {
-  // Get counts for each box
-  const { data, error } = await supabase
+  // Get all user progress entries to analyze
+  const { data: progressData, error } = await supabase
     .from('user_progress')
-    .select('box_number, count(*)')
-    .eq('user_id', userId)
-    .group('box_number');
+    .select('box_number')
+    .eq('user_id', userId);
 
   if (error) {
     console.error("Error fetching boxes stats:", error);
@@ -153,17 +151,16 @@ export async function getBoxesStats(userId: string) {
   // Get counts for cards due in each box
   const { data: dueData, error: dueError } = await supabase
     .from('user_progress')
-    .select('box_number, count(*)')
+    .select('box_number')
     .eq('user_id', userId)
-    .lte('next_review_at', new Date().toISOString())
-    .group('box_number');
+    .lte('next_review_at', new Date().toISOString());
 
   if (dueError) {
     console.error("Error fetching due boxes stats:", dueError);
     throw dueError;
   }
 
-  // Transform into a more usable format
+  // Transform into a more usable format - manually count items instead of using GROUP BY
   const boxStats = Array.from({ length: 5 }, (_, i) => ({
     boxNumber: i + 1,
     total: 0,
@@ -171,10 +168,10 @@ export async function getBoxesStats(userId: string) {
   }));
 
   // Fill in total counts
-  (data || []).forEach(row => {
+  (progressData || []).forEach(row => {
     const boxIndex = (row.box_number || 1) - 1;
     if (boxIndex >= 0 && boxIndex < 5) {
-      boxStats[boxIndex].total = parseInt(row.count);
+      boxStats[boxIndex].total += 1;
     }
   });
 
@@ -182,7 +179,7 @@ export async function getBoxesStats(userId: string) {
   (dueData || []).forEach(row => {
     const boxIndex = (row.box_number || 1) - 1;
     if (boxIndex >= 0 && boxIndex < 5) {
-      boxStats[boxIndex].due = parseInt(row.count);
+      boxStats[boxIndex].due += 1;
     }
   });
 

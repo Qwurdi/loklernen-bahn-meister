@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import BottomNavigation from "@/components/layout/BottomNavigation";
+import LearningBoxesOverview from "@/components/flashcards/LearningBoxesOverview";
 
 export default function CardsPage() {
   const { user } = useAuth();
@@ -70,13 +71,16 @@ export default function CardsPage() {
             </Breadcrumb>
           )}
           
-          <div className="mb-8">
+          <div className="mb-6">
             <h1 className="text-2xl font-bold mb-4">Karteikarten</h1>
             <p className="text-gray-500 max-w-2xl">
               Lerne mit unseren Karteikarten und nutze das Spaced Repetition System für nachhaltigen Lernerfolg.
               {!user && " Melde dich an, um deinen Lernfortschritt zu speichern."}
             </p>
           </div>
+          
+          {/* Learning Boxes Overview - Add the new component here */}
+          <LearningBoxesOverview />
 
           <Tabs defaultValue="signale" className="mb-8">
             <TabsList className="w-full max-w-md mb-6">

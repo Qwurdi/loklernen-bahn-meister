@@ -8,9 +8,9 @@ import {
   fetchUserProgress,
   fetchNewQuestions,
   fetchPracticeQuestions,
+  fetchQuestionsByBox,
   updateUserProgress,
-  updateUserStats,
-  fetchQuestionsByBox
+  updateUserStats
 } from './services';
 
 export function useSpacedRepetition(

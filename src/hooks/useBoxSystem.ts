@@ -3,16 +3,18 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { BoxStats } from '@/components/flashcards/boxes/LearningBoxesDisplay';
 import { Question, RegulationCategory } from '@/types/questions';
 import { transformAnswers } from '@/api/questions';
 
 export function useBoxSystem() {
   const { user } = useAuth();
+  const { regulationPreference } = useUserPreferences();
   const [activeBox, setActiveBox] = useState<number | null>(null);
   
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['boxSystem', user?.id],
+    queryKey: ['boxSystem', user?.id, regulationPreference],
     queryFn: async () => {
       if (!user) return { boxStats: [], boxQuestions: [] };
       
@@ -57,13 +59,14 @@ export function useBoxSystem() {
     enabled: !!user
   });
   
-  // Query for questions in the selected box
+  // Query for questions in the selected box, now with regulation preference
   const { data: boxQuestionsData, isLoading: questionsLoading } = useQuery({
-    queryKey: ['boxQuestions', user?.id, activeBox],
+    queryKey: ['boxQuestions', user?.id, activeBox, regulationPreference],
     queryFn: async () => {
       if (!user || !activeBox) return [];
       
-      const { data, error } = await supabase
+      // First get user progress items for the selected box
+      const { data: progressItems, error: progressError } = await supabase
         .from('user_progress')
         .select(`
           *,
@@ -73,25 +76,44 @@ export function useBoxSystem() {
         .eq('box_number', activeBox)
         .order('next_review_at', { ascending: true });
         
-      if (error) throw error;
+      if (progressError) throw progressError;
       
-      // Transform the questions data to match our Question type
-      return (data || []).map(item => {
-        // Handle the regulation_category field properly
-        let regulationCategory: RegulationCategory | undefined;
+      if (!progressItems || progressItems.length === 0) {
+        return [];
+      }
+      
+      // Now filter questions based on regulation preference
+      const filteredQuestions = progressItems
+        .filter(item => {
+          const regulationCategory = item.questions?.regulation_category;
+          return (
+            // Include if regulation matches user preference
+            regulationCategory === regulationPreference ||
+            // Or if regulation is "both"
+            regulationCategory === "both" ||
+            // Or if no regulation is specified (backward compatibility)
+            !regulationCategory
+          );
+        })
+        .map(item => {
+          // Handle the regulation_category field properly
+          let regulationCategory: RegulationCategory | undefined;
+          
+          if (item.questions.regulation_category === 'DS 301' || 
+              item.questions.regulation_category === 'DV 301' || 
+              item.questions.regulation_category === 'both') {
+            regulationCategory = item.questions.regulation_category as RegulationCategory;
+          }
+          
+          return {
+            ...item.questions,
+            regulation_category: regulationCategory,
+            answers: transformAnswers(item.questions.answers)
+          } as Question;
+        });
         
-        if (item.questions.regulation_category === 'DS 301' || 
-            item.questions.regulation_category === 'DV 301' || 
-            item.questions.regulation_category === 'both') {
-          regulationCategory = item.questions.regulation_category as RegulationCategory;
-        }
-        
-        return {
-          ...item.questions,
-          regulation_category: regulationCategory,
-          answers: transformAnswers(item.questions.answers)
-        } as Question;
-      });
+      // Limit to a reasonable number of cards for preview
+      return filteredQuestions.slice(0, 10);
     },
     enabled: !!user && activeBox !== null
   });

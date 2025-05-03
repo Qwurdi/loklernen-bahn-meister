@@ -7,20 +7,26 @@ export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
 
   React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    };
+    
     const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
     
-    const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    }
+    // Add event listener for resize events
+    window.addEventListener('resize', checkMobile);
     
-    // Add event listener
-    mql.addEventListener("change", onChange)
+    // Add event listener for media query changes
+    mql.addEventListener("change", checkMobile);
     
     // Set initial value
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+    checkMobile();
     
     // Cleanup
-    return () => mql.removeEventListener("change", onChange)
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      mql.removeEventListener("change", checkMobile);
+    }
   }, [])
 
   // Return false during SSR, true when mobile, false when desktop

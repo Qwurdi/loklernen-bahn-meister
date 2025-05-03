@@ -29,10 +29,18 @@ export default function LearningSessionPage() {
   const [sessionFinished, setSessionFinished] = useState(false);
   const isMobile = useIsMobile();
   
-  // Get category, regulation preference and box number from URL parameters
+  // Get category, subcategory, regulation preference and box number from URL parameters
   const categoryParam = searchParams.get("category") as QuestionCategory || "Signale";
+  const subcategoryParam = searchParams.get("subcategory");
   const regulationParam = searchParams.get("regelwerk") || regulationPreference;
   const boxParam = searchParams.get("box") ? parseInt(searchParams.get("box") || "0") : undefined;
+
+  console.log("Learning session parameters:", {
+    category: categoryParam,
+    subcategory: subcategoryParam,
+    regulation: regulationParam,
+    box: boxParam
+  });
 
   // Prevent scrolling on mobile devices
   useEffect(() => {
@@ -50,10 +58,10 @@ export default function LearningSessionPage() {
     };
   }, [isMobile]);
 
-  // Pass both category and regulation preference to the hook
+  // Pass both category, subcategory and regulation preference to the hook
   const { loading, dueQuestions, submitAnswer, reloadQuestions } = useSpacedRepetition(
     categoryParam,
-    undefined,
+    subcategoryParam,
     { 
       practiceMode: false,
       regulationCategory: regulationParam,
@@ -61,9 +69,18 @@ export default function LearningSessionPage() {
     }
   );
 
-  const sessionTitle = boxParam 
-    ? `Box ${boxParam} - Lernmodus` 
-    : 'Fällige Karten - Lernmodus';
+  // Create a more descriptive title based on parameters
+  const getSessionTitle = () => {
+    if (boxParam) {
+      return `Box ${boxParam} - Lernmodus`;
+    } 
+    if (subcategoryParam) {
+      return `${subcategoryParam} - Lernmodus`;
+    }
+    return 'Fällige Karten - Lernmodus';
+  };
+
+  const sessionTitle = getSessionTitle();
 
   console.log("LearningSessionPage: Loaded questions count:", dueQuestions?.length || 0);
 
@@ -71,7 +88,8 @@ export default function LearningSessionPage() {
     if (!loading && dueQuestions.length > 0) {
       // Shuffle the cards to create a mixed learning session
       const shuffled = [...dueQuestions].sort(() => Math.random() - 0.5);
-      setSessionCards(shuffled);
+      // Limit to 36 cards max for consistency
+      setSessionCards(shuffled.slice(0, 36));
     }
   }, [loading, dueQuestions]);
 

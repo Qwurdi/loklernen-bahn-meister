@@ -12,7 +12,7 @@ export async function fetchUserProgress(
   subcategory?: string,
   regulationCategory: string = "all"
 ) {
-  console.log("Loading due questions for user", userId, "with regulation", regulationCategory);
+  console.log("Loading due questions for user", userId, "with regulation", regulationCategory, "and subcategory", subcategory || "all");
   
   // First get progress data for questions that are due
   const { data: progressData, error: progressError } = await supabase
@@ -43,6 +43,7 @@ export async function fetchUserProgress(
   // Apply regulation filter if not "all"
   if (regulationCategory !== "all") {
     filteredProgressData = filteredProgressData.filter(p => 
+      // Include if the regulation matches OR is "both" OR is not specified
       p.questions?.regulation_category === regulationCategory || 
       p.questions?.regulation_category === "both" || 
       !p.questions?.regulation_category);
@@ -61,8 +62,9 @@ export async function fetchNewQuestions(
   subcategory?: string,
   regulationCategory: string = "all",
   questionIdsWithProgress: string[] = [],
-  batchSize: number = 50
+  batchSize: number = 36  // Changed from 50 to 36 for consistency
 ) {
+  console.log("Fetching new questions for category:", category, "subcategory:", subcategory, "regulation:", regulationCategory);
   // Build the query for new questions
   let newQuestionsQuery = supabase
     .from('questions')
@@ -107,8 +109,10 @@ export async function fetchPracticeQuestions(
   category: QuestionCategory,
   subcategory?: string,
   regulationCategory: string = "all",
-  batchSize: number = 50
+  batchSize: number = 36  // Changed from 50 to 36 for consistency
 ) {
+  console.log("Practice mode: Fetching questions for category:", category, "subcategory:", subcategory, "regulation:", regulationCategory);
+  
   let query = supabase
     .from('questions')
     .select('*')
@@ -132,4 +136,44 @@ export async function fetchPracticeQuestions(
   }
 
   return questions?.map(transformQuestion) || [];
+}
+
+/**
+ * Fetches questions for a specific box number
+ */
+export async function fetchQuestionsByBox(
+  userId: string,
+  boxNumber: number,
+  regulationCategory: string = "all"
+) {
+  console.log(`Fetching questions for user ${userId} in box ${boxNumber} with regulation ${regulationCategory}`);
+  
+  const { data, error } = await supabase
+    .from('user_progress')
+    .select(`
+      *,
+      questions(*)
+    `)
+    .eq('user_id', userId)
+    .eq('box_number', boxNumber)
+    .order('next_review_at', { ascending: true });
+    
+  if (error) {
+    console.error("Error fetching questions by box:", error);
+    throw error;
+  }
+  
+  // Filter by regulation if needed
+  let filteredData = data || [];
+  
+  if (regulationCategory !== "all") {
+    filteredData = filteredData.filter(p => 
+      p.questions?.regulation_category === regulationCategory || 
+      p.questions?.regulation_category === "both" || 
+      !p.questions?.regulation_category);
+  }
+  
+  console.log(`Found ${filteredData.length} questions in box ${boxNumber}`);
+  
+  return filteredData;
 }

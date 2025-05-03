@@ -1,25 +1,22 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BookOpen, CheckCircle, ChevronDown, ChevronUp, Clock, Filter, FilterX, Signal, Square } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import CategoryCard from "@/components/common/CategoryCard";
-import { signalSubCategories } from "@/api/questions";
 import { useAuth } from "@/contexts/AuthContext";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import LearningBoxesOverview from "@/components/flashcards/LearningBoxesOverview";
-import { useEffect, useState } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { RegulationFilterToggle } from "@/components/common/RegulationFilterToggle";
 import { RegulationFilterType } from "@/types/regulation";
+import CardsPageHeader from "@/components/flashcards/CardsPageHeader";
+import CardDecksSection from "@/components/flashcards/CardDecksSection";
+import LearningPlanSection from "@/components/flashcards/LearningPlanSection";
+import RecommendedCardsSection from "@/components/flashcards/RecommendedCardsSection";
 
 export default function CardsPage() {
   const { user } = useAuth();
@@ -114,7 +111,6 @@ export default function CardsPage() {
         byRegulation: Record<string, number>
       }>, curr) => {
         const subCategory = curr.sub_category;
-        const category = curr.category;
         const regulationCategory = curr.regulation_category || "Allgemein";
         
         if (!acc[subCategory]) {
@@ -187,234 +183,39 @@ export default function CardsPage() {
             </Breadcrumb>
           )}
           
-          <div className="mb-6 flex flex-col sm:flex-row justify-between items-start gap-4">
-            <div>
-              <h1 className="text-2xl font-bold mb-2">Karteikarten</h1>
-              <p className="text-gray-500 max-w-2xl">
-                Lerne mit unseren Karteikarten und nutze das Spaced Repetition System für nachhaltigen Lernerfolg.
-                {!user && " Melde dich an, um deinen Lernfortschritt zu speichern."}
-              </p>
-            </div>
-            
-            {user && selectedCategories.length > 0 && (
-              <div className="flex flex-col gap-2 items-end">
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-loklernen-ultramarine text-white">
-                    {selectedCategories.length} Kategorien ausgewählt
-                  </Badge>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => setSelectedCategories([])}
-                  >
-                    <FilterX className="h-4 w-4" />
-                  </Button>
-                </div>
-                <Button 
-                  className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90"
-                  onClick={handleStartLearningSelected}
-                >
-                  Ausgewählte Kategorien lernen
-                </Button>
-              </div>
-            )}
-          </div>
+          <CardsPageHeader 
+            user={user}
+            selectedCategories={selectedCategories}
+            onClearSelection={() => setSelectedCategories([])}
+            onStartLearningSelected={handleStartLearningSelected}
+            regulationFilter={regulationFilter}
+            onRegulationFilterChange={setRegulationFilter}
+          />
           
           {/* Learning Boxes Overview */}
           <LearningBoxesOverview />
 
-          <div className="mb-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
-              <h2 className="text-xl font-semibold">Kartendecks</h2>
-              
-              {user && (
-                <div className="flex gap-2 items-center">
-                  <RegulationFilterToggle
-                    value={regulationFilter}
-                    onChange={setRegulationFilter}
-                    title=""
-                    showInfoTooltip={false}
-                    variant="outline"
-                    size="sm"
-                    showAllOption
-                    className="w-auto"
-                  />
-                </div>
-              )}
-            </div>
-            
-            <p className="text-sm text-gray-500 mb-4">
-              Wähle die Kategorien aus, die du lernen möchtest. Du kannst mehrere Kategorien gleichzeitig auswählen.
-            </p>
-          </div>
-
-          <Tabs 
-            defaultValue="signale" 
-            value={activeTab}
-            onValueChange={(value) => setActiveTab(value as "signale" | "betriebsdienst")}
-            className="mb-8"
-          >
-            <TabsList className="w-full max-w-md mb-6">
-              <TabsTrigger value="signale" className="flex-1">
-                <Signal className="h-4 w-4 mr-2" />
-                Signale
-              </TabsTrigger>
-              <TabsTrigger value="betriebsdienst" className="flex-1">
-                <BookOpen className="h-4 w-4 mr-2" />
-                Betriebsdienst
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="signale">
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {signalSubCategories.map((subcategory) => {
-                  const stats = progressStats?.[subcategory];
-                  const cardCounts = categoryCardCounts?.[subcategory];
-                  
-                  // Calculate progress percentage
-                  const progress = stats ? Math.round((stats.correct / Math.max(1, stats.total)) * 100) : 0;
-                  
-                  // Calculate card stats
-                  const totalCards = cardCounts?.total || 0;
-                  const dueCards = stats?.due || 0;
-                  const masteredCards = stats?.mastered || 0;
-                  
-                  // Filter by regulation if needed
-                  let shouldDisplay = true;
-                  if (regulationFilter !== "all" && cardCounts) {
-                    const hasCardsForRegulation = cardCounts.byRegulation[regulationFilter] > 0 || 
-                                                cardCounts.byRegulation["Beide"] > 0;
-                    shouldDisplay = hasCardsForRegulation;
-                  }
-                  
-                  if (!shouldDisplay) return null;
-                  
-                  return (
-                    <CategoryCard
-                      key={subcategory}
-                      title={subcategory}
-                      description={stats 
-                        ? `${Math.round(progress)}% gelernt`
-                        : "Lerne die wichtigsten Signale dieser Kategorie"}
-                      progress={progress}
-                      link={`/karteikarten/signale/${encodeURIComponent(subcategory.toLowerCase().replace(/[^a-z0-9]+/g, '-'))}`}
-                      isSelected={selectedCategories.includes(subcategory)}
-                      onSelect={() => handleSelectCategory(subcategory)}
-                      selectable={!!user}
-                      stats={{
-                        totalCards,
-                        dueCards,
-                        masteredCards
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="betriebsdienst">
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                <CategoryCard
-                  title="Grundlagen Bahnbetrieb"
-                  description="Einstieg in den Bahnbetrieb"
-                  progress={0}
-                  link="/karteikarten/betriebsdienst/grundlagen"
-                  isLocked={!user}
-                  isSelected={selectedCategories.includes("Grundlagen Bahnbetrieb")}
-                  onSelect={() => handleSelectCategory("Grundlagen Bahnbetrieb")}
-                  selectable={!!user}
-                  stats={{
-                    totalCards: 25,
-                    dueCards: user ? 0 : undefined,
-                    masteredCards: user ? 0 : undefined
-                  }}
-                />
-                <CategoryCard
-                  title="UVV & Arbeitsschutz"
-                  description="Sicherheit am Arbeitsplatz"
-                  progress={0}
-                  link="/karteikarten/betriebsdienst/uvv"
-                  isLocked={!user}
-                  isSelected={selectedCategories.includes("UVV & Arbeitsschutz")}
-                  onSelect={() => handleSelectCategory("UVV & Arbeitsschutz")}
-                  selectable={!!user}
-                  stats={{
-                    totalCards: 18,
-                    dueCards: user ? 0 : undefined,
-                    masteredCards: user ? 0 : undefined
-                  }}
-                />
-                <CategoryCard
-                  title="Rangieren"
-                  description="Alles zum Thema Rangieren"
-                  progress={0}
-                  link="/karteikarten/betriebsdienst/rangieren"
-                  isPro
-                  isLocked
-                  stats={{
-                    totalCards: 42
-                  }}
-                />
-                <CategoryCard
-                  title="Züge fahren"
-                  description="Von der Abfahrt bis zur Ankunft"
-                  progress={0}
-                  link="/karteikarten/betriebsdienst/zuege-fahren"
-                  isPro
-                  isLocked
-                  stats={{
-                    totalCards: 35
-                  }}
-                />
-              </div>
-            </TabsContent>
-          </Tabs>
+          <CardDecksSection 
+            user={user}
+            activeTab={activeTab}
+            onTabChange={(value) => setActiveTab(value as "signale" | "betriebsdienst")}
+            selectedCategories={selectedCategories}
+            onSelectCategory={handleSelectCategory}
+            regulationFilter={regulationFilter}
+            onRegulationFilterChange={setRegulationFilter}
+            progressStats={progressStats}
+            categoryCardCounts={categoryCardCounts}
+          />
           
-          {user && selectedCategories.length > 0 && (
-            <div className="mb-8 p-4 border border-gray-800 rounded-lg bg-gray-900">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-lg font-medium mb-1">Dein Lernplan</h3>
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {selectedCategories.map(cat => (
-                      <Badge key={cat} variant="secondary" className="bg-gray-700 text-white">
-                        {cat}
-                        <button 
-                          onClick={() => handleSelectCategory(cat)}
-                          className="ml-1 text-gray-400 hover:text-white"
-                        >
-                          ×
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                  <p className="text-sm text-gray-400">
-                    {regulationFilter !== "all" ? 
-                      `Regelwerk: ${regulationFilter}` : 
-                      "Alle Regelwerke"}
-                  </p>
-                </div>
-                <Button
-                  className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90"
-                  onClick={handleStartLearningSelected}
-                >
-                  Mit diesem Plan lernen
-                </Button>
-              </div>
-            </div>
-          )}
+          <LearningPlanSection 
+            selectedCategories={selectedCategories}
+            regulationFilter={regulationFilter}
+            onStartLearning={handleStartLearningSelected}
+            onRemoveCategory={handleSelectCategory}
+          />
           
           {user && selectedCategories.length === 0 && (
-            <div className="mt-8 text-center">
-              <p className="mb-2 text-muted-foreground">
-                Direkt mit dem Lernen anfangen? Wir empfehlen dir die fälligen Karten.
-              </p>
-              <Link to="/karteikarten/lernen">
-                <Button className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90">
-                  Empfohlene Karten lernen
-                </Button>
-              </Link>
-            </div>
+            <RecommendedCardsSection user={user} />
           )}
         </div>
       </main>

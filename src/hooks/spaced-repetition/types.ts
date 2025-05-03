@@ -12,11 +12,14 @@ export interface UserProgress {
   correct_count: number;
   incorrect_count: number;
   last_score: number;
+  box_number: number;
+  streak: number;
 }
 
 export interface SpacedRepetitionOptions {
   practiceMode?: boolean;
   regulationCategory?: string;
+  boxNumber?: number;
 }
 
 export interface SpacedRepetitionResult {
@@ -26,4 +29,10 @@ export interface SpacedRepetitionResult {
   progress: UserProgress[];
   submitAnswer: (questionId: string, score: number) => Promise<void>;
   reloadQuestions: () => Promise<void>;
+}
+
+export interface BoxStats {
+  boxNumber: number;
+  total: number;
+  due: number;
 }

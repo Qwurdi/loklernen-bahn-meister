@@ -9,7 +9,8 @@ import {
   fetchNewQuestions,
   fetchPracticeQuestions,
   updateUserProgress,
-  updateUserStats
+  updateUserStats,
+  fetchQuestionsByBox
 } from './services';
 
 export function useSpacedRepetition(
@@ -25,6 +26,7 @@ export function useSpacedRepetition(
   
   // Default to 'all' if regulationCategory is not provided
   const regulationCategory = options.regulationCategory || "all";
+  const boxNumber = options.boxNumber;
   
   // Maximum number of questions to load at once
   const batchSize = 50;
@@ -51,6 +53,23 @@ export function useSpacedRepetition(
           batchSize
         );
         setDueQuestions(practiceQuestions);
+        setLoading(false);
+        return;
+      }
+      
+      // If a specific box is requested, only fetch questions from that box
+      if (boxNumber !== undefined) {
+        const boxProgress = await fetchQuestionsByBox(user.id, boxNumber);
+        
+        // Transform the questions from the box data
+        const questionsFromBox = boxProgress
+          .filter(p => p.questions) // Ensure questions exist
+          .map(p => transformQuestion(p.questions));
+          
+        console.log(`Loaded ${questionsFromBox.length} questions from box ${boxNumber}`);
+        
+        setDueQuestions(questionsFromBox);
+        setProgress(boxProgress);
         setLoading(false);
         return;
       }
@@ -104,7 +123,7 @@ export function useSpacedRepetition(
     } finally {
       setLoading(false);
     }
-  }, [user, category, subcategory, options.practiceMode, regulationCategory]);
+  }, [user, category, subcategory, options.practiceMode, regulationCategory, boxNumber]);
 
   useEffect(() => {
     loadDueQuestions();

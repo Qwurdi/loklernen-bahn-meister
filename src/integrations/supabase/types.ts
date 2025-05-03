@@ -59,6 +59,7 @@ export type Database = {
       }
       user_progress: {
         Row: {
+          box_number: number
           correct_count: number
           created_at: string
           ease_factor: number
@@ -70,10 +71,12 @@ export type Database = {
           next_review_at: string
           question_id: string
           repetition_count: number
+          streak: number
           updated_at: string
           user_id: string
         }
         Insert: {
+          box_number?: number
           correct_count?: number
           created_at?: string
           ease_factor?: number
@@ -85,10 +88,12 @@ export type Database = {
           next_review_at?: string
           question_id: string
           repetition_count?: number
+          streak?: number
           updated_at?: string
           user_id: string
         }
         Update: {
+          box_number?: number
           correct_count?: number
           created_at?: string
           ease_factor?: number
@@ -100,6 +105,7 @@ export type Database = {
           next_review_at?: string
           question_id?: string
           repetition_count?: number
+          streak?: number
           updated_at?: string
           user_id?: string
         }
@@ -157,7 +163,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_next_review: {
+        Args: { box_num: number }
+        Returns: string
+      }
     }
     Enums: {
       question_category: "Signale" | "Betriebsdienst"

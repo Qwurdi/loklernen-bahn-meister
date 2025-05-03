@@ -1,21 +1,19 @@
 
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { useIsMobile } from "@/hooks/use-mobile";
 import BottomNavigation from "@/components/layout/BottomNavigation";
-import LearningBoxesOverview from "@/components/flashcards/LearningBoxesOverview";
 import { toast } from "sonner";
 import CardsPageHeader from "@/components/flashcards/CardsPageHeader";
 import CardDecksSection from "@/components/flashcards/CardDecksSection";
 import LearningPlanSection from "@/components/flashcards/LearningPlanSection";
-import RecommendedCardsSection from "@/components/flashcards/RecommendedCardsSection";
 import { useCardsPageData } from "@/hooks/useCardsPageData";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 import { Settings } from "lucide-react";
+import BoxSystemOverview from "@/components/flashcards/boxes/BoxSystemOverview";
 
 export default function CardsPage() {
   const { user } = useAuth();
@@ -51,7 +49,7 @@ export default function CardsPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-black text-white">
       <Navbar />
       
       <main className="flex-1">
@@ -79,8 +77,8 @@ export default function CardsPage() {
             onStartLearningSelected={handleStartLearningSelected}
           />
           
-          {/* Learning Boxes Overview */}
-          <LearningBoxesOverview />
+          {/* Box System Overview - New Component */}
+          <BoxSystemOverview />
 
           <CardDecksSection 
             user={user}
@@ -97,10 +95,6 @@ export default function CardsPage() {
             onStartLearning={handleStartLearningSelected}
             onRemoveCategory={handleSelectCategory}
           />
-          
-          {user && selectedCategories.length === 0 && (
-            <RecommendedCardsSection user={user} />
-          )}
           
           {/* Settings Hint */}
           <div className="text-center text-sm text-gray-500 mt-8 border-t border-gray-800 pt-4">

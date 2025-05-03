@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
@@ -28,9 +29,10 @@ export default function LearningSessionPage() {
   const [sessionFinished, setSessionFinished] = useState(false);
   const isMobile = useIsMobile();
   
-  // Get category and regulation preference from URL parameters
+  // Get category, regulation preference and box number from URL parameters
   const categoryParam = searchParams.get("category") as QuestionCategory || "Signale";
   const regulationParam = searchParams.get("regelwerk") || regulationPreference;
+  const boxParam = searchParams.get("box") ? parseInt(searchParams.get("box") || "0") : undefined;
 
   // Prevent scrolling on mobile devices
   useEffect(() => {
@@ -54,9 +56,14 @@ export default function LearningSessionPage() {
     undefined,
     { 
       practiceMode: false,
-      regulationCategory: regulationParam
+      regulationCategory: regulationParam,
+      boxNumber: boxParam
     }
   );
+
+  const sessionTitle = boxParam 
+    ? `Box ${boxParam} - Lernmodus` 
+    : 'Fällige Karten - Lernmodus';
 
   console.log("LearningSessionPage: Loaded questions count:", dueQuestions?.length || 0);
 
@@ -175,6 +182,8 @@ export default function LearningSessionPage() {
               Zurück
             </Button>
             
+            <h2 className="text-xl font-semibold">{sessionTitle}</h2>
+            
             <Button
               variant="ghost"
               size="sm"
@@ -184,6 +193,12 @@ export default function LearningSessionPage() {
               <List className="h-4 w-4 mr-1" />
               Alle Kategorien
             </Button>
+          </div>
+        )}
+
+        {isMobile && (
+          <div className="px-3 pt-2 pb-1">
+            <h2 className="text-xl font-semibold">{sessionTitle}</h2>
           </div>
         )}
 

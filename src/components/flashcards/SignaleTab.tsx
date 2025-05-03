@@ -21,9 +21,12 @@ export default function SignaleTab({
   isSelectable,
   regulationFilter
 }: SignaleTabProps) {
+  // Convert readonly array to regular string array to fix the type error
+  const categories = [...signalSubCategories];
+  
   return (
     <CategoryGrid
-      categories={signalSubCategories}
+      categories={categories}
       progressStats={progressStats}
       categoryCardCounts={categoryCardCounts}
       selectedCategories={selectedCategories}

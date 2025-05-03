@@ -2,6 +2,7 @@
 import React from "react";
 import CategoryGrid from "./CategoryGrid";
 import { RegulationFilterType } from "@/types/regulation";
+import CategoryCard from "@/components/common/CategoryCard";
 
 interface BetriebsdienstTabProps {
   progressStats?: Record<string, any>;

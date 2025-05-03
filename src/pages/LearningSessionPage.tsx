@@ -124,7 +124,7 @@ export default function LearningSessionPage() {
           isMobile={isMobile} 
         />
 
-        <CardStackSession<Question>
+        <CardStackSession
           sessionCards={sessionCards}
           currentIndex={currentIndex}
           setCurrentIndex={setCurrentIndex}

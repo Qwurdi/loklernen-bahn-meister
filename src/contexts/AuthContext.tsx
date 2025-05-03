@@ -3,7 +3,6 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 
 interface AuthContextType {
   session: Session | null;
@@ -56,22 +55,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      // Make sure to properly unsubscribe to prevent memory leaks
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
     await supabase.auth.signOut();
   };
 
+  const contextValue = {
+    session, 
+    user, 
+    loading, 
+    signOut,
+    isNewUser,
+    setIsNewUser
+  };
+  
   return (
-    <AuthContext.Provider value={{ 
-      session, 
-      user, 
-      loading, 
-      signOut,
-      isNewUser,
-      setIsNewUser
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

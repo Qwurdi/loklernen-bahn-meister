@@ -5,11 +5,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BookOpen, Clock, BookUp } from 'lucide-react';
+import { BookOpen, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import SpacedRepetitionTooltip from './stack/SpacedRepetitionTooltip';
 import LearningBoxHelp from './LearningBoxHelp';
 import { QuestionCategory } from '@/types/questions';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import DueCardsMiniView from './stack/DueCardsMiniView';
 
 // Define learning box intervals
 const LEARNING_BOXES = [
@@ -34,17 +38,18 @@ export default function LearningBoxesOverview() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const [category, setCategory] = React.useState<CategoryFilterType>("all");
+  const [isOpen, setIsOpen] = React.useState(false);
 
   // Query to fetch user progress data
   const { data, isLoading } = useQuery({
     queryKey: ['learningBoxes', user?.id, category],
     queryFn: async () => {
-      if (!user) return { boxStats: [], totalCards: 0, dueToday: 0 };
+      if (!user) return { boxStats: [], totalCards: 0, dueToday: 0, dueCards: [] };
 
       // Get all progress records to analyze
       let query = supabase
         .from('user_progress')
-        .select('interval_days, questions!inner(category)');
+        .select('interval_days, questions!inner(*)')
       
       // Filter by category if needed
       if (category !== "all") {
@@ -55,12 +60,18 @@ export default function LearningBoxesOverview() {
       
       if (error) throw error;
 
-      // Get due today count
-      const { count: dueToday } = await supabase
+      // Get due today count and cards
+      const { data: dueCards } = await supabase
         .from('user_progress')
-        .select('*', { count: 'exact', head: true })
+        .select('*, questions(*)')
         .eq('user_id', user.id)
-        .lte('next_review_at', new Date().toISOString());
+        .lte('next_review_at', new Date().toISOString())
+        .order('next_review_at', { ascending: true });
+      
+      const filteredDueCards = dueCards?.filter(card => {
+        if (category === "all") return true;
+        return card.questions?.category === category;
+      }) || [];
       
       // Calculate counts for each learning box
       const boxStats = LEARNING_BOXES.map(box => {
@@ -82,7 +93,8 @@ export default function LearningBoxesOverview() {
       return { 
         boxStats,
         totalCards: progressData?.length || 0,
-        dueToday: dueToday || 0
+        dueToday: filteredDueCards.length,
+        dueCards: filteredDueCards
       };
     },
     enabled: !!user,
@@ -116,6 +128,7 @@ export default function LearningBoxesOverview() {
   const boxStats = data?.boxStats || [];
   const totalCards = data?.totalCards || 0;
   const dueToday = data?.dueToday || 0;
+  const dueCards = data?.dueCards || [];
 
   return (
     <div className="bg-black border border-gray-800 rounded-lg p-4 mb-6">
@@ -166,6 +179,38 @@ export default function LearningBoxesOverview() {
           <span className="text-loklernen-ultramarine">{dueToday} Karten heute fällig</span>
         </div>
       </div>
+
+      {dueToday > 0 && (
+        <Collapsible 
+          open={isOpen} 
+          onOpenChange={setIsOpen}
+          className="mt-4 border-t border-gray-800 pt-3"
+        >
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium">Fällige Karten</span>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                {isOpen ? 
+                  <ChevronUp className="h-4 w-4" /> : 
+                  <ChevronDown className="h-4 w-4" />
+                }
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          
+          <CollapsibleContent className="mt-2">
+            <DueCardsMiniView dueCards={dueCards} />
+            
+            <div className="mt-3 flex justify-center">
+              <Link to="/karteikarten/lernen">
+                <Button size="sm" className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90">
+                  Alle fälligen Karten lernen
+                </Button>
+              </Link>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
     </div>
   );
 }

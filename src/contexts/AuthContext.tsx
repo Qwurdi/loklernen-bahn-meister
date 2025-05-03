@@ -22,6 +22,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isNewUser, setIsNewUser] = useState(false);
 
   useEffect(() => {
+    // Create a stable reference to loading state for closures
+    let isInitializing = true;
+    
     // First check for existing session to initialize state
     const getInitialSession = async () => {
       try {
@@ -32,17 +35,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error("Error getting initial session:", error);
       } finally {
         setLoading(false);
+        isInitializing = false;
       }
     };
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
-        const isInitialLoad = loading;
-        
         if (event === 'SIGNED_IN') {
           // Only show toast for non-initial loads
-          if (!isInitialLoad) {
+          if (!isInitializing) {
             toast.success('Erfolgreich angemeldet!');
           }
           
@@ -71,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, []);  // No dependencies required here
 
   const signOut = async () => {
     await supabase.auth.signOut();

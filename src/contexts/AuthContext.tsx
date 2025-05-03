@@ -22,69 +22,72 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isNewUser, setIsNewUser] = useState(false);
 
   useEffect(() => {
-    let isMounted = true;
-    
-    async function initializeAuth() {
-      try {
-        // First set up auth state listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          (event, currentSession) => {
-            if (!isMounted) return;
-            
-            if (event === 'SIGNED_IN' && !loading) {
-              toast.success('Erfolgreich angemeldet!');
-              
-              // Check if this is a new sign up
-              if (!user) {
-                const isSignUp = localStorage.getItem('isNewSignUp') === 'true';
-                if (isSignUp) {
-                  setIsNewUser(true);
-                  localStorage.removeItem('isNewSignUp');
-                }
-              }
-            } else if (event === 'SIGNED_OUT') {
-              toast.success('Erfolgreich abgemeldet!');
-            }
-            
-            setSession(currentSession);
-            setUser(currentSession?.user ?? null);
-            setLoading(false);
-          }
-        );
+    // Initial setup - flag to prevent memory leaks
+    let mounted = true;
 
-        // Then check for existing session to initialize state
+    // Setup auth listener first
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      // Only update state if the component is still mounted
+      if (!mounted) return;
+
+      // Show notifications for login/logout events (but not on initial load)
+      if (!loading) {
+        if (event === 'SIGNED_IN') {
+          toast.success('Erfolgreich angemeldet!');
+          
+          // Check for new sign up
+          if (!user) {
+            const isSignUp = localStorage.getItem('isNewSignUp') === 'true';
+            if (isSignUp) {
+              setIsNewUser(true);
+              localStorage.removeItem('isNewSignUp');
+            }
+          }
+        } else if (event === 'SIGNED_OUT') {
+          toast.success('Erfolgreich abgemeldet!');
+        }
+      }
+
+      // Update state
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      setLoading(false);
+    });
+
+    // Get initial session
+    const getInitialSession = async () => {
+      try {
         const { data } = await supabase.auth.getSession();
-        if (isMounted) {
+        
+        // Only update state if component is still mounted
+        if (mounted) {
           setSession(data.session);
           setUser(data.session?.user ?? null);
           setLoading(false);
         }
-
-        return () => {
-          isMounted = false;
-          subscription.unsubscribe();
-        };
       } catch (error) {
-        console.error("Error initializing auth:", error);
-        if (isMounted) {
-          setLoading(false);
-        }
-        return () => { isMounted = false; };
+        console.error("Error getting initial session:", error);
+        if (mounted) setLoading(false);
       }
-    }
-
-    const cleanup = initializeAuth();
-    return () => {
-      // Call the cleanup function returned by initializeAuth
-      cleanup.then(cleanupFn => cleanupFn && cleanupFn());
     };
-  }, []);  // Empty dependency array means this effect runs once on mount
 
+    // Call get initial session
+    getInitialSession();
+
+    // Cleanup function - runs when component unmounts
+    return () => {
+      mounted = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, []); // Empty dependency array means this runs once on mount
+
+  // Sign out function
   const signOut = async () => {
     await supabase.auth.signOut();
   };
 
-  const contextValue = {
+  // Context value - all the values we want to expose
+  const value = {
     session,
     user,
     loading,
@@ -92,9 +95,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isNewUser,
     setIsNewUser
   };
-  
+
   return (
-    <AuthContext.Provider value={contextValue}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

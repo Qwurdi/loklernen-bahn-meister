@@ -3,8 +3,9 @@ import CardStack from "@/components/flashcards/stack/CardStack";
 import { Question } from "@/types/questions";
 import { useEffect } from "react";
 
-interface CardStackSessionProps {
-  sessionCards: Question[];
+// Define a generic type parameter T that extends Question
+interface CardStackSessionProps<T extends Question = Question> {
+  sessionCards: T[];
   currentIndex: number;
   setCurrentIndex: (index: number) => void;
   onAnswer: (questionId: string, score: number) => Promise<void>;
@@ -12,14 +13,15 @@ interface CardStackSessionProps {
   isMobile: boolean;
 }
 
-export default function CardStackSession({
+// Use the generic type parameter in the component definition
+export default function CardStackSession<T extends Question = Question>({
   sessionCards,
   currentIndex,
   setCurrentIndex,
   onAnswer,
   onComplete,
   isMobile
-}: CardStackSessionProps) {
+}: CardStackSessionProps<T>) {
   // Prevent scrolling on mobile devices
   useEffect(() => {
     if (!isMobile) return;
@@ -40,7 +42,7 @@ export default function CardStackSession({
   
   return (
     <div className="h-full w-full flex-1 flex flex-col">
-      <CardStack 
+      <CardStack<T> 
         questions={sessionCards}
         onAnswer={onAnswer}
         onComplete={onComplete}

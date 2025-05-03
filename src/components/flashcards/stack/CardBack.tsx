@@ -1,88 +1,95 @@
 
-import React from 'react';
 import { Question } from '@/types/questions';
-import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react';
-import { useDynamicTextSize } from '@/hooks/useDynamicTextSize';
-import { useIsMobile } from '@/hooks/use-mobile';
-import FlashcardActionButton from '../FlashcardActionButton';
+import { Button } from '@/components/ui/button';
+import { CheckCircle2, XCircle } from 'lucide-react';
 
-interface CardBackProps {
-  question: Question;
+// Update interface to use generics
+interface CardBackProps<T extends Question = Question> {
+  question: T;
   onAnswer?: (known: boolean) => void;
 }
 
-export default function CardBack({ question, onAnswer }: CardBackProps) {
-  const correctAnswer = question.answers.find(a => a.isCorrect)?.text || '';
-  const isMobile = useIsMobile();
-  
-  // Dynamic text size for the answer
-  const textSizeClass = useDynamicTextSize(correctAnswer, 'answer');
-  
+// Add generic type parameter to the component
+export default function CardBack<T extends Question = Question>({ question, onAnswer }: CardBackProps<T>) {
   return (
-    <div className="w-full h-full bg-gray-900 p-6 flex flex-col rounded-2xl border border-gray-800">
-      <div className="bg-loklernen-ultramarine/30 px-3 py-1.5 rounded-full text-xs text-blue-300 self-start mb-2">
-        Antwort
-      </div>
-      
-      <div className="flex-1 flex flex-col justify-between overflow-hidden">
-        <div className="flex flex-col items-center w-full py-2">
-          {/* Image with fixed minimum height for visibility */}
-          {question.image_url && (
-            <div className="min-h-[120px] flex items-center justify-center mb-4">
-              <img 
-                src={question.image_url} 
-                alt="Signalbild" 
-                className="w-auto h-auto max-h-[120px] object-contain"
-              />
-            </div>
-          )}
-          
-          <div className="bg-gray-800 p-5 rounded-xl w-full shadow-sm border border-gray-700 mb-4 overflow-y-auto max-h-[50%]">
-            {question.category === "Signale" ? (
-              <div className="space-y-2">
-                {correctAnswer.split('\n').map((line, i) => (
-                  <p key={i} className={`${textSizeClass} font-bold text-blue-300`}>
-                    {line}
-                  </p>
+    <div className="card-face back h-full w-full p-4 flex flex-col bg-gray-50 text-gray-800">
+      {/* Card content */}
+      <div className="flex-1 flex flex-col overflow-auto">
+        {/* Answer heading */}
+        <div className="text-sm font-medium uppercase text-gray-500 mb-2">Antwort</div>
+        
+        {/* Answers */}
+        <div className="answers-container flex-1">
+          {question.question_type === 'open' ? (
+            // For open questions, show all correct answers
+            <div className="open-answer mb-4">
+              {question.answers
+                .filter(ans => ans.isCorrect)
+                .map((answer, idx) => (
+                  <div 
+                    key={idx} 
+                    className="bg-green-50 border border-green-200 p-3 rounded-md text-green-800 mb-2 font-medium"
+                  >
+                    {answer.text}
+                  </div>
                 ))}
-              </div>
-            ) : (
-              <p className={`${textSizeClass} font-medium text-blue-300`}>
-                {correctAnswer}
-              </p>
-            )}
-          </div>
+            </div>
+          ) : (
+            // For multiple choice questions
+            <ul className="space-y-2">
+              {question.answers.map((answer, idx) => (
+                <li 
+                  key={idx}
+                  className={`p-3 rounded-md ${
+                    answer.isCorrect 
+                      ? 'bg-green-50 border border-green-200 text-green-800' 
+                      : 'bg-gray-100 border border-gray-200 text-gray-500'
+                  }`}
+                >
+                  <div className="flex items-start">
+                    <div className="mr-2 mt-0.5">
+                      {answer.isCorrect ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-gray-400" />
+                      )}
+                    </div>
+                    <div>{answer.text}</div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
       
-      {/* Desktop Answer Buttons (only shown on desktop) */}
-      {!isMobile && onAnswer && (
-        <div className="mt-4 grid grid-cols-2 gap-4">
-          <FlashcardActionButton
-            variant="unknown"
+      {/* Action buttons (desktop only) */}
+      {onAnswer && (
+        <div className="flex justify-between mt-4 space-x-2">
+          <Button 
+            variant="outline" 
+            className="flex-1 border-red-300 hover:border-red-500 hover:bg-red-50 group"
             onClick={() => onAnswer(false)}
-            label="Nicht gewusst"
-          />
-          <FlashcardActionButton
-            variant="known"
+          >
+            <XCircle className="h-4 w-4 mr-2 text-red-500 group-hover:text-red-600" />
+            Nicht gewusst
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className="flex-1 border-green-300 hover:border-green-500 hover:bg-green-50 group"
             onClick={() => onAnswer(true)}
-            label="Gewusst"
-          />
+          >
+            <CheckCircle2 className="h-4 w-4 mr-2 text-green-500 group-hover:text-green-600" />
+            Gewusst
+          </Button>
         </div>
       )}
       
-      {/* Mobile Swipe Instructions (only shown on mobile) */}
-      {isMobile && (
-        <div className="swipe-instructions mt-auto flex flex-row items-center justify-between text-sm text-gray-400">
-          <div className="flex items-center">
-            <ArrowLeft size={16} className="mr-1 text-red-400" /> 
-            <span>Nicht gewusst</span>
-          </div>
-          
-          <div className="flex items-center">
-            <span>Gewusst</span>
-            <ArrowRight size={16} className="ml-1 text-green-400" />
-          </div>
+      {/* Mobile instructions */}
+      {!onAnswer && (
+        <div className="instructions text-sm text-gray-500 mt-4 text-center">
+          Wische nach links (nicht gewusst) oder rechts (gewusst)
         </div>
       )}
     </div>

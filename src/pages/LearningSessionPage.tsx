@@ -12,6 +12,7 @@ import SessionHeader from "@/components/learning-session/SessionHeader";
 import EmptySessionState from "@/components/learning-session/EmptySessionState";
 import SessionCompleteState from "@/components/learning-session/SessionCompleteState";
 import CardStackSession from "@/components/learning-session/CardStackSession";
+import { Question } from "@/types/questions";
 
 export default function LearningSessionPage() {
   console.log("LearningSessionPage: Initializing component");
@@ -20,7 +21,7 @@ export default function LearningSessionPage() {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
-  const [sessionCards, setSessionCards] = useState([]);
+  const [sessionCards, setSessionCards] = useState<Question[]>([]);
   const [sessionFinished, setSessionFinished] = useState(false);
   const isMobile = useIsMobile();
   
@@ -62,7 +63,7 @@ export default function LearningSessionPage() {
     }
   }, [loading, dueQuestions]);
 
-  const handleAnswer = async (questionId, score) => {
+  const handleAnswer = async (questionId: string, score: number) => {
     // Consider scores >= 4 as correct
     if (score >= 4) {
       setCorrectCount(prev => prev + 1);
@@ -123,7 +124,7 @@ export default function LearningSessionPage() {
           isMobile={isMobile} 
         />
 
-        <CardStackSession
+        <CardStackSession<Question>
           sessionCards={sessionCards}
           currentIndex={currentIndex}
           setCurrentIndex={setCurrentIndex}

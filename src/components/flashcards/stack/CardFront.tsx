@@ -1,46 +1,47 @@
 
-import React from 'react';
 import { Question } from '@/types/questions';
-import { ArrowDown } from 'lucide-react';
-import { useDynamicTextSize } from '@/hooks/useDynamicTextSize';
+import { Fragment } from 'react';
 
-interface CardFrontProps {
-  question: Question;
+// Update interface to use generics
+interface CardFrontProps<T extends Question = Question> {
+  question: T;
 }
 
-export default function CardFront({ question }: CardFrontProps) {
-  // Dynamic text size class based on question text length
-  const textSizeClass = useDynamicTextSize(question.text, 'question');
-  
+// Add generic type parameter to the component
+export default function CardFront<T extends Question = Question>({ question }: CardFrontProps<T>) {
   return (
-    <div className="w-full h-full bg-white p-6 flex flex-col rounded-2xl">
-      <div className="bg-gray-50 px-3 py-1.5 rounded-full text-xs text-gray-500 self-start mb-2">
-        {question.category}
+    <div className="card-face front h-full w-full p-4 flex flex-col">
+      {/* Category badge */}
+      <div className="category-badge text-xs font-medium px-2 py-1 rounded-full bg-loklernen-ultramarine/10 text-loklernen-ultramarine self-start mb-4">
+        {question.sub_category}
       </div>
       
-      {/* Dynamic text size for the question */}
-      <h2 className={`${textSizeClass} font-medium mb-4 overflow-y-auto max-h-[25%] text-gray-800`}>
-        {question.text}
-      </h2>
-      
-      {/* Fixed space for the image with minimum height to ensure visibility */}
-      <div className="flex-1 flex flex-col items-center justify-center py-2 min-h-[220px]">
-        {question.image_url ? (
-          <img 
-            src={question.image_url} 
-            alt="Signalbild" 
-            className="w-auto h-auto max-h-[220px] max-w-full object-contain"
-          />
-        ) : (
-          <div className="w-full h-40 bg-gray-100 rounded-lg flex items-center justify-center">
-            <span className="text-gray-400">Kein Bild vorhanden</span>
+      {/* Card content */}
+      <div className="flex-1 flex flex-col items-center justify-center text-center overflow-auto p-2">
+        {/* Question image if available */}
+        {question.image_url && (
+          <div className="question-image mb-4 max-h-[40%] flex items-center justify-center">
+            <img 
+              src={question.image_url} 
+              alt="Signalbild" 
+              className="max-h-full max-w-full object-contain rounded-lg"
+            />
           </div>
         )}
-      </div>
-      
-      <div className="tap-hint mt-auto flex flex-col items-center justify-center">
-        <p className="text-sm text-gray-500 mb-1">Tippen, um Antwort anzuzeigen</p>
-        <ArrowDown size={20} className="text-gray-400 animate-bounce" />
+        
+        {/* Question text */}
+        <div 
+          className={`question-text text-lg sm:text-xl font-medium text-gray-800 mb-4 ${
+            !question.image_url ? 'flex-1 flex items-center justify-center' : ''
+          }`}
+        >
+          {question.text}
+        </div>
+        
+        {/* Instructions */}
+        <div className="instructions text-sm text-gray-500 mt-auto">
+          Tippe zum Umdrehen
+        </div>
       </div>
     </div>
   );

@@ -6,21 +6,23 @@ import CardItem from './CardItem';
 import EmptyStackMessage from './EmptyStackMessage';
 import StackProgress from './StackProgress';
 
-interface CardStackProps {
-  questions: Question[];
+// Update interface to use generics
+interface CardStackProps<T extends Question = Question> {
+  questions: T[];
   onAnswer: (questionId: string, score: number) => Promise<void>;
   onComplete: () => void;
   currentIndex: number;
   setCurrentIndex: (index: number) => void;
 }
 
-export default function CardStack({ 
+// Add the generic type parameter to the component
+export default function CardStack<T extends Question = Question>({ 
   questions, 
   onAnswer, 
   onComplete,
   currentIndex,
   setCurrentIndex
-}: CardStackProps) {
+}: CardStackProps<T>) {
   const [direction, setDirection] = useState<'left' | 'right' | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const stackRef = useRef<HTMLDivElement>(null);

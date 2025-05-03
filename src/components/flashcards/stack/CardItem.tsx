@@ -8,19 +8,21 @@ import SwipeHint from './SwipeHint';
 import useCardSwipe from './useCardSwipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-interface CardItemProps {
-  question: Question;
+// Update interface to use generics
+interface CardItemProps<T extends Question = Question> {
+  question: T;
   onSwipe?: (direction: 'left' | 'right') => void;
   isPreview?: boolean;
   swipeDisabled?: boolean;
 }
 
-export default function CardItem({ 
+// Add generic type parameter to the component
+export default function CardItem<T extends Question = Question>({ 
   question, 
   onSwipe, 
   isPreview = false,
   swipeDisabled = false 
-}: CardItemProps) {
+}: CardItemProps<T>) {
   const [isFlipped, setIsFlipped] = useState(false);
   const isMobile = useIsMobile();
   

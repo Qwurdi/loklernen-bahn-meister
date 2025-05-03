@@ -22,17 +22,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isNewUser, setIsNewUser] = useState(false);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    // First check for existing session to initialize state
+    const getInitialSession = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+      } catch (error) {
+        console.error("Error getting initial session:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (event, currentSession) => {
+        const isInitialLoad = loading;
+        
         if (event === 'SIGNED_IN') {
           // Only show toast for non-initial loads
-          if (!loading) {
+          if (!isInitialLoad) {
             toast.success('Erfolgreich angemeldet!');
           }
           
           // Check if this is a new sign up
-          if (event === 'SIGNED_IN' && !user) {
+          if (!user) {
             const isSignUp = localStorage.getItem('isNewSignUp') === 'true';
             if (isSignUp) {
               setIsNewUser(true);
@@ -42,21 +57,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else if (event === 'SIGNED_OUT') {
           toast.success('Erfolgreich abgemeldet!');
         }
-        setSession(session);
-        setUser(session?.user ?? null);
+        
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
         setLoading(false);
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    // Initialize session
+    getInitialSession();
 
+    // Clean up subscription on unmount
     return () => {
-      // Make sure to properly unsubscribe to prevent memory leaks
       subscription.unsubscribe();
     };
   }, []);
@@ -65,7 +77,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
   };
 
-  const contextValue = {
+  // Create context value object outside of JSX to improve readability
+  const contextValue: AuthContextType = {
     session, 
     user, 
     loading, 

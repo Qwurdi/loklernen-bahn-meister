@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { BoxStats } from '@/components/flashcards/boxes/LearningBoxesDisplay';
-import { Question } from '@/types/questions';
+import { Question, RegulationCategory } from '@/types/questions';
 import { transformAnswers } from '@/api/questions';
 
 export function useBoxSystem() {
@@ -76,16 +76,22 @@ export function useBoxSystem() {
       if (error) throw error;
       
       // Transform the questions data to match our Question type
-      return (data || []).map(item => ({
-        ...item.questions,
-        answers: transformAnswers(item.questions.answers),
-        progress: {
-          next_review_at: item.next_review_at,
-          box_number: item.box_number,
-          streak: item.streak,
-          repetition_count: item.repetition_count
+      return (data || []).map(item => {
+        // Handle the regulation_category field properly
+        let regulationCategory: RegulationCategory | undefined;
+        
+        if (item.questions.regulation_category === 'DS 301' || 
+            item.questions.regulation_category === 'DV 301' || 
+            item.questions.regulation_category === 'both') {
+          regulationCategory = item.questions.regulation_category as RegulationCategory;
         }
-      }));
+        
+        return {
+          ...item.questions,
+          regulation_category: regulationCategory,
+          answers: transformAnswers(item.questions.answers)
+        } as Question;
+      });
     },
     enabled: !!user && activeBox !== null
   });

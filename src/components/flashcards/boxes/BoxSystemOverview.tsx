@@ -9,6 +9,7 @@ import { Play, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Question } from '@/types/questions';
 
 export default function BoxSystemOverview() {
   const navigate = useNavigate();
@@ -116,7 +117,7 @@ export default function BoxSystemOverview() {
       {activeBox && (
         <BoxContentView
           boxNumber={activeBox}
-          questions={boxQuestions}
+          questions={boxQuestions as Question[]}
           dueCount={activeBoxStats?.due || 0}
           onStartLearning={() => handleStartLearning(activeBox)}
         />

@@ -18,6 +18,7 @@ export interface BoxStats {
   color: string;
   border: string;
   name: string;
+  due?: number; // Added due property as optional
 }
 
 interface LearningBoxesDisplayProps {

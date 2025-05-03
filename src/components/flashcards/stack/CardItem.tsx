@@ -6,6 +6,7 @@ import CardFront from './CardFront';
 import CardBack from './CardBack';
 import SwipeHint from './SwipeHint';
 import useCardSwipe from './useCardSwipe';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CardItemProps {
   question: Question;
@@ -21,6 +22,7 @@ export default function CardItem({
   swipeDisabled = false 
 }: CardItemProps) {
   const [isFlipped, setIsFlipped] = useState(false);
+  const isMobile = useIsMobile();
   
   const {
     cardRef,
@@ -39,6 +41,12 @@ export default function CardItem({
     if (!isPreview && !swipeDisabled && !isFlipped) {
       setIsFlipped(true);
     }
+  };
+
+  // Handle button answers (desktop only)
+  const handleAnswer = (known: boolean) => {
+    if (isPreview || swipeDisabled) return;
+    onSwipe?.(known ? 'right' : 'left');
   };
 
   const bgColor = swipeDirection === 'right' 
@@ -69,7 +77,7 @@ export default function CardItem({
         damping: 20
       }}
       onClick={handleCardTap}
-      {...(!isPreview && !swipeDisabled ? handlers : {})}
+      {...(isMobile && !isPreview && !swipeDisabled ? handlers : {})}
     >
       <div className="w-full h-full relative overflow-hidden rounded-2xl" style={{ perspective: '1000px' }}>
         {/* Front card face */}
@@ -103,12 +111,15 @@ export default function CardItem({
             height: '100%'
           }}
         >
-          <CardBack question={question} />
+          <CardBack 
+            question={question} 
+            onAnswer={!isPreview ? handleAnswer : undefined}
+          />
         </div>
       </div>
       
-      {/* Show swipe hints when card is flipped */}
-      {isFlipped && !isPreview && (
+      {/* Show swipe hints for mobile only */}
+      {isFlipped && !isPreview && isMobile && (
         <SwipeHint
           direction={swipeDirection}
           dragDelta={dragState.dragDelta}

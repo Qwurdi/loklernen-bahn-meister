@@ -1,15 +1,19 @@
 
 import React from 'react';
 import { Question } from '@/types/questions';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react';
 import { useDynamicTextSize } from '@/hooks/useDynamicTextSize';
+import { useIsMobile } from '@/hooks/use-mobile';
+import FlashcardActionButton from '../FlashcardActionButton';
 
 interface CardBackProps {
   question: Question;
+  onAnswer?: (known: boolean) => void;
 }
 
-export default function CardBack({ question }: CardBackProps) {
+export default function CardBack({ question, onAnswer }: CardBackProps) {
   const correctAnswer = question.answers.find(a => a.isCorrect)?.text || '';
+  const isMobile = useIsMobile();
   
   // Dynamic text size for the answer
   const textSizeClass = useDynamicTextSize(correctAnswer, 'answer');
@@ -51,17 +55,36 @@ export default function CardBack({ question }: CardBackProps) {
         </div>
       </div>
       
-      <div className="swipe-instructions mt-auto flex flex-row items-center justify-between text-sm text-gray-400">
-        <div className="flex items-center">
-          <ArrowLeft size={16} className="mr-1 text-red-400" /> 
-          <span>Nicht gewusst</span>
+      {/* Desktop Answer Buttons (only shown on desktop) */}
+      {!isMobile && onAnswer && (
+        <div className="mt-4 grid grid-cols-2 gap-4">
+          <FlashcardActionButton
+            variant="unknown"
+            onClick={() => onAnswer(false)}
+            label="Nicht gewusst"
+          />
+          <FlashcardActionButton
+            variant="known"
+            onClick={() => onAnswer(true)}
+            label="Gewusst"
+          />
         </div>
-        
-        <div className="flex items-center">
-          <span>Gewusst</span>
-          <ArrowRight size={16} className="ml-1 text-green-400" />
+      )}
+      
+      {/* Mobile Swipe Instructions (only shown on mobile) */}
+      {isMobile && (
+        <div className="swipe-instructions mt-auto flex flex-row items-center justify-between text-sm text-gray-400">
+          <div className="flex items-center">
+            <ArrowLeft size={16} className="mr-1 text-red-400" /> 
+            <span>Nicht gewusst</span>
+          </div>
+          
+          <div className="flex items-center">
+            <span>Gewusst</span>
+            <ArrowRight size={16} className="ml-1 text-green-400" />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

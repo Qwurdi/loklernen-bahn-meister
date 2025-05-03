@@ -1,5 +1,6 @@
 
 import { useState, useRef } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface SwipeHandlerProps {
   onSwipeLeft?: () => void;
@@ -30,10 +31,11 @@ export default function useCardSwipe({
   
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
   
   // Handle touch start
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (disabled) return;
+    if (disabled || !isMobile) return;
     
     // Prevent default to disable scrolling
     e.preventDefault();
@@ -49,7 +51,7 @@ export default function useCardSwipe({
   
   // Handle touch move
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (disabled || !dragState.startX || !dragState.isDragging) return;
+    if (disabled || !dragState.startX || !dragState.isDragging || !isMobile) return;
     
     // Always prevent default to stop scrolling
     e.preventDefault();
@@ -78,7 +80,7 @@ export default function useCardSwipe({
   
   // Handle touch end
   const handleTouchEnd = () => {
-    if (disabled || !dragState.startX || !dragState.isDragging) return;
+    if (disabled || !dragState.startX || !dragState.isDragging || !isMobile) return;
     
     const { dragDelta } = dragState;
     

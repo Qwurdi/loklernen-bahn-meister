@@ -117,7 +117,7 @@ export default function LearningSessionPage() {
   // Render main learning session UI with our new card stack
   return (
     <SessionContainer isMobile={isMobile} fullHeight={isMobile}>
-      <main className={`flex-1 ${isMobile ? 'px-0 pt-2 pb-16 overflow-hidden flex flex-col' : 'container px-4 py-8'}`}>
+      <main className={`flex-1 ${isMobile ? 'px-0 pt-2 pb-16 overflow-hidden flex flex-col' : 'container px-4 py-8'} bg-gray-50`}>
         <SessionHeader 
           sessionTitle={sessionTitle} 
           categoryParam={categoryParam} 

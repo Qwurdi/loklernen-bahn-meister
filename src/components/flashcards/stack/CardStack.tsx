@@ -69,14 +69,14 @@ export default function CardStack<T extends Question = Question>({
   const nextCard = hasNextCard ? questions[currentIndex + 1] : null;
   
   return (
-    <div className="stack-container h-full w-full relative overflow-hidden" ref={stackRef}>
+    <div className="stack-container h-full w-full relative overflow-hidden bg-gray-50 rounded-lg p-4" ref={stackRef}>
       <StackProgress 
         total={questions.length} 
         current={currentIndex + 1} 
-        className="absolute top-0 left-0 right-0 z-10" 
+        className="absolute top-2 left-2 right-2 z-10" 
       />
       
-      <div className="cards-wrapper h-full w-full flex items-center justify-center pt-8 pb-16">
+      <div className="cards-wrapper h-full w-full flex items-center justify-center pt-12 pb-6">
         <AnimatePresence mode="popLayout">
           {/* Next card in stack (shown partially underneath) */}
           {hasNextCard && !isAnimating && (

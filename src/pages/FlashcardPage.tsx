@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
@@ -133,12 +132,12 @@ export default function FlashcardPage() {
   // Handle session completion
   if (sessionFinished) {
     return (
-      <div className="flex min-h-screen flex-col bg-black text-white">
+      <div className="flex min-h-screen flex-col bg-gray-50 text-gray-800">
         <Navbar />
         <main className="flex-1 container py-12 flex flex-col items-center justify-center">
-          <div className="p-6 max-w-md text-center bg-gray-900 rounded-xl shadow-lg border border-gray-800">
+          <div className="p-6 max-w-md text-center bg-white rounded-xl shadow-sm border border-gray-200">
             <h2 className="text-2xl font-bold mb-4">Kategorie abgeschlossen!</h2>
-            <p className="text-gray-300 mb-6">
+            <p className="text-gray-600 mb-6">
               Du hast {correctCount} von {questions.length} Karten richtig beantwortet.
               ({Math.round((correctCount / questions.length) * 100)}%)
             </p>
@@ -159,7 +158,7 @@ export default function FlashcardPage() {
   }
 
   return (
-    <div className={`flex flex-col ${isMobile ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-black text-white`}>
+    <div className={`flex flex-col ${isMobile ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-gray-50 text-gray-800`}>
       <Navbar />
       
       <main className="flex-1">

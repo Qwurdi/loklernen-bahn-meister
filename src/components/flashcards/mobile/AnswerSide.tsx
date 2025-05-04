@@ -3,6 +3,7 @@ import React from "react";
 import { Question } from "@/types/questions";
 import FlashcardActionButton from "../FlashcardActionButton";
 import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface AnswerSideProps {
   question: Question;
@@ -24,19 +25,21 @@ export default function AnswerSide({
   const textSizeClass = useDynamicTextSize(answerText, 'answer');
   
   return (
-    <div className="flex flex-col h-full">
-      <div className="bg-blue-50 px-3 py-1.5 rounded-full text-xs text-blue-600 self-start mb-2">Antwort</div>
+    <div className="flex flex-col h-full bg-white p-4">
+      <div className="bg-blue-100 px-3 py-1.5 rounded-full text-xs text-blue-600 self-start mb-2">Antwort</div>
       
       <div className="flex-1 flex flex-col justify-between overflow-y-auto">
         <div className="flex flex-col items-center w-full pb-16">
-          {/* Fixed height container for the image */}
+          {/* Fixed height container for the image with proper containment */}
           {question?.image_url && (
-            <div className="min-h-[160px] flex items-center justify-center mb-6">
-              <img 
-                src={question.image_url} 
-                alt="Signal" 
-                className="max-h-[160px] object-contain"
-              />
+            <div className="w-full mb-6">
+              <AspectRatio ratio={4/3} className="max-h-[180px] bg-gray-50 rounded-md">
+                <img 
+                  src={question.image_url} 
+                  alt="Signal" 
+                  className="w-full h-full object-contain p-2"
+                />
+              </AspectRatio>
             </div>
           )}
           

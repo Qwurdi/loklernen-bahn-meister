@@ -32,13 +32,13 @@ export default function StackProgress({
         </div>
       </div>
       
-      <div className="relative">
+      <div className="relative mt-3">
         <Progress 
           value={percentage} 
           className="h-1.5 bg-gray-200" 
           indicatorClassName="bg-gradient-ultramarine animate-gradient-shift"
         />
-        <div className="absolute right-0 top-0 transform translate-y-[-125%] text-xs text-gray-500">
+        <div className="absolute right-0 top-0 transform translate-y-[-150%] text-xs text-gray-500">
           {percentage}%
         </div>
       </div>

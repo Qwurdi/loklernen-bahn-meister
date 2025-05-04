@@ -38,9 +38,7 @@ export default function StackProgress({
           className="h-1.5 bg-gray-200" 
           indicatorClassName="bg-gradient-ultramarine animate-gradient-shift"
         />
-        <div className="absolute right-0 top-0 transform translate-y-[-150%] text-xs text-gray-500">
-          {percentage}%
-        </div>
+        {/* Percentage display removed */}
       </div>
     </div>
   );

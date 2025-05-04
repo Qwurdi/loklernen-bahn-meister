@@ -48,7 +48,7 @@ export default function FlashcardProgress({
     );
   }
 
-  // Desktop view remains more detailed
+  // Desktop view remains more detailed but without percentage displays
   return (
     <div className="mb-6 rounded-lg border border-gray-800 p-4 bg-gray-900">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -56,7 +56,7 @@ export default function FlashcardProgress({
           <p className="text-sm font-medium mb-1">Fortschritt</p>
           <div className="flex items-center gap-2">
             <Progress value={progressPercentage} className="h-2" />
-            <span className="text-xs font-medium">{progressPercentage}%</span>
+            {/* Percentage removed */}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             Karte {currentIndex + 1} von {totalCards}
@@ -71,7 +71,7 @@ export default function FlashcardProgress({
               className="h-2" 
               indicatorClassName={correctPercentage > 70 ? "bg-green-500" : correctPercentage > 40 ? "bg-yellow-500" : "bg-red-500"}
             />
-            <span className="text-xs font-medium">{correctPercentage}%</span>
+            {/* Percentage removed */}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             {correctCount} richtig beantwortet

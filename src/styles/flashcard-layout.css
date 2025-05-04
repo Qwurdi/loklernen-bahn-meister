@@ -1,0 +1,112 @@
+
+/* ===== Flashcard Layout Styles ===== */
+
+/* Stack Container */
+.stack-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  overflow: hidden;
+}
+
+/* Card Transform Styles */
+.transform-gpu {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Mobile-Optimized Touch Behaviors */
+.touch-none {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Dynamic Text Size for Flashcards */
+.flashcard-text-xs {
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+.flashcard-text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25;
+}
+
+.flashcard-text-base {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.flashcard-text-lg {
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+
+/* Ensure text containers have proper overflow handling */
+.text-container-scrollable {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+/* Aspect ratio maintenance */
+.aspect-square {
+  aspect-ratio: 1 / 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Progress indicators with trend colors */
+.progress-bar-container {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 9999px;
+  overflow: hidden;
+  backdrop-filter: blur(5px);
+}
+
+.progress-bar-mint {
+  background: linear-gradient(90deg, #C7F0BD 0%, #A7E0AD 100%);
+}
+
+.progress-bar-tranquil {
+  background: linear-gradient(90deg, #5080FF 0%, #3F00FF 100%);
+}
+
+.progress-bar-coral {
+  background: linear-gradient(90deg, #FF6D70 0%, #FF4D50 100%);
+}
+
+/* Box styling enhancements */
+.learning-box {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.learning-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  backdrop-filter: blur(8px);
+  border-radius: inherit;
+}
+
+.learning-box:hover {
+  transform: translateY(-2px);
+}

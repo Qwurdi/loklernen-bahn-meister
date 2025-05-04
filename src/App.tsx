@@ -5,7 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { UserPreferencesProvider } from "@/contexts/UserPreferencesContext";
 import AppRoutes from "@/routing/AppRoutes";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@radix-ui/react-tooltip";
 
 console.log("App: Initializing application component");
 
@@ -28,7 +28,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <UserPreferencesProvider>
-          <TooltipProvider delayDuration={300}>
+          <TooltipProvider>
             <AppRoutes />
             <Toaster />
             <Sonner />

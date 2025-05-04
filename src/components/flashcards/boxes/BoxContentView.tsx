@@ -36,48 +36,48 @@ export default function BoxContentView({
   const getBoxAccentStyle = () => {
     switch (boxNumber) {
       case 1:
-        return "bg-gradient-to-r from-loklernen-coral/30 to-transparent border-l-4 border-loklernen-coral";
+        return "bg-gradient-to-r from-loklernen-coral/10 to-white border-l-4 border-loklernen-coral";
       case 2:
-        return "bg-gradient-to-r from-amber-500/30 to-transparent border-l-4 border-amber-500";
+        return "bg-gradient-to-r from-amber-500/10 to-white border-l-4 border-amber-500";
       case 3:
-        return "bg-gradient-to-r from-loklernen-tranquil/30 to-transparent border-l-4 border-loklernen-tranquil";
+        return "bg-gradient-to-r from-loklernen-tranquil/10 to-white border-l-4 border-loklernen-tranquil";
       case 4:
-        return "bg-gradient-to-r from-blue-400/30 to-transparent border-l-4 border-blue-400";
+        return "bg-gradient-to-r from-blue-400/10 to-white border-l-4 border-blue-400";
       case 5:
-        return "bg-gradient-to-r from-loklernen-mint/30 to-transparent border-l-4 border-loklernen-mint";
+        return "bg-gradient-to-r from-loklernen-mint/10 to-white border-l-4 border-loklernen-mint";
       default:
-        return "bg-gradient-to-r from-gray-500/30 to-transparent border-l-4 border-gray-500";
+        return "bg-gradient-to-r from-gray-500/10 to-white border-l-4 border-gray-500";
     }
   };
 
   return (
-    <div className="mt-6 space-y-5 backdrop-blur-sm">
+    <div className="mt-6 space-y-5">
       <div className={`rounded-lg p-3 ${getBoxAccentStyle()}`}>
-        <h3 className="text-lg font-bold mb-1 text-white">Box {boxNumber}</h3>
-        <p className="text-sm text-gray-300">{boxDescriptions[boxNumber - 1]}</p>
+        <h3 className="text-lg font-bold mb-1 text-gray-800">Box {boxNumber}</h3>
+        <p className="text-sm text-gray-600">{boxDescriptions[boxNumber - 1]}</p>
       </div>
       
       {dueCount > 0 ? (
         <Button 
           onClick={onStartLearning}
-          className="w-full bg-gradient-ultramarine hover:opacity-90 shadow-lg mb-5 transition-all duration-300 hover:-translate-y-1"
+          className="w-full bg-gradient-ultramarine hover:opacity-90 shadow-sm mb-5 transition-all duration-300 hover:-translate-y-1"
         >
           {dueCount} fällige Karten lernen <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
       ) : (
-        <div className="text-center p-3 mb-5 backdrop-blur-sm rounded-lg text-sm text-gray-300 border border-white/10 bg-black/20">
+        <div className="text-center p-3 mb-5 bg-gray-50 rounded-lg text-sm text-gray-500 border border-gray-200">
           Keine fälligen Karten in dieser Box
         </div>
       )}
       
       {previewQuestions.length > 0 ? (
         <div className="space-y-3">
-          <h4 className="text-sm font-semibold text-white bg-gradient-ultramarine bg-clip-text text-transparent">Kartenvorschau:</h4>
+          <h4 className="text-sm font-semibold text-gray-700">Kartenvorschau:</h4>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {previewQuestions.map(question => (
               <div 
                 key={question.id}
-                className="border border-white/10 p-3 h-[120px] overflow-hidden hover:border-loklernen-ultramarine/50 cursor-pointer transition-all duration-300 group bg-black/20 backdrop-blur-md rounded-lg"
+                className="border border-gray-200 p-3 h-[120px] overflow-hidden hover:border-loklernen-ultramarine/50 cursor-pointer transition-all duration-300 group bg-white rounded-lg shadow-sm hover:shadow-md"
                 onClick={() => navigate(`/karteikarten/lernen?box=${boxNumber}`)}
               >
                 {question.image_url ? (
@@ -88,13 +88,13 @@ export default function BoxContentView({
                         alt="Signalbild" 
                         className="max-h-full max-w-full object-contain rounded"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-br from-loklernen-ultramarine/15 to-transparent pointer-events-none"></div>
+                      <div className="absolute inset-0 bg-gradient-to-br from-loklernen-ultramarine/5 to-transparent pointer-events-none"></div>
                     </div>
                   </div>
                 ) : (
                   <div className="flex flex-col h-full">
-                    <p className="text-xs text-gray-300 line-clamp-4 mb-2">{question.text}</p>
-                    <div className="mt-auto text-[10px] text-right text-loklernen-ultramarine group-hover:text-white">Karte ansehen →</div>
+                    <p className="text-xs text-gray-600 line-clamp-4 mb-2">{question.text}</p>
+                    <div className="mt-auto text-[10px] text-right text-loklernen-ultramarine group-hover:text-loklernen-ultramarine/80">Karte ansehen →</div>
                   </div>
                 )}
               </div>
@@ -102,8 +102,8 @@ export default function BoxContentView({
           </div>
         </div>
       ) : (
-        <div className="text-center p-5 bg-black/20 backdrop-blur-sm rounded-lg border border-white/10">
-          <p className="text-gray-400">Noch keine Karten in dieser Box</p>
+        <div className="text-center p-5 bg-gray-50 rounded-lg border border-gray-200">
+          <p className="text-gray-500">Noch keine Karten in dieser Box</p>
         </div>
       )}
     </div>

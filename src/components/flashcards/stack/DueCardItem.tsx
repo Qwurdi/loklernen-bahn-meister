@@ -28,9 +28,9 @@ export default function DueCardItem({
       <div 
         className={`w-20 h-20 transition-all rounded-lg border ${
           isHovered ? 
-          'border-loklernen-ultramarine shadow-md shadow-loklernen-ultramarine/20 bg-black/40' : 
-          'border-white/10 bg-black/20'
-        } backdrop-blur-md hover:translate-y-[-2px]`}
+          'border-loklernen-ultramarine shadow-md shadow-loklernen-ultramarine/10 bg-white' : 
+          'border-gray-200 bg-white'
+        } hover:translate-y-[-2px]`}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
@@ -43,7 +43,7 @@ export default function DueCardItem({
               />
             </AspectRatio>
           ) : (
-            <div className="text-xs line-clamp-2 overflow-hidden text-center text-gray-300">
+            <div className="text-xs line-clamp-2 overflow-hidden text-center text-gray-600">
               {question.text.length > 30 ? `${question.text.substring(0, 30)}...` : question.text}
             </div>
           )}

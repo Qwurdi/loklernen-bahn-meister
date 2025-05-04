@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -49,7 +48,7 @@ export default function CardsPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-black text-white">
+    <div className="flex min-h-screen flex-col bg-gray-50 text-gray-900">
       <div className="fixed inset-0 bg-gradient-to-br from-gray-900 to-black -z-10"></div>
       <Navbar />
       
@@ -60,7 +59,7 @@ export default function CardsPage() {
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <Link to="/" className="text-loklernen-lavender hover:text-white transition-colors">Home</Link>
+                    <Link to="/" className="text-loklernen-ultramarine hover:text-loklernen-ultramarine/80 transition-colors">Home</Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
@@ -78,7 +77,7 @@ export default function CardsPage() {
             onStartLearningSelected={handleStartLearningSelected}
           />
           
-          {/* Box System Overview - Enhanced Component */}
+          {/* Box System Overview - Light Design */}
           <BoxSystemOverview />
 
           <CardDecksSection 
@@ -97,12 +96,12 @@ export default function CardsPage() {
             onRemoveCategory={handleSelectCategory}
           />
           
-          {/* Settings Hint with Enhanced Styling */}
-          <div className="text-center text-sm text-gray-400 mt-8 border-t border-gray-800 pt-4">
+          {/* Settings Hint with Light Design */}
+          <div className="text-center text-sm text-gray-500 mt-8 border-t border-gray-200 pt-4">
             <p className="flex items-center justify-center gap-2">
-              <Settings className="h-4 w-4 text-loklernen-lavender" />
-              Aktives Regelwerk: <span className="font-semibold text-loklernen-lavender">{regulationPreference}</span>
-              <Link to="/einstellungen" className="text-loklernen-tranquil hover:text-loklernen-ultramarine hover:underline ml-2 transition-colors">
+              <Settings className="h-4 w-4 text-loklernen-ultramarine" />
+              Aktives Regelwerk: <span className="font-semibold text-loklernen-ultramarine">{regulationPreference}</span>
+              <Link to="/einstellungen" className="text-loklernen-ultramarine hover:text-loklernen-ultramarine/80 hover:underline ml-2 transition-colors">
                 Regelwerk in Einstellungen ändern
               </Link>
             </p>

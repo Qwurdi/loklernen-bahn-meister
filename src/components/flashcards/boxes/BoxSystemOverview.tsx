@@ -40,19 +40,19 @@ export default function BoxSystemOverview() {
   // Show login prompt if user is not authenticated
   if (!user) {
     return (
-      <div className="mb-6 space-y-2">
+      <div className="mb-6 space-y-2 bg-white p-6 rounded-lg shadow-sm">
         <div className="flex items-center gap-2 mb-1">
-          <h3 className="text-xl font-bold bg-gradient-ultramarine bg-clip-text text-transparent">Lernboxen-System</h3>
-          <span className="text-sm text-gray-300">Dein persönlicher Lernfortschritt</span>
+          <h3 className="text-xl font-bold text-gray-900">Lernboxen-System</h3>
+          <span className="text-sm text-gray-500">Dein persönlicher Lernfortschritt</span>
         </div>
         
-        <p className="text-sm text-gray-300 mb-4">
+        <p className="text-sm text-gray-500 mb-4">
           Melde dich an, um deinen persönlichen Lernfortschritt zu speichern und das Boxen-System zu nutzen.
         </p>
         
         <Button 
           onClick={() => navigate('/login')}
-          className="bg-gradient-ultramarine hover:opacity-90 shadow-lg"
+          className="bg-gradient-ultramarine hover:opacity-90 shadow-sm"
         >
           Anmelden
         </Button>
@@ -63,15 +63,15 @@ export default function BoxSystemOverview() {
   // Show loading state
   if (loading) {
     return (
-      <div className="mb-8 space-y-4">
+      <div className="mb-8 space-y-4 bg-white p-6 rounded-lg shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold bg-gradient-ultramarine bg-clip-text text-transparent">Lernboxen-System</h3>
+          <h3 className="text-xl font-bold text-gray-900">Lernboxen-System</h3>
           <Skeleton className="h-10 w-10" />
         </div>
         
         <div className="grid grid-cols-5 gap-3">
           {[1, 2, 3, 4, 5].map(i => (
-            <Skeleton key={i} className="h-28 bg-gray-800/40 backdrop-blur-sm rounded-lg" />
+            <Skeleton key={i} className="h-28 bg-gray-100 rounded-lg" />
           ))}
         </div>
       </div>
@@ -79,18 +79,18 @@ export default function BoxSystemOverview() {
   }
 
   return (
-    <div className="mb-8 space-y-4">
+    <div className="mb-8 space-y-4 bg-white p-6 rounded-lg shadow-sm">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h3 className="text-xl font-bold bg-gradient-ultramarine bg-clip-text text-transparent">Lernboxen-System</h3>
-          <p className="text-sm text-gray-300">Dein persönlicher Lernfortschritt</p>
+          <h3 className="text-xl font-bold text-gray-900">Lernboxen-System</h3>
+          <p className="text-sm text-gray-500">Dein persönlicher Lernfortschritt</p>
         </div>
         
         <div className="flex gap-3">
           {totalDueCards > 0 && (
             <Button
               onClick={() => handleStartLearning()}
-              className="bg-gradient-ultramarine hover:bg-loklernen-ultramarine/90 shadow-md transition-all duration-200"
+              className="bg-gradient-ultramarine hover:bg-loklernen-ultramarine/90 shadow-sm transition-all duration-200"
             >
               <Play className="h-4 w-4 mr-2" /> Alle fälligen Karten lernen
             </Button>
@@ -99,14 +99,14 @@ export default function BoxSystemOverview() {
           <Button
             variant="outline"
             onClick={refreshBoxData}
-            className="border-gray-700 bg-black/20 backdrop-blur-lg text-gray-300 hover:bg-gray-800 transition-all duration-200"
+            className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-all duration-200"
           >
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      {/* Boxes Grid with enhanced visuals */}
+      {/* Boxes Grid with light design */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {boxStats.map((box) => (
           <LearningBoxItem

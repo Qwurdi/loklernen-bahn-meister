@@ -21,10 +21,10 @@ export default function DueCardSubcategory({
   onHoverCard 
 }: DueCardSubcategoryProps) {
   return (
-    <div className="space-y-2 pl-3 border-l border-white/10">
+    <div className="space-y-2 pl-3 border-l border-gray-200">
       <div className="flex items-center justify-between">
-        <h5 className="text-xs font-medium text-gray-300">{subcategory}</h5>
-        <Badge variant="outline" className="text-xs bg-black/30 text-gray-300 border-white/10">
+        <h5 className="text-xs font-medium text-gray-500">{subcategory}</h5>
+        <Badge variant="outline" className="text-xs bg-white text-gray-500 border-gray-200">
           <Clock className="h-3 w-3 mr-1" /> {cards.length}
         </Badge>
       </div>

@@ -19,7 +19,7 @@ export default function DueCardCategory({
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <h4 className="text-sm font-medium text-white">
+        <h4 className="text-sm font-medium text-gray-700">
           {category === "Signale" ? (
             <Signal className="h-4 w-4 inline mr-1 text-loklernen-ultramarine" />
           ) : (

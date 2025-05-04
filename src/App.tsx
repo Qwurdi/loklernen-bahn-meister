@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { UserPreferencesProvider } from "@/contexts/UserPreferencesContext";
 import AppRoutes from "@/routing/AppRoutes";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 console.log("App: Initializing application component");
 
@@ -27,11 +28,11 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <UserPreferencesProvider>
-          {/* TooltipProvider moved to main.tsx */}
-          {/* AppRoutes component contains all route definitions */}
-          <AppRoutes />
-          <Toaster />
-          <Sonner />
+          <TooltipProvider delayDuration={300}>
+            <AppRoutes />
+            <Toaster />
+            <Sonner />
+          </TooltipProvider>
         </UserPreferencesProvider>
       </AuthProvider>
     </QueryClientProvider>

@@ -4,7 +4,7 @@ import { Question } from "@/types/questions";
 import { Button } from "@/components/ui/button";
 import { Lightbulb } from "lucide-react";
 import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
+import ZoomableImage from "@/components/common/ZoomableImage";
 
 interface QuestionSideProps {
   question: Question;
@@ -24,18 +24,14 @@ export default function QuestionSide({ question, onShowAnswer }: QuestionSidePro
         {question?.text}
       </h2>
       
-      {/* Image container with AspectRatio for proper display */}
+      {/* Image container with ZoomableImage */}
       <div className="flex-1 flex items-center justify-center mb-4">
         {question?.image_url && (
-          <div className="w-full max-w-[280px] mx-auto">
-            <AspectRatio ratio={1} className="bg-gray-50 rounded-lg overflow-hidden">
-              <img 
-                src={question.image_url} 
-                alt="Signal" 
-                className="w-full h-full object-contain p-2"
-              />
-            </AspectRatio>
-          </div>
+          <ZoomableImage
+            src={question.image_url}
+            alt="Signal"
+            containerClassName="w-full max-w-[200px] mx-auto"
+          />
         )}
       </div>
       

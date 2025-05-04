@@ -2,7 +2,7 @@
 import { Question } from '@/types/questions';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, XCircle } from 'lucide-react';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
+import ZoomableImage from '@/components/common/ZoomableImage';
 
 // Update interface to use generics
 interface CardBackProps<T extends Question = Question> {
@@ -63,17 +63,13 @@ export default function CardBack<T extends Question = Question>({ question, onAn
         </div>
       </div>
       
-      {/* Image with proper display */}
+      {/* Image with ZoomableImage */}
       {question.image_url && (
-        <div className="w-full max-w-[200px] mx-auto mb-6">
-          <AspectRatio ratio={1} className="bg-gray-50 rounded-md overflow-hidden">
-            <img 
-              src={question.image_url} 
-              alt="Signalbild" 
-              className="w-full h-full object-contain p-2"
-            />
-          </AspectRatio>
-        </div>
+        <ZoomableImage
+          src={question.image_url}
+          alt="Signalbild"
+          containerClassName="w-full max-w-[200px] mx-auto mb-6"
+        />
       )}
       
       {/* Action buttons with enhanced styling */}

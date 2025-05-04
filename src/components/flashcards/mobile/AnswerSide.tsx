@@ -3,7 +3,7 @@ import React from "react";
 import { Question } from "@/types/questions";
 import FlashcardActionButton from "../FlashcardActionButton";
 import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
+import ZoomableImage from "@/components/common/ZoomableImage";
 
 interface AnswerSideProps {
   question: Question;
@@ -46,17 +46,13 @@ export default function AnswerSide({
           )}
         </div>
         
-        {/* Image container with AspectRatio */}
+        {/* Image container with ZoomableImage */}
         {question?.image_url && (
-          <div className="w-full max-w-[280px] mx-auto mb-6">
-            <AspectRatio ratio={1} className="bg-gray-50 rounded-lg overflow-hidden">
-              <img 
-                src={question.image_url} 
-                alt="Signal" 
-                className="w-full h-full object-contain p-2"
-              />
-            </AspectRatio>
-          </div>
+          <ZoomableImage
+            src={question.image_url}
+            alt="Signal"
+            containerClassName="w-full max-w-[200px] mx-auto mb-6"
+          />
         )}
       </div>
       

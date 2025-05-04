@@ -1,7 +1,7 @@
 
 import { Question } from '@/types/questions';
 import { Fragment } from 'react';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
+import ZoomableImage from '@/components/common/ZoomableImage';
 
 // Update interface to use generics
 interface CardFrontProps<T extends Question = Question> {
@@ -26,17 +26,13 @@ export default function CardFront<T extends Question = Question>({ question }: C
       
       {/* Card content with enhanced image display */}
       <div className="flex-1 flex flex-col items-center justify-center overflow-auto">
-        {/* Question image with AspectRatio */}
+        {/* Question image with ZoomableImage */}
         {question.image_url && (
-          <div className="w-full max-w-[250px] mx-auto mb-6">
-            <AspectRatio ratio={1} className="bg-gray-50 rounded-md overflow-hidden">
-              <img 
-                src={question.image_url} 
-                alt="Signalbild" 
-                className="w-full h-full object-contain p-2"
-              />
-            </AspectRatio>
-          </div>
+          <ZoomableImage
+            src={question.image_url}
+            alt="Signalbild"
+            containerClassName="w-full max-w-[200px] mx-auto mb-6"
+          />
         )}
         
         {/* Instructions with updated styling */}

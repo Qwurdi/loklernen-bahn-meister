@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import FlashcardActionButton from "./FlashcardActionButton";
 import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
+import ZoomableImage from "@/components/common/ZoomableImage";
 
 interface FlashcardItemDesktopProps {
   question: Question;
@@ -39,18 +39,14 @@ export default function FlashcardItemDesktop({
               {question?.text}
             </h2>
             
-            {/* Image with aspect ratio for consistent display */}
+            {/* Image with zoomable functionality */}
             {question?.image_url && (
               <div className="flex-1 flex items-center justify-center mb-6">
-                <div className="w-full max-w-[280px]">
-                  <AspectRatio ratio={1} className="bg-gray-50 rounded-lg overflow-hidden">
-                    <img 
-                      src={question.image_url} 
-                      alt="Signal" 
-                      className="w-full h-full object-contain p-2"
-                    />
-                  </AspectRatio>
-                </div>
+                <ZoomableImage
+                  src={question.image_url}
+                  alt="Signal"
+                  containerClassName="w-full max-w-[200px]" 
+                />
               </div>
             )}
             
@@ -90,17 +86,13 @@ export default function FlashcardItemDesktop({
               )}
             </div>
             
-            {/* Image with AspectRatio */}
+            {/* Image with ZoomableImage */}
             {question?.image_url && (
-              <div className="w-full max-w-[250px] mx-auto mb-6">
-                <AspectRatio ratio={1} className="bg-gray-50 rounded-lg overflow-hidden">
-                  <img 
-                    src={question.image_url} 
-                    alt="Signal" 
-                    className="w-full h-full object-contain p-2"
-                  />
-                </AspectRatio>
-              </div>
+              <ZoomableImage
+                src={question.image_url}
+                alt="Signal"
+                containerClassName="w-full max-w-[200px] mx-auto mb-6"
+              />
             )}
 
             {!answered && (

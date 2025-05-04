@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Question } from '@/types/questions';
 import { motion, AnimatePresence } from 'framer-motion';
 import CardItem from './CardItem';
@@ -27,6 +27,21 @@ export default function CardStack<T extends Question = Question>({
   const [isAnimating, setIsAnimating] = useState(false);
   const stackRef = useRef<HTMLDivElement>(null);
 
+  // Preload the next few images
+  useEffect(() => {
+    // Preload the next 3 cards' images (if they exist)
+    for (let i = 1; i <= 3; i++) {
+      const preloadIndex = currentIndex + i;
+      if (preloadIndex < questions.length) {
+        const nextQuestion = questions[preloadIndex];
+        if (nextQuestion.image_url) {
+          const img = new Image();
+          img.src = nextQuestion.image_url;
+        }
+      }
+    }
+  }, [currentIndex, questions]);
+
   const handleSwipe = useCallback(async (direction: 'left' | 'right') => {
     if (isAnimating || currentIndex >= questions.length) return;
     
@@ -36,7 +51,7 @@ export default function CardStack<T extends Question = Question>({
     const currentQuestion = questions[currentIndex];
     const score = direction === 'right' ? 5 : 1; // Right = known (5), Left = not known (1)
     
-    // Process the answer
+    // Process the answer - using optimized submitAnswer that doesn't reload
     await onAnswer(currentQuestion.id, score);
     
     // Short delay to let animation complete

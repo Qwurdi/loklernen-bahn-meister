@@ -23,13 +23,14 @@ export function useSpacedRepetition(
   const [dueQuestions, setDueQuestions] = useState<Question[]>([]);
   const [progress, setProgress] = useState<UserProgress[]>([]);
   const [error, setError] = useState<Error | null>(null);
+  const [pendingUpdates, setPendingUpdates] = useState<{questionId: string, score: number}[]>([]);
   
   // Default to 'all' if regulationCategory is not provided
   const regulationCategory = options.regulationCategory || "all";
   const boxNumber = options.boxNumber;
   
-  // Maximum number of questions to load at once
-  const batchSize = 50;
+  // Optimized batch size - ideal for didactic and technical balance
+  const batchSize = options.batchSize || 15; // Default to 15 cards per session
   
   // Move loadDueQuestions to useCallback to avoid recreation on every render
   const loadDueQuestions = useCallback(async () => {
@@ -123,29 +124,58 @@ export function useSpacedRepetition(
     } finally {
       setLoading(false);
     }
-  }, [user, category, subcategory, options.practiceMode, regulationCategory, boxNumber]);
+  }, [user, category, subcategory, options.practiceMode, regulationCategory, boxNumber, batchSize]);
 
   useEffect(() => {
     loadDueQuestions();
   }, [loadDueQuestions]);
 
+  // New function - Submit answer without immediate reload
   const submitAnswer = async (questionId: string, score: number) => {
     if (!user) return;
 
     try {
+      // Add to pending updates
+      setPendingUpdates(prev => [...prev, {questionId, score}]);
+      
       const currentProgress = progress.find(p => p.question_id === questionId);
       
-      // Update or create progress for this question
-      await updateUserProgress(user.id, questionId, score, currentProgress);
+      // Update progress in the background, don't await the result
+      updateUserProgress(user.id, questionId, score, currentProgress)
+        .catch(err => console.error('Background update error:', err));
       
-      // Update user statistics
-      await updateUserStats(user.id, score);
-
-      // Reload questions to update the list
-      await loadDueQuestions();
+      // Update stats in the background, don't await the result
+      updateUserStats(user.id, score)
+        .catch(err => console.error('Background stats update error:', err));
+        
     } catch (error) {
       console.error('Error submitting answer:', error);
       setError(error instanceof Error ? error : new Error('Unknown error submitting answer'));
+    }
+  };
+
+  // Function to apply all pending updates and reload questions
+  const applyPendingUpdates = async () => {
+    if (!user || pendingUpdates.length === 0) return;
+    
+    setLoading(true);
+    try {
+      // Ensure all updates are complete
+      for (const {questionId, score} of pendingUpdates) {
+        const currentProgress = progress.find(p => p.question_id === questionId);
+        await updateUserProgress(user.id, questionId, score, currentProgress);
+      }
+      
+      // Clear pending updates
+      setPendingUpdates([]);
+      
+      // Reload questions
+      await loadDueQuestions();
+    } catch (error) {
+      console.error('Error applying updates:', error);
+      setError(error instanceof Error ? error : new Error('Unknown error applying updates'));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -155,6 +185,8 @@ export function useSpacedRepetition(
     dueQuestions,
     progress,
     submitAnswer,
+    pendingUpdatesCount: pendingUpdates.length,
+    applyPendingUpdates,
     reloadQuestions: loadDueQuestions
   };
 }

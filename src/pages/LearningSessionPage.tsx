@@ -42,13 +42,21 @@ export default function LearningSessionPage() {
   });
 
   // Pass both category, subcategory and regulation preference to the hook
-  const { loading, dueQuestions, submitAnswer, reloadQuestions } = useSpacedRepetition(
+  // Use optimized batch size of 15 cards per session
+  const { 
+    loading, 
+    dueQuestions, 
+    submitAnswer, 
+    applyPendingUpdates, 
+    pendingUpdatesCount 
+  } = useSpacedRepetition(
     categoryParam,
     subcategoryParam,
     { 
       practiceMode: false,
       regulationCategory: regulationParam,
-      boxNumber: boxParam
+      boxNumber: boxParam,
+      batchSize: 15 // Ideal batch size for balance between performance and cognitive load
     }
   );
 
@@ -58,8 +66,7 @@ export default function LearningSessionPage() {
     if (!loading && dueQuestions.length > 0) {
       // Shuffle the cards to create a mixed learning session
       const shuffled = [...dueQuestions].sort(() => Math.random() - 0.5);
-      // Limit to 36 cards max for consistency
-      setSessionCards(shuffled.slice(0, 36));
+      setSessionCards(shuffled);
     }
   }, [loading, dueQuestions]);
 
@@ -69,7 +76,7 @@ export default function LearningSessionPage() {
       setCorrectCount(prev => prev + 1);
     }
     
-    // Submit answer for spaced repetition
+    // Submit answer for spaced repetition without reloading all cards
     if (user) {
       await submitAnswer(questionId, score);
     }
@@ -77,14 +84,26 @@ export default function LearningSessionPage() {
 
   const handleComplete = () => {
     setSessionFinished(true);
-    toast.success("Lernsession abgeschlossen! Gut gemacht!");
+
+    // Apply all pending updates when session is complete
+    applyPendingUpdates().then(() => {
+      toast.success("Lernsession abgeschlossen! Gut gemacht!");
+    });
   };
 
   const handleRestart = async () => {
-    await reloadQuestions();
+    // Apply any pending updates before restarting
+    await applyPendingUpdates();
+    
     setCurrentIndex(0);
     setCorrectCount(0);
     setSessionFinished(false);
+    
+    // Reset will shuffle cards again
+    if (dueQuestions.length > 0) {
+      const shuffled = [...dueQuestions].sort(() => Math.random() - 0.5);
+      setSessionCards(shuffled);
+    }
   };
 
   // Render loading state
@@ -109,6 +128,7 @@ export default function LearningSessionPage() {
           correctCount={correctCount} 
           totalCards={sessionCards.length}
           onRestart={handleRestart}
+          pendingUpdates={pendingUpdatesCount > 0}
         />
       </SessionContainer>
     );

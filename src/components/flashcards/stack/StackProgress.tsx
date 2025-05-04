@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Progress } from "@/components/ui/progress";
 
 interface StackProgressProps {
   total: number;
@@ -15,20 +16,31 @@ export default function StackProgress({
   const percentage = Math.round((current / total) * 100);
   
   return (
-    <div className={`stack-progress px-1 pt-1 pb-2 ${className}`}>
-      <div className="flex items-center justify-between mb-1">
-        <div className="flex items-center gap-1">
-          <div className="w-7 h-7 rounded-full bg-loklernen-sapphire flex items-center justify-center text-white font-medium text-xs">
-            {current}
+    <div className={`stack-progress px-4 pt-2 pb-3 ${className}`}>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <div className="card-white rounded-lg px-3 py-1.5 shadow-md flex items-center justify-center">
+            <span className="text-loklernen-ultramarine font-semibold">{current}</span>
+            <span className="text-gray-400 mx-1">/</span>
+            <span className="text-gray-500">{total}</span>
           </div>
-          <span className="text-xs text-gray-600">/{total}</span>
+          <span className="text-xs text-gray-500">Karte</span>
+        </div>
+        
+        <div className="text-xs py-0.5 px-2 bg-gray-100 rounded-full text-gray-600 border border-gray-200 shadow-sm">
+          {total - current} übrig
         </div>
       </div>
-      <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
-        <div 
-          className="h-full bg-loklernen-sapphire transition-all duration-300 ease-out"
-          style={{ width: `${percentage}%` }}
+      
+      <div className="relative">
+        <Progress 
+          value={percentage} 
+          className="h-1.5 bg-gray-200" 
+          indicatorClassName="bg-gradient-ultramarine animate-gradient-shift"
         />
+        <div className="absolute right-0 top-0 transform translate-y-[-125%] text-xs text-gray-500">
+          {percentage}%
+        </div>
       </div>
     </div>
   );

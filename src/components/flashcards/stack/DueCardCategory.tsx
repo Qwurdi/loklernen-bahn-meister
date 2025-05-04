@@ -23,21 +23,23 @@ export default function DueCardCategory({
           {category === "Signale" ? (
             <Signal className="h-4 w-4 inline mr-1 text-loklernen-ultramarine" />
           ) : (
-            <span className="inline-block w-4 h-4 bg-loklernen-betriebsdienst rounded-sm mr-1"></span>
+            <span className="inline-block w-4 h-4 bg-loklernen-ultramarine rounded-sm mr-1"></span>
           )}
           {category}
         </h4>
       </div>
       
-      {Object.entries(subcategories).map(([subcategory, cards]) => (
-        <DueCardSubcategory 
-          key={subcategory}
-          subcategory={subcategory}
-          cards={cards}
-          hoverCard={hoverCard}
-          onHoverCard={onHoverCard}
-        />
-      ))}
+      <div className="space-y-4">
+        {Object.entries(subcategories).map(([subcategory, cards]) => (
+          <DueCardSubcategory 
+            key={subcategory}
+            subcategory={subcategory}
+            cards={cards}
+            hoverCard={hoverCard}
+            onHoverCard={onHoverCard}
+          />
+        ))}
+      </div>
     </div>
   );
 }

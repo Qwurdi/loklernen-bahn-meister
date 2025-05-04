@@ -13,7 +13,6 @@ import LearningBoxesDisplay, { LEARNING_BOXES, BoxStats } from './boxes/Learning
 import LearningBoxStats from './boxes/LearningBoxStats';
 import DueCardsCollapsible from './boxes/DueCardsCollapsible';
 import { RegulationFilterType } from '@/types/regulation';
-import { Card } from '@/components/ui/card';
 
 type CategoryFilterType = "all" | QuestionCategory;
 
@@ -101,24 +100,26 @@ export default function LearningBoxesOverview() {
   if (!user) {
     return (
       <SpacedRepetitionTooltip>
-        <Card className="enhanced-glass-card border-gray-800/50 p-4 mb-6 text-center">
-          <h3 className="text-lg font-semibold mb-2 text-white">Lernfortschritt</h3>
-          <p className="text-gray-400">Melde dich an, um deinen Lernfortschritt zu sehen</p>
-        </Card>
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="text-lg font-semibold bg-gradient-ultramarine bg-clip-text text-transparent">Lernfortschritt</h3>
+          </div>
+          <p className="text-sm text-gray-400">Melde dich an, um deinen Lernfortschritt zu sehen</p>
+        </div>
       </SpacedRepetitionTooltip>
     );
   }
 
   if (isLoading) {
     return (
-      <Card className="enhanced-glass-card border-gray-800/50 p-4 mb-6">
-        <Skeleton className="h-6 w-40 mb-4 bg-gray-800/60" />
+      <div className="mb-6 space-y-4">
+        <Skeleton className="h-6 w-40 mb-4 bg-gray-800/40" />
         <div className="grid grid-cols-5 gap-2">
           {[1, 2, 3, 4, 5].map(i => (
-            <Skeleton key={i} className="h-16 flex-1 bg-gray-800/60" />
+            <Skeleton key={i} className="h-16 bg-gray-800/40" />
           ))}
         </div>
-      </Card>
+      </div>
     );
   }
 
@@ -128,15 +129,15 @@ export default function LearningBoxesOverview() {
   const dueCards = data?.dueCards || [];
 
   return (
-    <Card className="enhanced-glass-card border-gray-800/50 p-4 mb-6">
+    <div className="mb-6 space-y-4">
       <div className="flex flex-col md:flex-row justify-between mb-4 gap-2">
         <div className="flex items-center">
-          <h3 className="text-lg font-semibold text-white">Lernfortschritt</h3>
+          <h3 className="text-lg font-semibold bg-gradient-ultramarine bg-clip-text text-transparent">Lernfortschritt</h3>
           <LearningBoxHelp />
         </div>
         
         <Tabs value={category} onValueChange={(value) => setCategory(value as CategoryFilterType)} className="w-full md:w-auto">
-          <TabsList className="bg-black/50 backdrop-blur-md border border-gray-800/80">
+          <TabsList className="bg-black/50 backdrop-blur-md border border-white/10">
             <TabsTrigger value="all" className="text-xs md:text-sm data-[state=active]:bg-loklernen-ultramarine data-[state=active]:text-white">Alle</TabsTrigger>
             <TabsTrigger value="Signale" className="text-xs md:text-sm data-[state=active]:bg-loklernen-ultramarine data-[state=active]:text-white">Signale</TabsTrigger>
             <TabsTrigger value="Betriebsdienst" className="text-xs md:text-sm data-[state=active]:bg-loklernen-ultramarine data-[state=active]:text-white">Betriebsdienst</TabsTrigger>
@@ -152,6 +153,6 @@ export default function LearningBoxesOverview() {
 
       {/* Due Cards Collapsible Section */}
       <DueCardsCollapsible dueToday={dueToday} dueCards={dueCards} />
-    </Card>
+    </div>
   );
 }

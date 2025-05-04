@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
 import { Question } from '@/types/questions';
 import FlashcardQuestionImage from '@/components/flashcards/FlashcardQuestionImage';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
@@ -26,16 +25,16 @@ export default function DueCardItem({
       to={`/karteikarten/lernen?questionId=${card.question_id}`} 
       className="shrink-0"
     >
-      <Card 
-        className={`w-20 h-20 transition-all ${
+      <div 
+        className={`w-20 h-20 transition-all rounded-lg border ${
           isHovered ? 
-          'border-loklernen-ultramarine shadow-md shadow-loklernen-ultramarine/20' : 
-          'border-gray-700/50'
-        } enhanced-mini-card`}
+          'border-loklernen-ultramarine shadow-md shadow-loklernen-ultramarine/20 bg-black/40' : 
+          'border-white/10 bg-black/20'
+        } backdrop-blur-md hover:translate-y-[-2px]`}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
-        <CardContent className="p-1 overflow-hidden h-full flex flex-col justify-center items-center">
+        <div className="p-1 overflow-hidden h-full flex flex-col justify-center items-center">
           {question.image_url ? (
             <AspectRatio ratio={1} className="w-16 h-16 overflow-hidden">
               <FlashcardQuestionImage 
@@ -51,8 +50,8 @@ export default function DueCardItem({
           <div className="mt-auto pt-1 text-[8px] text-gray-400 text-center w-full truncate">
             {question.regulation_category || "Allgemein"}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </Link>
   );
 }

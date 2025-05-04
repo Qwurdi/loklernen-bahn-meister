@@ -3,7 +3,6 @@ import React from 'react';
 import { useBoxSystem } from '@/hooks/useBoxSystem';
 import LearningBoxItem from './LearningBoxItem';
 import BoxContentView from './BoxContentView';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Play, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -41,33 +40,41 @@ export default function BoxSystemOverview() {
   // Show login prompt if user is not authenticated
   if (!user) {
     return (
-      <Card className="p-6 enhanced-glass-card border-gray-800/50 mb-6 shadow-xl rounded-xl">
-        <h3 className="text-lg font-bold mb-2 bg-gradient-ultramarine bg-clip-text text-transparent">Lernboxen-System</h3>
+      <div className="mb-6 space-y-2">
+        <div className="flex items-center gap-2 mb-1">
+          <h3 className="text-xl font-bold bg-gradient-ultramarine bg-clip-text text-transparent">Lernboxen-System</h3>
+          <span className="text-sm text-gray-300">Dein persönlicher Lernfortschritt</span>
+        </div>
+        
         <p className="text-sm text-gray-300 mb-4">
           Melde dich an, um deinen persönlichen Lernfortschritt zu speichern und das Boxen-System zu nutzen.
         </p>
+        
         <Button 
           onClick={() => navigate('/login')}
           className="bg-gradient-ultramarine hover:opacity-90 shadow-lg"
         >
           Anmelden
         </Button>
-      </Card>
+      </div>
     );
   }
 
   // Show loading state
   if (loading) {
     return (
-      <Card className="p-6 enhanced-glass-card border-gray-800/50 mb-6 shadow-lg rounded-xl">
-        <h3 className="text-lg font-bold mb-2 bg-gradient-ultramarine bg-clip-text text-transparent">Lernboxen-System</h3>
-        <div className="grid grid-cols-5 gap-3 mb-6">
+      <div className="mb-8 space-y-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold bg-gradient-ultramarine bg-clip-text text-transparent">Lernboxen-System</h3>
+          <Skeleton className="h-10 w-10" />
+        </div>
+        
+        <div className="grid grid-cols-5 gap-3">
           {[1, 2, 3, 4, 5].map(i => (
-            <Skeleton key={i} className="h-32 bg-gray-800/60" />
+            <Skeleton key={i} className="h-28 bg-gray-800/40 backdrop-blur-sm rounded-lg" />
           ))}
         </div>
-        <Skeleton className="h-48 bg-gray-800/60" />
-      </Card>
+      </div>
     );
   }
 
@@ -83,7 +90,7 @@ export default function BoxSystemOverview() {
           {totalDueCards > 0 && (
             <Button
               onClick={() => handleStartLearning()}
-              className="bg-gradient-ultramarine hover:opacity-90 shadow-md transition-all duration-200"
+              className="bg-gradient-ultramarine hover:bg-loklernen-ultramarine/90 shadow-md transition-all duration-200"
             >
               <Play className="h-4 w-4 mr-2" /> Alle fälligen Karten lernen
             </Button>
@@ -113,7 +120,7 @@ export default function BoxSystemOverview() {
         ))}
       </div>
 
-      {/* Box Content View with enhanced design */}
+      {/* Box Content View */}
       {activeBox && (
         <BoxContentView
           boxNumber={activeBox}

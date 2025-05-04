@@ -18,12 +18,11 @@ export default function LearningPlanSection({
   if (selectedCategories.length === 0) return null;
   
   return (
-    <div className="mt-6 rounded-lg border border-gray-800 bg-black/30 p-4">
+    <div className="mt-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
       <div className="mb-3 flex justify-between items-center">
-        <h3 className="font-medium">Dein Lernplan</h3>
+        <h3 className="font-medium text-gray-800">Dein Lernplan</h3>
         <Button 
-          variant="outline" 
-          className="h-8 text-sm bg-gradient-to-r from-loklernen-ultramarine/90 to-loklernen-sapphire/90 border-none text-white px-4"
+          className="bg-gradient-ultramarine hover:opacity-90 transition-opacity text-white px-4"
           onClick={onStartLearning}
         >
           Jetzt lernen
@@ -35,11 +34,11 @@ export default function LearningPlanSection({
           <Badge 
             key={category} 
             variant="outline"
-            className="pl-3 pr-2 py-1.5 bg-gray-800/50 border-gray-700 text-white flex items-center group gap-1"
+            className="pl-3 pr-2 py-1.5 bg-gray-100 border-gray-200 text-gray-700 flex items-center group gap-1"
           >
             <span>{category}</span>
             <button 
-              className="ml-1 bg-transparent border-none p-0.5 rounded-full opacity-70 group-hover:opacity-100 hover:bg-gray-700 transition-colors"
+              className="ml-1 bg-transparent border-none p-0.5 rounded-full opacity-70 group-hover:opacity-100 hover:bg-gray-200 transition-colors"
               onClick={() => onRemoveCategory(category)}
             >
               <X className="h-3 w-3" />

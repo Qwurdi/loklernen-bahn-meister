@@ -57,8 +57,8 @@ export default function CategoryGrid({
   
   if (visibleCategories.length === 0) {
     return (
-      <div className="text-center py-8 px-4 border border-gray-800 rounded-lg bg-black/30">
-        <p className="text-gray-400">Keine Kategorien für das ausgewählte Regelwerk verfügbar.</p>
+      <div className="text-center py-8 px-4 border border-gray-200 rounded-lg bg-white">
+        <p className="text-gray-600">Keine Kategorien für das ausgewählte Regelwerk verfügbar.</p>
       </div>
     );
   }
@@ -95,6 +95,7 @@ export default function CategoryGrid({
               masteredCards
             }}
             isPro={isPro}
+            regulationCategory={regulationFilter !== "all" ? regulationFilter : undefined}
           />
         );
       })}

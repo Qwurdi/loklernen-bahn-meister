@@ -156,7 +156,7 @@ export default function SignalePage() {
               {!user && " Melde dich an, um deinen Lernfortschritt zu speichern."}
             </p>
             
-            <Card className="p-4 mb-6">
+            <Card className="p-4 mb-6 bg-white">
               <RegulationFilterToggle 
                 value={regulationFilter}
                 onChange={handleRegulationChange}
@@ -186,7 +186,7 @@ export default function SignalePage() {
                   link={`/signale/${encodeURIComponent(subcategory.toLowerCase().replace(/[^a-z0-9]+/g, '-'))}${
                     regulationFilter !== "all" ? `?regelwerk=${regulationFilter}` : ''
                   }`}
-                  badge={regulationFilter !== "all" ? regulationFilter : undefined}
+                  regulationCategory={regulationFilter !== "all" ? regulationFilter : undefined}
                 />
               );
             })}

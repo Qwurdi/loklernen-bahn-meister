@@ -41,14 +41,14 @@ export default function BoxSystemOverview() {
   // Show login prompt if user is not authenticated
   if (!user) {
     return (
-      <Card className="p-6 bg-gradient-card backdrop-blur-sm border-gray-800/50 mb-6 shadow-lg rounded-xl">
-        <h3 className="text-lg font-bold mb-2 bg-gradient-lavender bg-clip-text text-transparent">Lernboxen-System</h3>
+      <Card className="p-6 enhanced-glass-card border-gray-800/50 mb-6 shadow-xl rounded-xl">
+        <h3 className="text-lg font-bold mb-2 bg-gradient-ultramarine bg-clip-text text-transparent">Lernboxen-System</h3>
         <p className="text-sm text-gray-300 mb-4">
           Melde dich an, um deinen persönlichen Lernfortschritt zu speichern und das Boxen-System zu nutzen.
         </p>
         <Button 
           onClick={() => navigate('/login')}
-          className="bg-gradient-ultramarine hover:bg-loklernen-ultramarine/90 shadow-md"
+          className="bg-gradient-ultramarine hover:opacity-90 shadow-lg"
         >
           Anmelden
         </Button>
@@ -59,8 +59,8 @@ export default function BoxSystemOverview() {
   // Show loading state
   if (loading) {
     return (
-      <Card className="p-6 bg-gradient-card backdrop-blur-sm border-gray-800/50 mb-6 shadow-lg rounded-xl">
-        <h3 className="text-lg font-bold mb-2 bg-gradient-lavender bg-clip-text text-transparent">Lernboxen-System</h3>
+      <Card className="p-6 enhanced-glass-card border-gray-800/50 mb-6 shadow-lg rounded-xl">
+        <h3 className="text-lg font-bold mb-2 bg-gradient-ultramarine bg-clip-text text-transparent">Lernboxen-System</h3>
         <div className="grid grid-cols-5 gap-3 mb-6">
           {[1, 2, 3, 4, 5].map(i => (
             <Skeleton key={i} className="h-32 bg-gray-800/60" />
@@ -75,7 +75,7 @@ export default function BoxSystemOverview() {
     <div className="mb-8 space-y-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h3 className="text-xl font-bold bg-gradient-lavender bg-clip-text text-transparent">Lernboxen-System</h3>
+          <h3 className="text-xl font-bold bg-gradient-ultramarine bg-clip-text text-transparent">Lernboxen-System</h3>
           <p className="text-sm text-gray-300">Dein persönlicher Lernfortschritt</p>
         </div>
         
@@ -92,7 +92,7 @@ export default function BoxSystemOverview() {
           <Button
             variant="outline"
             onClick={refreshBoxData}
-            className="border-gray-700 bg-black/20 backdrop-blur-sm text-gray-300 hover:bg-gray-800 transition-all duration-200"
+            className="border-gray-700 bg-black/20 backdrop-blur-lg text-gray-300 hover:bg-gray-800 transition-all duration-200"
           >
             <RefreshCw className="h-4 w-4" />
           </Button>

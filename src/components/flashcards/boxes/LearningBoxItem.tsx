@@ -23,32 +23,32 @@ export default function LearningBoxItem({
     switch (boxNumber) {
       case 1: return "bg-loklernen-coral";
       case 2: return "bg-amber-500"; 
-      case 3: return "bg-loklernen-lavender";
-      case 4: return "bg-loklernen-tranquil";
+      case 3: return "bg-loklernen-tranquil";
+      case 4: return "bg-blue-400";
       case 5: return "bg-loklernen-mint";
       default: return "bg-gray-500";
     }
   };
   
-  // Box gradient based on number - using our trend colors
+  // Box gradient based on number - using our trend colors with improved gradients
   const getBoxGradient = () => {
     switch (boxNumber) {
       case 1: return "bg-gradient-to-br from-loklernen-coral to-loklernen-coral/80";
       case 2: return "bg-gradient-to-br from-amber-500 to-amber-400";
-      case 3: return "bg-gradient-to-br from-loklernen-lavender to-loklernen-lavender/80";
-      case 4: return "bg-gradient-to-br from-loklernen-tranquil to-loklernen-tranquil/80";
+      case 3: return "bg-gradient-to-br from-loklernen-tranquil to-blue-400";
+      case 4: return "bg-gradient-to-br from-blue-400 to-loklernen-tranquil";
       case 5: return "bg-gradient-to-br from-loklernen-mint to-loklernen-mint/80";
       default: return "bg-gradient-to-br from-gray-500 to-gray-400";
     }
   };
   
-  // Box border color based on number
+  // Box border color based on number with enhanced glow
   const getBoxBorder = () => {
     switch (boxNumber) {
       case 1: return "border-loklernen-coral/40";
       case 2: return "border-amber-400/40";
-      case 3: return "border-loklernen-lavender/40";
-      case 4: return "border-loklernen-tranquil/40";
+      case 3: return "border-loklernen-tranquil/40";
+      case 4: return "border-blue-400/40";
       case 5: return "border-loklernen-mint/40";
       default: return "border-gray-400/40";
     }
@@ -69,10 +69,10 @@ export default function LearningBoxItem({
   return (
     <Card 
       className={cn(
-        "cursor-pointer transition-all hover:translate-y-[-3px] border p-3 flex flex-col h-[120px] glass-card",
+        "cursor-pointer transition-all hover:translate-y-[-3px] border p-3 flex flex-col h-[120px]",
         isActive 
-          ? "border-loklernen-ultramarine shadow-lg shadow-loklernen-ultramarine/20" 
-          : "border-gray-700 hover:border-loklernen-tranquil/50"
+          ? "glass-card-active border-loklernen-ultramarine shadow-lg shadow-loklernen-ultramarine/20" 
+          : "glass-card border-gray-700/50 hover:border-loklernen-ultramarine/50"
       )}
       onClick={onClick}
     >
@@ -83,17 +83,17 @@ export default function LearningBoxItem({
             "text-xs px-1.5 py-0.5 rounded-full text-black animate-pulse",
             boxNumber === 1 ? "bg-loklernen-coral" :
             boxNumber === 2 ? "bg-amber-500" :
-            boxNumber === 3 ? "bg-loklernen-lavender" :
-            boxNumber === 4 ? "bg-loklernen-tranquil" :
+            boxNumber === 3 ? "bg-loklernen-tranquil" :
+            boxNumber === 4 ? "bg-blue-400" :
             "bg-loklernen-mint"
           )}>{dueCards}</span>
         )}
       </div>
       
-      {/* Bar visualization with gradient */}
-      <div className="h-2.5 bg-black/30 rounded-full overflow-hidden mt-1 backdrop-blur-sm">
+      {/* Bar visualization with enhanced gradient */}
+      <div className="h-2.5 bg-black/30 rounded-full overflow-hidden mt-1 backdrop-blur-md">
         <div 
-          className={`h-full ${getBoxGradient()}`}
+          className={`h-full ${getBoxGradient()} animate-gradient-shift`}
           style={{ width: `${totalCards > 0 ? 100 : 0}%` }} 
         />
       </div>
@@ -103,9 +103,9 @@ export default function LearningBoxItem({
         <span className="text-xs text-gray-300">{getIntervalText()}</span>
       </div>
 
-      {/* Add subtle indicator for active state */}
+      {/* Enhanced indicator for active state with glow effect */}
       {isActive && (
-        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-loklernen-ultramarine rounded-full"></div>
+        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-loklernen-ultramarine rounded-full animate-glow-pulse"></div>
       )}
     </Card>
   );

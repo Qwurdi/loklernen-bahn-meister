@@ -13,6 +13,7 @@ import LearningBoxesDisplay, { LEARNING_BOXES, BoxStats } from './boxes/Learning
 import LearningBoxStats from './boxes/LearningBoxStats';
 import DueCardsCollapsible from './boxes/DueCardsCollapsible';
 import { RegulationFilterType } from '@/types/regulation';
+import { Card } from '@/components/ui/card';
 
 type CategoryFilterType = "all" | QuestionCategory;
 
@@ -100,24 +101,24 @@ export default function LearningBoxesOverview() {
   if (!user) {
     return (
       <SpacedRepetitionTooltip>
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-6 text-center">
+        <Card className="enhanced-glass-card border-gray-800/50 p-4 mb-6 text-center">
           <h3 className="text-lg font-semibold mb-2 text-white">Lernfortschritt</h3>
           <p className="text-gray-400">Melde dich an, um deinen Lernfortschritt zu sehen</p>
-        </div>
+        </Card>
       </SpacedRepetitionTooltip>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-6">
-        <Skeleton className="h-6 w-40 mb-4" />
+      <Card className="enhanced-glass-card border-gray-800/50 p-4 mb-6">
+        <Skeleton className="h-6 w-40 mb-4 bg-gray-800/60" />
         <div className="grid grid-cols-5 gap-2">
           {[1, 2, 3, 4, 5].map(i => (
-            <Skeleton key={i} className="h-16 flex-1" />
+            <Skeleton key={i} className="h-16 flex-1 bg-gray-800/60" />
           ))}
         </div>
-      </div>
+      </Card>
     );
   }
 
@@ -127,7 +128,7 @@ export default function LearningBoxesOverview() {
   const dueCards = data?.dueCards || [];
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-6">
+    <Card className="enhanced-glass-card border-gray-800/50 p-4 mb-6">
       <div className="flex flex-col md:flex-row justify-between mb-4 gap-2">
         <div className="flex items-center">
           <h3 className="text-lg font-semibold text-white">Lernfortschritt</h3>
@@ -135,10 +136,10 @@ export default function LearningBoxesOverview() {
         </div>
         
         <Tabs value={category} onValueChange={(value) => setCategory(value as CategoryFilterType)} className="w-full md:w-auto">
-          <TabsList className="bg-gray-800 border border-gray-700">
-            <TabsTrigger value="all" className="text-xs md:text-sm data-[state=active]:bg-gray-700">Alle</TabsTrigger>
-            <TabsTrigger value="Signale" className="text-xs md:text-sm data-[state=active]:bg-gray-700">Signale</TabsTrigger>
-            <TabsTrigger value="Betriebsdienst" className="text-xs md:text-sm data-[state=active]:bg-gray-700">Betriebsdienst</TabsTrigger>
+          <TabsList className="bg-black/50 backdrop-blur-md border border-gray-800/80">
+            <TabsTrigger value="all" className="text-xs md:text-sm data-[state=active]:bg-loklernen-ultramarine data-[state=active]:text-white">Alle</TabsTrigger>
+            <TabsTrigger value="Signale" className="text-xs md:text-sm data-[state=active]:bg-loklernen-ultramarine data-[state=active]:text-white">Signale</TabsTrigger>
+            <TabsTrigger value="Betriebsdienst" className="text-xs md:text-sm data-[state=active]:bg-loklernen-ultramarine data-[state=active]:text-white">Betriebsdienst</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -151,6 +152,6 @@ export default function LearningBoxesOverview() {
 
       {/* Due Cards Collapsible Section */}
       <DueCardsCollapsible dueToday={dueToday} dueCards={dueCards} />
-    </div>
+    </Card>
   );
 }

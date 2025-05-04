@@ -30,8 +30,8 @@ export default function DueCardItem({
         className={`w-20 h-20 transition-all ${
           isHovered ? 
           'border-loklernen-ultramarine shadow-md shadow-loklernen-ultramarine/20' : 
-          'border-gray-700'
-        } bg-gray-800`}
+          'border-gray-700/50'
+        } enhanced-mini-card`}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >

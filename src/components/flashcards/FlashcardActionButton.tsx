@@ -32,7 +32,7 @@ export default function FlashcardActionButton({
       <Button 
         variant="outline"
         size="lg"
-        className={`rounded-full bg-white/80 ${borderColor} ${hoverBg} shadow-sm ${hoverBorder} backdrop-blur-sm`}
+        className={`rounded-full bg-white ${borderColor} ${hoverBg} shadow-md ${hoverBorder}`}
         onClick={onClick}
         aria-label={srLabel}
       >
@@ -46,7 +46,7 @@ export default function FlashcardActionButton({
   return (
     <Button
       variant="outline"
-      className={`flex-1 ${borderColor} ${hoverBg} ${hoverBorder} h-12`}
+      className={`flex-1 ${borderColor} ${hoverBg} ${hoverBorder} h-12 bg-white`}
       onClick={onClick}
     >
       <span className={`h-4 w-4 mr-2 ${iconColor}`}>

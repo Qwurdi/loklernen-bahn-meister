@@ -16,7 +16,7 @@ export default function SessionContainer({
   fullHeight = false
 }: SessionContainerProps) {
   return (
-    <div className={`flex flex-col ${isMobile && fullHeight ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-black text-white`}>
+    <div className={`flex flex-col ${isMobile && fullHeight ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-white text-gray-800`}>
       <Navbar />
       
       {children}

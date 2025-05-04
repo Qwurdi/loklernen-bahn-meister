@@ -53,9 +53,9 @@ export default function CardItem<T extends Question = Question>({
 
   // Enhanced background color feedback
   const bgColor = swipeDirection === 'right' 
-    ? 'rgba(220, 252, 231, 0.3)' // Light green background for correct
+    ? 'rgba(199, 240, 189, 0.2)' // Neo-Mint for correct
     : swipeDirection === 'left' 
-      ? 'rgba(254, 226, 226, 0.3)' // Light red background for incorrect
+      ? 'rgba(255, 109, 112, 0.2)' // Digital Coral for incorrect
       : 'transparent';
 
   // Calculate rotation based on drag
@@ -65,7 +65,7 @@ export default function CardItem<T extends Question = Question>({
     <motion.div
       ref={cardRef}
       className={`flashcard-item relative w-[90vw] max-w-md aspect-[3/4] rounded-2xl
-                  shadow-md touch-none transform-gpu ${isPreview ? 'pointer-events-none' : ''}`}
+                  shadow-lg touch-none transform-gpu ${isPreview ? 'pointer-events-none' : ''} ${isFlipped ? 'animate-glow-pulse' : ''}`}
       style={{
         backgroundColor: bgColor,
         WebkitTapHighlightColor: 'transparent'
@@ -129,10 +129,10 @@ export default function CardItem<T extends Question = Question>({
         />
       )}
 
-      {/* Add subtle card shadow for depth */}
+      {/* Add subtle card reflection effect for depth */}
       <div className="absolute inset-0 pointer-events-none rounded-2xl opacity-30"
            style={{
-             boxShadow: '0 4px 15px rgba(0, 0, 0, 0.08)'
+             background: 'linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.05) 100%)'
            }}
       />
     </motion.div>

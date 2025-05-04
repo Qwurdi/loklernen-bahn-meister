@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import FlashcardActionButton from "./FlashcardActionButton";
 import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface FlashcardItemDesktopProps {
   question: Question;
@@ -31,35 +30,28 @@ export default function FlashcardItemDesktop({
   
   return (
     <div className="mx-auto max-w-md">
-      <Card className="relative p-4 min-h-[450px] flex flex-col bg-white">
+      <Card className="relative p-4 min-h-[450px] flex flex-col">
         {!flipped ? (
           <div className="flex flex-col h-full">
-            {/* Category badge */}
-            <div className="bg-loklernen-ultramarine text-white px-3 py-1.5 rounded-full text-xs self-start mb-2">
-              {question?.category || "Signal"}
-            </div>
-            
             {/* Dynamic question text size */}
-            <h2 className={`${questionTextClass} font-medium mb-3 overflow-y-auto max-h-[25%] text-gray-800`}>
+            <h2 className={`${questionTextClass} font-medium mb-3 overflow-y-auto max-h-[25%]`}>
               {question?.text}
             </h2>
             
-            {/* Fixed space for images with proper containment */}
-            {question?.image_url && (
-              <div className="flex-1 flex items-center justify-center py-4 min-h-[200px]">
-                <AspectRatio ratio={4/3} className="w-full max-h-[200px] bg-gray-50 rounded-md">
-                  <img 
-                    src={question.image_url} 
-                    alt="Signal" 
-                    className="w-full h-full object-contain p-2"
-                  />
-                </AspectRatio>
-              </div>
-            )}
+            {/* Fixed space for images */}
+            <div className="flex-1 flex items-center justify-center py-4 min-h-[200px]">
+              {question?.image_url && (
+                <img 
+                  src={question.image_url} 
+                  alt="Signal" 
+                  className="max-h-[200px] max-w-full object-contain"
+                />
+              )}
+            </div>
             
             <div className="mt-4">
               <Button 
-                className="w-full bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90"
+                className="w-full"
                 onClick={onShowAnswer}
               >
                 <Lightbulb className="h-4 w-4 mr-2" />
@@ -73,21 +65,19 @@ export default function FlashcardItemDesktop({
         ) : (
           <div className="flex flex-col h-full">
             <div className="mb-3">
-              <div className="bg-blue-100 px-3 py-1.5 rounded-full text-xs text-blue-600 self-start">Antwort</div>
+              <h2 className="text-lg font-medium">Antwort</h2>
             </div>
             
             <div className="flex-1 flex flex-col items-center justify-between gap-4">
               <div className="flex flex-col items-center w-full">
-                {/* Fixed height for the image with proper containment */}
+                {/* Fixed height for the image */}
                 {question?.image_url && (
-                  <div className="w-full mb-4">
-                    <AspectRatio ratio={4/3} className="max-h-[140px] bg-gray-50 rounded-md">
-                      <img 
-                        src={question.image_url} 
-                        alt="Signal" 
-                        className="w-full h-full object-contain p-2"
-                      />
-                    </AspectRatio>
+                  <div className="min-h-[140px] flex items-center justify-center mb-4">
+                    <img 
+                      src={question.image_url} 
+                      alt="Signal" 
+                      className="max-h-[140px] object-contain"
+                    />
                   </div>
                 )}
                 

@@ -32,7 +32,7 @@ export default function FlashcardActionButton({
       <Button 
         variant="outline"
         size="lg"
-        className={`rounded-full bg-white ${borderColor} ${hoverBg} shadow-sm ${hoverBorder}`}
+        className={`rounded-full bg-white/80 ${borderColor} ${hoverBg} shadow-sm ${hoverBorder} backdrop-blur-sm`}
         onClick={onClick}
         aria-label={srLabel}
       >

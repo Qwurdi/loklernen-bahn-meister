@@ -4,7 +4,6 @@ import { Question } from "@/types/questions";
 import FlashcardActionButton from "../FlashcardActionButton";
 import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
 import ZoomableImage from "@/components/common/ZoomableImage";
-import { ArrowLeft, ArrowRight } from "lucide-react";
 
 interface AnswerSideProps {
   question: Question;
@@ -58,19 +57,9 @@ export default function AnswerSide({
         )}
       </div>
       
-      {/* Floating action buttons with fixed positioning and swipe hint */}
+      {/* Floating action buttons with fixed positioning */}
       {!answered && (
-        <div className="absolute left-0 right-0 bottom-4 flex flex-col items-center">
-          {/* Dezenter Swipe-Hinweis */}
-          <div className="bg-gray-800/40 text-white px-3 py-1 rounded-full mb-3 flex items-center gap-1 text-xs">
-            <ArrowLeft className="h-3 w-3 text-red-300" />
-            <span>Nicht gewusst</span>
-            <span className="mx-0.5">|</span>
-            <span>Gewusst</span>
-            <ArrowRight className="h-3 w-3 text-green-300" />
-          </div>
-          
-          {/* Action buttons */}
+        <div className="absolute left-0 right-0 bottom-4 flex justify-center items-center">
           <div className="flex justify-center items-center space-x-6">
             <FlashcardActionButton
               variant="unknown"

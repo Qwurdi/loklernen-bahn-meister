@@ -1,7 +1,7 @@
 
 import { Question } from '@/types/questions';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, XCircle, ArrowLeft, ArrowRight } from 'lucide-react';
+import { CheckCircle2, XCircle } from 'lucide-react';
 import ZoomableImage from '@/components/common/ZoomableImage';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -99,19 +99,6 @@ export default function CardBack<T extends Question = Question>({ question, onAn
               <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
               Gewusst
             </Button>
-          </div>
-        </div>
-      )}
-      
-      {/* Mobile swipe instructions with improved visibility */}
-      {isMobile && (
-        <div className="fixed bottom-6 left-0 right-0 flex justify-center pointer-events-none z-10">
-          <div className="instructions text-xs bg-gray-800/40 text-white px-3 py-1 rounded-full flex items-center gap-1">
-            <ArrowLeft className="h-3 w-3 text-red-300" />
-            <span>Nicht gewusst</span>
-            <span className="mx-0.5">|</span>
-            <span>Gewusst</span>
-            <ArrowRight className="h-3 w-3 text-green-300" />
           </div>
         </div>
       )}

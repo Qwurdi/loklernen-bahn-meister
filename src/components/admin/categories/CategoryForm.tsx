@@ -1,96 +1,118 @@
 
-import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCategories } from "@/hooks/useCategories";
 import { QuestionCategory } from "@/types/questions";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 
 interface CategoryFormProps {
   parentCategory: QuestionCategory;
 }
 
+// Define the form schema with validation rules
+const formSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters").max(50, "Name must be less than 50 characters"),
+  description: z.string().max(200, "Description must be less than 200 characters").optional()
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
 const CategoryForm: React.FC<CategoryFormProps> = ({ parentCategory }) => {
   const { createCategory, isCreating } = useCategories();
-  const [formData, setFormData] = useState({
-    name: "",
-    description: ""
+
+  // Initialize the form with react-hook-form and zod validation
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      description: ""
+    }
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.name.trim()) {
-      return;
-    }
-
+  const onSubmit = (values: FormValues) => {
     createCategory({
-      name: formData.name.trim(),
-      description: formData.description.trim() || undefined,
+      name: values.name.trim(),
+      description: values.description?.trim() || undefined,
       parent_category: parentCategory
     });
 
     // Reset form after submission
-    setFormData({
-      name: "",
-      description: ""
-    });
+    form.reset();
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Neue Kategorie hinzufügen</CardTitle>
+    <Card className="shadow-md border-gray-200 hover:shadow-lg transition-shadow duration-300">
+      <CardHeader className="bg-gradient-to-r from-loklernen-ultramarine/10 to-loklernen-sapphire/5 rounded-t-lg">
+        <CardTitle className="text-loklernen-ultramarine">Neue Kategorie hinzufügen</CardTitle>
+        <CardDescription>
+          Erstellen Sie eine neue {parentCategory === "Signale" ? "Signal" : "Betriebsdienst"}-Kategorie
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
+      <CardContent className="pt-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
               name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Name der Kategorie"
-              required
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Kategorienamen</FormLabel>
+                  <FormControl>
+                    <Input 
+                      {...field} 
+                      placeholder="z.B. Hauptsignale" 
+                      className="border-gray-300 focus:border-loklernen-ultramarine focus:ring-loklernen-ultramarine/20"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="description">Beschreibung (optional)</Label>
-            <Textarea
-              id="description"
+            
+            <FormField
+              control={form.control}
               name="description"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder="Kurze Beschreibung der Kategorie"
-              rows={3}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Beschreibung (optional)</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      {...field} 
+                      placeholder="Kurze Beschreibung der Kategorie"
+                      className="min-h-[80px] resize-y border-gray-300 focus:border-loklernen-ultramarine focus:ring-loklernen-ultramarine/20"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={isCreating || !formData.name.trim()}
-          >
-            {isCreating ? (
-              "Kategorie wird erstellt..."
-            ) : (
-              <>
-                <Plus className="mr-2 h-4 w-4" />
-                Kategorie hinzufügen
-              </>
-            )}
-          </Button>
-        </form>
+            <Button 
+              type="submit" 
+              className="w-full mt-6 bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90 transition-colors" 
+              disabled={isCreating}
+            >
+              {isCreating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Wird erstellt...
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Kategorie hinzufügen
+                </>
+              )}
+            </Button>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );

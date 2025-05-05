@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Question, QuestionCategory } from '@/types/questions';
@@ -28,6 +27,7 @@ export function useSpacedRepetition(
   // Default to 'all' if regulationCategory is not provided
   const regulationCategory = options.regulationCategory || "all";
   const boxNumber = options.boxNumber;
+  const selectedCategories = options.selectedCategories || [];
   
   // Optimized batch size - ideal for didactic and technical balance
   const batchSize = options.batchSize || 15; // Default to 15 cards per session
@@ -43,7 +43,7 @@ export function useSpacedRepetition(
     try {
       setLoading(true);
       setError(null);
-      console.log(`Loading questions with category=${category}, subcategory=${subcategory}, regulation=${regulationCategory}, practice=${options.practiceMode}`);
+      console.log(`Loading questions with category=${category}, subcategory=${subcategory}, regulation=${regulationCategory}, practice=${options.practiceMode}, selectedCategories=${selectedCategories.join(',')}`);
 
       // Handle practice mode differently - just load questions without checking if they're due
       if (options.practiceMode) {
@@ -51,7 +51,8 @@ export function useSpacedRepetition(
           category, 
           subcategory, 
           regulationCategory, 
-          batchSize
+          batchSize,
+          selectedCategories
         );
         setDueQuestions(practiceQuestions);
         setLoading(false);
@@ -75,8 +76,14 @@ export function useSpacedRepetition(
         return;
       }
       
-      // Regular spaced repetition mode
-      const filteredProgressData = await fetchUserProgress(user.id, category, subcategory, regulationCategory);
+      // Regular spaced repetition mode - now with support for selected categories
+      const filteredProgressData = await fetchUserProgress(
+        user.id, 
+        category, 
+        subcategory, 
+        regulationCategory,
+        selectedCategories
+      );
       
       // Transform the questions from the progress data
       const questionsWithProgress = filteredProgressData
@@ -106,7 +113,8 @@ export function useSpacedRepetition(
         subcategory, 
         regulationCategory, 
         questionIdsWithProgress, 
-        batchSize
+        batchSize,
+        selectedCategories
       );
 
       // Combine progress questions and new questions, and limit to batch size
@@ -124,7 +132,7 @@ export function useSpacedRepetition(
     } finally {
       setLoading(false);
     }
-  }, [user, category, subcategory, options.practiceMode, regulationCategory, boxNumber, batchSize]);
+  }, [user, category, subcategory, options.practiceMode, regulationCategory, boxNumber, batchSize, selectedCategories]);
 
   useEffect(() => {
     loadDueQuestions();

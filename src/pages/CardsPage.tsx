@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -13,6 +14,7 @@ import { useCardsPageData } from "@/hooks/useCardsPageData";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 import { Settings } from "lucide-react";
 import BoxSystemOverview from "@/components/flashcards/boxes/BoxSystemOverview";
+import FloatingLearnButton from "@/components/flashcards/FloatingLearnButton";
 
 export default function CardsPage() {
   const { user } = useAuth();
@@ -42,7 +44,7 @@ export default function CardsPage() {
     });
     
     // Always include the global regulation preference
-    queryParams.append('regulation', regulationPreference);
+    queryParams.append('regelwerk', regulationPreference);
     
     window.location.href = `/karteikarten/lernen?${queryParams.toString()}`;
   };
@@ -108,6 +110,13 @@ export default function CardsPage() {
           </div>
         </div>
       </main>
+      
+      {/* Floating "Learn Now" button */}
+      <FloatingLearnButton 
+        visible={selectedCategories.length > 0}
+        onLearnStart={handleStartLearningSelected}
+        count={selectedCategories.length}
+      />
       
       {!isMobile && <Footer />}
       {isMobile && <BottomNavigation />}

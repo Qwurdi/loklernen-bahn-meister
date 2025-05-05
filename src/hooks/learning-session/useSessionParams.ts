@@ -8,6 +8,7 @@ interface SessionParams {
   subcategoryParam: string | null;
   regulationParam: string;
   boxParam?: number;
+  selectedCategories: string[];
   sessionTitle: string;
 }
 
@@ -20,9 +21,17 @@ export function useSessionParams(): SessionParams {
   const subcategoryParam = searchParams.get("subcategory");
   const regulationParam = searchParams.get("regelwerk") || regulationPreference;
   const boxParam = searchParams.get("box") ? parseInt(searchParams.get("box") || "0") : undefined;
+  
+  // Get selected categories from URL parameters (new)
+  const selectedCategories = searchParams.getAll("categories");
 
   // Create a more descriptive title based on parameters
   const getSessionTitle = () => {
+    if (selectedCategories.length > 0) {
+      return selectedCategories.length === 1 
+        ? `${selectedCategories[0]} - Lernmodus` 
+        : `${selectedCategories.length} Kategorien - Lernmodus`;
+    }
     if (boxParam) {
       return `Box ${boxParam} - Lernmodus`;
     } 
@@ -39,6 +48,7 @@ export function useSessionParams(): SessionParams {
     subcategoryParam,
     regulationParam,
     boxParam,
+    selectedCategories,
     sessionTitle
   };
 }

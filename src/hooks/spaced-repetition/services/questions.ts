@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Question, QuestionCategory } from '@/types/questions';
 import { transformQuestion } from '../utils';
@@ -10,7 +9,8 @@ export async function fetchUserProgress(
   userId: string,
   category: QuestionCategory,
   subcategory?: string,
-  regulationCategory: string = "all"
+  regulationCategory: string = "all",
+  selectedCategories?: string[]
 ) {
   console.log("Loading due questions for user", userId, "with regulation", regulationCategory, "and subcategory", subcategory || "all");
   
@@ -34,8 +34,13 @@ export async function fetchUserProgress(
   filteredProgressData = filteredProgressData.filter(p => 
     p.questions?.category === category);
   
-  // Filter by subcategory if specified
-  if (subcategory) {
+  // If we have selected categories, use them instead of a single subcategory
+  if (selectedCategories && selectedCategories.length > 0) {
+    filteredProgressData = filteredProgressData.filter(p => 
+      selectedCategories.includes(p.questions?.sub_category));
+  }
+  // Otherwise, filter by subcategory if specified
+  else if (subcategory) {
     filteredProgressData = filteredProgressData.filter(p => 
       p.questions?.sub_category === subcategory);
   }
@@ -62,7 +67,8 @@ export async function fetchNewQuestions(
   subcategory?: string,
   regulationCategory: string = "all",
   questionIdsWithProgress: string[] = [],
-  batchSize: number = 36  // Changed from 50 to 36 for consistency
+  batchSize: number = 36,
+  selectedCategories?: string[]
 ) {
   console.log("Fetching new questions for category:", category, "subcategory:", subcategory, "regulation:", regulationCategory);
   // Build the query for new questions
@@ -72,7 +78,12 @@ export async function fetchNewQuestions(
     .eq('category', category)
     .limit(batchSize);
     
-  if (subcategory) {
+  // If we have selected categories, use them instead of a single subcategory
+  if (selectedCategories && selectedCategories.length > 0) {
+    newQuestionsQuery = newQuestionsQuery.in('sub_category', selectedCategories);
+  }
+  // Otherwise, filter by subcategory if specified
+  else if (subcategory) {
     newQuestionsQuery = newQuestionsQuery.eq('sub_category', subcategory);
   }
   
@@ -109,7 +120,8 @@ export async function fetchPracticeQuestions(
   category: QuestionCategory,
   subcategory?: string,
   regulationCategory: string = "all",
-  batchSize: number = 36  // Changed from 50 to 36 for consistency
+  batchSize: number = 36,
+  selectedCategories?: string[]
 ) {
   console.log("Practice mode: Fetching questions for category:", category, "subcategory:", subcategory, "regulation:", regulationCategory);
   
@@ -119,7 +131,12 @@ export async function fetchPracticeQuestions(
     .eq('category', category)
     .limit(batchSize);
     
-  if (subcategory) {
+  // If we have selected categories, use them instead of a single subcategory
+  if (selectedCategories && selectedCategories.length > 0) {
+    query = query.in('sub_category', selectedCategories);
+  }
+  // Otherwise, filter by subcategory if specified
+  else if (subcategory) {
     query = query.eq('sub_category', subcategory);
   }
   
@@ -144,7 +161,8 @@ export async function fetchPracticeQuestions(
 export async function fetchQuestionsByBox(
   userId: string,
   boxNumber: number,
-  regulationCategory: string = "all"
+  regulationCategory: string = "all",
+  selectedCategories?: string[]
 ) {
   console.log(`Fetching questions for user ${userId} in box ${boxNumber} with regulation ${regulationCategory}`);
   
@@ -171,6 +189,12 @@ export async function fetchQuestionsByBox(
       p.questions?.regulation_category === regulationCategory || 
       p.questions?.regulation_category === "both" || 
       !p.questions?.regulation_category);
+  }
+  
+  // Filter by selected categories if specified
+  if (selectedCategories && selectedCategories.length > 0) {
+    filteredData = filteredData.filter(p => 
+      selectedCategories.includes(p.questions?.sub_category));
   }
   
   console.log(`Found ${filteredData.length} questions in box ${boxNumber}`);

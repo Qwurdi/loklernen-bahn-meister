@@ -1,7 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { CreateQuestionDTO, Question, QuestionCategory, Answer } from "@/types/questions";
 import { Json } from "@/integrations/supabase/types";
+import { signalSubCategories, betriebsdienstSubCategories } from "@/api/categories/types";
 
 // Helper function to convert database answers (Json) to Answer[]
 export function transformAnswers(jsonAnswers: Json): Answer[] {
@@ -103,7 +103,7 @@ export async function uploadQuestionImage(file: File, userId: string) {
 // Helper function to seed initial questions for each subcategory
 export async function seedInitialQuestions(userId: string) {
   // Import categories from the centralized categories API
-  const { signalSubCategories } = await import('./categories');
+  const { signalSubCategories } = await import('./categories/types');
 
   const sampleQuestions: CreateQuestionDTO[] = signalSubCategories.map((sub_category) => ({
     category: "Signale",

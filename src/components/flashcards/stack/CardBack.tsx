@@ -1,8 +1,9 @@
 
 import { Question } from '@/types/questions';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, SwipeLeft, SwipeRight } from 'lucide-react';
 import ZoomableImage from '@/components/common/ZoomableImage';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Update interface to use generics
 interface CardBackProps<T extends Question = Question> {
@@ -12,93 +13,106 @@ interface CardBackProps<T extends Question = Question> {
 
 // Add generic type parameter to the component
 export default function CardBack<T extends Question = Question>({ question, onAnswer }: CardBackProps<T>) {
+  const isMobile = useIsMobile();
+  
   return (
     <div className="card-face back h-full w-full p-6 flex flex-col card-white rounded-xl shadow-md">
       {/* Answer heading with new style */}
       <div className="text-sm font-medium uppercase text-blue-600 mb-3">Antwort</div>
       
-      {/* Answers with enhanced styling */}
-      <div className="answers-container">
-        <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6">
-          {question.question_type === 'open' ? (
-            // For open questions, show all correct answers
-            <div className="open-answer">
-              {question.answers
-                .filter(ans => ans.isCorrect)
-                .map((answer, idx) => (
-                  <div 
-                    key={idx} 
-                    className="text-blue-800 font-medium"
-                  >
-                    {answer.text}
-                  </div>
-                ))}
-            </div>
-          ) : (
-            // For multiple choice questions
-            <ul className="space-y-3">
-              {question.answers.map((answer, idx) => (
-                <li 
-                  key={idx}
-                  className={`p-3 rounded-md ${
-                    answer.isCorrect 
-                      ? 'bg-green-50 border border-green-100 text-green-800' 
-                      : 'bg-gray-50 border border-gray-100 text-gray-500'
-                  }`}
-                >
-                  <div className="flex items-start">
-                    <div className="mr-2 mt-0.5">
-                      {answer.isCorrect ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <XCircle className="h-4 w-4 text-gray-400" />
-                      )}
+      {/* Scrollable container for long content */}
+      <div className="flex-1 overflow-y-auto pb-16">
+        {/* Answers with enhanced styling */}
+        <div className="answers-container">
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6">
+            {question.question_type === 'open' ? (
+              // For open questions, show all correct answers
+              <div className="open-answer">
+                {question.answers
+                  .filter(ans => ans.isCorrect)
+                  .map((answer, idx) => (
+                    <div 
+                      key={idx} 
+                      className="text-blue-800 font-medium"
+                    >
+                      {answer.text}
                     </div>
-                    <div>{answer.text}</div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+                  ))}
+              </div>
+            ) : (
+              // For multiple choice questions
+              <ul className="space-y-3">
+                {question.answers.map((answer, idx) => (
+                  <li 
+                    key={idx}
+                    className={`p-3 rounded-md ${
+                      answer.isCorrect 
+                        ? 'bg-green-50 border border-green-100 text-green-800' 
+                        : 'bg-gray-50 border border-gray-100 text-gray-500'
+                    }`}
+                  >
+                    <div className="flex items-start">
+                      <div className="mr-2 mt-0.5">
+                        {answer.isCorrect ? (
+                          <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-gray-400" />
+                        )}
+                      </div>
+                      <div>{answer.text}</div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
+        
+        {/* Image with ZoomableImage */}
+        {question.image_url && (
+          <ZoomableImage
+            src={question.image_url}
+            alt="Signalbild"
+            containerClassName="w-full max-w-[200px] mx-auto mb-6"
+          />
+        )}
       </div>
-      
-      {/* Image with ZoomableImage */}
-      {question.image_url && (
-        <ZoomableImage
-          src={question.image_url}
-          alt="Signalbild"
-          containerClassName="w-full max-w-[200px] mx-auto mb-6"
-        />
-      )}
       
       {/* Action buttons with enhanced styling */}
       {onAnswer && (
-        <div className="flex justify-between mt-auto space-x-2">
-          <Button 
-            variant="outline" 
-            className="flex-1 border-red-200 hover:border-red-300 hover:bg-red-50 text-gray-800"
-            onClick={() => onAnswer(false)}
-          >
-            <XCircle className="h-4 w-4 mr-2 text-red-500" />
-            Nicht gewusst
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            className="flex-1 border-green-200 hover:border-green-300 hover:bg-green-50 text-gray-800"
-            onClick={() => onAnswer(true)}
-          >
-            <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
-            Gewusst
-          </Button>
+        <div className="sticky bottom-4 mt-auto">
+          <div className="flex justify-between space-x-2">
+            <Button 
+              variant="outline" 
+              className="flex-1 border-red-200 hover:border-red-300 hover:bg-red-50 text-gray-800"
+              onClick={() => onAnswer(false)}
+            >
+              <XCircle className="h-4 w-4 mr-2 text-red-500" />
+              Nicht gewusst
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="flex-1 border-green-200 hover:border-green-300 hover:bg-green-50 text-gray-800"
+              onClick={() => onAnswer(true)}
+            >
+              <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+              Gewusst
+            </Button>
+          </div>
         </div>
       )}
       
-      {/* Mobile instructions */}
-      {!onAnswer && (
-        <div className="instructions text-sm text-gray-500 mt-4 text-center px-3 py-1.5 rounded-full border border-gray-200 bg-gray-50">
-          Wische nach links (nicht gewusst) oder rechts (gewusst)
+      {/* Mobile swipe instructions with improved visibility */}
+      {isMobile && (
+        <div className="fixed bottom-8 left-0 right-0 flex justify-center pointer-events-none z-10">
+          <div className="instructions text-sm bg-gray-800/80 text-white px-4 py-2 rounded-full flex items-center gap-2">
+            <SwipeLeft className="h-4 w-4 text-red-300" />
+            <span>Nicht gewusst</span>
+            <span className="mx-1">|</span>
+            <span>Gewusst</span>
+            <SwipeRight className="h-4 w-4 text-green-300" />
+          </div>
         </div>
       )}
     </div>

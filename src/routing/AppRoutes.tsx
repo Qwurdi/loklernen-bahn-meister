@@ -24,6 +24,7 @@ const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
 const QuestionsPage = lazy(() => import("@/pages/admin/QuestionsPage"));
 const QuestionEditorPage = lazy(() => import("@/pages/admin/QuestionEditorPage"));
 const DeleteQuestionPage = lazy(() => import("@/pages/admin/DeleteQuestionPage"));
+const CategoriesPage = lazy(() => import("@/pages/admin/CategoriesPage"));
 
 console.log("AppRoutes: Initializing routes");
 
@@ -117,6 +118,7 @@ const AppRoutes = () => {
           <Route path="questions/create" element={<QuestionEditorPage />} />
           <Route path="questions/edit/:id" element={<QuestionEditorPage />} />
           <Route path="questions/delete/:id" element={<DeleteQuestionPage />} />
+          <Route path="categories" element={<CategoriesPage />} />
         </Route>
         
         <Route path="*" element={<NotFound />} />

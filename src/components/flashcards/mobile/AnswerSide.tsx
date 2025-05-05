@@ -4,7 +4,7 @@ import { Question } from "@/types/questions";
 import FlashcardActionButton from "../FlashcardActionButton";
 import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
 import ZoomableImage from "@/components/common/ZoomableImage";
-import { SwipeLeft, SwipeRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 interface AnswerSideProps {
   question: Question;
@@ -63,11 +63,11 @@ export default function AnswerSide({
         <div className="absolute left-0 right-0 bottom-4 flex flex-col items-center">
           {/* Swipe hint with visual indicators */}
           <div className="bg-gray-800/70 text-white px-4 py-2 rounded-full mb-4 flex items-center gap-2">
-            <SwipeLeft className="h-4 w-4 text-red-300" />
+            <ArrowLeft className="h-4 w-4 text-red-300" />
             <span className="text-sm">Nicht gewusst</span>
             <span className="mx-1">|</span>
             <span className="text-sm">Gewusst</span>
-            <SwipeRight className="h-4 w-4 text-green-300" />
+            <ArrowRight className="h-4 w-4 text-green-300" />
           </div>
           
           {/* Action buttons */}

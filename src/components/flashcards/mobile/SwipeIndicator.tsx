@@ -1,6 +1,6 @@
 
 import React from "react";
-import { SwipeLeft, SwipeRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 interface SwipeIndicatorProps {
   dragDelta: number;
@@ -30,11 +30,11 @@ export default function SwipeIndicator({ dragDelta, swipeThreshold }: SwipeIndic
         {dragDelta > 0 ? (
           <>
             <span>Gewusst</span>
-            <SwipeRight className="h-5 w-5" />
+            <ArrowRight className="h-5 w-5" />
           </>
         ) : (
           <>
-            <SwipeLeft className="h-5 w-5" />
+            <ArrowLeft className="h-5 w-5" />
             <span>Nicht gewusst</span>
           </>
         )}

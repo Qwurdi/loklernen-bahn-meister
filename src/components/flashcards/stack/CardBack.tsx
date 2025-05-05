@@ -1,7 +1,7 @@
 
 import { Question } from '@/types/questions';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, XCircle, SwipeLeft, SwipeRight } from 'lucide-react';
+import { CheckCircle2, XCircle, ArrowLeft, ArrowRight } from 'lucide-react';
 import ZoomableImage from '@/components/common/ZoomableImage';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -107,11 +107,11 @@ export default function CardBack<T extends Question = Question>({ question, onAn
       {isMobile && (
         <div className="fixed bottom-8 left-0 right-0 flex justify-center pointer-events-none z-10">
           <div className="instructions text-sm bg-gray-800/80 text-white px-4 py-2 rounded-full flex items-center gap-2">
-            <SwipeLeft className="h-4 w-4 text-red-300" />
+            <ArrowLeft className="h-4 w-4 text-red-300" />
             <span>Nicht gewusst</span>
             <span className="mx-1">|</span>
             <span>Gewusst</span>
-            <SwipeRight className="h-4 w-4 text-green-300" />
+            <ArrowRight className="h-4 w-4 text-green-300" />
           </div>
         </div>
       )}

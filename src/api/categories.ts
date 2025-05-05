@@ -31,8 +31,8 @@ export async function fetchCategories(): Promise<Category[]> {
     throw error;
   }
 
-  cachedCategories = data;
-  return data;
+  cachedCategories = data as Category[];
+  return data as Category[];
 }
 
 // Clear the categories cache
@@ -70,7 +70,7 @@ export async function createCategory(category: Omit<Category, 'id' | 'created_at
   }
 
   clearCategoriesCache();
-  return data;
+  return data as Category;
 }
 
 // Update a category
@@ -88,7 +88,7 @@ export async function updateCategory(id: string, updates: Partial<Omit<Category,
   }
 
   clearCategoriesCache();
-  return data;
+  return data as Category;
 }
 
 // Delete a category

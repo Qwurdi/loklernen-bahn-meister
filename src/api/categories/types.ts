@@ -11,6 +11,7 @@ export interface Category {
   parent_category: QuestionCategory;
   created_at?: string;
   updated_at?: string;
+  isPro?: boolean;
 }
 
 // Signal subcategories array

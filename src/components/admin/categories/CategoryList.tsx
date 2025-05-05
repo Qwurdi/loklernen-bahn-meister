@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Category } from "@/api/categories";
 import { useCategories } from "@/hooks/useCategories";
 import { QuestionCategory } from "@/types/questions";
@@ -25,7 +26,8 @@ interface CategoryListProps {
 // Define the form schema for editing a category
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").max(50, "Name must be less than 50 characters"),
-  description: z.string().max(200, "Description must be less than 200 characters").optional()
+  description: z.string().max(200, "Description must be less than 200 characters").optional(),
+  isPro: z.boolean().default(false)
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -41,7 +43,8 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, parentCategory 
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      description: ""
+      description: "",
+      isPro: false
     }
   });
 
@@ -49,7 +52,8 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, parentCategory 
     setEditCategory(category);
     form.reset({
       name: category.name,
-      description: category.description || ""
+      description: category.description || "",
+      isPro: category.isPro || false
     });
   };
 
@@ -60,7 +64,8 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, parentCategory 
       id: editCategory.id,
       updates: {
         name: values.name,
-        description: values.description || undefined
+        description: values.description || undefined,
+        isPro: values.isPro
       }
     });
     setEditCategory(null);
@@ -120,7 +125,14 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, parentCategory 
                 className="p-4 hover:bg-gray-50 transition-colors duration-150 flex justify-between items-center"
               >
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-gray-900">{category.name}</div>
+                  <div className="font-medium text-gray-900 flex items-center gap-2">
+                    {category.name}
+                    {category.isPro && (
+                      <Badge className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-black">
+                        PRO
+                      </Badge>
+                    )}
+                  </div>
                   {category.description && (
                     <div className="mt-1 text-sm text-gray-500 truncate">{category.description}</div>
                   )}
@@ -191,6 +203,27 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, parentCategory 
                         />
                       </FormControl>
                       <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="isPro"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="font-medium">Pro-Kategorie</FormLabel>
+                        <p className="text-sm text-gray-500">
+                          Diese Kategorie ist nur für Pro-Nutzer verfügbar
+                        </p>
+                      </div>
                     </FormItem>
                   )}
                 />

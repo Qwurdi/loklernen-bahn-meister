@@ -1,8 +1,9 @@
 
 import React, { useEffect, useState } from "react";
-import CategoryCard from "@/components/common/CategoryCard";
 import { RegulationFilterType } from "@/types/regulation";
-import { fetchCategoriesByParent, betriebsdienstSubCategories } from "@/api/categories";
+import { fetchCategoriesByParent } from "@/api/categories";
+import CategoryGrid from "@/components/flashcards/CategoryGrid";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 interface BetriebsdienstTabProps {
   progressStats?: Record<string, any>;
@@ -28,18 +29,39 @@ export default function BetriebsdienstTab({
 
   useEffect(() => {
     const loadCategories = async () => {
+      setIsLoading(true);
       try {
         const dbCategories = await fetchCategoriesByParent('Betriebsdienst');
         if (dbCategories && dbCategories.length > 0) {
+          // Map to just category names for compatibility with existing code
           setCategories(dbCategories.map(cat => cat.name));
         } else {
+          console.warn("No Betriebsdienst categories found in database, using fallback.");
           // Fallback to hardcoded categories if none found in DB
-          setCategories([...betriebsdienstSubCategories]);
+          setCategories([
+            "Grundlagen Bahnbetrieb",
+            "UVV & Arbeitsschutz",
+            "Rangieren",
+            "Züge fahren",
+            "PZB & Sicherungsanlagen",
+            "Kommunikation",
+            "Besonderheiten",
+            "Unregelmäßigkeiten"
+          ]);
         }
       } catch (error) {
         console.error("Error loading Betriebsdienst categories:", error);
         // Fallback to hardcoded categories on error
-        setCategories([...betriebsdienstSubCategories]);
+        setCategories([
+          "Grundlagen Bahnbetrieb",
+          "UVV & Arbeitsschutz",
+          "Rangieren",
+          "Züge fahren",
+          "PZB & Sicherungsanlagen",
+          "Kommunikation",
+          "Besonderheiten",
+          "Unregelmäßigkeiten"
+        ]);
       } finally {
         setIsLoading(false);
       }
@@ -47,61 +69,35 @@ export default function BetriebsdienstTab({
 
     loadCategories();
   }, []);
-
-  // Define which categories require PRO and which are locked without user
-  const proCategories = ["Rangieren", "Züge fahren", "PZB & Sicherungsanlagen", "Kommunikation", "Besonderheiten", "Unregelmäßigkeiten"];
   
   if (isLoading) {
-    return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {[1, 2, 3, 4].map(i => (
-        <div key={i} className="h-40 bg-gray-100 rounded-lg animate-pulse"></div>
-      ))}
-    </div>;
+    return (
+      <div className="py-8 flex justify-center">
+        <LoadingSpinner />
+      </div>
+    );
   }
   
+  // Define which categories require PRO - this will be replaced by database isPro flag in the future
+  const DEFAULT_PRO_CATEGORIES = [
+    "Rangieren", 
+    "Züge fahren", 
+    "PZB & Sicherungsanlagen", 
+    "Kommunikation", 
+    "Besonderheiten", 
+    "Unregelmäßigkeiten"
+  ];
+
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {categories.map((subcategory) => {
-        const isPro = proCategories.includes(subcategory);
-        const isLocked = !user || isPro;
-        
-        return (
-          <CategoryCard
-            key={subcategory}
-            title={subcategory}
-            description={subcategory === "Grundlagen Bahnbetrieb" 
-              ? "Einstieg in den Bahnbetrieb" 
-              : subcategory === "UVV & Arbeitsschutz" 
-                ? "Sicherheit am Arbeitsplatz"
-                : subcategory === "Rangieren"
-                  ? "Alles zum Thema Rangieren"
-                  : subcategory === "Züge fahren"
-                    ? "Von der Abfahrt bis zur Ankunft"
-                    : subcategory === "PZB & Sicherungsanlagen"
-                      ? "Sicherungstechnik und PZB-System"
-                      : subcategory === "Kommunikation"
-                        ? "Betriebliche Kommunikation"
-                        : subcategory === "Besonderheiten"
-                          ? "Spezialfälle im Bahnbetrieb"
-                          : "Störungen und außergewöhnliche Ereignisse"}
-            progress={0}
-            link={`/karteikarten/betriebsdienst/${encodeURIComponent(subcategory.toLowerCase().replace(/[^a-z0-9]+/g, '-'))}`}
-            isLocked={isLocked}
-            isPro={isPro}
-            isSelected={selectedCategories.includes(subcategory)}
-            onSelect={() => onSelectCategory(subcategory)}
-            selectable={!isLocked && isSelectable}
-            stats={{
-              totalCards: categoryCardCounts?.[subcategory] || 
-                (subcategory === "Grundlagen Bahnbetrieb" ? 25 : 
-                subcategory === "UVV & Arbeitsschutz" ? 18 : 
-                subcategory === "Rangieren" ? 42 : 35),
-              dueCards: !isLocked ? (progressStats?.[subcategory]?.dueCards || 0) : undefined,
-              masteredCards: !isLocked ? (progressStats?.[subcategory]?.masteredCards || 0) : undefined
-            }}
-          />
-        );
-      })}
-    </div>
+    <CategoryGrid
+      categories={categories}
+      categoryCardCounts={categoryCardCounts}
+      progressStats={progressStats}
+      selectedCategories={selectedCategories}
+      onSelectCategory={onSelectCategory}
+      isSelectable={isSelectable}
+      regulationFilter={regulationFilter}
+      isPro={!user} // If user is not logged in, all categories are treated as Pro (requiring login)
+    />
   );
 }

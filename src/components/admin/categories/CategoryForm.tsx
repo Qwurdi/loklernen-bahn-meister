@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useCategories } from "@/hooks/useCategories";
 import { QuestionCategory } from "@/types/questions";
 import { Plus, Loader2 } from "lucide-react";
@@ -19,7 +20,8 @@ interface CategoryFormProps {
 // Define the form schema with validation rules
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").max(50, "Name must be less than 50 characters"),
-  description: z.string().max(200, "Description must be less than 200 characters").optional()
+  description: z.string().max(200, "Description must be less than 200 characters").optional(),
+  isPro: z.boolean().default(false)
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -32,7 +34,8 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ parentCategory }) => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      description: ""
+      description: "",
+      isPro: false
     }
   });
 
@@ -40,7 +43,8 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ parentCategory }) => {
     createCategory({
       name: values.name.trim(),
       description: values.description?.trim() || undefined,
-      parent_category: parentCategory
+      parent_category: parentCategory,
+      isPro: values.isPro
     });
 
     // Reset form after submission
@@ -90,6 +94,28 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ parentCategory }) => {
                     />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="isPro"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 mt-2">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="font-medium">Pro-Kategorie</FormLabel>
+                    <p className="text-sm text-gray-500">
+                      Diese Kategorie ist nur für Pro-Nutzer verfügbar
+                    </p>
+                  </div>
                 </FormItem>
               )}
             />

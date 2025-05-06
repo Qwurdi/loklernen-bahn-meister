@@ -9,9 +9,12 @@ export {
 
 // Export user progress related functions
 export {
-  updateUserProgress,
-  updateUserStats
-} from './user-progress';
+  updateUserProgress
+} from './progress-updates';
+
+export {
+  updateUserStats 
+} from './user-stats';
 
 // Export utility functions for score calculations
 export {

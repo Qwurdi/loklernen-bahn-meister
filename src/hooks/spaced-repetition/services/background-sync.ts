@@ -5,6 +5,19 @@ import { toast } from 'sonner';
 import { updateUserProgress } from './progress-updates';
 import { updateUserStats } from './user-stats';
 
+// Add TypeScript declaration for SyncManager
+declare global {
+  interface ServiceWorkerRegistration {
+    sync?: {
+      register(tag: string): Promise<void>;
+    }
+  }
+  
+  interface SyncManager {
+    register(tag: string): Promise<void>;
+  }
+}
+
 /**
  * Sync pending offline actions with the backend once online
  */
@@ -76,7 +89,8 @@ export function registerBackgroundSync() {
   if ('serviceWorker' in navigator && 'SyncManager' in window) {
     navigator.serviceWorker.ready.then(registration => {
       // Register for background sync
-      registration.sync.register('sync-pending-answers')
+      // Use optional chaining to safely access the sync property
+      registration.sync?.register('sync-pending-answers')
         .then(() => {
           console.log('Background sync registered for pending answers');
         })

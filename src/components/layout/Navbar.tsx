@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import DesktopNavigation from "./navbar/DesktopNavigation";
 import DesktopAuthButtons from "./navbar/DesktopAuthButtons";
@@ -8,11 +8,23 @@ import Logo from "./navbar/Logo";
 import BackButton from "./navbar/BackButton";
 import NetworkStatusIndicator from "@/components/common/NetworkStatusIndicator";
 import { useNetworkStatus } from "@/hooks/use-network-status";
+import { defaultNavItems, getPreviousPath } from "./navbar/NavbarUtils";
 
 export default function Navbar() {
-  const navigate = useNavigate();
+  const location = useLocation();
   const { isOnline, wasOffline } = useNetworkStatus();
   const [showNetworkStatus, setShowNetworkStatus] = useState(false);
+  const previousPath = getPreviousPath(location.pathname);
+  
+  // Function to check if a path is active
+  const isActive = (path: string) => {
+    // Check if the current path starts with the given path
+    // but make an exception for root path to avoid matching everything
+    if (path === '/') {
+      return location.pathname === path;
+    }
+    return location.pathname.startsWith(path);
+  };
 
   // Show network status indicator when network status changes
   useEffect(() => {
@@ -33,20 +45,20 @@ export default function Navbar() {
       <header className="sticky top-0 z-40 w-full border-b bg-white/80 backdrop-blur-md">
         <div className="container flex h-14 items-center">
           <div className="mr-4">
-            <BackButton />
+            <BackButton previousPath={previousPath} />
           </div>
           <div className="mr-4">
             <Logo />
           </div>
           <div className="flex flex-1 items-center space-x-2 justify-between sm:space-x-4 md:justify-end">
             <div className="hidden md:flex">
-              <DesktopNavigation />
+              <DesktopNavigation navItems={defaultNavItems} isActive={isActive} />
             </div>
             <div className="flex items-center gap-2">
               {showNetworkStatus && (
                 <NetworkStatusIndicator className="hidden md:flex" />
               )}
-              <DesktopAuthButtons />
+              <DesktopAuthButtons isActive={isActive} />
             </div>
           </div>
         </div>

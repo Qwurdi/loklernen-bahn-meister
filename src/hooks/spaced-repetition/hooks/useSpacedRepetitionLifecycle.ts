@@ -8,7 +8,7 @@ import { toast } from 'sonner';
  * Hook to manage the lifecycle of the spaced repetition system
  */
 export function useSpacedRepetitionLifecycle(
-  userId?: string,
+  userId: string | undefined,
   loadQuestions: () => Promise<{ questions: Question[], progressData: UserProgress[] }>,
   questionsError: Error | null,
   isMounted: React.MutableRefObject<boolean>,

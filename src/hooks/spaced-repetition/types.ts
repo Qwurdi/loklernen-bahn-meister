@@ -20,8 +20,8 @@ export interface SpacedRepetitionOptions {
   practiceMode?: boolean;
   regulationCategory?: string;
   boxNumber?: number;
-  batchSize?: number; // New option to control batch size
-  selectedCategories?: string[]; // New option for multiple subcategories
+  batchSize?: number;
+  selectedCategories?: string[];
 }
 
 export interface SpacedRepetitionResult {
@@ -30,9 +30,11 @@ export interface SpacedRepetitionResult {
   dueQuestions: Question[];
   progress: UserProgress[];
   submitAnswer: (questionId: string, score: number) => Promise<void>;
-  pendingUpdatesCount: number; // New property
-  applyPendingUpdates: () => Promise<void>; // New method
+  pendingUpdatesCount: number;
+  applyPendingUpdates: () => Promise<void>;
   reloadQuestions: () => Promise<void>;
+  isMounted?: React.MutableRefObject<boolean>;
+  cleanupQuestions?: () => void;
 }
 
 export interface BoxStats {

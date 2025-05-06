@@ -1,23 +1,14 @@
 
-/* ===== Component Styles ===== */
-
-/* Progress Ring Component */
-.progress-ring-container {
-  position: relative;
-  display: inline-block;
+/* Rich Text Editor Placeholder */
+[contenteditable][data-placeholder]:empty:before {
+  content: attr(data-placeholder);
+  color: #9ca3af; /* text-gray-400 */
+  font-style: italic;
+  pointer-events: none;
 }
 
-.progress-ring {
-  transform: rotate(-90deg);
-  transform-origin: 50% 50%;
-}
-
-.progress-ring__circle {
-  transition: stroke-dashoffset 0.35s;
-  transform-origin: 50% 50%;
-}
-
-/* Card Component Styles */
-.card-hover {
-  @apply transition-all duration-200 hover:shadow-md hover:-translate-y-1;
+/* Highlighted drop zone for drag and drop */
+.border-loklernen-ultramarine {
+  border-color: #3F00FF !important;
+  box-shadow: 0 0 0 2px rgba(63, 0, 255, 0.2);
 }

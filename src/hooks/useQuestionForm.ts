@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,6 +30,7 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
     imageFile,
     imagePreview,
     handleImageChange,
+    handlePastedImage, // Using the new pasted image handler
     removeImage,
     setImagePreview
   } = useQuestionImage(initialData?.image_url);
@@ -249,6 +249,7 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
     handleRegulationCategoryChange,
     handleAnswerChange,
     handleImageChange,
+    handlePastedImage, // Expose the new pasted image handler
     removeImage,
     toggleAnswerCorrectness,
     addAnswer,

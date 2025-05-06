@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { bold, italic, list, link } from 'lucide-react';
+import { Bold, Italic, List, Link } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -55,7 +55,7 @@ export function RichTextEditor({
           size="icon" 
           onClick={handleBold}
         >
-          <bold className="h-4 w-4" />
+          <Bold className="h-4 w-4" />
         </Button>
         <Button 
           type="button" 
@@ -63,7 +63,7 @@ export function RichTextEditor({
           size="icon" 
           onClick={handleItalic}
         >
-          <italic className="h-4 w-4" />
+          <Italic className="h-4 w-4" />
         </Button>
         <Button 
           type="button" 
@@ -71,7 +71,7 @@ export function RichTextEditor({
           size="icon" 
           onClick={handleList}
         >
-          <list className="h-4 w-4" />
+          <List className="h-4 w-4" />
         </Button>
         <Button 
           type="button" 
@@ -79,7 +79,7 @@ export function RichTextEditor({
           size="icon" 
           onClick={handleLink}
         >
-          <link className="h-4 w-4" />
+          <Link className="h-4 w-4" />
         </Button>
       </div>
       <div
@@ -93,7 +93,6 @@ export function RichTextEditor({
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         dangerouslySetInnerHTML={{ __html: value || '' }}
-        placeholder={placeholder}
         data-placeholder={!value ? placeholder : undefined}
       />
     </div>

@@ -1,10 +1,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { CreateQuestionDTO } from '@/types/questions';
+import { CreateQuestionDTO, Question } from '@/types/questions';
 import { toast } from 'sonner';
 
 interface UseAutoSaveProps {
-  formData: Partial<CreateQuestionDTO>;
+  formData: Partial<CreateQuestionDTO> & { id?: string };
   isEditMode: boolean;
   saveInterval?: number; // milliseconds
   enabled?: boolean;

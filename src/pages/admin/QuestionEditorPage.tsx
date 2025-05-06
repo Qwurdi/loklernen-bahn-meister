@@ -34,6 +34,7 @@ const QuestionEditorPage: React.FC = () => {
     handleRegulationCategoryChange,
     handleAnswerChange,
     handleImageChange,
+    handlePastedImage,
     removeImage,
     toggleAnswerCorrectness,
     addAnswer,
@@ -139,6 +140,7 @@ const QuestionEditorPage: React.FC = () => {
               imagePreview={imagePreview}
               onTextChange={handleRichTextChange}
               onImageChange={handleImageChange}
+              handlePastedImage={handlePastedImage}
               removeImage={removeImage}
             />
           </EditorTabContent>

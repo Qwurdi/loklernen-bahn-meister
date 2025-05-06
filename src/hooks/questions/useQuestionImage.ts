@@ -19,6 +19,16 @@ export const useQuestionImage = (initialImageUrl: string | null = null) => {
     }
   };
   
+  const handlePastedImage = (file: File) => {
+    setImageFile(file);
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setImagePreview(event.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+  
   const removeImage = () => {
     setImageFile(null);
     setImagePreview(null);
@@ -28,6 +38,7 @@ export const useQuestionImage = (initialImageUrl: string | null = null) => {
     imageFile,
     imagePreview,
     handleImageChange,
+    handlePastedImage,
     removeImage,
     setImagePreview
   };

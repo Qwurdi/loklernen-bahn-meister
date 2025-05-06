@@ -26,6 +26,7 @@ export default function LearningSessionPage() {
   const [sessionCards, setSessionCards] = useState<Question[]>([]);
   const [sessionFinished, setSessionFinished] = useState(false);
   const [isFirstLoaded, setIsFirstLoaded] = useState(false);
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
   const isMobile = useIsMobile();
   
   // Get session parameters from URL
@@ -68,6 +69,18 @@ export default function LearningSessionPage() {
 
   console.log("LearningSessionPage: Loaded questions count:", dueQuestions?.length || 0);
 
+  // Add a timeout to prevent infinite loading
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (loading && !isFirstLoaded) {
+        console.log("Loading timed out after 10 seconds");
+        setLoadingTimedOut(true);
+      }
+    }, 10000);
+    
+    return () => clearTimeout(timeoutId);
+  }, [loading, isFirstLoaded]);
+
   // Use useEffect with proper dependencies to shuffle cards only when necessary
   useEffect(() => {
     if (!loading && dueQuestions && dueQuestions.length > 0) {
@@ -75,6 +88,11 @@ export default function LearningSessionPage() {
       const shuffled = [...dueQuestions].sort(() => Math.random() - 0.5);
       setSessionCards(shuffled);
       setIsFirstLoaded(true);
+      console.log("Cards loaded and shuffled:", shuffled.length);
+    } else if (!loading && dueQuestions && dueQuestions.length === 0) {
+      // Make sure we set isFirstLoaded even when there are no questions
+      setIsFirstLoaded(true);
+      console.log("No cards loaded but loading finished");
     }
   }, [loading, dueQuestions]);
 
@@ -158,13 +176,26 @@ export default function LearningSessionPage() {
     );
   }
 
-  // Render loading state
-  if (loading || (!isFirstLoaded && !sessionCards.length)) {
+  // Render loading state - but exit after timeout
+  if ((loading && !loadingTimedOut) || (!isFirstLoaded && !sessionCards.length && !loadingTimedOut)) {
+    console.log("Rendering loading state");
     return <FlashcardLoadingState />;
+  }
+
+  // Handle loading timeout - show empty state with error info
+  if (loadingTimedOut && !isFirstLoaded) {
+    console.log("Loading timed out - showing error state");
+    toast.error("Das Laden der Karten dauert ungewöhnlich lange. Bitte versuche es später erneut.");
+    return (
+      <SessionContainer isMobile={isMobile}>
+        <EmptySessionState categoryParam={categoryParam} showError={true} />
+      </SessionContainer>
+    );
   }
 
   // Render empty state when no cards are available
   if (!loading && !sessionCards.length) {
+    console.log("No cards available - showing empty state");
     return (
       <SessionContainer isMobile={isMobile}>
         <EmptySessionState categoryParam={categoryParam} />
@@ -187,6 +218,7 @@ export default function LearningSessionPage() {
   }
 
   // Render main learning session UI with our card stack
+  console.log("Rendering main learning session UI");
   return (
     <SessionContainer isMobile={isMobile} fullHeight={isMobile}>
       <main className={`flex-1 ${isMobile ? 'px-0 pt-2 pb-16 overflow-hidden flex flex-col' : 'container px-4 py-8'}`}>

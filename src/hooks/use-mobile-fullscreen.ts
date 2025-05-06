@@ -19,9 +19,17 @@ export function useMobileFullscreen(enableOnMount: boolean = false) {
     }
   }, []);
   
-  // Function to toggle fullscreen mode
+  // Function to toggle fullscreen mode with better error handling
   const toggleFullscreen = useCallback(() => {
     try {
+      // Check if document is defined (SSR protection)
+      if (typeof document === 'undefined') {
+        console.log("Document not available, skipping fullscreen toggle");
+        return;
+      }
+      
+      console.log("Toggling fullscreen mode, current state:", fullscreenActive.current);
+      
       if (!document.fullscreenElement && !fullscreenActive.current) {
         // If not in fullscreen mode, enter fullscreen
         const docEl = document.documentElement;
@@ -33,6 +41,7 @@ export function useMobileFullscreen(enableOnMount: boolean = false) {
           (docEl as any).msRequestFullscreen;
         
         if (requestFullscreen) {
+          console.log("Trying to enter fullscreen mode");
           requestFullscreen.call(docEl)
             .then(() => {
               fullscreenActive.current = true;
@@ -44,7 +53,10 @@ export function useMobileFullscreen(enableOnMount: boolean = false) {
               // Try to recover
               fullscreenActive.current = false;
               safeSetState(false);
+              // On mobile, sometimes fullscreen API can't be used - don't show error to user
             });
+        } else {
+          console.log("Fullscreen API not available");
         }
       } else if (document.fullscreenElement || fullscreenActive.current) {
         // If in fullscreen mode, exit fullscreen
@@ -55,6 +67,7 @@ export function useMobileFullscreen(enableOnMount: boolean = false) {
           (document as any).msExitFullscreen;
           
         if (exitFullscreen) {
+          console.log("Trying to exit fullscreen mode");
           exitFullscreen.call(document)
             .then(() => {
               fullscreenActive.current = false;
@@ -67,17 +80,30 @@ export function useMobileFullscreen(enableOnMount: boolean = false) {
               fullscreenActive.current = true;
               safeSetState(true);
             });
+        } else {
+          console.log("Fullscreen API for exit not available");
+          // Just update our state
+          fullscreenActive.current = false;
+          safeSetState(false);
         }
       }
     } catch (error) {
       console.error('Fullscreen API error:', error);
+      // If there was an error, just update the state to match reality
+      const isCurrentlyFullscreen = !!document.fullscreenElement;
+      fullscreenActive.current = isCurrentlyFullscreen;
+      safeSetState(isCurrentlyFullscreen);
     }
   }, [safeSetState]);
   
   // Listen for fullscreen change events
   useEffect(() => {
+    // Fail-safe check for document (SSR protection)
+    if (typeof document === 'undefined') return;
+    
     function handleFullscreenChange() {
       const isFullscreen = !!document.fullscreenElement;
+      console.log("Fullscreen change detected:", isFullscreen);
       fullscreenActive.current = isFullscreen;
       safeSetState(isFullscreen);
     }
@@ -88,13 +114,24 @@ export function useMobileFullscreen(enableOnMount: boolean = false) {
     document.addEventListener('mozfullscreenchange', handleFullscreenChange);
     document.addEventListener('MSFullscreenChange', handleFullscreenChange);
     
-    // Enable fullscreen on mount if requested
+    // Enable fullscreen on mount if requested, with a short delay to prevent issues
     if (enableOnMount && !fullscreenActive.current) {
-      toggleFullscreen();
+      console.log("Enable fullscreen on mount requested");
+      // Small delay to avoid issues with initial rendering
+      const timer = setTimeout(() => {
+        if (isMounted.current) {
+          toggleFullscreen();
+        }
+      }, 300);
+      
+      return () => {
+        clearTimeout(timer);
+      };
     }
     
     // Cleanup function to prevent memory leaks
     return () => {
+      console.log("Cleaning up fullscreen listeners");
       isMounted.current = false;
       
       // Remove all event listeners
@@ -106,6 +143,7 @@ export function useMobileFullscreen(enableOnMount: boolean = false) {
       // If component unmounts while in fullscreen, exit fullscreen
       if (document.fullscreenElement || fullscreenActive.current) {
         try {
+          console.log("Exiting fullscreen on unmount");
           const exitFullscreen = 
             document.exitFullscreen || 
             (document as any).webkitExitFullscreen || 

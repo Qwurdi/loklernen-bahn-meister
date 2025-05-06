@@ -17,12 +17,18 @@ export default function SessionContainer({
   fullHeight = false
 }: SessionContainerProps) {
   // Use the mobile fullscreen hook only when fullHeight is true
-  const { isFullscreenMobile, toggleFullscreen } = useMobileFullscreen(isMobile && fullHeight);
+  const { isFullscreenMobile, toggleFullscreen } = useMobileFullscreen(false);
   
   // Enable fullscreen mode automatically when the component mounts if needed
   useEffect(() => {
     if (isMobile && fullHeight && !isFullscreenMobile) {
-      toggleFullscreen();
+      console.log("SessionContainer: Attempting to enable fullscreen mode");
+      // Set a small delay before enabling fullscreen to prevent issues
+      const timer = setTimeout(() => {
+        toggleFullscreen();
+      }, 500);
+      
+      return () => clearTimeout(timer);
     }
   }, [isMobile, fullHeight, isFullscreenMobile, toggleFullscreen]);
   

@@ -29,7 +29,7 @@ export function useSpacedRepetition(
   const isFetching = useRef(false);
   
   // Use specialized hooks for different concerns
-  const { loadQuestions, loadingQuestions, questionsError } = useLoadQuestions(
+  const { loadQuestions, loadingQuestions, questionsError, cleanup: cleanupQuestions } = useLoadQuestions(
     user?.id, 
     category as QuestionCategory, // Cast to QuestionCategory type
     subcategory, 
@@ -69,7 +69,10 @@ export function useSpacedRepetition(
   useEffect(() => {
     const fetchQuestions = async () => {
       // Prevent concurrent fetches
-      if (isFetching.current) return;
+      if (isFetching.current) {
+        console.log("Fetch already in progress, skipping");
+        return;
+      }
       
       isFetching.current = true;
       
@@ -78,6 +81,7 @@ export function useSpacedRepetition(
         safeSetError(null);
         
         if (!user) {
+          console.log("No user, clearing questions and progress");
           safeSetDueQuestions([]);
           safeSetProgress([]);
           return;
@@ -85,6 +89,11 @@ export function useSpacedRepetition(
         
         console.log('Fetching questions for spaced repetition system');
         const { questions, progressData } = await loadQuestions();
+        
+        if (!isMounted.current) {
+          console.log("Component unmounted during fetch, cancelling updates");
+          return;
+        }
         
         // Validate questions before setting
         if (Array.isArray(questions)) {
@@ -98,6 +107,7 @@ export function useSpacedRepetition(
             toast.warning("Die geladenen Karten scheinen fehlerhaft zu sein. Bitte versuche es mit einer anderen Kategorie.");
           }
           
+          console.log(`Setting ${validQuestions.length} valid questions`);
           safeSetDueQuestions(validQuestions);
         } else {
           console.error('Invalid questions data:', questions);
@@ -124,9 +134,11 @@ export function useSpacedRepetition(
     
     // Cleanup function to prevent memory leaks
     return () => {
+      console.log("Cleaning up spaced repetition hook");
       isMounted.current = false;
+      cleanupQuestions();
     };
-  }, [user, loadQuestions, safeSetLoading, safeSetError, safeSetDueQuestions, safeSetProgress]);
+  }, [user, loadQuestions, safeSetLoading, safeSetError, safeSetDueQuestions, safeSetProgress, cleanupQuestions]);
   
   // Update error state from child hooks
   useEffect(() => {

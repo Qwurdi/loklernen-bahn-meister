@@ -8,14 +8,13 @@ import { EditorTabs, EditorTabContent } from "@/components/admin/questions/Edito
 import { BasicInfoTab } from "@/components/admin/questions/BasicInfoTab";
 import { ContentTab } from "@/components/admin/questions/ContentTab";
 import { AnswersTab } from "@/components/admin/questions/AnswersTab";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Save } from "lucide-react";
 import { PreviewModal } from "@/components/admin/questions/PreviewModal";
 import { useAutoSave } from "@/hooks/questions/useAutoSave";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { QuestionType } from "@/types/questions";
+import { FormErrors } from "@/components/admin/questions/editor/FormErrors";
+import { AutoSaveIndicator } from "@/components/admin/questions/editor/AutoSaveIndicator";
+import { DraftDialog } from "@/components/admin/questions/editor/DraftDialog";
+import { NavigationWarning } from "@/components/admin/questions/editor/NavigationWarning";
 
 const QuestionEditorPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -72,30 +71,11 @@ const QuestionEditorPage: React.FC = () => {
     }
   }, [loadDraft, isEditMode]);
 
-  // Show a confirmation dialog if the user tries to navigate away with unsaved changes
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (isDirty) {
-        const message = "Sie haben ungespeicherte Änderungen. Sind Sie sicher, dass Sie die Seite verlassen möchten?";
-        e.preventDefault();
-        e.returnValue = message;
-        return message;
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [isDirty]);
-
   const isSignalQuestion = formData.category === "Signale";
 
   const handleLoadDraft = () => {
     if (draftData) {
       setFormData(draftData.formData);
-      toast.success(`Entwurf vom ${new Date(draftData.timestamp).toLocaleString()} geladen`);
     }
     setShowDraftDialog(false);
   };
@@ -103,7 +83,6 @@ const QuestionEditorPage: React.FC = () => {
   const handleDiscardDraft = () => {
     clearDraft();
     setShowDraftDialog(false);
-    toast.info("Entwurf verworfen");
   };
 
   const handleCancel = () => {
@@ -120,13 +99,14 @@ const QuestionEditorPage: React.FC = () => {
     setActiveTab(value);
   };
 
-  // Fixed the type signature to match what AnswersTab expects
   const handleToggleAnswerCorrectness = (index: number) => {
     toggleAnswerCorrectness(index, formData.question_type!);
   };
 
   return (
     <div className="container pb-10">
+      <NavigationWarning isDirty={isDirty} />
+      
       <QuestionFormHeader 
         isEditMode={isEditMode} 
         isLoading={isLoading} 
@@ -137,36 +117,14 @@ const QuestionEditorPage: React.FC = () => {
         onCancel={handleCancel}
       />
       
-      {errors.length > 0 && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            <ul className="list-disc pl-5">
-              {errors.map((error, index) => (
-                <li key={index}>{error}</li>
-              ))}
-            </ul>
-          </AlertDescription>
-        </Alert>
-      )}
+      <FormErrors errors={errors} />
       
-      {lastSaved && (
-        <div className="text-xs text-muted-foreground mb-4 flex items-center gap-2">
-          <span>Letzter automatischer Speicherstand: {lastSaved.toLocaleTimeString()}</span>
-          {isDirty && (
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="h-6 text-xs py-0 px-2 flex items-center gap-1"
-              onClick={(e) => handleSubmit(e)}
-              disabled={isLoading}
-            >
-              <Save className="h-3 w-3" />
-              Jetzt speichern
-            </Button>
-          )}
-        </div>
-      )}
+      <AutoSaveIndicator 
+        lastSaved={lastSaved} 
+        isDirty={isDirty}
+        onSave={handleSubmit}
+        isLoading={isLoading}
+      />
 
       <form onSubmit={handleSubmit}>
         <EditorTabs defaultValue={activeTab} onValueChange={handleChangeTab}>
@@ -215,20 +173,13 @@ const QuestionEditorPage: React.FC = () => {
         question={formData}
       />
       
-      <AlertDialog open={showDraftDialog} onOpenChange={setShowDraftDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Gespeicherten Entwurf gefunden</AlertDialogTitle>
-            <AlertDialogDescription>
-              Ein automatisch gespeicherter Entwurf vom {draftData?.timestamp ? new Date(draftData.timestamp).toLocaleString() : 'unbekannten Zeitpunkt'} wurde gefunden. Möchten Sie diesen laden oder verwerfen?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleDiscardDraft}>Verwerfen</AlertDialogCancel>
-            <AlertDialogAction onClick={handleLoadDraft}>Entwurf laden</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DraftDialog 
+        open={showDraftDialog}
+        onOpenChange={setShowDraftDialog}
+        draftData={draftData}
+        onLoadDraft={handleLoadDraft}
+        onDiscardDraft={handleDiscardDraft}
+      />
     </div>
   );
 };

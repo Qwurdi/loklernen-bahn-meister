@@ -1,17 +1,26 @@
 
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useQuestions } from "@/hooks/useQuestions";
 import { useQuestionForm } from "@/hooks/useQuestionForm";
-import { QuestionEditorHeader } from "@/components/admin/questions/QuestionEditorHeader";
-import { QuestionCategorySelector } from "@/components/admin/questions/QuestionCategorySelector";
-import { QuestionSubCategorySelector } from "@/components/admin/questions/QuestionSubCategorySelector";
-import { QuestionDetailsForm } from "@/components/admin/questions/QuestionDetailsForm";
-import { QuestionPreview } from "@/components/admin/questions/QuestionPreview";
+import { QuestionFormHeader } from "@/components/admin/questions/QuestionFormHeader";
+import { EditorTabs, EditorTabContent } from "@/components/admin/questions/EditorTabs";
+import { BasicInfoTab } from "@/components/admin/questions/BasicInfoTab";
+import { ContentTab } from "@/components/admin/questions/ContentTab";
+import { AnswersTab } from "@/components/admin/questions/AnswersTab";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { PreviewModal } from "@/components/admin/questions/PreviewModal";
+import { useAutoSave } from "@/hooks/questions/useAutoSave";
+import { toast } from "sonner";
 
 const QuestionEditorPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { data: questions } = useQuestions();
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [showDraftDialog, setShowDraftDialog] = useState(false);
+  const [draftData, setDraftData] = useState<any>(null);
   
   const {
     isEditMode,
@@ -29,9 +38,31 @@ const QuestionEditorPage: React.FC = () => {
     toggleAnswerCorrectness,
     addAnswer,
     removeAnswer,
-    handleSubmit
+    handleSubmit,
+    setFormData,
+    errors
   } = useQuestionForm({ id });
   
+  const { lastSaved, isDirty, loadDraft, clearDraft } = useAutoSave({
+    formData,
+    isEditMode
+  });
+
+  // Handle rich text changes
+  const handleRichTextChange = (value: string) => {
+    setFormData(prev => ({ ...prev, text: value }));
+  };
+
+  // Load draft on initial load if available
+  useEffect(() => {
+    const draft = loadDraft();
+    if (draft && !isEditMode) {
+      setDraftData(draft);
+      setShowDraftDialog(true);
+    }
+  }, [loadDraft, isEditMode]);
+
+  // Load existing question data
   useEffect(() => {
     if (isEditMode && id && questions) {
       const questionToEdit = questions.find(q => q.id === id);
@@ -43,59 +74,109 @@ const QuestionEditorPage: React.FC = () => {
 
   const isSignalQuestion = formData.category === "Signale";
 
+  const handleLoadDraft = () => {
+    if (draftData) {
+      setFormData(draftData.formData);
+      toast.success(`Entwurf vom ${new Date(draftData.timestamp).toLocaleString()} geladen`);
+    }
+    setShowDraftDialog(false);
+  };
+
+  const handleDiscardDraft = () => {
+    clearDraft();
+    setShowDraftDialog(false);
+    toast.info("Entwurf verworfen");
+  };
+
   return (
-    <div className="space-y-6">
-      <QuestionEditorHeader 
+    <div className="container pb-10">
+      <QuestionFormHeader 
         isEditMode={isEditMode} 
         isLoading={isLoading} 
-        onSave={handleSubmit} 
+        onSave={handleSubmit}
+        onPreview={() => setShowPreviewModal(true)}
+        showDuplicateButton={isEditMode}
       />
       
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="space-y-6">
-            <QuestionCategorySelector
-              category={formData.category}
-              onCategoryChange={handleCategoryChange}
-            />
+      {errors.length > 0 && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            <ul className="list-disc pl-5">
+              {errors.map((error, index) => (
+                <li key={index}>{error}</li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {lastSaved && (
+        <div className="text-xs text-muted-foreground mb-4">
+          Letzter automatischer Speicherstand: {lastSaved.toLocaleTimeString()}
+        </div>
+      )}
 
-            <QuestionSubCategorySelector
-              category={formData.category}
+      <form onSubmit={handleSubmit}>
+        <EditorTabs>
+          <EditorTabContent value="basics">
+            <BasicInfoTab
+              category={formData.category!}
               subCategory={formData.sub_category || ""}
+              difficulty={formData.difficulty || 1}
+              isSignalQuestion={isSignalQuestion}
+              regulationCategory={formData.regulation_category}
+              onCategoryChange={handleCategoryChange}
               onSubCategoryChange={handleSubCategoryChange}
+              onDifficultyChange={handleDifficultyChange}
+              onRegulationCategoryChange={isSignalQuestion ? handleRegulationCategoryChange : undefined}
             />
-
-            <QuestionDetailsForm
+          </EditorTabContent>
+          
+          <EditorTabContent value="content">
+            <ContentTab
               text={formData.text || ""}
               imagePreview={imagePreview}
-              questionType={formData.question_type}
-              answers={formData.answers || []}
-              isSignalQuestion={isSignalQuestion}
-              difficulty={formData.difficulty || 1}
-              regulationCategory={formData.regulation_category}
-              onTextChange={handleInputChange}
+              onTextChange={handleRichTextChange}
               onImageChange={handleImageChange}
               removeImage={removeImage}
+            />
+          </EditorTabContent>
+          
+          <EditorTabContent value="answers">
+            <AnswersTab
+              answers={formData.answers || []}
+              questionType={formData.question_type!}
+              isSignalQuestion={isSignalQuestion}
               handleAnswerChange={handleAnswerChange}
               toggleAnswerCorrectness={(index) => toggleAnswerCorrectness(index, formData.question_type!)}
               removeAnswer={removeAnswer}
               addAnswer={addAnswer}
-              onDifficultyChange={handleDifficultyChange}
-              onRegulationCategoryChange={isSignalQuestion ? handleRegulationCategoryChange : undefined}
             />
-          </div>
-          
-          <QuestionPreview
-            text={formData.text || ""}
-            imagePreview={imagePreview}
-            answers={formData.answers || []}
-            category={formData.category || ""}
-            sub_category={formData.sub_category || ""}
-            difficulty={formData.difficulty || 1}
-            regulation_category={formData.regulation_category}
-          />
-        </div>
+          </EditorTabContent>
+        </EditorTabs>
       </form>
+      
+      <PreviewModal
+        open={showPreviewModal}
+        onOpenChange={setShowPreviewModal}
+        question={formData}
+      />
+      
+      <AlertDialog open={showDraftDialog} onOpenChange={setShowDraftDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Gespeicherten Entwurf gefunden</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ein automatisch gespeicherter Entwurf vom {draftData?.timestamp ? new Date(draftData.timestamp).toLocaleString() : 'unbekannten Zeitpunkt'} wurde gefunden. Möchten Sie diesen laden oder verwerfen?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleDiscardDraft}>Verwerfen</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLoadDraft}>Entwurf laden</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

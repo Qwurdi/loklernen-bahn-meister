@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import type { CreateQuestionDTO, Question, QuestionCategory, Answer } from "@/types/questions";
 import { Json } from "@/integrations/supabase/types";
@@ -125,42 +126,61 @@ export async function seedInitialQuestions(userId: string) {
 }
 
 export async function duplicateQuestion(originalQuestion: Question): Promise<Question> {
-  // Get the current user's ID
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    throw new Error("User not authenticated");
+  try {
+    // Get the current user's ID
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+    
+    console.log("Duplicating question:", originalQuestion);
+    
+    // Create a duplicate of the question but with the current user as creator
+    const duplicateData: CreateQuestionDTO = {
+      category: originalQuestion.category,
+      sub_category: originalQuestion.sub_category,
+      question_type: originalQuestion.question_type,
+      difficulty: originalQuestion.difficulty,
+      text: originalQuestion.text,
+      image_url: originalQuestion.image_url,
+      answers: originalQuestion.answers,
+      created_by: user.id, // Use current user's ID instead of original creator
+      regulation_category: originalQuestion.regulation_category
+    };
+
+    const supabaseAnswers: Json = duplicateData.answers.map(answer => ({
+      text: answer.text,
+      isCorrect: answer.isCorrect
+    }));
+
+    const { data, error } = await supabase
+      .from('questions')
+      .insert([{
+        category: duplicateData.category,
+        sub_category: duplicateData.sub_category,
+        question_type: duplicateData.question_type,
+        difficulty: duplicateData.difficulty,
+        text: duplicateData.text,
+        image_url: duplicateData.image_url,
+        answers: supabaseAnswers,
+        created_by: duplicateData.created_by,
+        regulation_category: duplicateData.regulation_category
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Supabase error during duplication:", error);
+      throw error;
+    }
+    
+    console.log("Successfully duplicated question:", data);
+    return transformQuestion(data);
+  } catch (error) {
+    console.error("Error in duplicateQuestion function:", error);
+    throw error;
   }
-  
-  // Create a duplicate of the question but with the current user as creator
-  const duplicateData: CreateQuestionDTO = {
-    category: originalQuestion.category,
-    sub_category: originalQuestion.sub_category,
-    question_type: originalQuestion.question_type,
-    difficulty: originalQuestion.difficulty,
-    text: originalQuestion.text,
-    image_url: originalQuestion.image_url,
-    answers: originalQuestion.answers,
-    created_by: user.id, // Use current user's ID instead of original creator
-    regulation_category: originalQuestion.regulation_category
-  };
-
-  const supabaseAnswers: Json = duplicateData.answers.map(answer => ({
-    text: answer.text,
-    isCorrect: answer.isCorrect
-  }));
-
-  const { data, error } = await supabase
-    .from('questions')
-    .insert([{
-      ...duplicateData,
-      answers: supabaseAnswers,
-    }])
-    .select()
-    .single();
-
-  if (error) throw error;
-  return transformQuestion(data);
 }
 
 // Add a function to filter questions by regulation category

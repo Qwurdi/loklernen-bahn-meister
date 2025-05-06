@@ -71,33 +71,6 @@
   user-select: none;
 }
 
-/* Card stack exit animations */
-@keyframes swipe-left {
-  from {
-    transform: translateX(0) rotate(0deg);
-  }
-  to {
-    transform: translateX(-200%) rotate(-20deg);
-  }
-}
-
-@keyframes swipe-right {
-  from {
-    transform: translateX(0) rotate(0deg);
-  }
-  to {
-    transform: translateX(200%) rotate(20deg);
-  }
-}
-
-.animate-swipe-left {
-  animation: swipe-left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-
-.animate-swipe-right {
-  animation: swipe-right 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-
 /* Prevent repaints during animations */
 .content-visibility-auto {
   content-visibility: auto;

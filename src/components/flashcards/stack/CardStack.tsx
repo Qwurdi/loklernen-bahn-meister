@@ -1,10 +1,10 @@
 
-import React, { useState, useRef, useCallback, memo } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Question } from '@/types/questions';
+import { motion, AnimatePresence } from 'framer-motion';
+import CardItem from './CardItem';
 import EmptyStackMessage from './EmptyStackMessage';
 import StackProgress from './StackProgress';
-import { useImagePreloader } from './useImagePreloader';
-import CardAnimation from './CardAnimation';
 
 // Update interface to use generics
 interface CardStackProps<T extends Question = Question> {
@@ -16,21 +16,32 @@ interface CardStackProps<T extends Question = Question> {
 }
 
 // Add the generic type parameter to the component
-const CardStack = <T extends Question = Question>({ 
+export default function CardStack<T extends Question = Question>({ 
   questions, 
   onAnswer, 
   onComplete,
   currentIndex,
   setCurrentIndex
-}: CardStackProps<T>) => {
+}: CardStackProps<T>) {
   const [direction, setDirection] = useState<'left' | 'right' | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const stackRef = useRef<HTMLDivElement>(null);
-  
-  // Use custom hook for image preloading
-  const { animationTimeoutRef } = useImagePreloader(questions, currentIndex);
 
-  // Memoize handleSwipe to prevent unnecessary recreation
+  // Preload the next few images
+  useEffect(() => {
+    // Preload the next 3 cards' images (if they exist)
+    for (let i = 1; i <= 3; i++) {
+      const preloadIndex = currentIndex + i;
+      if (preloadIndex < questions.length) {
+        const nextQuestion = questions[preloadIndex];
+        if (nextQuestion.image_url) {
+          const img = new Image();
+          img.src = nextQuestion.image_url;
+        }
+      }
+    }
+  }, [currentIndex, questions]);
+
   const handleSwipe = useCallback(async (direction: 'left' | 'right') => {
     if (isAnimating || currentIndex >= questions.length) return;
     
@@ -38,26 +49,13 @@ const CardStack = <T extends Question = Question>({
     setDirection(direction);
     
     const currentQuestion = questions[currentIndex];
-    
-    // Safety check for missing ID
-    if (!currentQuestion || !currentQuestion.id) {
-      console.error("Invalid question data", currentQuestion);
-      setIsAnimating(false);
-      setDirection(null);
-      return;
-    }
-    
     const score = direction === 'right' ? 5 : 1; // Right = known (5), Left = not known (1)
     
-    try {
-      // Process the answer - using optimized submitAnswer that doesn't reload
-      await onAnswer(currentQuestion.id, score);
-    } catch (error) {
-      console.error("Error submitting answer:", error);
-    }
+    // Process the answer - using optimized submitAnswer that doesn't reload
+    await onAnswer(currentQuestion.id, score);
     
     // Short delay to let animation complete
-    animationTimeoutRef.current = window.setTimeout(() => {
+    setTimeout(() => {
       // Move to next question or complete session
       if (currentIndex < questions.length - 1) {
         setCurrentIndex(currentIndex + 1);
@@ -68,12 +66,11 @@ const CardStack = <T extends Question = Question>({
       // Reset animation state
       setDirection(null);
       setIsAnimating(false);
-      animationTimeoutRef.current = null;
     }, 300);
-  }, [currentIndex, questions, onAnswer, onComplete, setCurrentIndex, isAnimating, animationTimeoutRef]);
+  }, [currentIndex, questions, onAnswer, onComplete, setCurrentIndex, isAnimating]);
 
   // If no questions are available
-  if (!questions || questions.length === 0) {
+  if (questions.length === 0) {
     return <EmptyStackMessage />;
   }
 
@@ -82,13 +79,7 @@ const CardStack = <T extends Question = Question>({
     return <EmptyStackMessage isCompleted={true} />;
   }
 
-  // Check if currentCard exists before proceeding
   const currentCard = questions[currentIndex];
-  if (!currentCard) {
-    console.error("Missing current card data at index", currentIndex);
-    return <EmptyStackMessage />;
-  }
-
   const hasNextCard = currentIndex < questions.length - 1;
   const nextCard = hasNextCard ? questions[currentIndex + 1] : null;
   
@@ -101,19 +92,45 @@ const CardStack = <T extends Question = Question>({
       />
       
       <div className="cards-wrapper h-full w-full flex items-center justify-center pt-8 pb-16">
-        <CardAnimation
-          currentCard={currentCard}
-          nextCard={nextCard}
-          direction={direction}
-          isAnimating={isAnimating}
-          hasNextCard={hasNextCard}
-          onSwipe={handleSwipe}
-          swipeDisabled={isAnimating}
-        />
+        <AnimatePresence mode="popLayout">
+          {/* Next card in stack (shown partially underneath) */}
+          {hasNextCard && !isAnimating && (
+            <motion.div 
+              key={`next-${nextCard.id}`}
+              className="absolute"
+              initial={{ scale: 0.85, y: 16, opacity: 0.6 }}
+              animate={{ scale: 0.9, y: 12, opacity: 0.8 }}
+              exit={{ scale: 1, y: 0, opacity: 1 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="opacity-60 pointer-events-none">
+                <CardItem 
+                  question={nextCard}
+                  isPreview={true}
+                />
+              </div>
+            </motion.div>
+          )}
+          
+          {/* Current active card */}
+          <motion.div
+            key={`card-${currentCard.id}`}
+            animate={direction === 'left' 
+              ? { x: -window.innerWidth * 1.5, rotate: -20, opacity: 0 } 
+              : direction === 'right' 
+                ? { x: window.innerWidth * 1.5, rotate: 20, opacity: 0 } 
+                : { x: 0, rotate: 0, opacity: 1 }
+            }
+            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+          >
+            <CardItem 
+              question={currentCard}
+              onSwipe={handleSwipe}
+              swipeDisabled={isAnimating}
+            />
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
-};
-
-// Export as memoized component to avoid unnecessary re-renders
-export default memo(CardStack) as typeof CardStack;
+}

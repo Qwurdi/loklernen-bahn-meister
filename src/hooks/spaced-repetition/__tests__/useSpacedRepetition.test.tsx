@@ -53,7 +53,7 @@ describe('useSpacedRepetition hook', () => {
     });
     
     // Verify the services were called correctly
-    expect(fetchUserProgress).toHaveBeenCalledWith('test-user-id', 'Signale', undefined, 'all', []);
+    expect(fetchUserProgress).toHaveBeenCalledWith('test-user-id', 'Signale', undefined, 'all');
     expect(fetchNewQuestions).toHaveBeenCalled();
     
     // Verify we have the expected questions
@@ -80,7 +80,7 @@ describe('useSpacedRepetition hook', () => {
     });
     
     // Verify the practice service was called correctly
-    expect(fetchPracticeQuestions).toHaveBeenCalledWith('Signale', undefined, 'all', 15, []);
+    expect(fetchPracticeQuestions).toHaveBeenCalledWith('Signale', undefined, 'all', 50);
     
     // Verify we have the expected questions
     expect(result.current.dueQuestions).toEqual(mockPracticeQuestions);
@@ -118,7 +118,7 @@ describe('useSpacedRepetition hook', () => {
     expect(updateUserStats).toHaveBeenCalledWith('test-user-id', 5);
     
     // Verify that questions were reloaded after submission
-    expect(fetchUserProgress).toHaveBeenCalledTimes(1);
+    expect(fetchUserProgress).toHaveBeenCalledTimes(2);
   });
 
   it('should handle reload questions correctly', async () => {
@@ -169,7 +169,7 @@ describe('useSpacedRepetition hook', () => {
     });
     
     // Verify the regulation category was passed correctly
-    expect(fetchUserProgress).toHaveBeenCalledWith('test-user-id', 'Signale', undefined, 'DS 301', []);
-    expect(fetchNewQuestions).toHaveBeenCalledWith('Signale', undefined, 'DS 301', expect.anything(), expect.anything(), []);
+    expect(fetchUserProgress).toHaveBeenCalledWith('test-user-id', 'Signale', undefined, 'DS 301');
+    expect(fetchNewQuestions).toHaveBeenCalledWith('Signale', undefined, 'DS 301', expect.anything(), expect.anything());
   });
 });

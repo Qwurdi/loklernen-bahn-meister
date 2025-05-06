@@ -5,7 +5,7 @@ import { Sidebar } from "@/components/ui/sidebar/sidebar-base";
 import { SidebarGroup } from "@/components/ui/sidebar/sidebar-group";
 import { SidebarMenu } from "@/components/ui/sidebar/sidebar-menu";
 import { SidebarFooter } from "@/components/ui/sidebar/sidebar-footer";
-import { Database, Gauge, Settings, BookOpenText, Award, BarChart, HelpCircle, Tags } from "lucide-react";
+import { Database, Gauge, Settings, BookOpenText, Award, BarChart, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const AdminSidebar: React.FC = () => {
@@ -38,17 +38,6 @@ const AdminSidebar: React.FC = () => {
           >
             <BookOpenText size={20} />
             <span>Fragenverwaltung</span>
-          </NavLink>
-          
-          <NavLink 
-            to="/admin/categories" 
-            className={({ isActive }) => 
-              cn("flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent",
-                isActive ? "bg-accent font-medium" : "")
-            }
-          >
-            <Tags size={20} />
-            <span>Kategorieverwaltung</span>
           </NavLink>
           
           <NavLink 

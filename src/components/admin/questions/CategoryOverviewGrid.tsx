@@ -1,8 +1,9 @@
+
 import React from "react";
 import { Question } from "@/types/questions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { signalSubCategories, betriebsdienstSubCategories } from "@/api/categories/types";
+import { signalSubCategories } from "@/api/questions";
 
 interface CategoryOverviewGridProps {
   questions: Question[];
@@ -11,6 +12,17 @@ interface CategoryOverviewGridProps {
   onCategorySelect: (category: "Signale" | "Betriebsdienst" | "all") => void;
   onSubCategorySelect: (subCategory: string | null) => void;
 }
+
+const betriebsdienstSubCategories = [
+  "Grundlagen Bahnbetrieb",
+  "UVV & Arbeitsschutz",
+  "Rangieren",
+  "Züge fahren",
+  "PZB & Sicherungsanlagen",
+  "Kommunikation",
+  "Besonderheiten",
+  "Unregelmäßigkeiten"
+];
 
 export const CategoryOverviewGrid: React.FC<CategoryOverviewGridProps> = ({
   questions,

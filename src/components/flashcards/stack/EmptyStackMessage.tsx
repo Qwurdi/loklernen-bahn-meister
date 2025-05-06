@@ -1,8 +1,7 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Box, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 interface EmptyStackMessageProps {
   isCompleted?: boolean;
@@ -10,41 +9,51 @@ interface EmptyStackMessageProps {
 
 export default function EmptyStackMessage({ isCompleted = false }: EmptyStackMessageProps) {
   const navigate = useNavigate();
-
-  // Return to cards page
-  const handleBackToCards = () => {
-    navigate('/karteikarten');
+  
+  const handleResetLesson = () => {
+    // Navigate to the same page with a reset parameter to trigger a fresh state
+    const currentPath = window.location.pathname;
+    navigate(currentPath, { state: { reset: true } });
   };
-
-  if (isCompleted) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full p-6 text-center animate-fade-in">
-        <div className="bg-green-100 rounded-full p-4 mb-4">
-          <CheckCircle size={48} className="text-green-600" />
-        </div>
-        <h2 className="text-xl font-bold mb-2">Gut gemacht!</h2>
-        <p className="text-gray-600 mb-6">
-          Du hast alle Karten in dieser Sitzung bearbeitet.
-        </p>
-        <Button onClick={handleBackToCards} className="bg-loklernen-ultramarine">
-          Zurück zur Übersicht
-        </Button>
-      </div>
-    );
-  }
-
+  
   return (
-    <div className="flex flex-col items-center justify-center h-full p-6 text-center animate-fade-in">
-      <div className="bg-blue-100 rounded-full p-4 mb-4">
-        <Box size={48} className="text-blue-600" />
-      </div>
-      <h2 className="text-xl font-bold mb-2">Keine Karten verfügbar</h2>
-      <p className="text-gray-600 mb-6">
-        Es wurden keine Karten für diese Kategorie gefunden. Bitte wähle eine andere Kategorie aus.
-      </p>
-      <Button onClick={handleBackToCards} className="bg-loklernen-ultramarine">
-        Zurück zur Übersicht
-      </Button>
+    <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+      {isCompleted ? (
+        <>
+          <h2 className="text-2xl font-bold mb-3 text-white">Großartig!</h2>
+          <p className="text-gray-300 mb-6">
+            Du hast alle Karteikarten in dieser Lektion abgeschlossen.
+          </p>
+          <div className="flex flex-col gap-3 w-full max-w-xs">
+            <Button 
+              onClick={() => navigate('/karteikarten')}
+              className="w-full bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90"
+            >
+              Zurück zur Übersicht
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleResetLesson}
+              className="w-full border-gray-700 bg-gray-800/50 text-gray-200 hover:bg-gray-700"
+            >
+              Lektion wiederholen
+            </Button>
+          </div>
+        </>
+      ) : (
+        <>
+          <h2 className="text-2xl font-bold mb-3 text-white">Keine Karten verfügbar</h2>
+          <p className="text-gray-300 mb-6">
+            Es sind derzeit keine Karteikarten in dieser Kategorie verfügbar.
+          </p>
+          <Button 
+            onClick={() => navigate('/karteikarten')}
+            className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90"
+          >
+            Zurück zur Übersicht
+          </Button>
+        </>
+      )}
     </div>
   );
 }

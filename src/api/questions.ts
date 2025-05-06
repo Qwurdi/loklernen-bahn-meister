@@ -1,7 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { CreateQuestionDTO, Question, QuestionCategory, Answer } from "@/types/questions";
 import { Json } from "@/integrations/supabase/types";
-import { signalSubCategories, betriebsdienstSubCategories } from "@/api/categories/types";
 
 // Helper function to convert database answers (Json) to Answer[]
 export function transformAnswers(jsonAnswers: Json): Answer[] {
@@ -100,11 +99,32 @@ export async function uploadQuestionImage(file: File, userId: string) {
   return data.publicUrl;
 }
 
+// Predefined signal subcategories (fixed encoding)
+export const signalSubCategories = [
+  "Allgemeine Bestimmungen",
+  "Hp-Signale",
+  "Kombinationssignale (Ks)",
+  "Lichthaupt- und Lichtvorsignale (Hl)",
+  "Haupt- und Vorsignalverbindungen (Sv)",
+  "Vr-Signale",
+  "Zusatzsignale (Zs)",
+  "Signale für Schiebelokomotiven und Sperrfahrten (Ts)",
+  "Langsamfahrsignale (Lf)",
+  "Schutzsignale (Sh)",
+  "Signale für den Rangierdienst (Ra)",
+  "Weichensignale (Wn)",
+  "Signale für das Zugpersonal (Zp)",
+  "Fahrleitungssignale (El)",
+  "Signale an Zügen (Zg)",
+  "Signale an einzelnen Fahrzeugen (Fz)",
+  "Nebensignale (Ne)",
+  "Signale für Bahnübergänge (Bü)",
+  "Orientierungszeichen",
+  "Signalkombinationen (Sk)"
+] as const;
+
 // Helper function to seed initial questions for each subcategory
 export async function seedInitialQuestions(userId: string) {
-  // Import categories from the centralized categories API
-  const { signalSubCategories } = await import('./categories/types');
-
   const sampleQuestions: CreateQuestionDTO[] = signalSubCategories.map((sub_category) => ({
     category: "Signale",
     sub_category,

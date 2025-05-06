@@ -1,7 +1,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { calculateNextReviewDate } from '../../utils';
-import { updateUserProgress } from '../progress-updates';
+import { updateUserProgress, updateUserStats } from '../user-progress';
 import { supabase } from '@/integrations/supabase/client';
 
 // Mock Supabase client
@@ -10,16 +10,18 @@ vi.mock('@/integrations/supabase/client', () => ({
     from: vi.fn(() => ({
       update: vi.fn(() => ({
         eq: vi.fn(() => ({
-          select: vi.fn(() => ({
-            data: null,
-            error: null
-          }))
+          error: null
         }))
       })),
       insert: vi.fn(() => ({
-        select: vi.fn(() => ({
-          data: null,
-          error: null
+        error: null
+      })),
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          single: vi.fn(() => ({
+            data: null,
+            error: null
+          }))
         }))
       }))
     }))
@@ -31,7 +33,7 @@ vi.mock('../../utils', () => ({
   calculateNextReviewDate: vi.fn().mockReturnValue('2025-05-10T00:00:00.000Z')
 }));
 
-describe('progress-updates service', () => {
+describe('user-progress service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -39,9 +41,8 @@ describe('progress-updates service', () => {
   describe('updateUserProgress', () => {
     it('should update existing progress correctly', async () => {
       // Mock the supabase response for update
-      const mockUpdateResponse = { data: [{ id: 'updated-progress-id' }], error: null };
-      const mockSelect = vi.fn(() => mockUpdateResponse);
-      const mockEq = vi.fn(() => ({ select: mockSelect }));
+      const mockUpdateResponse = { error: null };
+      const mockEq = vi.fn(() => mockUpdateResponse);
       const mockUpdate = vi.fn(() => ({ eq: mockEq }));
       const mockFrom = vi.fn(() => ({ update: mockUpdate }));
       
@@ -83,9 +84,8 @@ describe('progress-updates service', () => {
 
     it('should create new progress when no existing progress is provided', async () => {
       // Mock the supabase response for insert
-      const mockInsertResponse = { data: [{ id: 'new-progress-id' }], error: null };
-      const mockSelect = vi.fn(() => mockInsertResponse);
-      const mockInsert = vi.fn(() => ({ select: mockSelect }));
+      const mockInsertResponse = { error: null };
+      const mockInsert = vi.fn(() => mockInsertResponse);
       const mockFrom = vi.fn(() => ({ insert: mockInsert }));
       
       // @ts-ignore - Override the mock
@@ -109,9 +109,8 @@ describe('progress-updates service', () => {
 
     it('should throw an error when Supabase update fails', async () => {
       // Mock the supabase response for update failure
-      const mockUpdateError = { data: null, error: new Error('Update failed') };
-      const mockSelect = vi.fn(() => mockUpdateError);
-      const mockEq = vi.fn(() => ({ select: mockSelect }));
+      const mockUpdateError = { error: new Error('Update failed') };
+      const mockEq = vi.fn(() => mockUpdateError);
       const mockUpdate = vi.fn(() => ({ eq: mockEq }));
       const mockFrom = vi.fn(() => ({ update: mockUpdate }));
       
@@ -138,6 +137,85 @@ describe('progress-updates service', () => {
 
       await expect(updateUserProgress(userId, questionId, score, currentProgress))
         .rejects.toThrow();
+    });
+  });
+
+  describe('updateUserStats', () => {
+    it('should update existing user stats when they exist', async () => {
+      // Mock existing stats
+      const mockExistingStats = {
+        data: {
+          xp: 100,
+          total_correct: 10,
+          total_incorrect: 2
+        },
+        error: null
+      };
+      
+      // Mock update response
+      const mockUpdateResponse = { error: null };
+      
+      const mockSingle = vi.fn(() => mockExistingStats);
+      const mockEqSelect = vi.fn(() => ({ single: mockSingle }));
+      const mockSelect = vi.fn(() => ({ eq: mockEqSelect }));
+      
+      const mockEqUpdate = vi.fn(() => mockUpdateResponse);
+      const mockUpdate = vi.fn(() => ({ eq: mockEqUpdate }));
+      
+      const mockFrom = vi.fn(() => ({
+        select: mockSelect,
+        update: mockUpdate
+      }));
+      
+      // @ts-ignore - Override the mock
+      supabase.from = mockFrom;
+
+      const userId = 'test-user-id';
+      const score = 5;
+
+      await updateUserStats(userId, score);
+
+      // Check if we're querying the right table
+      expect(mockFrom).toHaveBeenCalledWith('user_stats');
+      
+      // Check if we're updating the correct user stats
+      expect(mockEqUpdate).toHaveBeenCalledWith('user_id', userId);
+    });
+
+    it('should create new user stats when they do not exist', async () => {
+      // Mock no existing stats (PGRST116 is the "no rows returned" error code)
+      const mockNoExistingStats = {
+        data: null,
+        error: { code: 'PGRST116' }
+      };
+      
+      // Mock insert response
+      const mockInsertResponse = { error: null };
+      
+      const mockSingle = vi.fn(() => mockNoExistingStats);
+      const mockEqSelect = vi.fn(() => ({ single: mockSingle }));
+      const mockSelect = vi.fn(() => ({ eq: mockEqSelect }));
+      
+      const mockInsert = vi.fn(() => mockInsertResponse);
+      
+      const mockFrom = vi.fn(() => ({
+        select: mockSelect,
+        insert: mockInsert
+      }));
+      
+      // @ts-ignore - Override the mock
+      supabase.from = mockFrom;
+
+      const userId = 'test-user-id';
+      const score = 2;
+
+      await updateUserStats(userId, score);
+
+      // Check if we're querying the right table
+      expect(mockFrom).toHaveBeenCalledWith('user_stats');
+      
+      // Check if the insert method was called
+      expect(mockInsert).toHaveBeenCalled();
     });
   });
 });

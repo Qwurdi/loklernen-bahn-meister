@@ -1,54 +1,42 @@
 
-import { useEffect } from "react";
-import AppRoutes from "./routing/AppRoutes";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as SonnerToaster } from "sonner";
-import "./styles/main.css";
-import { useAuth } from "./contexts/AuthContext";
-import { useNetworkStatus } from "./hooks/use-network-status";
-import { registerBackgroundSync, syncOfflineData } from "./hooks/spaced-repetition/services";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { UserPreferencesProvider } from "@/contexts/UserPreferencesContext";
+import AppRoutes from "@/routing/AppRoutes";
+import { TooltipProvider } from "@radix-ui/react-tooltip";
 
-// Register service worker for offline capabilities
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(registration => {
-        console.log('Service Worker registered with scope:', registration.scope);
-      })
-      .catch(err => {
-        console.error('Service Worker registration failed:', err);
-      });
-  });
-}
+console.log("App: Initializing application component");
 
-function App() {
-  const { user } = useAuth();
-  const { isOnline } = useNetworkStatus();
-  
-  // Effect to sync offline data when coming back online
-  useEffect(() => {
-    if (isOnline && user) {
-      console.log("Online status detected, attempting to sync offline data");
-      syncOfflineData(user.id).catch(error => {
-        console.error("Error syncing offline data:", error);
-      });
-    }
-  }, [isOnline, user]);
-  
-  // Register background sync when online
-  useEffect(() => {
-    if (isOnline) {
-      registerBackgroundSync();
-    }
-  }, [isOnline]);
+// Create a QueryClient with optimized configuration to prevent unnecessary reloads
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 30, // 30 minutes (renamed from cacheTime)
+      refetchOnWindowFocus: false, // Don't refetch when window regains focus
+      retry: 1, // Only retry once on failure
+    },
+  },
+});
+
+const App = () => {
+  console.log("App: Rendering main application structure");
   
   return (
-    <>
-      <AppRoutes />
-      <Toaster />
-      <SonnerToaster position="top-center" closeButton richColors />
-    </>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <UserPreferencesProvider>
+          <TooltipProvider>
+            <AppRoutes />
+            <Toaster />
+            <Sonner />
+          </TooltipProvider>
+        </UserPreferencesProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
-}
+};
 
 export default App;

@@ -1,8 +1,7 @@
 
-import { useRef, useEffect, memo } from 'react';
 import CardStack from "@/components/flashcards/stack/CardStack";
 import { Question } from "@/types/questions";
-import { useMobileFullscreen } from "@/hooks/use-mobile-fullscreen";
+import { useEffect } from "react";
 
 // Define a generic type parameter T that extends Question
 interface CardStackSessionProps<T extends Question = Question> {
@@ -14,10 +13,8 @@ interface CardStackSessionProps<T extends Question = Question> {
   isMobile: boolean;
 }
 
-/**
- * Optimized CardStackSession component with rendering performance improvements
- */
-function CardStackSession<T extends Question = Question>({
+// Use the generic type parameter in the component definition
+export default function CardStackSession<T extends Question = Question>({
   sessionCards,
   currentIndex,
   setCurrentIndex,
@@ -25,31 +22,26 @@ function CardStackSession<T extends Question = Question>({
   onComplete,
   isMobile
 }: CardStackSessionProps<T>) {
-  // Track mounted state to prevent memory leaks
-  const isMounted = useRef(true);
-  
-  // Use our centralized mobile fullscreen hook
-  const { isFullscreenMobile, toggleFullscreen } = useMobileFullscreen(false);
-  
-  // Enable fullscreen mode when component mounts on mobile
+  // Prevent scrolling on mobile devices
   useEffect(() => {
-    if (isMobile && !isFullscreenMobile) {
-      toggleFullscreen();
-    }
+    if (!isMobile) return;
     
-    // Cleanup function to handle component unmounting
+    // Save the original style to restore it later
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    
+    // Prevent scrolling on the body
+    document.body.style.overflow = 'hidden';
+    document.documentElement.classList.add('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
+    
+    // Cleanup function to restore original style
     return () => {
-      isMounted.current = false;
-      
-      // Exit fullscreen when component unmounts if we're in fullscreen
-      if (isMobile && isFullscreenMobile) {
-        toggleFullscreen();
-      }
+      document.body.style.overflow = originalStyle;
+      document.documentElement.classList.remove('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
     };
-  }, [isMobile, isFullscreenMobile, toggleFullscreen]);
+  }, [isMobile]);
   
   return (
-    <div className="h-full w-full flex-1 flex flex-col transform-gpu">
+    <div className="h-full w-full flex-1 flex flex-col">
       <CardStack 
         questions={sessionCards}
         onAnswer={onAnswer}
@@ -60,6 +52,3 @@ function CardStackSession<T extends Question = Question>({
     </div>
   );
 }
-
-// Export as memoized component to avoid unnecessary re-renders
-export default memo(CardStackSession) as typeof CardStackSession;

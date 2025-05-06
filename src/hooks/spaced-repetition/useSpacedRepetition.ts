@@ -1,69 +1,192 @@
 
-import { useCallback } from 'react';
-import { SpacedRepetitionOptions, SpacedRepetitionResult } from './types';
-import { useSpacedRepetitionCore } from './hooks/useSpacedRepetitionCore';
+import { useEffect, useState, useCallback } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Question, QuestionCategory } from '@/types/questions';
+import { SpacedRepetitionOptions, UserProgress, SpacedRepetitionResult } from './types';
+import { transformQuestion } from './utils';
+import {
+  fetchUserProgress,
+  fetchNewQuestions,
+  fetchPracticeQuestions,
+  fetchQuestionsByBox,
+  updateUserProgress,
+  updateUserStats
+} from './services';
 
-/**
- * Enhanced spaced repetition hook with error handling, memory leak prevention, 
- * and performance optimizations
- */
 export function useSpacedRepetition(
-  category: string, 
+  category: QuestionCategory, 
   subcategory?: string,
   options: SpacedRepetitionOptions = {}
 ): SpacedRepetitionResult {
-  // Use the core hook to manage the spaced repetition state and logic
-  const {
-    loading,
-    error,
-    dueQuestions,
-    progress,
-    submitAnswer,
-    pendingUpdatesCount,
-    applyPendingUpdates,
-    reloadQuestions,
-  } = useSpacedRepetitionCore(category, subcategory, options);
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [dueQuestions, setDueQuestions] = useState<Question[]>([]);
+  const [progress, setProgress] = useState<UserProgress[]>([]);
+  const [error, setError] = useState<Error | null>(null);
+  const [pendingUpdates, setPendingUpdates] = useState<{questionId: string, score: number}[]>([]);
   
-  // Enhance reloadQuestions with error handling
-  const enhancedReloadQuestions = useCallback(async () => {
+  // Default to 'all' if regulationCategory is not provided
+  const regulationCategory = options.regulationCategory || "all";
+  const boxNumber = options.boxNumber;
+  
+  // Optimized batch size - ideal for didactic and technical balance
+  const batchSize = options.batchSize || 15; // Default to 15 cards per session
+  
+  // Move loadDueQuestions to useCallback to avoid recreation on every render
+  const loadDueQuestions = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      setDueQuestions([]);
+      return;
+    }
+    
     try {
-      await reloadQuestions();
-    } catch (error) {
-      console.error("Error reloading questions:", error);
+      setLoading(true);
+      setError(null);
+      console.log(`Loading questions with category=${category}, subcategory=${subcategory}, regulation=${regulationCategory}, practice=${options.practiceMode}`);
+
+      // Handle practice mode differently - just load questions without checking if they're due
+      if (options.practiceMode) {
+        const practiceQuestions = await fetchPracticeQuestions(
+          category, 
+          subcategory, 
+          regulationCategory, 
+          batchSize
+        );
+        setDueQuestions(practiceQuestions);
+        setLoading(false);
+        return;
+      }
       
-      // The error will be handled by the core hook
-      // Wir entfernen den return-Wert, damit die Funktion Promise<void> zurückgibt
-    }
-  }, [reloadQuestions]);
-  
-  // Enhance submitAnswer with error handling
-  const enhancedSubmitAnswer = useCallback(async (questionId: string, score: number) => {
-    try {
-      return await submitAnswer(questionId, score);
+      // If a specific box is requested, only fetch questions from that box
+      if (boxNumber !== undefined) {
+        const boxProgress = await fetchQuestionsByBox(user.id, boxNumber);
+        
+        // Transform the questions from the box data
+        const questionsFromBox = boxProgress
+          .filter(p => p.questions) // Ensure questions exist
+          .map(p => transformQuestion(p.questions));
+          
+        console.log(`Loaded ${questionsFromBox.length} questions from box ${boxNumber}`);
+        
+        setDueQuestions(questionsFromBox);
+        setProgress(boxProgress);
+        setLoading(false);
+        return;
+      }
+      
+      // Regular spaced repetition mode
+      const filteredProgressData = await fetchUserProgress(user.id, category, subcategory, regulationCategory);
+      
+      // Transform the questions from the progress data
+      const questionsWithProgress = filteredProgressData
+        .filter(p => p.questions) // Ensure questions exist
+        .map(p => transformQuestion(p.questions));
+        
+      console.log("Questions with progress:", questionsWithProgress.length);
+
+      // If we have enough questions with progress, no need to fetch new ones
+      if (questionsWithProgress.length >= batchSize) {
+        setDueQuestions(questionsWithProgress.slice(0, batchSize));
+        setProgress(filteredProgressData);
+        setLoading(false);
+        return;
+      }
+
+      // Otherwise, fetch new questions (those without progress)
+      // Get the IDs of questions that already have progress
+      const questionIdsWithProgress = filteredProgressData
+        .filter(p => p.questions?.id)
+        .map(p => p.question_id);
+        
+      console.log("Question IDs with progress:", questionIdsWithProgress.length);
+
+      const newQuestions = await fetchNewQuestions(
+        category, 
+        subcategory, 
+        regulationCategory, 
+        questionIdsWithProgress, 
+        batchSize
+      );
+
+      // Combine progress questions and new questions, and limit to batch size
+      const allQuestions = [
+        ...questionsWithProgress,
+        ...newQuestions.map(transformQuestion)
+      ].slice(0, batchSize);
+      
+      console.log("Final questions count:", allQuestions.length);
+      setDueQuestions(allQuestions);
+      setProgress(filteredProgressData);
     } catch (error) {
-      console.error("Error submitting answer:", error);
-      throw error; // Let the caller handle the error
+      console.error('Error loading questions:', error);
+      setError(error instanceof Error ? error : new Error('Unknown error loading questions'));
+    } finally {
+      setLoading(false);
     }
-  }, [submitAnswer]);
-  
-  // Enhance applyPendingUpdates with error handling
-  const enhancedApplyPendingUpdates = useCallback(async () => {
+  }, [user, category, subcategory, options.practiceMode, regulationCategory, boxNumber, batchSize]);
+
+  useEffect(() => {
+    loadDueQuestions();
+  }, [loadDueQuestions]);
+
+  // New function - Submit answer without immediate reload
+  const submitAnswer = async (questionId: string, score: number) => {
+    if (!user) return;
+
     try {
-      return await applyPendingUpdates();
+      // Add to pending updates
+      setPendingUpdates(prev => [...prev, {questionId, score}]);
+      
+      const currentProgress = progress.find(p => p.question_id === questionId);
+      
+      // Update progress in the background, don't await the result
+      updateUserProgress(user.id, questionId, score, currentProgress)
+        .catch(err => console.error('Background update error:', err));
+      
+      // Update stats in the background, don't await the result
+      updateUserStats(user.id, score)
+        .catch(err => console.error('Background stats update error:', err));
+        
     } catch (error) {
-      console.error("Error applying pending updates:", error);
-      throw error; // Let the caller handle the error
+      console.error('Error submitting answer:', error);
+      setError(error instanceof Error ? error : new Error('Unknown error submitting answer'));
     }
-  }, [applyPendingUpdates]);
-  
+  };
+
+  // Function to apply all pending updates and reload questions
+  const applyPendingUpdates = async () => {
+    if (!user || pendingUpdates.length === 0) return;
+    
+    setLoading(true);
+    try {
+      // Ensure all updates are complete
+      for (const {questionId, score} of pendingUpdates) {
+        const currentProgress = progress.find(p => p.question_id === questionId);
+        await updateUserProgress(user.id, questionId, score, currentProgress);
+      }
+      
+      // Clear pending updates
+      setPendingUpdates([]);
+      
+      // Reload questions
+      await loadDueQuestions();
+    } catch (error) {
+      console.error('Error applying updates:', error);
+      setError(error instanceof Error ? error : new Error('Unknown error applying updates'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     loading,
     error,
     dueQuestions,
     progress,
-    submitAnswer: enhancedSubmitAnswer,
-    pendingUpdatesCount,
-    applyPendingUpdates: enhancedApplyPendingUpdates,
-    reloadQuestions: enhancedReloadQuestions
+    submitAnswer,
+    pendingUpdatesCount: pendingUpdates.length,
+    applyPendingUpdates,
+    reloadQuestions: loadDueQuestions
   };
 }

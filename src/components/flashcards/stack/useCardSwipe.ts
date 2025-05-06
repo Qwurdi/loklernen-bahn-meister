@@ -1,16 +1,27 @@
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { SwipeHandlerProps, DragState, SwipeResult } from './swipe-types';
-import { useHapticFeedback } from './use-haptic-feedback';
-import { useDragHandlers } from './use-drag-handlers';
+
+interface SwipeHandlerProps {
+  onSwipeLeft?: () => void;
+  onSwipeRight?: () => void;
+  disabled?: boolean;
+  dragThreshold?: number;
+}
+
+interface DragState {
+  startX: number | null;
+  startY: number | null;
+  dragDelta: number;
+  isDragging: boolean;
+}
 
 export default function useCardSwipe({
   onSwipeLeft,
   onSwipeRight,
   disabled = false,
   dragThreshold = 100
-}: SwipeHandlerProps): SwipeResult {
+}: SwipeHandlerProps) {
   const [dragState, setDragState] = useState<DragState>({
     startX: null,
     startY: null,
@@ -21,22 +32,80 @@ export default function useCardSwipe({
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
-  const { triggerThresholdFeedback, triggerSwipeFeedback } = useHapticFeedback();
   
-  // Use extracted drag handlers
-  const { handleTouchStart, handleTouchMove, handleTouchEnd } = useDragHandlers({
-    disabled,
-    isMobile,
-    dragState,
-    setDragState,
-    dragThreshold,
-    setSwipeDirection,
-    onSwipeLeft,
-    onSwipeRight,
-    triggerThresholdFeedback,
-    triggerSwipeFeedback
-  });
+  // Handle touch start
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (disabled || !isMobile) return;
+    
+    // Prevent default to disable scrolling
+    e.preventDefault();
+    
+    const touch = e.touches[0];
+    setDragState({
+      startX: touch.clientX,
+      startY: touch.clientY,
+      dragDelta: 0,
+      isDragging: true
+    });
+  };
   
+  // Handle touch move
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (disabled || !dragState.startX || !dragState.isDragging || !isMobile) return;
+    
+    // Always prevent default to stop scrolling
+    e.preventDefault();
+    
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - dragState.startX;
+    const deltaY = Math.abs(touch.clientY - (dragState.startY || 0));
+    
+    // Vertical deadzone of 40px - ignore swipes that are primarily vertical
+    if (deltaY <= 40) {
+      setDragState(prev => ({
+        ...prev,
+        dragDelta: deltaX
+      }));
+      
+      setSwipeDirection(deltaX > 0 ? 'right' : deltaX < 0 ? 'left' : null);
+      
+      // Provide haptic feedback at threshold
+      if (Math.abs(deltaX) > dragThreshold / 2 && 
+          Math.abs(deltaX) < dragThreshold / 2 + 5 && 
+          navigator.vibrate) {
+        navigator.vibrate(5);
+      }
+    }
+  };
+  
+  // Handle touch end
+  const handleTouchEnd = () => {
+    if (disabled || !dragState.startX || !dragState.isDragging || !isMobile) return;
+    
+    const { dragDelta } = dragState;
+    
+    if (dragDelta > dragThreshold) {
+      // Swipe right - known
+      if (navigator.vibrate) navigator.vibrate([10, 30, 10]);
+      onSwipeRight?.();
+    } else if (dragDelta < -dragThreshold) {
+      // Swipe left - not known
+      if (navigator.vibrate) navigator.vibrate([10, 30, 10]);
+      onSwipeLeft?.();
+    } else {
+      // Reset to center position - no action
+      setSwipeDirection(null);
+    }
+    
+    // Reset drag state
+    setDragState({
+      startX: null,
+      startY: null,
+      dragDelta: 0,
+      isDragging: false
+    });
+  };
+
   return {
     cardRef,
     dragState,

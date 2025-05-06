@@ -14,16 +14,13 @@ export interface UserProgress {
   last_score: number;
   box_number: number;
   streak: number;
-  questions?: any; // Hinzugefügt als optionales Feld für den Join mit Fragen
 }
 
 export interface SpacedRepetitionOptions {
   practiceMode?: boolean;
   regulationCategory?: string;
   boxNumber?: number;
-  batchSize?: number;
-  selectedCategories?: string[];
-  bypassCache?: boolean; // Hinzugefügt, um die Fehlermeldung zu beheben
+  batchSize?: number; // New option to control batch size
 }
 
 export interface SpacedRepetitionResult {
@@ -32,11 +29,9 @@ export interface SpacedRepetitionResult {
   dueQuestions: Question[];
   progress: UserProgress[];
   submitAnswer: (questionId: string, score: number) => Promise<void>;
-  pendingUpdatesCount: number;
-  applyPendingUpdates: () => Promise<void>;
+  pendingUpdatesCount: number; // New property
+  applyPendingUpdates: () => Promise<void>; // New method
   reloadQuestions: () => Promise<void>;
-  isMounted?: React.MutableRefObject<boolean>;
-  cleanupQuestions?: () => void;
 }
 
 export interface BoxStats {

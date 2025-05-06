@@ -1,28 +1,35 @@
 
 import { useMemo } from 'react';
 
-/**
- * Calculate an appropriate text size class based on content length
- * to ensure text fits within its container
- */
-export function useDynamicTextSize(content: string, type: 'question' | 'answer' = 'question'): string {
+// Configuration values for different text lengths
+const TEXT_SIZE_THRESHOLDS = {
+  question: {
+    short: 50,   // Characters
+    medium: 100,  // Characters
+    long: 200    // Characters
+  },
+  answer: {
+    short: 60,   // Characters
+    medium: 120,  // Characters
+    long: 250    // Characters
+  }
+};
+
+type TextType = 'question' | 'answer';
+
+export function useDynamicTextSize(text: string, type: TextType = 'question') {
   return useMemo(() => {
-    if (!content) return 'text-base';
+    const thresholds = TEXT_SIZE_THRESHOLDS[type];
+    const textLength = text.length;
     
-    const textLength = content.length;
-    
-    // Different thresholds based on content type
-    if (type === 'question') {
-      if (textLength > 200) return 'text-sm leading-snug';
-      if (textLength > 120) return 'text-base leading-snug';
-      if (textLength > 80) return 'text-lg leading-snug';
-      return 'text-xl leading-snug';
+    if (textLength > thresholds.long) {
+      return 'text-xs'; // Very small for very long texts
+    } else if (textLength > thresholds.medium) {
+      return 'text-sm'; // Small for medium-length texts
+    } else if (textLength > thresholds.short) {
+      return 'text-base'; // Normal for short texts
     } else {
-      // Answer text typically needs to be more compact
-      if (textLength > 300) return 'text-xs leading-tight';
-      if (textLength > 200) return 'text-sm leading-tight';
-      if (textLength > 100) return 'text-base leading-snug';
-      return 'text-lg leading-snug';
+      return 'text-lg'; // Large for very short texts
     }
-  }, [content, type]);
+  }, [text, type]);
 }

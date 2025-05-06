@@ -14,6 +14,7 @@ export interface UserProgress {
   last_score: number;
   box_number: number;
   streak: number;
+  questions?: any; // Hinzugefügt als optionales Feld für den Join mit Fragen
 }
 
 export interface SpacedRepetitionOptions {
@@ -22,6 +23,7 @@ export interface SpacedRepetitionOptions {
   boxNumber?: number;
   batchSize?: number;
   selectedCategories?: string[];
+  bypassCache?: boolean; // Hinzugefügt, um die Fehlermeldung zu beheben
 }
 
 export interface SpacedRepetitionResult {

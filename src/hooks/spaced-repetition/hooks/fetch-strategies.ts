@@ -1,3 +1,4 @@
+
 import { QuestionCategory } from '@/types/questions';
 import { SpacedRepetitionOptions, UserProgress } from '../types';
 import {
@@ -177,9 +178,15 @@ async function fetchBoxQuestionStrategy(
       selectedCategories
     );
     
-    const questionsFromBox = boxProgress
-      .filter(p => p.questions) // Ensure questions exist
-      .map(p => p.questions);
+    // Extrahieren der Fragen aus dem Progress, sicherstellen dass progress.questions existiert
+    const questionsFromBox: any[] = [];
+      
+    // Korrektur: Zugriff auf die Fragen, beachten dass 'questions' nicht direkt in UserProgress existiert
+    for (const progress of boxProgress) {
+      if (progress.questions) { // Wir prüfen, ob progress.questions existiert
+        questionsFromBox.push(progress.questions);
+      }
+    }
       
     console.log(`Loaded ${questionsFromBox.length} questions from box ${boxNumber}`);
     
@@ -238,12 +245,16 @@ async function fetchDueQuestionStrategy(
     
     console.log(`Received ${filteredProgressData.length} progress items`);
     
-    // Extract questions directly - simpler approach
-    const questionsWithProgress = filteredProgressData
-      .filter(p => p.questions) // Ensure questions exist
-      .map(p => p.questions)
-      .filter(Boolean); // Remove null/undefined
-      
+    // Korrigierte Version um auf questions zuzugreifen
+    const questionsWithProgress: any[] = [];
+    
+    // Extrahieren der Fragen aus dem Progress, sicherstellen dass progress.questions existiert
+    for (const progress of filteredProgressData) {
+      if (progress.questions) { // Wir prüfen, ob progress.questions existiert
+        questionsWithProgress.push(progress.questions);
+      }
+    }
+    
     console.log("Questions with progress:", questionsWithProgress.length);
 
     // If we have enough questions with progress, no need to fetch new ones

@@ -32,10 +32,8 @@ export function useSpacedRepetition(
       console.error("Error reloading questions:", error);
       
       // The error will be handled by the core hook
-      return false;
+      // Wir entfernen den return-Wert, damit die Funktion Promise<void> zurückgibt
     }
-    
-    return true;
   }, [reloadQuestions]);
   
   // Enhance submitAnswer with error handling

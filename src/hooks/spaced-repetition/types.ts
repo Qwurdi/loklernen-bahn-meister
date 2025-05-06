@@ -20,7 +20,7 @@ export interface SpacedRepetitionOptions {
   practiceMode?: boolean;
   regulationCategory?: string;
   boxNumber?: number;
-  batchSize?: number; // New option to control batch size
+  batchSize?: number; // Option to control batch size
 }
 
 export interface SpacedRepetitionResult {
@@ -29,8 +29,8 @@ export interface SpacedRepetitionResult {
   dueQuestions: Question[];
   progress: UserProgress[];
   submitAnswer: (questionId: string, score: number) => Promise<void>;
-  pendingUpdatesCount: number; // New property
-  applyPendingUpdates: () => Promise<void>; // New method
+  pendingUpdatesCount: number;
+  applyPendingUpdates: () => Promise<void>;
   reloadQuestions: () => Promise<void>;
 }
 
@@ -38,4 +38,18 @@ export interface BoxStats {
   boxNumber: number;
   total: number;
   due: number;
+  regulationCategory?: string; // Added for regulation-specific stats
+}
+
+export interface LearningBoxOptions {
+  userId: string;
+  regulationCategory?: string;
+  includeCompleted?: boolean;
+}
+
+export interface SessionPreferences {
+  practiceMode: boolean;
+  regulationCategory: string;
+  batchSize: number;
+  selectedCategories?: string[];
 }

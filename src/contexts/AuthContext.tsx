@@ -22,12 +22,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isNewUser, setIsNewUser] = useState(false);
 
   useEffect(() => {
-    // Initial setup - flag to prevent memory leaks
     let mounted = true;
+    console.log("AuthContext: Initializing auth state");
 
     // Setup auth listener first
     const { data: authListener } = supabase.auth.onAuthStateChange((event, currentSession) => {
-      // Only update state if the component is still mounted
+      console.log("AuthContext: Auth state changed:", event);
       if (!mounted) return;
 
       // Show notifications for login/logout events (but not on initial load)
@@ -57,10 +57,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get initial session
     const getInitialSession = async () => {
       try {
+        console.log("AuthContext: Getting initial session");
         const { data } = await supabase.auth.getSession();
         
         // Only update state if component is still mounted
         if (mounted) {
+          console.log("AuthContext: Initial session loaded:", !!data.session);
           setSession(data.session);
           setUser(data.session?.user ?? null);
           setLoading(false);
@@ -76,6 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Cleanup function - runs when component unmounts
     return () => {
+      console.log("AuthContext: Cleaning up");
       mounted = false;
       authListener.subscription.unsubscribe();
     };

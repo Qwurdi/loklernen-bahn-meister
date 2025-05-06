@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,25 +15,45 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const isMobile = useIsMobile();
+  
+  // Get the intended destination from location state, or default to "/"
+  const from = (location.state as { from?: string })?.from || "/";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     try {
+      console.log("Login: Attempting login with email:", email);
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error("Login error:", error);
         throw error;
       }
 
-      navigate("/");
+      console.log("Login: Success, redirecting to:", from);
+      navigate(from);
     } catch (error: any) {
+      console.error("Login catch block:", error);
+      
+      // Provide user-friendly error messages
+      if (error.message.includes("Invalid login")) {
+        setError("Ungültige E-Mail-Adresse oder Passwort");
+      } else if (error.message.includes("Email not confirmed")) {
+        setError("Bitte bestätigen Sie Ihre E-Mail-Adresse");
+      } else {
+        setError(error.message || "Ein Fehler ist bei der Anmeldung aufgetreten");
+      }
+      
       toast.error(error.message || "Ein Fehler ist aufgetreten");
     } finally {
       setLoading(false);
@@ -55,6 +75,12 @@ export default function Login() {
             </div>
             
             <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
+                  {error}
+                </div>
+              )}
+              
               <div className="space-y-2">
                 <Label htmlFor="email">E-Mail</Label>
                 <Input

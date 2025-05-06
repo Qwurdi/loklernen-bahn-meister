@@ -9,6 +9,7 @@ interface SessionParams {
   regulationParam: string;
   boxParam?: number;
   sessionTitle: string;
+  practiceMode: boolean; // Flag für Übungsmodus
 }
 
 export function useSessionParams(): SessionParams {
@@ -20,16 +21,41 @@ export function useSessionParams(): SessionParams {
   const subcategoryParam = searchParams.get("subcategory");
   const regulationParam = searchParams.get("regelwerk") || regulationPreference;
   const boxParam = searchParams.get("box") ? parseInt(searchParams.get("box") || "0") : undefined;
+  const practiceMode = searchParams.get("practice") === "true";
+
+  // Log params for debugging
+  console.log("Session Params:", {
+    category: categoryParam,
+    subcategory: subcategoryParam,
+    regulation: regulationParam,
+    box: boxParam,
+    practice: practiceMode
+  });
 
   // Create a more descriptive title based on parameters
   const getSessionTitle = () => {
-    if (boxParam) {
-      return `Box ${boxParam} - Lernmodus`;
-    } 
-    if (subcategoryParam) {
-      return `${subcategoryParam} - Lernmodus`;
+    let title = '';
+    
+    if (practiceMode) {
+      title += 'Übungsmodus - ';
     }
-    return 'Fällige Karten - Lernmodus';
+    
+    if (boxParam) {
+      title += `Box ${boxParam} - `;
+    } 
+    
+    if (subcategoryParam) {
+      title += `${subcategoryParam}`;
+    } else {
+      title += 'Fällige Karten';
+    }
+    
+    // Add regulation info if specific
+    if (regulationParam !== "both") {
+      title += ` (${regulationParam})`;
+    }
+    
+    return title;
   };
 
   const sessionTitle = getSessionTitle();
@@ -39,6 +65,7 @@ export function useSessionParams(): SessionParams {
     subcategoryParam,
     regulationParam,
     boxParam,
-    sessionTitle
+    sessionTitle,
+    practiceMode
   };
 }

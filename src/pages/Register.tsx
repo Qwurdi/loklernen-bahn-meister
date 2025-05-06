@@ -17,20 +17,24 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     try {
+      console.log("Register: Attempting signup with email:", email);
       const { error } = await supabase.auth.signUp({
         email,
         password,
       });
 
       if (error) {
+        console.error("Register error:", error);
         throw error;
       }
 
@@ -40,6 +44,17 @@ export default function Register() {
       toast.success('Registrierung erfolgreich! Bitte überprüfe deine E-Mails.');
       navigate("/regelwerk-auswahl"); // Redirect to regulation selection page
     } catch (error: any) {
+      console.error("Register catch block:", error);
+      
+      // Provide user-friendly error messages
+      if (error.message.includes("already registered")) {
+        setError("Diese E-Mail-Adresse ist bereits registriert");
+      } else if (error.message.includes("password")) {
+        setError("Das Passwort muss mindestens 6 Zeichen lang sein");
+      } else {
+        setError(error.message || "Ein Fehler ist bei der Registrierung aufgetreten");
+      }
+      
       toast.error(error.message || "Ein Fehler ist aufgetreten");
     } finally {
       setLoading(false);
@@ -61,6 +76,12 @@ export default function Register() {
             </div>
             
             <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
+                  {error}
+                </div>
+              )}
+              
               <div className="space-y-2">
                 <Label htmlFor="email">E-Mail</Label>
                 <Input

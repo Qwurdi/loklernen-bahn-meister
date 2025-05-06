@@ -21,6 +21,7 @@ export interface SpacedRepetitionOptions {
   regulationCategory?: string;
   boxNumber?: number;
   batchSize?: number; // New option to control batch size
+  selectedCategories?: string[]; // New option for multiple subcategories
 }
 
 export interface SpacedRepetitionResult {

@@ -8,7 +8,7 @@ import { useSpacedRepetition } from "@/hooks/spaced-repetition";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { QuestionCategory } from "@/types/questions";
-import { signalSubCategories } from "@/api/questions";
+import { signalSubCategories } from "@/api/categories/types";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";

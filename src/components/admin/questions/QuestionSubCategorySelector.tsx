@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -8,18 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { signalSubCategories } from "@/api/questions";
-
-const betriebsdienstSubCategories = [
-  "Grundlagen Bahnbetrieb",
-  "UVV & Arbeitsschutz",
-  "Rangieren",
-  "Züge fahren",
-  "PZB & Sicherungsanlagen",
-  "Kommunikation",
-  "Besonderheiten",
-  "Unregelmäßigkeiten"
-] as const;
+import { fetchCategoriesByParent, signalSubCategories, betriebsdienstSubCategories } from "@/api/categories";
 
 interface QuestionSubCategorySelectorProps {
   category: "Signale" | "Betriebsdienst";
@@ -32,14 +21,37 @@ export const QuestionSubCategorySelector = ({
   subCategory,
   onSubCategoryChange
 }: QuestionSubCategorySelectorProps) => {
-  const categories = category === "Signale" ? signalSubCategories : betriebsdienstSubCategories;
+  const [categories, setCategories] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const dbCategories = await fetchCategoriesByParent(category);
+        if (dbCategories && dbCategories.length > 0) {
+          setCategories(dbCategories.map(cat => cat.name));
+        } else {
+          // Fallback to hardcoded categories if none found in DB
+          setCategories(category === "Signale" ? [...signalSubCategories] : [...betriebsdienstSubCategories]);
+        }
+      } catch (error) {
+        console.error(`Error loading ${category} categories:`, error);
+        // Fallback to hardcoded categories on error
+        setCategories(category === "Signale" ? [...signalSubCategories] : [...betriebsdienstSubCategories]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCategories();
+  }, [category]);
   
   return (
     <div className="space-y-2">
       <Label htmlFor="sub-category">Unterkategorie</Label>
-      <Select value={subCategory} onValueChange={onSubCategoryChange}>
+      <Select value={subCategory} onValueChange={onSubCategoryChange} disabled={isLoading}>
         <SelectTrigger id="sub-category" className="w-full">
-          <SelectValue placeholder="Wähle eine Unterkategorie" />
+          <SelectValue placeholder={isLoading ? "Lade Kategorien..." : "Wähle eine Unterkategorie"} />
         </SelectTrigger>
         <SelectContent>
           {categories.map((cat) => (

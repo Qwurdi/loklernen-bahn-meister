@@ -1,7 +1,8 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import CategoryCard from "@/components/common/CategoryCard";
 import { RegulationFilterType } from "@/types/regulation";
+import { fetchCategoriesByParent } from "@/api/categories";
 
 interface CategoryStats {
   correct: number;
@@ -37,6 +38,51 @@ export default function CategoryGrid({
   regulationFilter,
   isPro = false,
 }: CategoryGridProps) {
+  const [categoryProStatus, setCategoryProStatus] = useState<Record<string, boolean>>({});
+  
+  // Fetch categories to determine which are pro
+  useEffect(() => {
+    const fetchProStatus = async () => {
+      try {
+        const parent = categories.some(cat => 
+          ["Rangieren", "Züge fahren", "PZB & Sicherungsanlagen"].includes(cat)
+        ) ? 'Betriebsdienst' : 'Signale';
+        
+        const dbCategories = await fetchCategoriesByParent(parent);
+        
+        // Create a map of category name to isPro status
+        const proStatusMap = dbCategories.reduce((map: Record<string, boolean>, cat) => {
+          map[cat.name] = !!cat.isPro;
+          return map;
+        }, {});
+        
+        setCategoryProStatus(proStatusMap);
+      } catch (error) {
+        console.error("Error fetching category PRO status:", error);
+        // Fallback for Betriebsdienst categories that are typically Pro
+        if (categories.some(cat => ["Rangieren", "Züge fahren"].includes(cat))) {
+          const DEFAULT_PRO_CATEGORIES = [
+            "Rangieren", 
+            "Züge fahren", 
+            "PZB & Sicherungsanlagen", 
+            "Kommunikation", 
+            "Besonderheiten", 
+            "Unregelmäßigkeiten"
+          ];
+          
+          const fallbackMap = categories.reduce((map: Record<string, boolean>, cat) => {
+            map[cat] = DEFAULT_PRO_CATEGORIES.includes(cat);
+            return map;
+          }, {});
+          
+          setCategoryProStatus(fallbackMap);
+        }
+      }
+    };
+    
+    fetchProStatus();
+  }, [categories]);
+  
   // Filter categories based on regulation preference
   const visibleCategories = categories.filter(subcategory => {
     const cardCounts = categoryCardCounts?.[subcategory];
@@ -77,6 +123,9 @@ export default function CategoryGrid({
         const dueCards = stats?.due || 0;
         const masteredCards = stats?.mastered || 0;
         
+        // Determine if this category is a Pro category from the database or fallback
+        const isCategoryPro = categoryProStatus[subcategory] || false;
+        
         return (
           <CategoryCard
             key={subcategory}
@@ -85,16 +134,17 @@ export default function CategoryGrid({
               ? `${Math.round(progress)}% gelernt`
               : "Lerne die wichtigsten Signale dieser Kategorie"}
             progress={progress}
-            link={`/karteikarten/signale/${encodeURIComponent(subcategory.toLowerCase().replace(/[^a-z0-9]+/g, '-'))}`}
+            link={`/karteikarten/${subcategory.toLowerCase().includes('signal') ? 'signale' : 'betriebsdienst'}/${encodeURIComponent(subcategory.toLowerCase().replace(/[^a-z0-9]+/g, '-'))}`}
             isSelected={selectedCategories.includes(subcategory)}
             onSelect={() => onSelectCategory(subcategory)}
             selectable={isSelectable}
+            isLocked={isPro && isCategoryPro}
+            isPro={isCategoryPro}
             stats={{
               totalCards,
               dueCards,
               masteredCards
             }}
-            isPro={isPro}
             regulationCategory={regulationFilter !== "all" ? regulationFilter : undefined}
           />
         );

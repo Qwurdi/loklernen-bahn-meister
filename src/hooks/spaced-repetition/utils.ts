@@ -39,6 +39,10 @@ export function transformQuestion(dbQuestion: any): Question {
       text: dbQuestion.text || 'Keine Frage vorhanden', // Default text
       image_url: dbQuestion.image_url || null,
       answers: answers,
+      created_by: dbQuestion.created_by || 'system', // Default creator
+      revision: dbQuestion.revision || 1, // Default revision number
+      created_at: dbQuestion.created_at || new Date().toISOString(), // Default to now
+      updated_at: dbQuestion.updated_at || new Date().toISOString(), // Default to now
       regulation_category: dbQuestion.regulation_category || null,
     };
   } catch (err) {

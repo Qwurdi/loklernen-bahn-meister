@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { Question } from '@/types/questions';
 import { motion } from 'framer-motion';
 import CardFront from './CardFront';
@@ -17,7 +17,7 @@ interface CardItemProps<T extends Question = Question> {
 }
 
 // Add generic type parameter to the component
-export default function CardItem<T extends Question = Question>({ 
+function CardItem<T extends Question = Question>({ 
   question, 
   onSwipe, 
   isPreview = false,
@@ -38,18 +38,18 @@ export default function CardItem<T extends Question = Question>({
     dragThreshold: 80
   });
 
-  // Only allow flipping the card on the front side
-  const handleCardTap = () => {
+  // Memoize card tap handler
+  const handleCardTap = useCallback(() => {
     if (!isPreview && !swipeDisabled && !isFlipped) {
       setIsFlipped(true);
     }
-  };
+  }, [isPreview, swipeDisabled, isFlipped]);
 
-  // Handle button answers (desktop only)
-  const handleAnswer = (known: boolean) => {
+  // Memoize answer handler
+  const handleAnswer = useCallback((known: boolean) => {
     if (isPreview || swipeDisabled) return;
     onSwipe?.(known ? 'right' : 'left');
-  };
+  }, [isPreview, swipeDisabled, onSwipe]);
 
   // Enhanced background color feedback
   const bgColor = swipeDirection === 'right' 
@@ -85,16 +85,11 @@ export default function CardItem<T extends Question = Question>({
       <div className="w-full h-full relative overflow-hidden rounded-2xl" style={{ perspective: '1000px' }}>
         {/* Front card face with improved animation */}
         <div 
-          className="w-full h-full transition-transform duration-500 transform-gpu"
+          className={`w-full h-full transition-transform duration-500 transform-gpu backface-hidden
+                      absolute ${isFlipped ? 'opacity-0 z-0' : 'opacity-100 z-10'}`}
           style={{
             transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-            position: 'absolute',
-            backfaceVisibility: 'hidden',
             transformStyle: 'preserve-3d',
-            zIndex: isFlipped ? 0 : 1,
-            opacity: isFlipped ? 0 : 1,
-            width: '100%',
-            height: '100%'
           }}
         >
           <CardFront question={question} />
@@ -102,16 +97,11 @@ export default function CardItem<T extends Question = Question>({
         
         {/* Back card face with improved animation */}
         <div 
-          className="w-full h-full transition-transform duration-500 transform-gpu"
+          className={`w-full h-full transition-transform duration-500 transform-gpu backface-hidden
+                      absolute ${isFlipped ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
           style={{
             transform: isFlipped ? 'rotateY(0deg)' : 'rotateY(-180deg)',
-            position: 'absolute',
-            backfaceVisibility: 'hidden',
             transformStyle: 'preserve-3d',
-            zIndex: isFlipped ? 1 : 0,
-            opacity: isFlipped ? 1 : 0,
-            width: '100%',
-            height: '100%'
           }}
         >
           <CardBack 
@@ -138,3 +128,6 @@ export default function CardItem<T extends Question = Question>({
     </motion.div>
   );
 }
+
+// Export a memoized version of the component to prevent unnecessary rerenders
+export default memo(CardItem) as typeof CardItem;

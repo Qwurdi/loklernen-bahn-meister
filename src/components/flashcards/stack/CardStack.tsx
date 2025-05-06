@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, memo } from 'react';
 import { Question } from '@/types/questions';
 import { motion, AnimatePresence } from 'framer-motion';
 import CardItem from './CardItem';
@@ -15,14 +15,14 @@ interface CardStackProps<T extends Question = Question> {
   setCurrentIndex: (index: number) => void;
 }
 
-// Add the generic type parameter to the component
-export default function CardStack<T extends Question = Question>({ 
+// Add the generic type parameter to the component and memoize it
+const CardStack = <T extends Question = Question>({ 
   questions, 
   onAnswer, 
   onComplete,
   currentIndex,
   setCurrentIndex
-}: CardStackProps<T>) {
+}: CardStackProps<T>) => {
   const [direction, setDirection] = useState<'left' | 'right' | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const stackRef = useRef<HTMLDivElement>(null);
@@ -30,18 +30,23 @@ export default function CardStack<T extends Question = Question>({
   // Preload the next few images
   useEffect(() => {
     // Preload the next 3 cards' images (if they exist)
-    for (let i = 1; i <= 3; i++) {
-      const preloadIndex = currentIndex + i;
-      if (preloadIndex < questions.length) {
-        const nextQuestion = questions[preloadIndex];
-        if (nextQuestion.image_url) {
-          const img = new Image();
-          img.src = nextQuestion.image_url;
+    const preloadImages = () => {
+      for (let i = 1; i <= 3; i++) {
+        const preloadIndex = currentIndex + i;
+        if (preloadIndex < questions.length) {
+          const nextQuestion = questions[preloadIndex];
+          if (nextQuestion.image_url) {
+            const img = new Image();
+            img.src = nextQuestion.image_url;
+          }
         }
       }
-    }
+    };
+    
+    preloadImages();
   }, [currentIndex, questions]);
 
+  // Memoize handleSwipe to prevent unnecessary recreation
   const handleSwipe = useCallback(async (direction: 'left' | 'right') => {
     if (isAnimating || currentIndex >= questions.length) return;
     
@@ -51,8 +56,12 @@ export default function CardStack<T extends Question = Question>({
     const currentQuestion = questions[currentIndex];
     const score = direction === 'right' ? 5 : 1; // Right = known (5), Left = not known (1)
     
-    // Process the answer - using optimized submitAnswer that doesn't reload
-    await onAnswer(currentQuestion.id, score);
+    try {
+      // Process the answer - using optimized submitAnswer that doesn't reload
+      await onAnswer(currentQuestion.id, score);
+    } catch (error) {
+      console.error("Error submitting answer:", error);
+    }
     
     // Short delay to let animation complete
     setTimeout(() => {
@@ -121,7 +130,12 @@ export default function CardStack<T extends Question = Question>({
                 ? { x: window.innerWidth * 1.5, rotate: 20, opacity: 0 } 
                 : { x: 0, rotate: 0, opacity: 1 }
             }
-            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 200, 
+              damping: 20,
+              duration: 0.3
+            }}
           >
             <CardItem 
               question={currentCard}
@@ -133,4 +147,7 @@ export default function CardStack<T extends Question = Question>({
       </div>
     </div>
   );
-}
+};
+
+// Export as memoized component to avoid unnecessary re-renders
+export default memo(CardStack) as typeof CardStack;

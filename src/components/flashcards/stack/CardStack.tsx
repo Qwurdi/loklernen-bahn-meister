@@ -1,10 +1,10 @@
 
-import React, { useState, useRef, useCallback, useEffect, memo } from 'react';
+import React, { useState, useRef, useCallback, memo } from 'react';
 import { Question } from '@/types/questions';
-import { motion, AnimatePresence } from 'framer-motion';
-import CardItem from './CardItem';
 import EmptyStackMessage from './EmptyStackMessage';
 import StackProgress from './StackProgress';
+import { useImagePreloader } from './useImagePreloader';
+import CardAnimation from './CardAnimation';
 
 // Update interface to use generics
 interface CardStackProps<T extends Question = Question> {
@@ -25,70 +25,10 @@ const CardStack = <T extends Question = Question>({
 }: CardStackProps<T>) => {
   const [direction, setDirection] = useState<'left' | 'right' | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
   const stackRef = useRef<HTMLDivElement>(null);
-  const animationTimeoutRef = useRef<number | null>(null);
-
-  // Preload the next few images
-  useEffect(() => {
-    // New queue system to load images sequentially
-    const imageQueue: string[] = [];
-    
-    // Track which images have already been loaded
-    const loadImage = (url: string) => {
-      // Skip if already loaded or no URL
-      if (!url || loadedImages.has(url)) return;
-      
-      // Add to queue
-      imageQueue.push(url);
-    };
-    
-    // Process queue one by one to avoid overwhelming the browser
-    const processQueue = () => {
-      if (imageQueue.length === 0) return;
-      
-      const url = imageQueue.shift()!;
-      const img = new Image();
-      
-      img.onload = () => {
-        setLoadedImages(prev => new Set(prev).add(url));
-        // Process next image after a small delay
-        setTimeout(processQueue, 100);
-      };
-      
-      img.onerror = () => {
-        console.error(`Failed to load image: ${url}`);
-        // Continue with next image even if this one failed
-        setTimeout(processQueue, 100);
-      };
-      
-      img.src = url;
-    };
-    
-    // Queue current and next 3 cards' images (if they exist)
-    for (let i = 0; i < 4; i++) {
-      const preloadIndex = currentIndex + i;
-      if (preloadIndex < questions.length) {
-        const question = questions[preloadIndex];
-        if (question.image_url) {
-          loadImage(question.image_url);
-        }
-      }
-    }
-    
-    // Start processing the queue
-    if (imageQueue.length > 0) {
-      processQueue();
-    }
-    
-    // Cleanup any pending operations
-    return () => {
-      // Clear any timeouts if component unmounts
-      if (animationTimeoutRef.current !== null) {
-        clearTimeout(animationTimeoutRef.current);
-      }
-    };
-  }, [currentIndex, questions, loadedImages]);
+  
+  // Use custom hook for image preloading
+  const { animationTimeoutRef } = useImagePreloader(questions, currentIndex);
 
   // Memoize handleSwipe to prevent unnecessary recreation
   const handleSwipe = useCallback(async (direction: 'left' | 'right') => {
@@ -130,7 +70,7 @@ const CardStack = <T extends Question = Question>({
       setIsAnimating(false);
       animationTimeoutRef.current = null;
     }, 300);
-  }, [currentIndex, questions, onAnswer, onComplete, setCurrentIndex, isAnimating]);
+  }, [currentIndex, questions, onAnswer, onComplete, setCurrentIndex, isAnimating, animationTimeoutRef]);
 
   // If no questions are available
   if (!questions || questions.length === 0) {
@@ -161,50 +101,15 @@ const CardStack = <T extends Question = Question>({
       />
       
       <div className="cards-wrapper h-full w-full flex items-center justify-center pt-8 pb-16">
-        <AnimatePresence mode="wait">
-          {/* Next card in stack (shown partially underneath) */}
-          {hasNextCard && !isAnimating && nextCard && (
-            <motion.div 
-              key={`next-${nextCard.id || 'fallback-next'}`}
-              className="absolute"
-              initial={{ scale: 0.85, y: 16, opacity: 0.6 }}
-              animate={{ scale: 0.9, y: 12, opacity: 0.8 }}
-              exit={{ scale: 1, y: 0, opacity: 1 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="opacity-60 pointer-events-none">
-                <CardItem 
-                  question={nextCard}
-                  isPreview={true}
-                />
-              </div>
-            </motion.div>
-          )}
-          
-          {/* Current active card */}
-          <motion.div
-            key={`card-${currentCard.id || 'fallback-current'}`}
-            animate={direction === 'left' 
-              ? { x: -window.innerWidth * 1.5, rotate: -20, opacity: 0 } 
-              : direction === 'right' 
-                ? { x: window.innerWidth * 1.5, rotate: 20, opacity: 0 } 
-                : { x: 0, rotate: 0, opacity: 1 }
-            }
-            transition={{ 
-              type: "spring", 
-              stiffness: 200, 
-              damping: 20,
-              duration: 0.3
-            }}
-            className="hardware-accelerated"
-          >
-            <CardItem 
-              question={currentCard}
-              onSwipe={handleSwipe}
-              swipeDisabled={isAnimating}
-            />
-          </motion.div>
-        </AnimatePresence>
+        <CardAnimation
+          currentCard={currentCard}
+          nextCard={nextCard}
+          direction={direction}
+          isAnimating={isAnimating}
+          hasNextCard={hasNextCard}
+          onSwipe={handleSwipe}
+          swipeDisabled={isAnimating}
+        />
       </div>
     </div>
   );

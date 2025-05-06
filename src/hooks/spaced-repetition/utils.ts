@@ -1,81 +1,104 @@
 
 import { Question } from '@/types/questions';
-import { UserProgress } from './types';
 import { transformAnswers } from '@/api/questions';
 
-// Helper function to transform database questions to application questions
+/**
+ * Safely transforms a database question into application format
+ * with error handling for malformed data
+ */
 export function transformQuestion(dbQuestion: any): Question {
-  return {
-    ...dbQuestion,
-    answers: transformAnswers(dbQuestion.answers)
-  };
+  if (!dbQuestion) {
+    console.error('Attempted to transform undefined question');
+    throw new Error('Question data is missing');
+  }
+
+  try {
+    // Make sure we have required fields
+    if (!dbQuestion.id) {
+      console.error('Question missing required ID field');
+      throw new Error('Question ID is missing');
+    }
+
+    // Ensure answers are properly formatted
+    let answers;
+    try {
+      answers = transformAnswers(dbQuestion.answers || []);
+    } catch (error) {
+      console.error(`Error transforming answers for question ${dbQuestion.id}:`, error);
+      // Provide fallback empty answers rather than crashing
+      answers = [];
+    }
+
+    // Ensure all required fields exist with defaults for nullable ones
+    return {
+      id: dbQuestion.id,
+      category: dbQuestion.category || 'Signale', // Default category
+      sub_category: dbQuestion.sub_category || 'Allgemein', // Default subcategory
+      question_type: dbQuestion.question_type || 'open', // Default to open question type
+      difficulty: typeof dbQuestion.difficulty === 'number' ? dbQuestion.difficulty : 1,
+      text: dbQuestion.text || 'Keine Frage vorhanden', // Default text
+      image_url: dbQuestion.image_url || null,
+      answers: answers,
+      regulation_category: dbQuestion.regulation_category || null,
+    };
+  } catch (err) {
+    console.error('Failed to transform question:', dbQuestion, err);
+    throw new Error(`Question transformation failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+  }
 }
 
-// Calculate the next review date based on the box number
+/**
+ * Calculate the next review date based on box number
+ */
 export function calculateNextReviewDate(boxNumber: number): string {
   const now = new Date();
   
+  // Implement spaced repetition algorithm
   switch (boxNumber) {
     case 1:
-      return new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000).toISOString(); // 1 day
+      now.setDate(now.getDate() + 1); // 1 day
+      break;
     case 2:
-      return new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString(); // 3 days
+      now.setDate(now.getDate() + 3); // 3 days
+      break;
     case 3:
-      return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 days
+      now.setDate(now.getDate() + 7); // 1 week
+      break;
     case 4:
-      return new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString(); // 14 days
+      now.setDate(now.getDate() + 14); // 2 weeks
+      break;
     case 5:
-      return new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days
+      now.setDate(now.getDate() + 30); // 1 month
+      break;
+    case 6:
+      now.setDate(now.getDate() + 60); // 2 months
+      break;
+    case 7:
+      now.setDate(now.getDate() + 120); // 4 months
+      break;
     default:
-      return new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000).toISOString(); // Default to 1 day
+      now.setDate(now.getDate() + 1); // Default to 1 day for unknown box
   }
+  
+  return now.toISOString();
 }
 
-// Process answers based on the new box system
-export function processAnswer(
-  isCorrect: boolean, 
-  currentProgress?: UserProgress
-): {
-  box_number: number;
-  streak: number;
-  next_review_at: string;
-} {
-  const boxNumber = currentProgress?.box_number || 1;
-  const currentStreak = currentProgress?.streak || 0;
-
-  // If answer is correct, increment streak
-  if (isCorrect) {
-    let newStreak = currentStreak + 1;
-    let newBoxNumber = boxNumber;
-
-    // Check if we should move the card to the next box
-    const requiredStreakForBox = [0, 2, 3, 4, 5]; // Index 0 is unused, starts from Box 1
-    if (newStreak >= requiredStreakForBox[boxNumber] && boxNumber < 5) {
-      newBoxNumber = boxNumber + 1;
-      newStreak = 0; // Reset streak when advancing to the next box
-    }
-
-    return {
-      box_number: newBoxNumber,
-      streak: newStreak,
-      next_review_at: calculateNextReviewDate(newBoxNumber),
-    };
-  } 
-  // If answer is incorrect, reset streak and potentially move down a box
-  else {
-    let newBoxNumber = boxNumber;
-    
-    // Rules for moving down
-    if (boxNumber > 1 && boxNumber <= 4) {
-      newBoxNumber = boxNumber - 1;
-    } else if (boxNumber === 5) {
-      newBoxNumber = 3; // From Box 5 to Box 3 on failure
+/**
+ * Use memoization to cache expensive operations
+ */
+const memoize = <T extends (...args: any[]) => any>(fn: T): T => {
+  const cache = new Map();
+  
+  return ((...args: any[]) => {
+    const key = JSON.stringify(args);
+    if (cache.has(key)) {
+      return cache.get(key);
     }
     
-    return {
-      box_number: newBoxNumber,
-      streak: 0, // Reset streak on wrong answer
-      next_review_at: calculateNextReviewDate(newBoxNumber),
-    };
-  }
-}
+    const result = fn(...args);
+    cache.set(key, result);
+    return result;
+  }) as T;
+};
+
+export const memoizedTransformQuestion = memoize(transformQuestion);

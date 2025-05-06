@@ -27,22 +27,45 @@ const CardStack = <T extends Question = Question>({
   const [isAnimating, setIsAnimating] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
   const stackRef = useRef<HTMLDivElement>(null);
+  const animationTimeoutRef = useRef<number | null>(null);
 
   // Preload the next few images
   useEffect(() => {
+    // New queue system to load images sequentially
+    const imageQueue: string[] = [];
+    
     // Track which images have already been loaded
     const loadImage = (url: string) => {
       // Skip if already loaded or no URL
       if (!url || loadedImages.has(url)) return;
       
+      // Add to queue
+      imageQueue.push(url);
+    };
+    
+    // Process queue one by one to avoid overwhelming the browser
+    const processQueue = () => {
+      if (imageQueue.length === 0) return;
+      
+      const url = imageQueue.shift()!;
       const img = new Image();
+      
       img.onload = () => {
         setLoadedImages(prev => new Set(prev).add(url));
+        // Process next image after a small delay
+        setTimeout(processQueue, 100);
       };
+      
+      img.onerror = () => {
+        console.error(`Failed to load image: ${url}`);
+        // Continue with next image even if this one failed
+        setTimeout(processQueue, 100);
+      };
+      
       img.src = url;
     };
     
-    // Preload current and next 3 cards' images (if they exist)
+    // Queue current and next 3 cards' images (if they exist)
     for (let i = 0; i < 4; i++) {
       const preloadIndex = currentIndex + i;
       if (preloadIndex < questions.length) {
@@ -52,6 +75,19 @@ const CardStack = <T extends Question = Question>({
         }
       }
     }
+    
+    // Start processing the queue
+    if (imageQueue.length > 0) {
+      processQueue();
+    }
+    
+    // Cleanup any pending operations
+    return () => {
+      // Clear any timeouts if component unmounts
+      if (animationTimeoutRef.current !== null) {
+        clearTimeout(animationTimeoutRef.current);
+      }
+    };
   }, [currentIndex, questions, loadedImages]);
 
   // Memoize handleSwipe to prevent unnecessary recreation
@@ -62,6 +98,15 @@ const CardStack = <T extends Question = Question>({
     setDirection(direction);
     
     const currentQuestion = questions[currentIndex];
+    
+    // Safety check for missing ID
+    if (!currentQuestion || !currentQuestion.id) {
+      console.error("Invalid question data", currentQuestion);
+      setIsAnimating(false);
+      setDirection(null);
+      return;
+    }
+    
     const score = direction === 'right' ? 5 : 1; // Right = known (5), Left = not known (1)
     
     try {
@@ -72,7 +117,7 @@ const CardStack = <T extends Question = Question>({
     }
     
     // Short delay to let animation complete
-    setTimeout(() => {
+    animationTimeoutRef.current = window.setTimeout(() => {
       // Move to next question or complete session
       if (currentIndex < questions.length - 1) {
         setCurrentIndex(currentIndex + 1);
@@ -83,6 +128,7 @@ const CardStack = <T extends Question = Question>({
       // Reset animation state
       setDirection(null);
       setIsAnimating(false);
+      animationTimeoutRef.current = null;
     }, 300);
   }, [currentIndex, questions, onAnswer, onComplete, setCurrentIndex, isAnimating]);
 
@@ -96,7 +142,13 @@ const CardStack = <T extends Question = Question>({
     return <EmptyStackMessage isCompleted={true} />;
   }
 
+  // Check if currentCard exists before proceeding
   const currentCard = questions[currentIndex];
+  if (!currentCard) {
+    console.error("Missing current card data at index", currentIndex);
+    return <EmptyStackMessage />;
+  }
+
   const hasNextCard = currentIndex < questions.length - 1;
   const nextCard = hasNextCard ? questions[currentIndex + 1] : null;
   
@@ -111,9 +163,9 @@ const CardStack = <T extends Question = Question>({
       <div className="cards-wrapper h-full w-full flex items-center justify-center pt-8 pb-16">
         <AnimatePresence mode="wait">
           {/* Next card in stack (shown partially underneath) */}
-          {hasNextCard && !isAnimating && (
+          {hasNextCard && !isAnimating && nextCard && (
             <motion.div 
-              key={`next-${nextCard.id}`}
+              key={`next-${nextCard.id || 'fallback-next'}`}
               className="absolute"
               initial={{ scale: 0.85, y: 16, opacity: 0.6 }}
               animate={{ scale: 0.9, y: 12, opacity: 0.8 }}
@@ -131,7 +183,7 @@ const CardStack = <T extends Question = Question>({
           
           {/* Current active card */}
           <motion.div
-            key={`card-${currentCard.id}`}
+            key={`card-${currentCard.id || 'fallback-current'}`}
             animate={direction === 'left' 
               ? { x: -window.innerWidth * 1.5, rotate: -20, opacity: 0 } 
               : direction === 'right' 
@@ -144,6 +196,7 @@ const CardStack = <T extends Question = Question>({
               damping: 20,
               duration: 0.3
             }}
+            className="hardware-accelerated"
           >
             <CardItem 
               question={currentCard}

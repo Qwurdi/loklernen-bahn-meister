@@ -16,6 +16,7 @@
   transition-property: transform, opacity;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transform-style: preserve-3d;
+  isolation: isolate;
 }
 
 /* Fix for jumpy animations on mobile */
@@ -23,6 +24,8 @@
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
   will-change: transform;
+  overflow: hidden;
+  contain: content;
 }
 
 /* Forced hardware acceleration for card animations */
@@ -30,6 +33,7 @@
   transform: translate3d(0, 0, 0);
   -webkit-transform: translate3d(0, 0, 0);
   will-change: transform;
+  contain: layout size;
 }
 
 /* Prevent text layout shifts */
@@ -37,6 +41,8 @@
   overflow-wrap: break-word;
   word-break: break-word;
   hyphens: auto;
+  text-size-adjust: none;
+  -webkit-text-size-adjust: none;
 }
 
 /* Prevent flickering on animations */
@@ -45,6 +51,24 @@
   backface-visibility: hidden;
   perspective: 1000;
   -webkit-font-smoothing: antialiased;
+  transform-style: flat;
+}
+
+/* Hardware accelerated class for better performance */
+.hardware-accelerated {
+  transform: translate3d(0,0,0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
+  contain: content;
+  isolation: isolate;
+}
+
+/* Prevent tap highlight color on mobile */
+.tap-transparent {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
 }
 
 /* Card stack exit animations */
@@ -72,4 +96,23 @@
 
 .animate-swipe-right {
   animation: swipe-right 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Prevent repaints during animations */
+.content-visibility-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 0.5em 12em;
+}
+
+/* Low-motion option for better performance */
+@media (prefers-reduced-motion) {
+  .animate-swipe-left,
+  .animate-swipe-right {
+    animation-duration: 0.15s;
+    animation-timing-function: ease-out;
+  }
+  
+  .card-face {
+    transition-duration: 0.15s;
+  }
 }

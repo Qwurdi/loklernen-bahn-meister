@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { Question, QuestionCategory } from '@/types/questions';
 import { SpacedRepetitionOptions, UserProgress } from '../types';
@@ -15,6 +16,9 @@ interface FetchResult {
   progressData: UserProgress[];
 }
 
+/**
+ * Hook for loading questions with optimized error handling and performance
+ */
 export function useLoadQuestions(
   userId?: string,
   category?: QuestionCategory,
@@ -23,6 +27,7 @@ export function useLoadQuestions(
 ) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   
   // Default to 'all' if regulationCategory is not provided
   const regulationCategory = options.regulationCategory || "all";
@@ -31,6 +36,19 @@ export function useLoadQuestions(
   
   // Optimized batch size - ideal for didactic and technical balance
   const batchSize = options.batchSize || 15; // Default to 15 cards per session
+  
+  // Function to safely transform data with error handling
+  const safeTransformQuestion = (question: any): Question | null => {
+    if (!question) return null;
+    
+    try {
+      return transformQuestion(question);
+    } catch (err) {
+      console.error(`Error transforming question (ID: ${question?.id || 'unknown'})`, err);
+      // Return null for failed transformations
+      return null;
+    }
+  };
   
   const loadQuestions = useCallback(async (): Promise<FetchResult> => {
     if (!userId || !category) {
@@ -55,9 +73,17 @@ export function useLoadQuestions(
         if (!practiceQuestions || practiceQuestions.length === 0) {
           console.log('No practice questions found');
           toast.error("Keine Übungsfragen gefunden. Bitte wähle eine andere Kategorie.");
+          return { questions: [], progressData: [] };
         }
         
-        return { questions: practiceQuestions || [], progressData: [] };
+        // Safely transform each question and filter out null results
+        const transformedQuestions = practiceQuestions
+          .map(safeTransformQuestion)
+          .filter(Boolean) as Question[];
+          
+        console.log(`Successfully loaded ${transformedQuestions.length} practice questions`);
+        
+        return { questions: transformedQuestions || [], progressData: [] };
       }
       
       // If a specific box is requested, only fetch questions from that box
@@ -69,10 +95,11 @@ export function useLoadQuestions(
           selectedCategories
         );
         
-        // Transform the questions from the box data
+        // Transform the questions from the box data with safety checks
         const questionsFromBox = boxProgress
           .filter(p => p.questions) // Ensure questions exist
-          .map(p => transformQuestion(p.questions));
+          .map(p => safeTransformQuestion(p.questions))
+          .filter(Boolean) as Question[]; // Filter out null results
           
         console.log(`Loaded ${questionsFromBox.length} questions from box ${boxNumber}`);
         
@@ -97,10 +124,11 @@ export function useLoadQuestions(
         throw new Error('Failed to fetch user progress data');
       }
       
-      // Transform the questions from the progress data
+      // Transform the questions from the progress data with safety checks
       const questionsWithProgress = filteredProgressData
         .filter(p => p.questions) // Ensure questions exist
-        .map(p => transformQuestion(p.questions));
+        .map(p => safeTransformQuestion(p.questions))
+        .filter(Boolean) as Question[]; // Filter out null results
         
       console.log("Questions with progress:", questionsWithProgress.length);
 
@@ -129,10 +157,15 @@ export function useLoadQuestions(
         selectedCategories
       );
 
+      // Safely transform and filter the new questions
+      const transformedNewQuestions = newQuestions
+        .map(safeTransformQuestion)
+        .filter(Boolean) as Question[];
+
       // Combine progress questions and new questions, and limit to batch size
       const allQuestions = [
         ...questionsWithProgress,
-        ...newQuestions.map(transformQuestion)
+        ...transformedNewQuestions
       ].slice(0, batchSize);
       
       console.log("Final questions count:", allQuestions.length);
@@ -147,16 +180,30 @@ export function useLoadQuestions(
       console.error('Error loading questions:', err);
       const resultError = err instanceof Error ? err : new Error('Unknown error loading questions');
       setError(resultError);
-      toast.error("Fehler beim Laden der Karteikarten. Bitte versuche es später erneut.");
+      
+      // Improved error feedback to user
+      const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
+      toast.error(`Fehler beim Laden der Karteikarten: ${errorMessage}. Bitte versuche es später erneut.`);
+      
+      // Retry logic for certain errors (3 attempts maximum)
+      if (retryCount < 3) {
+        console.log(`Retry attempt ${retryCount + 1} of 3`);
+        setRetryCount(prev => prev + 1);
+        // Implement exponential backoff (wait longer between each retry)
+        const retryDelay = Math.pow(2, retryCount) * 1000;
+        setTimeout(() => loadQuestions(), retryDelay);
+      }
+      
       return { questions: [], progressData: [] };
     } finally {
       setLoading(false);
     }
-  }, [userId, category, subcategory, options.practiceMode, regulationCategory, boxNumber, batchSize, selectedCategories]);
+  }, [userId, category, subcategory, options.practiceMode, regulationCategory, boxNumber, batchSize, selectedCategories, retryCount]);
 
   return { 
     loadQuestions,
     loadingQuestions: loading,
-    questionsError: error
+    questionsError: error,
+    retryCount
   };
 }

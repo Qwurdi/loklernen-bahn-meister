@@ -1,5 +1,8 @@
+
+import { useRef, useEffect, memo } from 'react';
 import CardStack from "@/components/flashcards/stack/CardStack";
 import { Question } from "@/types/questions";
+import { useMobileFullscreen } from "@/hooks/use-mobile-fullscreen";
 
 // Define a generic type parameter T that extends Question
 interface CardStackSessionProps<T extends Question = Question> {
@@ -11,8 +14,10 @@ interface CardStackSessionProps<T extends Question = Question> {
   isMobile: boolean;
 }
 
-// Use the generic type parameter in the component definition
-export default function CardStackSession<T extends Question = Question>({
+/**
+ * Optimized CardStackSession component with rendering performance improvements
+ */
+function CardStackSession<T extends Question = Question>({
   sessionCards,
   currentIndex,
   setCurrentIndex,
@@ -20,11 +25,31 @@ export default function CardStackSession<T extends Question = Question>({
   onComplete,
   isMobile
 }: CardStackSessionProps<T>) {
-  // The mobile fullscreen handling is now done in the useMobileFullscreen hook
-  // and managed by the parent component, so we don't need to do it here anymore
+  // Track mounted state to prevent memory leaks
+  const isMounted = useRef(true);
+  
+  // Use our centralized mobile fullscreen hook
+  const { isFullscreenMobile, toggleFullscreen } = useMobileFullscreen(false);
+  
+  // Enable fullscreen mode when component mounts on mobile
+  useEffect(() => {
+    if (isMobile && !isFullscreenMobile) {
+      toggleFullscreen();
+    }
+    
+    // Cleanup function to handle component unmounting
+    return () => {
+      isMounted.current = false;
+      
+      // Exit fullscreen when component unmounts if we're in fullscreen
+      if (isMobile && isFullscreenMobile) {
+        toggleFullscreen();
+      }
+    };
+  }, [isMobile, isFullscreenMobile, toggleFullscreen]);
   
   return (
-    <div className="h-full w-full flex-1 flex flex-col">
+    <div className="h-full w-full flex-1 flex flex-col transform-gpu">
       <CardStack 
         questions={sessionCards}
         onAnswer={onAnswer}
@@ -35,3 +60,6 @@ export default function CardStackSession<T extends Question = Question>({
     </div>
   );
 }
+
+// Export as memoized component to avoid unnecessary re-renders
+export default memo(CardStackSession) as typeof CardStackSession;

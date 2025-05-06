@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuestions } from "@/hooks/useQuestions";
@@ -127,7 +126,7 @@ const QuestionEditorPage: React.FC = () => {
         onSave={handleSubmit}
         onPreview={() => setShowPreviewModal(true)}
         showDuplicateButton={isEditMode}
-        onDuplicate={id && questions ? () => handleDuplicate(id, questions) : undefined}
+        onDuplicate={handleDuplicate}
         onCancel={handleCancel}
       />
       
@@ -195,7 +194,7 @@ const QuestionEditorPage: React.FC = () => {
               questionType={formData.question_type!}
               isSignalQuestion={isSignalQuestion}
               handleAnswerChange={handleAnswerChange}
-              toggleAnswerCorrectness={(index) => toggleAnswerCorrectness(index, formData.question_type!)}
+              toggleAnswerCorrectness={toggleAnswerCorrectness}
               removeAnswer={removeAnswer}
               addAnswer={addAnswer}
             />

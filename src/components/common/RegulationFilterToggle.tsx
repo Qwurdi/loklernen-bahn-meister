@@ -8,7 +8,7 @@ import {
   Tooltip, 
   TooltipContent, 
   TooltipTrigger 
-} from "@radix-ui/react-tooltip";
+} from "@/components/ui/tooltip";
 import { RegulationFilterType } from '@/types/regulation';
 
 interface RegulationFilterToggleProps {

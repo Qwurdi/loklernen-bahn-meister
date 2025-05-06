@@ -6,6 +6,7 @@ import "./styles/main.css";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { TooltipProvider } from "@radix-ui/react-tooltip";
 
 console.log("Main: Starting application initialization");
 
@@ -28,7 +29,9 @@ if (!rootElement) {
       <ErrorBoundary>
         <BrowserRouter>
           <AuthProvider>
-            <App />
+            <TooltipProvider>
+              <App />
+            </TooltipProvider>
           </AuthProvider>
         </BrowserRouter>
       </ErrorBoundary>

@@ -31,7 +31,6 @@ export default function LearningSessionPage() {
     subcategoryParam, 
     regulationParam, 
     boxParam,
-    selectedCategories,
     sessionTitle 
   } = useSessionParams();
 
@@ -39,8 +38,7 @@ export default function LearningSessionPage() {
     category: categoryParam,
     subcategory: subcategoryParam,
     regulation: regulationParam,
-    box: boxParam,
-    selectedCategories
+    box: boxParam
   });
 
   // Pass both category, subcategory and regulation preference to the hook
@@ -58,8 +56,7 @@ export default function LearningSessionPage() {
       practiceMode: false,
       regulationCategory: regulationParam,
       boxNumber: boxParam,
-      batchSize: 15, // Ideal batch size for balance between performance and cognitive load
-      selectedCategories: selectedCategories.length > 0 ? selectedCategories : undefined
+      batchSize: 15 // Ideal batch size for balance between performance and cognitive load
     }
   );
 

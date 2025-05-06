@@ -1,6 +1,5 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -26,19 +25,17 @@ const App = () => {
   console.log("App: Rendering main application structure");
   
   return (
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <UserPreferencesProvider>
-            <TooltipProvider>
-              <AppRoutes />
-              <Toaster />
-              <Sonner />
-            </TooltipProvider>
-          </UserPreferencesProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <UserPreferencesProvider>
+          <TooltipProvider>
+            <AppRoutes />
+            <Toaster />
+            <Sonner />
+          </TooltipProvider>
+        </UserPreferencesProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 };
 

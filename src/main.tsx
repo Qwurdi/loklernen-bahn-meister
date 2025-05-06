@@ -19,13 +19,15 @@ const rootElement = document.getElementById("root");
 if (!rootElement) {
   console.error("Root element not found, cannot mount application");
 } else {
-  console.log("Main: Setting up React application");
+  console.log("Main: Setting up single BrowserRouter instance");
   
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <React.StrictMode>
       <ErrorBoundary>
-        <App />
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
       </ErrorBoundary>
     </React.StrictMode>
   );

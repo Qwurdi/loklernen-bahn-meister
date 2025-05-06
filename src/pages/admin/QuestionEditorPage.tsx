@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuestions } from "@/hooks/useQuestions";
@@ -14,6 +15,7 @@ import { PreviewModal } from "@/components/admin/questions/PreviewModal";
 import { useAutoSave } from "@/hooks/questions/useAutoSave";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { QuestionType } from "@/types/questions";
 
 const QuestionEditorPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -118,6 +120,11 @@ const QuestionEditorPage: React.FC = () => {
     setActiveTab(value);
   };
 
+  // Fixed the type signature to match what AnswersTab expects
+  const handleToggleAnswerCorrectness = (index: number) => {
+    toggleAnswerCorrectness(index, formData.question_type!);
+  };
+
   return (
     <div className="container pb-10">
       <QuestionFormHeader 
@@ -194,7 +201,7 @@ const QuestionEditorPage: React.FC = () => {
               questionType={formData.question_type!}
               isSignalQuestion={isSignalQuestion}
               handleAnswerChange={handleAnswerChange}
-              toggleAnswerCorrectness={toggleAnswerCorrectness}
+              toggleAnswerCorrectness={handleToggleAnswerCorrectness}
               removeAnswer={removeAnswer}
               addAnswer={addAnswer}
             />

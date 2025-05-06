@@ -1,21 +1,14 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Question, QuestionCategory } from '@/types/questions';
+import { Question } from '@/types/questions';
 import { SpacedRepetitionOptions, UserProgress, SpacedRepetitionResult } from './types';
-import { transformQuestion } from './utils';
-import {
-  fetchUserProgress,
-  fetchNewQuestions,
-  fetchPracticeQuestions,
-  fetchQuestionsByBox,
-  updateUserProgress,
-  updateUserStats
-} from './services';
-import { toast } from 'sonner';
+import { useLoadQuestions } from './hooks/useLoadQuestions';
+import { useQuestionUpdates } from './hooks/useQuestionUpdates';
+import { usePendingUpdates } from './hooks/usePendingUpdates';
 
 export function useSpacedRepetition(
-  category: QuestionCategory, 
+  category: string, 
   subcategory?: string,
   options: SpacedRepetitionOptions = {}
 ): SpacedRepetitionResult {
@@ -24,149 +17,52 @@ export function useSpacedRepetition(
   const [dueQuestions, setDueQuestions] = useState<Question[]>([]);
   const [progress, setProgress] = useState<UserProgress[]>([]);
   const [error, setError] = useState<Error | null>(null);
-  const [pendingUpdates, setPendingUpdates] = useState<{questionId: string, score: number}[]>([]);
   
-  // Default to 'all' if regulationCategory is not provided
-  const regulationCategory = options.regulationCategory || "all";
-  const boxNumber = options.boxNumber;
-  const selectedCategories = options.selectedCategories || [];
+  // Use specialized hooks for different concerns
+  const { loadQuestions, loadingQuestions, questionsError } = useLoadQuestions(
+    user?.id, 
+    category, 
+    subcategory, 
+    options
+  );
   
-  // Optimized batch size - ideal for didactic and technical balance
-  const batchSize = options.batchSize || 15; // Default to 15 cards per session
+  const { pendingUpdates, addPendingUpdate, clearPendingUpdates } = usePendingUpdates();
   
-  // Move loadDueQuestions to useCallback to avoid recreation on every render
-  const loadDueQuestions = useCallback(async () => {
-    if (!user) {
-      setLoading(false);
-      setDueQuestions([]);
-      return;
-    }
-    
-    try {
-      setLoading(true);
-      setError(null);
-      console.log(`Loading questions with category=${category}, subcategory=${subcategory}, regulation=${regulationCategory}, practice=${options.practiceMode}, selectedCategories=${selectedCategories?.join(',')}`);
-
-      // Handle practice mode differently - just load questions without checking if they're due
-      if (options.practiceMode) {
-        const practiceQuestions = await fetchPracticeQuestions(
-          category, 
-          subcategory, 
-          regulationCategory, 
-          batchSize,
-          selectedCategories
-        );
-        
-        if (!practiceQuestions || practiceQuestions.length === 0) {
-          console.log('No practice questions found');
-          toast.error("Keine Übungsfragen gefunden. Bitte wähle eine andere Kategorie.");
-        }
-        
-        setDueQuestions(practiceQuestions || []);
-        setLoading(false);
-        return;
-      }
-      
-      // If a specific box is requested, only fetch questions from that box
-      if (boxNumber !== undefined) {
-        const boxProgress = await fetchQuestionsByBox(
-          user.id, 
-          boxNumber, 
-          regulationCategory,
-          selectedCategories
-        );
-        
-        // Transform the questions from the box data
-        const questionsFromBox = boxProgress
-          .filter(p => p.questions) // Ensure questions exist
-          .map(p => transformQuestion(p.questions));
-          
-        console.log(`Loaded ${questionsFromBox.length} questions from box ${boxNumber}`);
-        
-        if (questionsFromBox.length === 0) {
-          console.log(`No questions found in box ${boxNumber}`);
-          toast.info(`Keine Karten in Box ${boxNumber} gefunden.`);
-        }
-        
-        setDueQuestions(questionsFromBox);
-        setProgress(boxProgress);
-        setLoading(false);
-        return;
-      }
-      
-      // Regular spaced repetition mode - now with support for selected categories
-      const filteredProgressData = await fetchUserProgress(
-        user.id, 
-        category, 
-        subcategory, 
-        regulationCategory,
-        selectedCategories
-      );
-      
-      if (!filteredProgressData) {
-        throw new Error('Failed to fetch user progress data');
-      }
-      
-      // Transform the questions from the progress data
-      const questionsWithProgress = filteredProgressData
-        .filter(p => p.questions) // Ensure questions exist
-        .map(p => transformQuestion(p.questions));
-        
-      console.log("Questions with progress:", questionsWithProgress.length);
-
-      // If we have enough questions with progress, no need to fetch new ones
-      if (questionsWithProgress.length >= batchSize) {
-        setDueQuestions(questionsWithProgress.slice(0, batchSize));
-        setProgress(filteredProgressData);
-        setLoading(false);
-        return;
-      }
-
-      // Otherwise, fetch new questions (those without progress)
-      // Get the IDs of questions that already have progress
-      const questionIdsWithProgress = filteredProgressData
-        .filter(p => p.questions?.id)
-        .map(p => p.question_id);
-        
-      console.log("Question IDs with progress:", questionIdsWithProgress.length);
-
-      const newQuestions = await fetchNewQuestions(
-        category, 
-        subcategory, 
-        regulationCategory, 
-        questionIdsWithProgress, 
-        batchSize,
-        selectedCategories
-      );
-
-      // Combine progress questions and new questions, and limit to batch size
-      const allQuestions = [
-        ...questionsWithProgress,
-        ...newQuestions.map(transformQuestion)
-      ].slice(0, batchSize);
-      
-      console.log("Final questions count:", allQuestions.length);
-      
-      if (allQuestions.length === 0) {
-        console.log('No questions found');
-        toast.info("Keine Karteikarten für diese Kategorie gefunden.");
-      }
-      
-      setDueQuestions(allQuestions);
-      setProgress(filteredProgressData);
-    } catch (error) {
-      console.error('Error loading questions:', error);
-      setError(error instanceof Error ? error : new Error('Unknown error loading questions'));
-      toast.error("Fehler beim Laden der Karteikarten. Bitte versuche es später erneut.");
-    } finally {
-      setLoading(false);
-    }
-  }, [user, category, subcategory, options.practiceMode, regulationCategory, boxNumber, batchSize, selectedCategories]);
-
+  const { submitAnswer: submitQuestionUpdate } = useQuestionUpdates(user?.id);
+  
   // Load questions when component mounts or dependencies change
   useEffect(() => {
-    loadDueQuestions();
-  }, [loadDueQuestions]);
+    const fetchQuestions = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        if (!user) {
+          setDueQuestions([]);
+          setProgress([]);
+          return;
+        }
+        
+        const { questions, progressData } = await loadQuestions();
+        
+        setDueQuestions(questions);
+        setProgress(progressData);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Unknown error loading questions'));
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchQuestions();
+  }, [user, loadQuestions]);
+  
+  // Update error state from child hooks
+  useEffect(() => {
+    if (questionsError) {
+      setError(questionsError);
+    }
+  }, [questionsError]);
 
   // Submit answer without immediate reload
   const submitAnswer = async (questionId: string, score: number) => {
@@ -174,27 +70,18 @@ export function useSpacedRepetition(
 
     try {
       // Add to pending updates
-      setPendingUpdates(prev => [...prev, {questionId, score}]);
+      addPendingUpdate(questionId, score);
       
       const currentProgress = progress.find(p => p.question_id === questionId);
       
       // Update progress in the background, don't await the result
-      updateUserProgress(user.id, questionId, score, currentProgress)
+      submitQuestionUpdate(questionId, score, currentProgress)
         .catch(err => {
           console.error('Background update error:', err);
-          toast.error("Fehler beim Speichern des Fortschritts.");
         });
-      
-      // Update stats in the background, don't await the result
-      updateUserStats(user.id, score)
-        .catch(err => {
-          console.error('Background stats update error:', err);
-        });
-        
     } catch (error) {
       console.error('Error submitting answer:', error);
       setError(error instanceof Error ? error : new Error('Unknown error submitting answer'));
-      toast.error("Fehler beim Speichern der Antwort.");
     }
   };
 
@@ -207,31 +94,49 @@ export function useSpacedRepetition(
       // Ensure all updates are complete
       for (const {questionId, score} of pendingUpdates) {
         const currentProgress = progress.find(p => p.question_id === questionId);
-        await updateUserProgress(user.id, questionId, score, currentProgress);
+        await submitQuestionUpdate(questionId, score, currentProgress);
       }
       
       // Clear pending updates
-      setPendingUpdates([]);
+      clearPendingUpdates();
       
       // Reload questions
-      await loadDueQuestions();
+      const { questions, progressData } = await loadQuestions();
+      setDueQuestions(questions);
+      setProgress(progressData);
     } catch (error) {
       console.error('Error applying updates:', error);
       setError(error instanceof Error ? error : new Error('Unknown error applying updates'));
-      toast.error("Fehler beim Aktualisieren des Lernfortschritts.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Reload questions function
+  const reloadQuestions = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const { questions, progressData } = await loadQuestions();
+      setDueQuestions(questions);
+      setProgress(progressData);
+    } catch (error) {
+      console.error('Error reloading questions:', error);
+      setError(error instanceof Error ? error : new Error('Unknown error reloading questions'));
     } finally {
       setLoading(false);
     }
   };
 
   return {
-    loading,
+    loading: loading || loadingQuestions,
     error,
     dueQuestions,
     progress,
     submitAnswer,
     pendingUpdatesCount: pendingUpdates.length,
     applyPendingUpdates,
-    reloadQuestions: loadDueQuestions
+    reloadQuestions
   };
 }

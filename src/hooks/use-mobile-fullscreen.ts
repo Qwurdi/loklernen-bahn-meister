@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useIsMobile } from './use-mobile';
 
 /**
@@ -8,10 +8,16 @@ import { useIsMobile } from './use-mobile';
  */
 export function useMobileFullscreen(enabled = true) {
   const isMobile = useIsMobile();
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  
+  // Toggle fullscreen state
+  const toggleFullscreen = () => {
+    setIsFullscreen(prev => !prev);
+  };
   
   useEffect(() => {
-    // Only apply these changes on mobile devices when enabled
-    if (!isMobile || !enabled) return;
+    // Only apply these changes on mobile devices when enabled and fullscreen is active
+    if (!isMobile || !enabled || !isFullscreen) return;
     
     // Store original styles to restore them later
     const originalBodyStyle = document.body.style.overflow;
@@ -34,7 +40,10 @@ export function useMobileFullscreen(enabled = true) {
         'w-full'
       );
     };
-  }, [isMobile, enabled]); // Only re-run if mobile status or enabled flag changes
+  }, [isMobile, enabled, isFullscreen]); // Only re-run if mobile status, enabled flag, or fullscreen state changes
 
-  return { isFullscreenMobile: isMobile && enabled };
+  return { 
+    isFullscreenMobile: isMobile && enabled && isFullscreen,
+    toggleFullscreen
+  };
 }

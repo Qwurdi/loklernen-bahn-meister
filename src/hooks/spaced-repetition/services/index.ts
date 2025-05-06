@@ -7,7 +7,7 @@ export {
   fetchQuestionsByBox
 } from './questions';
 
-// Export all functions from user-progress.ts except fetchQuestionsByBox
+// Export all functions from user-progress.ts
 export {
   updateUserProgress,
   updateUserStats

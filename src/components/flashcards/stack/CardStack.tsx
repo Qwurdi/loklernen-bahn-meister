@@ -15,7 +15,7 @@ interface CardStackProps<T extends Question = Question> {
   setCurrentIndex: (index: number) => void;
 }
 
-// Add the generic type parameter to the component and memoize it
+// Add the generic type parameter to the component
 const CardStack = <T extends Question = Question>({ 
   questions, 
   onAnswer, 
@@ -25,26 +25,34 @@ const CardStack = <T extends Question = Question>({
 }: CardStackProps<T>) => {
   const [direction, setDirection] = useState<'left' | 'right' | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
   const stackRef = useRef<HTMLDivElement>(null);
 
   // Preload the next few images
   useEffect(() => {
-    // Preload the next 3 cards' images (if they exist)
-    const preloadImages = () => {
-      for (let i = 1; i <= 3; i++) {
-        const preloadIndex = currentIndex + i;
-        if (preloadIndex < questions.length) {
-          const nextQuestion = questions[preloadIndex];
-          if (nextQuestion.image_url) {
-            const img = new Image();
-            img.src = nextQuestion.image_url;
-          }
-        }
-      }
+    // Track which images have already been loaded
+    const loadImage = (url: string) => {
+      // Skip if already loaded or no URL
+      if (!url || loadedImages.has(url)) return;
+      
+      const img = new Image();
+      img.onload = () => {
+        setLoadedImages(prev => new Set(prev).add(url));
+      };
+      img.src = url;
     };
     
-    preloadImages();
-  }, [currentIndex, questions]);
+    // Preload current and next 3 cards' images (if they exist)
+    for (let i = 0; i < 4; i++) {
+      const preloadIndex = currentIndex + i;
+      if (preloadIndex < questions.length) {
+        const question = questions[preloadIndex];
+        if (question.image_url) {
+          loadImage(question.image_url);
+        }
+      }
+    }
+  }, [currentIndex, questions, loadedImages]);
 
   // Memoize handleSwipe to prevent unnecessary recreation
   const handleSwipe = useCallback(async (direction: 'left' | 'right') => {
@@ -79,7 +87,7 @@ const CardStack = <T extends Question = Question>({
   }, [currentIndex, questions, onAnswer, onComplete, setCurrentIndex, isAnimating]);
 
   // If no questions are available
-  if (questions.length === 0) {
+  if (!questions || questions.length === 0) {
     return <EmptyStackMessage />;
   }
 
@@ -101,7 +109,7 @@ const CardStack = <T extends Question = Question>({
       />
       
       <div className="cards-wrapper h-full w-full flex items-center justify-center pt-8 pb-16">
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence mode="wait">
           {/* Next card in stack (shown partially underneath) */}
           {hasNextCard && !isAnimating && (
             <motion.div 

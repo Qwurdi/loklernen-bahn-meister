@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Question, QuestionCategory } from '@/types/questions';
@@ -11,6 +12,7 @@ import {
   updateUserProgress,
   updateUserStats
 } from './services';
+import { toast } from 'sonner';
 
 export function useSpacedRepetition(
   category: QuestionCategory, 
@@ -43,7 +45,7 @@ export function useSpacedRepetition(
     try {
       setLoading(true);
       setError(null);
-      console.log(`Loading questions with category=${category}, subcategory=${subcategory}, regulation=${regulationCategory}, practice=${options.practiceMode}, selectedCategories=${selectedCategories.join(',')}`);
+      console.log(`Loading questions with category=${category}, subcategory=${subcategory}, regulation=${regulationCategory}, practice=${options.practiceMode}, selectedCategories=${selectedCategories?.join(',')}`);
 
       // Handle practice mode differently - just load questions without checking if they're due
       if (options.practiceMode) {
@@ -54,7 +56,13 @@ export function useSpacedRepetition(
           batchSize,
           selectedCategories
         );
-        setDueQuestions(practiceQuestions);
+        
+        if (!practiceQuestions || practiceQuestions.length === 0) {
+          console.log('No practice questions found');
+          toast.error("Keine Übungsfragen gefunden. Bitte wähle eine andere Kategorie.");
+        }
+        
+        setDueQuestions(practiceQuestions || []);
         setLoading(false);
         return;
       }
@@ -75,6 +83,11 @@ export function useSpacedRepetition(
           
         console.log(`Loaded ${questionsFromBox.length} questions from box ${boxNumber}`);
         
+        if (questionsFromBox.length === 0) {
+          console.log(`No questions found in box ${boxNumber}`);
+          toast.info(`Keine Karten in Box ${boxNumber} gefunden.`);
+        }
+        
         setDueQuestions(questionsFromBox);
         setProgress(boxProgress);
         setLoading(false);
@@ -89,6 +102,10 @@ export function useSpacedRepetition(
         regulationCategory,
         selectedCategories
       );
+      
+      if (!filteredProgressData) {
+        throw new Error('Failed to fetch user progress data');
+      }
       
       // Transform the questions from the progress data
       const questionsWithProgress = filteredProgressData
@@ -129,21 +146,29 @@ export function useSpacedRepetition(
       ].slice(0, batchSize);
       
       console.log("Final questions count:", allQuestions.length);
+      
+      if (allQuestions.length === 0) {
+        console.log('No questions found');
+        toast.info("Keine Karteikarten für diese Kategorie gefunden.");
+      }
+      
       setDueQuestions(allQuestions);
       setProgress(filteredProgressData);
     } catch (error) {
       console.error('Error loading questions:', error);
       setError(error instanceof Error ? error : new Error('Unknown error loading questions'));
+      toast.error("Fehler beim Laden der Karteikarten. Bitte versuche es später erneut.");
     } finally {
       setLoading(false);
     }
   }, [user, category, subcategory, options.practiceMode, regulationCategory, boxNumber, batchSize, selectedCategories]);
 
+  // Load questions when component mounts or dependencies change
   useEffect(() => {
     loadDueQuestions();
   }, [loadDueQuestions]);
 
-  // New function - Submit answer without immediate reload
+  // Submit answer without immediate reload
   const submitAnswer = async (questionId: string, score: number) => {
     if (!user) return;
 
@@ -155,15 +180,21 @@ export function useSpacedRepetition(
       
       // Update progress in the background, don't await the result
       updateUserProgress(user.id, questionId, score, currentProgress)
-        .catch(err => console.error('Background update error:', err));
+        .catch(err => {
+          console.error('Background update error:', err);
+          toast.error("Fehler beim Speichern des Fortschritts.");
+        });
       
       // Update stats in the background, don't await the result
       updateUserStats(user.id, score)
-        .catch(err => console.error('Background stats update error:', err));
+        .catch(err => {
+          console.error('Background stats update error:', err);
+        });
         
     } catch (error) {
       console.error('Error submitting answer:', error);
       setError(error instanceof Error ? error : new Error('Unknown error submitting answer'));
+      toast.error("Fehler beim Speichern der Antwort.");
     }
   };
 
@@ -187,6 +218,7 @@ export function useSpacedRepetition(
     } catch (error) {
       console.error('Error applying updates:', error);
       setError(error instanceof Error ? error : new Error('Unknown error applying updates'));
+      toast.error("Fehler beim Aktualisieren des Lernfortschritts.");
     } finally {
       setLoading(false);
     }

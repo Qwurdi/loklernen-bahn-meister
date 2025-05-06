@@ -14,6 +14,7 @@ import SessionCompleteState from "@/components/learning-session/SessionCompleteS
 import CardStackSession from "@/components/learning-session/CardStackSession";
 import { Question } from "@/types/questions";
 import { useMobileFullscreen } from "@/hooks/use-mobile-fullscreen";
+import { Shield } from "lucide-react";
 
 export default function LearningSessionPage() {
   console.log("LearningSessionPage: Initializing component");
@@ -24,10 +25,8 @@ export default function LearningSessionPage() {
   const [correctCount, setCorrectCount] = useState(0);
   const [sessionCards, setSessionCards] = useState<Question[]>([]);
   const [sessionFinished, setSessionFinished] = useState(false);
+  const [isFirstLoaded, setIsFirstLoaded] = useState(false);
   const isMobile = useIsMobile();
-  
-  // Use our centralized mobile fullscreen hook
-  const { isFullscreenMobile } = useMobileFullscreen(true);
   
   // Get session parameters from URL
   const { 
@@ -48,9 +47,9 @@ export default function LearningSessionPage() {
   });
 
   // Pass both category, subcategory and regulation preference to the hook
-  // Use optimized batch size of 15 cards per session
   const { 
     loading, 
+    error,
     dueQuestions, 
     submitAnswer, 
     applyPendingUpdates, 
@@ -62,7 +61,7 @@ export default function LearningSessionPage() {
       practiceMode: false,
       regulationCategory: regulationParam,
       boxNumber: boxParam,
-      batchSize: 15, // Ideal batch size for balance between performance and cognitive load
+      batchSize: 15,
       selectedCategories: selectedCategories.length > 0 ? selectedCategories : undefined
     }
   );
@@ -75,8 +74,17 @@ export default function LearningSessionPage() {
       // Shuffle the cards to create a mixed learning session
       const shuffled = [...dueQuestions].sort(() => Math.random() - 0.5);
       setSessionCards(shuffled);
+      setIsFirstLoaded(true);
     }
   }, [loading, dueQuestions]);
+
+  // Show error state if needed
+  useEffect(() => {
+    if (!loading && error) {
+      toast.error("Es ist ein Fehler beim Laden der Karten aufgetreten. Bitte versuche es später erneut.");
+      console.error("Error in learning session:", error);
+    }
+  }, [loading, error]);
 
   // Memoize the answer handler
   const handleAnswer = useCallback(async (questionId: string, score: number) => {
@@ -111,19 +119,52 @@ export default function LearningSessionPage() {
     setSessionFinished(false);
     
     // Reset will shuffle cards again
-    if (dueQuestions.length > 0) {
+    if (dueQuestions && dueQuestions.length > 0) {
       const shuffled = [...dueQuestions].sort(() => Math.random() - 0.5);
       setSessionCards(shuffled);
     }
   }, [applyPendingUpdates, dueQuestions]);
 
+  // Handle cases when not logged in but trying to access learning features that require login
+  const requiresLoginButNotLoggedIn = !user && !loading && !sessionCards.length;
+  
+  if (requiresLoginButNotLoggedIn) {
+    return (
+      <SessionContainer isMobile={isMobile}>
+        <div className="container px-4 py-8 flex flex-col items-center justify-center min-h-[60vh]">
+          <div className="bg-amber-100 rounded-full p-4 mb-4">
+            <Shield size={48} className="text-amber-600" />
+          </div>
+          <h2 className="text-xl font-bold mb-2 text-center">Login erforderlich</h2>
+          <p className="text-gray-600 mb-6 text-center">
+            Um deinen Lernfortschritt zu speichern, melde dich bitte an oder erstelle ein Konto.
+          </p>
+          <div className="flex gap-4">
+            <button 
+              onClick={() => navigate('/login')}
+              className="px-4 py-2 bg-loklernen-ultramarine text-white rounded-md hover:bg-loklernen-sapphire"
+            >
+              Anmelden
+            </button>
+            <button 
+              onClick={() => navigate('/karteikarten')}
+              className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100"
+            >
+              Zurück
+            </button>
+          </div>
+        </div>
+      </SessionContainer>
+    );
+  }
+
   // Render loading state
-  if (loading) {
+  if (loading || (!isFirstLoaded && !sessionCards.length)) {
     return <FlashcardLoadingState />;
   }
 
   // Render empty state when no cards are available
-  if (!sessionCards.length) {
+  if (!loading && !sessionCards.length) {
     return (
       <SessionContainer isMobile={isMobile}>
         <EmptySessionState categoryParam={categoryParam} />
@@ -145,7 +186,7 @@ export default function LearningSessionPage() {
     );
   }
 
-  // Render main learning session UI with our new card stack
+  // Render main learning session UI with our card stack
   return (
     <SessionContainer isMobile={isMobile} fullHeight={isMobile}>
       <main className={`flex-1 ${isMobile ? 'px-0 pt-2 pb-16 overflow-hidden flex flex-col' : 'container px-4 py-8'}`}>

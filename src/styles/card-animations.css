@@ -56,3 +56,41 @@
 .animate-glow-pulse {
   animation: glow-pulse 2s ease-in-out infinite;
 }
+
+/* Optimize animation performance */
+.hardware-accelerated {
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  -o-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Fix for flashing content during animation */
+.backface-visibility-hidden {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Fade in animation for UI elements */
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease forwards;
+}
+
+/* Prevent animation flickering */
+.gpu-accelerated {
+  transform: translate3d(0,0,0);
+  -webkit-font-smoothing: antialiased;
+}

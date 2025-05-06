@@ -61,12 +61,7 @@ export function useSpacedRepetition(
       
       // If a specific box is requested, only fetch questions from that box
       if (boxNumber !== undefined) {
-        const boxProgress = await fetchQuestionsByBox(
-          user.id, 
-          boxNumber, 
-          regulationCategory,
-          selectedCategories
-        );
+        const boxProgress = await fetchQuestionsByBox(user.id, boxNumber);
         
         // Transform the questions from the box data
         const questionsFromBox = boxProgress

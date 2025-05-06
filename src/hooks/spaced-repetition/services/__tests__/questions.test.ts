@@ -1,10 +1,6 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { 
-  fetchUserProgress, 
-  fetchNewQuestions, 
-  fetchPracticeQuestions 
-} from '../questions';
+import { fetchUserProgress, fetchNewQuestions, fetchPracticeQuestions } from '../questions';
 import { supabase } from '@/integrations/supabase/client';
 import { transformQuestion } from '../../utils';
 
@@ -34,12 +30,6 @@ vi.mock('@/integrations/supabase/client', () => ({
         limit: vi.fn(() => ({
           data: [],
           error: null
-        })),
-        in: vi.fn(() => ({
-          limit: vi.fn(() => ({
-            data: [],
-            error: null
-          }))
         }))
       }))
     }))

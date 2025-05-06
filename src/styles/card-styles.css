@@ -1,75 +1,126 @@
 
 /* ===== Card Styles ===== */
 
-/* Base card styles with hardware acceleration */
-.flashcard-item {
-  will-change: transform;
-  transform: translateZ(0);
-  -webkit-font-smoothing: subpixel-antialiased;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+/* Basic card styles */
+.card-white {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease-out;
 }
 
-/* Better transition performance by using transform instead of opacity */
-.card-face {
-  will-change: transform;
-  transition-property: transform, opacity;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transform-style: preserve-3d;
+.card-white:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
-/* Fix for jumpy animations on mobile */
-.transform-gpu {
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  will-change: transform;
+/* Enhanced card styles with new color system */
+.card-glow {
+  box-shadow: 0 0 15px rgba(63, 0, 255, 0.2);
+  transition: box-shadow 0.3s ease;
 }
 
-/* Forced hardware acceleration for card animations */
-.card-with-inertia {
-  transform: translate3d(0, 0, 0);
-  -webkit-transform: translate3d(0, 0, 0);
-  will-change: transform;
+.card-glow:hover {
+  box-shadow: 0 0 25px rgba(63, 0, 255, 0.3);
 }
 
-/* Prevent text layout shifts */
-.text-container {
-  overflow-wrap: break-word;
-  word-break: break-word;
-  hyphens: auto;
+/* Glass effects for card backgrounds */
+.glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(80, 128, 255, 0.2);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(63, 0, 255, 0.08);
+  transition: all 0.3s ease;
 }
 
-/* Prevent flickering on animations */
-.anti-flicker {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000;
-  -webkit-font-smoothing: antialiased;
+.glass-card:hover {
+  border-color: rgba(63, 0, 255, 0.3);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 2px 12px rgba(63, 0, 255, 0.12);
 }
 
-/* Card stack exit animations */
-@keyframes swipe-left {
-  from {
-    transform: translateX(0) rotate(0deg);
-  }
-  to {
-    transform: translateX(-200%) rotate(-20deg);
-  }
+.glass-card-active {
+  background: rgba(25, 25, 30, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(63, 0, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
 
-@keyframes swipe-right {
-  from {
-    transform: translateX(0) rotate(0deg);
-  }
-  to {
-    transform: translateX(200%) rotate(20deg);
-  }
+.enhanced-glass-card {
+  background: rgba(15, 15, 15, 0.65);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.15),
+    0 2px 8px rgba(63, 0, 255, 0.05);
+  transition: all 0.3s ease;
 }
 
-.animate-swipe-left {
-  animation: swipe-left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+.enhanced-glass-card:hover {
+  border-color: rgba(63, 0, 255, 0.25);
+  box-shadow: 
+    0 12px 36px rgba(0, 0, 0, 0.18),
+    0 4px 12px rgba(63, 0, 255, 0.08);
+  transform: translateY(-2px);
 }
 
-.animate-swipe-right {
-  animation: swipe-right 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+.enhanced-mini-card {
+  background: rgba(20, 20, 25, 0.8);
+  backdrop-filter: blur(8px);
+  transition: all 0.25s ease;
+}
+
+.enhanced-mini-card:hover {
+  transform: translateY(-2px) scale(1.05);
+  background: rgba(25, 25, 30, 0.85);
+  backdrop-filter: blur(12px);
+}
+
+.glass-light {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Dark card styles */
+.dark-card {
+  background: #1a1a1a;
+  border: 1px solid #444;
+  color: #fff;
+}
+
+.dark-card-content {
+  background: #2a2a2a;
+  border: 1px solid #444;
+}
+
+/* Enhanced card border glow effects with trend colors */
+.card-border-glow {
+  border: 1px solid rgba(63, 0, 255, 0.2);
+  box-shadow: 
+    0 0 5px rgba(63, 0, 255, 0.1),
+    0 0 10px rgba(63, 0, 255, 0.05) inset;
+  transition: all 0.3s ease;
+}
+
+.card-border-glow:hover {
+  border-color: rgba(80, 128, 255, 0.4);
+  box-shadow: 
+    0 0 10px rgba(63, 0, 255, 0.2),
+    0 0 15px rgba(80, 128, 255, 0.1) inset;
+}
+
+/* Enhanced card visibility for dark backgrounds */
+.card-on-dark {
+  background: linear-gradient(145deg, rgba(25, 25, 30, 0.8) 0%, rgba(15, 15, 20, 0.9) 100%);
+  border: 1px solid rgba(80, 128, 255, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.card-header-on-dark {
+  background-color: rgba(20, 20, 25, 0.8);
+  border-bottom: 1px solid rgba(80, 128, 255, 0.1);
 }

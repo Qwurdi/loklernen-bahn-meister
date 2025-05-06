@@ -5,6 +5,7 @@ import App from "./App";
 import "./styles/main.css";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 import { BrowserRouter } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
 
 console.log("Main: Starting application initialization");
 
@@ -26,7 +27,9 @@ if (!rootElement) {
     <React.StrictMode>
       <ErrorBoundary>
         <BrowserRouter>
-          <App />
+          <AuthProvider>
+            <App />
+          </AuthProvider>
         </BrowserRouter>
       </ErrorBoundary>
     </React.StrictMode>

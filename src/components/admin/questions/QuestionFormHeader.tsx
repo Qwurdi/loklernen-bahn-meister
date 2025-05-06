@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Eye, Copy } from "lucide-react";
+import { ArrowLeft, Save, Eye, Copy, X } from "lucide-react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
 interface QuestionFormHeaderProps {
@@ -11,6 +11,7 @@ interface QuestionFormHeaderProps {
   onSave: (e: React.FormEvent) => void;
   onPreview?: () => void;
   onDuplicate?: () => void;
+  onCancel?: () => void;
   showDuplicateButton?: boolean;
 }
 
@@ -20,6 +21,7 @@ export const QuestionFormHeader = ({
   onSave,
   onPreview,
   onDuplicate,
+  onCancel,
   showDuplicateButton = false
 }: QuestionFormHeaderProps) => {
   return (
@@ -46,18 +48,29 @@ export const QuestionFormHeader = ({
       
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Link to="/admin/questions">
-            <Button variant="outline" size="icon">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
+          <Button variant="outline" size="icon" onClick={onCancel} type="button">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
           <h1 className="text-2xl font-bold">{isEditMode ? "Frage bearbeiten" : "Neue Frage erstellen"}</h1>
         </div>
         <div className="flex items-center gap-2">
+          {onCancel && (
+            <Button 
+              variant="outline" 
+              onClick={onCancel}
+              type="button"
+              className="flex items-center gap-2"
+            >
+              <X className="h-4 w-4" />
+              Abbrechen
+            </Button>
+          )}
+        
           {onPreview && (
             <Button 
               variant="outline" 
               onClick={onPreview}
+              type="button"
             >
               <Eye className="mr-2 h-4 w-4" />
               Vorschau
@@ -68,6 +81,7 @@ export const QuestionFormHeader = ({
             <Button 
               variant="outline" 
               onClick={onDuplicate}
+              type="button"
             >
               <Copy className="mr-2 h-4 w-4" />
               Duplizieren
@@ -78,6 +92,7 @@ export const QuestionFormHeader = ({
             variant="default" 
             onClick={(e) => onSave(e)}
             disabled={isLoading}
+            type="button"
           >
             <Save className="mr-2 h-4 w-4" />
             {isLoading ? "Speichern..." : "Speichern"}

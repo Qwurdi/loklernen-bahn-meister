@@ -1,11 +1,11 @@
 
+import { useState } from "react";
 import { CreateQuestionDTO } from "@/types/questions";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadQuestionImage, createQuestion } from "@/api/questions";
 import { toast } from "sonner";
 import { Json } from "@/integrations/supabase/types";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export const useQuestionSubmit = () => {
@@ -32,25 +32,52 @@ export const useQuestionSubmit = () => {
         return;
       }
       
-      let finalImageUrl = formData.image_url;
-      if (imageFile) {
-        finalImageUrl = await uploadQuestionImage(imageFile, userId);
+      // Validate form data
+      if (!formData.category || !formData.sub_category || !formData.question_type || !formData.text) {
+        toast.error("Bitte füllen Sie alle Pflichtfelder aus.");
+        return;
       }
       
+      // Validate answers
+      if (!formData.answers || !Array.isArray(formData.answers) || formData.answers.length === 0) {
+        toast.error("Bitte geben Sie mindestens eine Antwort ein.");
+        return;
+      }
+      
+      let finalImageUrl = formData.image_url;
+      if (imageFile) {
+        try {
+          toast.info("Bild wird hochgeladen...");
+          finalImageUrl = await uploadQuestionImage(imageFile, userId);
+        } catch (imageError) {
+          console.error("Error uploading image:", imageError);
+          toast.error("Fehler beim Hochladen des Bildes. Die Frage wird ohne Bild gespeichert.");
+          finalImageUrl = null;
+        }
+      }
+      
+      // Sanitize answer data to ensure it's correctly formatted
+      const sanitizedAnswers = formData.answers.map(answer => ({
+        text: answer.text || "",
+        isCorrect: typeof answer.isCorrect === 'boolean' ? answer.isCorrect : false
+      }));
+      
       const questionData: CreateQuestionDTO = {
-        category: formData.category!,
-        sub_category: formData.sub_category!,
-        question_type: formData.question_type!,
-        difficulty: formData.difficulty!,
-        text: formData.text!,
+        category: formData.category,
+        sub_category: formData.sub_category,
+        question_type: formData.question_type,
+        difficulty: formData.difficulty || 1,
+        text: formData.text,
         image_url: finalImageUrl,
-        answers: formData.answers!,
+        answers: sanitizedAnswers,
         created_by: userId,
         regulation_category: formData.category === "Signale" ? formData.regulation_category : undefined
       };
       
       if (isEditMode && id) {
-        const supabaseAnswers: Json = formData.answers!.map(answer => ({
+        toast.info("Frage wird aktualisiert...");
+        
+        const supabaseAnswers: Json = sanitizedAnswers.map(answer => ({
           text: answer.text,
           isCorrect: answer.isCorrect
         }));
@@ -77,6 +104,8 @@ export const useQuestionSubmit = () => {
         
         toast.success("Frage erfolgreich aktualisiert!");
       } else {
+        toast.info("Frage wird erstellt...");
+        
         await createQuestion(questionData);
         
         // Invalidate cache for all questions
@@ -85,11 +114,12 @@ export const useQuestionSubmit = () => {
         toast.success("Frage erfolgreich erstellt!");
       }
       
+      // Navigate back to questions list
       navigate("/admin/questions");
       
     } catch (error) {
       console.error("Error saving question:", error);
-      toast.error("Fehler beim Speichern der Frage. Bitte versuchen Sie es später noch einmal.");
+      toast.error(`Fehler beim Speichern der Frage: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
     } finally {
       setIsLoading(false);
     }

@@ -6,14 +6,20 @@ import { FileText, ListChecks, Settings } from "lucide-react";
 interface EditorTabsProps {
   children: React.ReactNode;
   defaultValue?: string;
+  onValueChange?: (value: string) => void;
 }
 
 export const EditorTabs: React.FC<EditorTabsProps> = ({ 
   children, 
-  defaultValue = "basics" 
+  defaultValue = "basics",
+  onValueChange
 }) => {
   return (
-    <Tabs defaultValue={defaultValue} className="w-full">
+    <Tabs 
+      defaultValue={defaultValue} 
+      className="w-full" 
+      onValueChange={onValueChange}
+    >
       <TabsList className="grid w-full grid-cols-3 mb-6">
         <TabsTrigger value="basics" className="flex items-center gap-2">
           <Settings className="h-4 w-4" />

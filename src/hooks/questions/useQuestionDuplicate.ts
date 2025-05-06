@@ -12,8 +12,13 @@ export const useQuestionDuplicate = () => {
   const queryClient = useQueryClient();
 
   const handleDuplicate = async (id: string, questions: Question[] | undefined) => {
-    if (!id || !questions) {
-      toast.error("Keine Frage zum Duplizieren gefunden.");
+    if (!id) {
+      toast.error("Keine Frage-ID zum Duplizieren angegeben.");
+      return;
+    }
+    
+    if (!questions || !Array.isArray(questions)) {
+      toast.error("Fragen konnten nicht geladen werden.");
       return;
     }
     
@@ -27,7 +32,16 @@ export const useQuestionDuplicate = () => {
         throw new Error("Frage zum Duplizieren nicht gefunden.");
       }
       
-      const duplicatedQuestion = await duplicateQuestion(originalQuestion);
+      // Create safe copy of question to avoid reference issues
+      const questionCopy = {
+        ...originalQuestion,
+        answers: originalQuestion.answers.map(a => ({ 
+          text: a.text || "", 
+          isCorrect: typeof a.isCorrect === 'boolean' ? a.isCorrect : false 
+        }))
+      };
+      
+      const duplicatedQuestion = await duplicateQuestion(questionCopy);
       
       // Invalidate cache to make sure the new question appears in the list
       await queryClient.invalidateQueries({ queryKey: ['questions'] });
@@ -36,7 +50,7 @@ export const useQuestionDuplicate = () => {
       navigate(`/admin/questions/edit/${duplicatedQuestion.id}`);
     } catch (error) {
       console.error("Error duplicating question:", error);
-      toast.error("Fehler beim Duplizieren der Frage.");
+      toast.error("Fehler beim Duplizieren der Frage: " + (error instanceof Error ? error.message : "Unbekannter Fehler"));
     } finally {
       setIsLoading(false);
     }

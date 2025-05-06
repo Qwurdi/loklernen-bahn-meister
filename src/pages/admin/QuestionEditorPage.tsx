@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useQuestions } from "@/hooks/useQuestions";
 import { useQuestionForm } from "@/hooks/useQuestionForm";
 import { QuestionFormHeader } from "@/components/admin/questions/QuestionFormHeader";
@@ -10,10 +10,11 @@ import { ContentTab } from "@/components/admin/questions/ContentTab";
 import { AnswersTab } from "@/components/admin/questions/AnswersTab";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Save } from "lucide-react";
 import { PreviewModal } from "@/components/admin/questions/PreviewModal";
 import { useAutoSave } from "@/hooks/questions/useAutoSave";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 const QuestionEditorPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +22,8 @@ const QuestionEditorPage: React.FC = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [showDraftDialog, setShowDraftDialog] = useState(false);
   const [draftData, setDraftData] = useState<any>(null);
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("basics");
   
   const {
     isEditMode,
@@ -40,6 +43,7 @@ const QuestionEditorPage: React.FC = () => {
     addAnswer,
     removeAnswer,
     handleSubmit,
+    handleDuplicate,
     setFormData,
     errors
   } = useQuestionForm({ id });
@@ -56,22 +60,34 @@ const QuestionEditorPage: React.FC = () => {
 
   // Load draft on initial load if available
   useEffect(() => {
-    const draft = loadDraft();
-    if (draft && !isEditMode) {
-      setDraftData(draft);
-      setShowDraftDialog(true);
+    try {
+      const draft = loadDraft();
+      if (draft && !isEditMode) {
+        setDraftData(draft);
+        setShowDraftDialog(true);
+      }
+    } catch (error) {
+      console.error("Error checking for draft:", error);
     }
   }, [loadDraft, isEditMode]);
 
-  // Load existing question data
+  // Show a confirmation dialog if the user tries to navigate away with unsaved changes
   useEffect(() => {
-    if (isEditMode && id && questions) {
-      const questionToEdit = questions.find(q => q.id === id);
-      if (questionToEdit) {
-        // Initial data will be handled by the hook
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        const message = "Sie haben ungespeicherte Änderungen. Sind Sie sicher, dass Sie die Seite verlassen möchten?";
+        e.preventDefault();
+        e.returnValue = message;
+        return message;
       }
-    }
-  }, [isEditMode, id, questions]);
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isDirty]);
 
   const isSignalQuestion = formData.category === "Signale";
 
@@ -89,6 +105,20 @@ const QuestionEditorPage: React.FC = () => {
     toast.info("Entwurf verworfen");
   };
 
+  const handleCancel = () => {
+    if (isDirty) {
+      if (confirm("Sie haben ungespeicherte Änderungen. Sind Sie sicher, dass Sie abbrechen möchten?")) {
+        navigate("/admin/questions");
+      }
+    } else {
+      navigate("/admin/questions");
+    }
+  };
+
+  const handleChangeTab = (value: string) => {
+    setActiveTab(value);
+  };
+
   return (
     <div className="container pb-10">
       <QuestionFormHeader 
@@ -97,6 +127,8 @@ const QuestionEditorPage: React.FC = () => {
         onSave={handleSubmit}
         onPreview={() => setShowPreviewModal(true)}
         showDuplicateButton={isEditMode}
+        onDuplicate={id && questions ? () => handleDuplicate(id, questions) : undefined}
+        onCancel={handleCancel}
       />
       
       {errors.length > 0 && (
@@ -113,13 +145,25 @@ const QuestionEditorPage: React.FC = () => {
       )}
       
       {lastSaved && (
-        <div className="text-xs text-muted-foreground mb-4">
-          Letzter automatischer Speicherstand: {lastSaved.toLocaleTimeString()}
+        <div className="text-xs text-muted-foreground mb-4 flex items-center gap-2">
+          <span>Letzter automatischer Speicherstand: {lastSaved.toLocaleTimeString()}</span>
+          {isDirty && (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="h-6 text-xs py-0 px-2 flex items-center gap-1"
+              onClick={(e) => handleSubmit(e)}
+              disabled={isLoading}
+            >
+              <Save className="h-3 w-3" />
+              Jetzt speichern
+            </Button>
+          )}
         </div>
       )}
 
       <form onSubmit={handleSubmit}>
-        <EditorTabs>
+        <EditorTabs defaultValue={activeTab} onValueChange={handleChangeTab}>
           <EditorTabContent value="basics">
             <BasicInfoTab
               category={formData.category!}

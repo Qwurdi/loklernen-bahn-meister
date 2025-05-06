@@ -1,5 +1,5 @@
 
-// Export all functions from questions.ts
+// Export all question service functions
 export {
   fetchUserProgress,
   fetchNewQuestions,

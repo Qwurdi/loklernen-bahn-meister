@@ -8,7 +8,7 @@ import { useSafeState } from './useSafeState';
 import { toast } from 'sonner';
 
 /**
- * Hook to handle question data fetching and management
+ * Hook to handle question data fetching and management with improved error handling
  */
 export function useSpacedRepetitionData(
   category: string,
@@ -18,6 +18,8 @@ export function useSpacedRepetitionData(
   const { user } = useAuth();
   const isMounted = useRef(true);
   const isFetching = useRef(false);
+  const fetchAttempts = useRef(0);
+  const maxAttempts = 2; // Limit fetch attempts to prevent infinite loops
   
   const { safeSetState: setLoading, state: loading } = useSafeState(true);
   const { safeSetState: setError, state: error } = useSafeState<Error | null>(null);
@@ -45,10 +47,19 @@ export function useSpacedRepetitionData(
       return { questions: [], progressData: [] };
     }
     
+    // Prevent too many fetch attempts
+    if (fetchAttempts.current >= maxAttempts) {
+      console.log(`Max fetch attempts (${maxAttempts}) reached, skipping`);
+      setLoading(false);
+      return { questions: [], progressData: [] };
+    }
+    
+    fetchAttempts.current += 1;
     isFetching.current = true;
     setLoading(true);
     
     try {
+      console.log(`Fetching data attempt ${fetchAttempts.current}/${maxAttempts}`);
       const result = await loadQuestions();
       
       if (isMounted.current) {
@@ -59,7 +70,9 @@ export function useSpacedRepetitionData(
           );
           
           setDueQuestions(validQuestions);
+          console.log(`Successfully loaded ${validQuestions.length} valid questions`);
         } else {
+          console.warn("No valid questions array returned");
           setDueQuestions([]);
         }
         
@@ -75,6 +88,13 @@ export function useSpacedRepetitionData(
     } catch (err) {
       console.error('Error fetching data:', err);
       setError(err instanceof Error ? err : new Error('Unknown error loading questions'));
+      
+      // Show more specific error messages to user
+      const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
+      toast.error(`Fehler beim Laden der Karten: ${errorMessage}`, {
+        duration: 4000,
+        id: 'card-loading-error' // Prevent duplicate toasts
+      });
       
       return { questions: [], progressData: [] };
     } finally {

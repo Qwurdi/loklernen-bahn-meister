@@ -11,6 +11,14 @@ interface FetchResult {
   progressData: UserProgress[];
 }
 
+// In-memory cache for questions to improve performance
+const questionsCache = new Map<string, {
+  timestamp: number,
+  result: FetchResult
+}>();
+
+const CACHE_TIMEOUT = 2 * 60 * 1000; // 2 minutes cache timeout
+
 /**
  * Hook for loading questions with optimized error handling and performance
  */
@@ -25,6 +33,9 @@ export function useLoadQuestions(
   const [retryCount, setRetryCount] = useState(0);
   const abortControllerRef = useRef<AbortController | null>(null);
   
+  // Track if the component is still mounted
+  const componentMounted = useRef(true);
+  
   // Cancel any in-progress requests when component unmounts or dependencies change
   const cancelPreviousRequests = () => {
     if (abortControllerRef.current) {
@@ -34,10 +45,22 @@ export function useLoadQuestions(
     }
   };
 
-  const loadQuestions = useCallback(async (): Promise<FetchResult> => {
+  const loadQuestions = useCallback(async (forceRefresh = false): Promise<FetchResult> => {
     if (!userId || !category) {
       console.log("Cannot load questions, missing userId or category");
       return { questions: [], progressData: [] };
+    }
+    
+    // Generate cache key based on request parameters
+    const cacheKey = `${userId}-${category}-${subcategory}-${options.regulationCategory}-${options.boxNumber}-${options.practiceMode}-${options.selectedCategories?.join(',')}`;
+    
+    // Check cache first unless force refresh is requested
+    if (!forceRefresh) {
+      const cached = questionsCache.get(cacheKey);
+      if (cached && (Date.now() - cached.timestamp) < CACHE_TIMEOUT) {
+        console.log("Using cached questions data");
+        return cached.result;
+      }
     }
     
     // Cancel any previous requests
@@ -46,10 +69,22 @@ export function useLoadQuestions(
     // Create a new abort controller for this request
     abortControllerRef.current = new AbortController();
     
-    setLoading(true);
-    setError(null);
+    if (componentMounted.current) {
+      setLoading(true);
+      setError(null);
+    }
     
     try {
+      console.log("Fetching questions from API");
+      
+      // Add timeout for the fetch operation
+      const timeoutId = setTimeout(() => {
+        if (abortControllerRef.current) {
+          console.log("Request timeout reached, aborting");
+          abortControllerRef.current.abort();
+        }
+      }, 7000); // 7 second timeout
+      
       // Fetch questions using our dedicated fetch strategies module
       const result = await fetchQuestions(
         userId, 
@@ -59,47 +94,94 @@ export function useLoadQuestions(
         abortControllerRef.current
       );
       
+      // Clear timeout as request completed successfully
+      clearTimeout(timeoutId);
+      
       // Transform questions using our transformation utilities
       const transformedQuestions = handleQuestionTransformation(result.questions);
       
-      return { 
+      const finalResult = { 
         questions: transformedQuestions, 
         progressData: result.progressData 
       };
+      
+      // Cache successful results
+      if (transformedQuestions.length > 0) {
+        questionsCache.set(cacheKey, {
+          timestamp: Date.now(),
+          result: finalResult
+        });
+      }
+      
+      return finalResult;
     } catch (err) {
       if (abortControllerRef.current?.signal.aborted) {
         console.log("Request was aborted, ignoring error");
+        
+        // Check cache for fallback data
+        const cached = questionsCache.get(cacheKey);
+        if (cached) {
+          console.log("Using cached data after abort");
+          return cached.result;
+        }
+        
         return { questions: [], progressData: [] };
       }
       
       console.error('Error loading questions:', err);
       const resultError = err instanceof Error ? err : new Error('Unknown error loading questions');
-      setError(resultError);
+      
+      if (componentMounted.current) {
+        setError(resultError);
+      }
       
       // Improved error feedback to user
-      const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
-      toast.error(`Fehler beim Laden der Karteikarten: ${errorMessage}. Bitte versuche es später erneut.`);
+      if (componentMounted.current && retryCount < 1) {
+        const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
+        toast.error(`Fehler beim Laden der Karteikarten: ${errorMessage}`, {
+          id: 'question-loading-error' // Prevent duplicate toasts
+        });
+      }
       
-      // Retry logic for certain errors (3 attempts maximum)
-      if (retryCount < 3) {
-        console.log(`Retry attempt ${retryCount + 1} of 3`);
+      // Retry logic for certain errors (2 attempts maximum)
+      if (retryCount < 2 && componentMounted.current) {
+        console.log(`Retry attempt ${retryCount + 1} of 2`);
         setRetryCount(prev => prev + 1);
         // Implement exponential backoff (wait longer between each retry)
         const retryDelay = Math.pow(2, retryCount) * 1000;
-        setTimeout(() => loadQuestions(), retryDelay);
+        
+        // Use timeout for retry
+        const retryTimeout = setTimeout(() => {
+          if (componentMounted.current) {
+            loadQuestions(true); // Force refresh on retry
+          }
+        }, retryDelay);
+        
+        // Clear timeout if component unmounts
+        return { questions: [], progressData: [] };
+      }
+      
+      // Check if we have cached data to use as fallback
+      const cached = questionsCache.get(cacheKey);
+      if (cached) {
+        console.log("Using cached data after error");
+        return cached.result;
       }
       
       return { questions: [], progressData: [] };
     } finally {
-      setLoading(false);
+      if (componentMounted.current) {
+        setLoading(false);
+      }
       abortControllerRef.current = null;
     }
   }, [userId, category, subcategory, options, retryCount]);
 
-  // Clean up abort controller on unmount
-  const cleanup = () => {
+  // Clean up resources on unmount
+  const cleanup = useCallback(() => {
+    componentMounted.current = false;
     cancelPreviousRequests();
-  };
+  }, []);
 
   return { 
     loadQuestions,

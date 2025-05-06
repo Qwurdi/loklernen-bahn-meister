@@ -1,4 +1,3 @@
-
 import { QuestionCategory } from '@/types/questions';
 import { SpacedRepetitionOptions, UserProgress } from '../types';
 import {
@@ -9,8 +8,12 @@ import {
 } from '../services';
 import { toast } from 'sonner';
 
+// Cache mechanism for questions to reduce database load
+const questionCache = new Map();
+const CACHE_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+
 /**
- * Main function to fetch questions based on different strategies
+ * Main function to fetch questions with optimized caching and error handling
  */
 export async function fetchQuestions(
   userId: string,
@@ -30,41 +33,97 @@ export async function fetchQuestions(
   
   console.log(`Loading questions with category=${category}, subcategory=${subcategory}, regulation=${regulationCategory}, practice=${options.practiceMode}, selectedCategories=${selectedCategories?.join(',')}`);
   
+  // Check cache first
+  const cacheKey = `${userId}-${category}-${subcategory}-${regulationCategory}-${boxNumber}-${selectedCategories.join('-')}`;
+  const cachedData = questionCache.get(cacheKey);
+  
+  if (cachedData && !options.bypassCache) {
+    const { timestamp, data } = cachedData;
+    if (Date.now() - timestamp < CACHE_TIMEOUT) {
+      console.log('Using cached question data');
+      return data;
+    } else {
+      // Cache expired
+      questionCache.delete(cacheKey);
+    }
+  }
+  
   // Check for abort signal
   if (abortController?.signal.aborted) {
+    console.log('Request aborted, returning empty result');
     return { questions: [], progressData: [] };
   }
   
-  // Practice mode strategy
-  if (options.practiceMode) {
-    return await fetchPracticeQuestionStrategy(
-      category, 
-      subcategory, 
-      regulationCategory,
-      batchSize,
-      selectedCategories
-    );
+  try {
+    let result;
+    
+    // Practice mode strategy
+    if (options.practiceMode) {
+      result = await fetchPracticeQuestionStrategy(
+        category, 
+        subcategory, 
+        regulationCategory,
+        batchSize,
+        selectedCategories
+      );
+    }
+    // Box number strategy
+    else if (boxNumber !== undefined) {
+      result = await fetchBoxQuestionStrategy(
+        userId,
+        boxNumber,
+        regulationCategory,
+        selectedCategories
+      );
+    }
+    // Regular spaced repetition strategy
+    else {
+      result = await fetchDueQuestionStrategy(
+        userId,
+        category,
+        subcategory,
+        regulationCategory,
+        batchSize,
+        selectedCategories
+      );
+    }
+    
+    // Cache successful results
+    if (result.questions.length > 0) {
+      questionCache.set(cacheKey, {
+        timestamp: Date.now(),
+        data: result
+      });
+    }
+    
+    return result;
+  } catch (error) {
+    console.error("Error fetching questions:", error);
+    
+    // Return cached data as fallback if available
+    if (cachedData) {
+      console.log('Using cached data as fallback after error');
+      return cachedData.data;
+    }
+    
+    // Fallback to practice mode if other strategies fail
+    if (!options.practiceMode) {
+      console.log('Falling back to practice mode after error');
+      try {
+        return await fetchPracticeQuestionStrategy(
+          category, 
+          subcategory, 
+          regulationCategory, 
+          batchSize,
+          selectedCategories
+        );
+      } catch (fallbackError) {
+        console.error("Even practice mode fallback failed:", fallbackError);
+      }
+    }
+    
+    throw error;
   }
-  
-  // Box number strategy
-  if (boxNumber !== undefined) {
-    return await fetchBoxQuestionStrategy(
-      userId,
-      boxNumber,
-      regulationCategory,
-      selectedCategories
-    );
-  }
-  
-  // Regular spaced repetition strategy
-  return await fetchDueQuestionStrategy(
-    userId,
-    category,
-    subcategory,
-    regulationCategory,
-    batchSize,
-    selectedCategories
-  );
 }
 
 /**
@@ -147,7 +206,7 @@ async function fetchBoxQuestionStrategy(
 }
 
 /**
- * Strategy for fetching due questions and new questions if needed
+ * Strategy for fetching due questions with optimized query flow
  */
 async function fetchDueQuestionStrategy(
   userId: string,
@@ -157,9 +216,11 @@ async function fetchDueQuestionStrategy(
   batchSize: number = 15,
   selectedCategories?: string[]
 ) {
+  console.log("Fetching due questions with optimized flow");
+  
   try {
-    console.log("Fetching user progress data for spaced repetition");
-    const filteredProgressData = await fetchUserProgress(
+    // Set timeout for progress data fetch
+    const progressPromise = fetchUserProgress(
       userId, 
       category, 
       subcategory, 
@@ -167,16 +228,21 @@ async function fetchDueQuestionStrategy(
       selectedCategories
     );
     
-    if (!filteredProgressData) {
-      throw new Error('Failed to fetch user progress data');
-    }
+    // Create timeout promise
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Timeout fetching user progress')), 5000);
+    });
+    
+    // Race the fetch against the timeout
+    const filteredProgressData = await Promise.race([progressPromise, timeoutPromise]) as UserProgress[];
     
     console.log(`Received ${filteredProgressData.length} progress items`);
     
-    // Transform the questions from the progress data
+    // Extract questions directly - simpler approach
     const questionsWithProgress = filteredProgressData
       .filter(p => p.questions) // Ensure questions exist
-      .map(p => p.questions);
+      .map(p => p.questions)
+      .filter(Boolean); // Remove null/undefined
       
     console.log("Questions with progress:", questionsWithProgress.length);
 
@@ -193,52 +259,42 @@ async function fetchDueQuestionStrategy(
       .filter(p => p.questions?.id)
       .map(p => p.question_id);
       
-    console.log("Question IDs with progress:", questionIdsWithProgress.length);
-
-    // Try to fetch new questions if we don't have enough questions with progress
-    try {
-      console.log("Fetching new questions to supplement progress data");
-      const newQuestions = await fetchNewQuestions(
-        category, 
-        subcategory, 
-        regulationCategory, 
-        questionIdsWithProgress, 
-        batchSize,
-        selectedCategories
-      );
-
-      // Combine progress questions and new questions, and limit to batch size
-      const allQuestions = [
-        ...questionsWithProgress,
-        ...newQuestions
-      ].slice(0, batchSize);
-      
-      console.log("Final questions count:", allQuestions.length);
-      
-      if (allQuestions.length === 0) {
-        console.log('No questions found');
-        toast.info("Keine Karteikarten für diese Kategorie gefunden.");
-      }
-      
-      return { questions: allQuestions, progressData: filteredProgressData };
-    } catch (error) {
-      console.error("Error fetching new questions:", error);
-      
-      // If fetching new questions fails but we have some with progress, return those
-      if (questionsWithProgress.length > 0) {
-        console.log("Returning only questions with progress due to error fetching new questions");
-        return { 
-          questions: questionsWithProgress, 
-          progressData: filteredProgressData 
-        };
-      }
-      throw error;
+    // Try to fetch new questions with timeout
+    const newQuestionsPromise = fetchNewQuestions(
+      category, 
+      subcategory, 
+      regulationCategory, 
+      questionIdsWithProgress, 
+      batchSize,
+      selectedCategories
+    );
+    
+    // Create timeout promise for new questions
+    const newQuestionsTimeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Timeout fetching new questions')), 4000);
+    });
+    
+    // Race the fetch against the timeout
+    const newQuestions = await Promise.race([newQuestionsPromise, newQuestionsTimeoutPromise]) as any[];
+    
+    // Combine progress questions and new questions, and limit to batch size
+    const allQuestions = [
+      ...questionsWithProgress,
+      ...newQuestions
+    ].slice(0, batchSize);
+    
+    console.log("Final questions count:", allQuestions.length);
+    
+    if (allQuestions.length === 0) {
+      console.log('No questions found');
+      toast.info("Keine Karteikarten für diese Kategorie gefunden.");
     }
+    
+    return { questions: allQuestions, progressData: filteredProgressData };
   } catch (progressError) {
     console.error("Error in due question strategy:", progressError);
     
-    // Try fetching just new questions as fallback if progress fetch fails
-    console.log("Trying fallback: fetching only new questions without progress data");
+    // Simplified fallback that doesn't reuse parameters
     try {
       const newQuestions = await fetchNewQuestions(
         category, 

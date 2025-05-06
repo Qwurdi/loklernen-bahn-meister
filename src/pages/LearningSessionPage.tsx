@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSpacedRepetition } from "@/hooks/spaced-repetition";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,6 +13,7 @@ import EmptySessionState from "@/components/learning-session/EmptySessionState";
 import SessionCompleteState from "@/components/learning-session/SessionCompleteState";
 import CardStackSession from "@/components/learning-session/CardStackSession";
 import { Question } from "@/types/questions";
+import { useMobileFullscreen } from "@/hooks/use-mobile-fullscreen";
 
 export default function LearningSessionPage() {
   console.log("LearningSessionPage: Initializing component");
@@ -24,6 +25,9 @@ export default function LearningSessionPage() {
   const [sessionCards, setSessionCards] = useState<Question[]>([]);
   const [sessionFinished, setSessionFinished] = useState(false);
   const isMobile = useIsMobile();
+  
+  // Use our centralized mobile fullscreen hook
+  const { isFullscreenMobile } = useMobileFullscreen(true);
   
   // Get session parameters from URL
   const { 
@@ -65,15 +69,17 @@ export default function LearningSessionPage() {
 
   console.log("LearningSessionPage: Loaded questions count:", dueQuestions?.length || 0);
 
+  // Use useEffect with proper dependencies to shuffle cards only when necessary
   useEffect(() => {
-    if (!loading && dueQuestions.length > 0) {
+    if (!loading && dueQuestions && dueQuestions.length > 0) {
       // Shuffle the cards to create a mixed learning session
       const shuffled = [...dueQuestions].sort(() => Math.random() - 0.5);
       setSessionCards(shuffled);
     }
   }, [loading, dueQuestions]);
 
-  const handleAnswer = async (questionId: string, score: number) => {
+  // Memoize the answer handler
+  const handleAnswer = useCallback(async (questionId: string, score: number) => {
     // Consider scores >= 4 as correct
     if (score >= 4) {
       setCorrectCount(prev => prev + 1);
@@ -83,18 +89,20 @@ export default function LearningSessionPage() {
     if (user) {
       await submitAnswer(questionId, score);
     }
-  };
+  }, [user, submitAnswer]);
 
-  const handleComplete = () => {
+  // Memoize the completion handler
+  const handleComplete = useCallback(() => {
     setSessionFinished(true);
 
     // Apply all pending updates when session is complete
     applyPendingUpdates().then(() => {
       toast.success("Lernsession abgeschlossen! Gut gemacht!");
     });
-  };
+  }, [applyPendingUpdates]);
 
-  const handleRestart = async () => {
+  // Memoize the restart handler
+  const handleRestart = useCallback(async () => {
     // Apply any pending updates before restarting
     await applyPendingUpdates();
     
@@ -107,7 +115,7 @@ export default function LearningSessionPage() {
       const shuffled = [...dueQuestions].sort(() => Math.random() - 0.5);
       setSessionCards(shuffled);
     }
-  };
+  }, [applyPendingUpdates, dueQuestions]);
 
   // Render loading state
   if (loading) {

@@ -1,5 +1,5 @@
 
-// Export all functions from questions.ts
+// Export all question service functions
 export {
   fetchUserProgress,
   fetchNewQuestions,
@@ -7,8 +7,20 @@ export {
   fetchQuestionsByBox
 } from './questions';
 
-// Export all functions from user-progress.ts except fetchQuestionsByBox
+// Export user progress related functions
 export {
   updateUserProgress,
   updateUserStats
 } from './user-progress';
+
+// Export utility functions for score calculations
+export {
+  calculateNewBoxNumber,
+  calculateXpGain
+} from './score-calculation';
+
+// Export streak management functions
+export {
+  updateStreak,
+  calculateStreakUpdate
+} from './streak-management';

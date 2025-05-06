@@ -1,7 +1,5 @@
-
 import CardStack from "@/components/flashcards/stack/CardStack";
 import { Question } from "@/types/questions";
-import { useEffect } from "react";
 
 // Define a generic type parameter T that extends Question
 interface CardStackSessionProps<T extends Question = Question> {
@@ -22,23 +20,8 @@ export default function CardStackSession<T extends Question = Question>({
   onComplete,
   isMobile
 }: CardStackSessionProps<T>) {
-  // Prevent scrolling on mobile devices
-  useEffect(() => {
-    if (!isMobile) return;
-    
-    // Save the original style to restore it later
-    const originalStyle = window.getComputedStyle(document.body).overflow;
-    
-    // Prevent scrolling on the body
-    document.body.style.overflow = 'hidden';
-    document.documentElement.classList.add('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
-    
-    // Cleanup function to restore original style
-    return () => {
-      document.body.style.overflow = originalStyle;
-      document.documentElement.classList.remove('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
-    };
-  }, [isMobile]);
+  // The mobile fullscreen handling is now done in the useMobileFullscreen hook
+  // and managed by the parent component, so we don't need to do it here anymore
   
   return (
     <div className="h-full w-full flex-1 flex flex-col">

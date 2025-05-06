@@ -1,7 +1,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Question } from '@/types/questions';
+import { Question, QuestionCategory } from '@/types/questions';
 import { SpacedRepetitionOptions, UserProgress, SpacedRepetitionResult } from './types';
 import { useLoadQuestions } from './hooks/useLoadQuestions';
 import { useQuestionUpdates } from './hooks/useQuestionUpdates';
@@ -21,7 +21,7 @@ export function useSpacedRepetition(
   // Use specialized hooks for different concerns
   const { loadQuestions, loadingQuestions, questionsError } = useLoadQuestions(
     user?.id, 
-    category, 
+    category as QuestionCategory, // Cast to QuestionCategory type
     subcategory, 
     options
   );

@@ -24,3 +24,10 @@ export {
   updateStreak,
   calculateStreakUpdate
 } from './streak-management';
+
+// Export offline background sync functions
+export {
+  syncOfflineData,
+  registerBackgroundSync,
+  requestSync
+} from './background-sync';

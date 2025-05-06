@@ -5,6 +5,7 @@ import { useSpacedRepetition } from "@/hooks/spaced-repetition";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useNetworkStatus } from "@/hooks/use-network-status";
 import FlashcardLoadingState from "@/components/flashcards/FlashcardLoadingState";
 import { useSessionParams } from "@/hooks/learning-session/useSessionParams";
 import SessionContainer from "@/components/learning-session/SessionContainer";
@@ -13,8 +14,12 @@ import EmptySessionState from "@/components/learning-session/EmptySessionState";
 import SessionCompleteState from "@/components/learning-session/SessionCompleteState";
 import CardStackSession from "@/components/learning-session/CardStackSession";
 import { Question } from "@/types/questions";
-import { Shield } from "lucide-react";
+import { Shield, Wifi, WifiOff } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { 
+  saveQuestionsToCache, 
+  storePendingAction 
+} from "@/lib/offline-storage";
 
 export default function LearningSessionPage() {
   console.log("LearningSessionPage: Initializing component");
@@ -29,6 +34,7 @@ export default function LearningSessionPage() {
   const [loadingTimedOut, setLoadingTimedOut] = useState(false);
   const [fallbackMode, setFallbackMode] = useState(false);
   const isMobile = useIsMobile();
+  const { isOnline } = useNetworkStatus();
   
   // Get session parameters from URL
   const { 
@@ -50,12 +56,12 @@ export default function LearningSessionPage() {
 
   // Use useMemo for spaced repetition options to prevent unnecessary rerenders
   const spacedRepetitionOptions = useMemo(() => ({
-    practiceMode: false,
+    practiceMode: fallbackMode, // Switch to practice mode when in fallback
     regulationCategory: regulationParam,
     boxNumber: boxParam,
     batchSize: 20, // Increased batch size
     selectedCategories: selectedCategories.length > 0 ? selectedCategories : undefined
-  }), [regulationParam, boxParam, selectedCategories]);
+  }), [regulationParam, boxParam, selectedCategories, fallbackMode]);
 
   // Pass both category, subcategory and regulation preference to the hook
   const { 
@@ -86,16 +92,22 @@ export default function LearningSessionPage() {
           console.log("Switching to fallback mode (practice)");
           setFallbackMode(true);
           
-          // Notify user about fallback mode
-          toast.info("Langsame Verbindung erkannt. Wechsle zu Übungskarten...", {
-            duration: 4000
-          });
+          // Different message based on online status
+          if (!isOnline) {
+            toast.info("Du bist offline. Lade verfügbare Übungskarten...", {
+              duration: 4000
+            });
+          } else {
+            toast.info("Langsame Verbindung erkannt. Wechsle zu Übungskarten...", {
+              duration: 4000
+            });
+          }
         }
       }
     }, 8000); // Reduced timeout threshold
     
     return () => clearTimeout(timeoutId);
-  }, [loading, isFirstLoaded, fallbackMode, dueQuestions.length]);
+  }, [loading, isFirstLoaded, fallbackMode, dueQuestions.length, isOnline]);
 
   // Try to reload questions if in fallback mode
   useEffect(() => {
@@ -123,27 +135,41 @@ export default function LearningSessionPage() {
       setSessionCards(shuffled);
       setIsFirstLoaded(true);
       console.log("Cards loaded and shuffled:", shuffled.length);
+      
+      // Cache these cards for offline use
+      try {
+        saveQuestionsToCache(shuffled, categoryParam, subcategoryParam);
+      } catch (error) {
+        console.error("Error caching cards:", error);
+      }
     } else if (!loading && dueQuestions && dueQuestions.length === 0) {
       // Make sure we set isFirstLoaded even when there are no questions
       setIsFirstLoaded(true);
       console.log("No cards loaded but loading finished");
     }
-  }, [loading, dueQuestions]);
+  }, [loading, dueQuestions, categoryParam, subcategoryParam]);
 
   // Show error state if needed
   useEffect(() => {
     if (!loading && error) {
       console.error("Error in learning session:", error);
       
-      // Show friendly error message
-      toast.error("Fehler beim Laden der Karten. Versuche es mit Übungskarten.", {
-        duration: 5000,
-        id: 'session-error' // Prevent duplicate toasts
-      });
+      // Different message based on online status
+      if (!isOnline) {
+        toast.error("Du bist offline. Versuche es mit Übungskarten oder probiere später erneut.", {
+          duration: 5000,
+          id: 'session-error'
+        });
+      } else {
+        toast.error("Fehler beim Laden der Karten. Versuche es mit Übungskarten.", {
+          duration: 5000,
+          id: 'session-error'
+        });
+      }
     }
-  }, [loading, error]);
+  }, [loading, error, isOnline]);
 
-  // Memoize the answer handler for better performance
+  // Memoize the answer handler for better performance and offline support
   const handleAnswer = useCallback(async (questionId: string, score: number) => {
     // Consider scores >= 4 as correct
     if (score >= 4) {
@@ -151,6 +177,22 @@ export default function LearningSessionPage() {
     }
     
     try {
+      // If offline, store the answer locally first
+      if (!isOnline) {
+        await storePendingAction({
+          type: 'answer',
+          data: { questionId, score },
+          timestamp: new Date().toISOString()
+        });
+        
+        // Show offline notification
+        toast.info("Du bist offline. Deine Antwort wird später synchronisiert.", {
+          id: 'offline-answer'
+        });
+        
+        return; // Don't try to submit to server while offline
+      }
+      
       // Submit answer for spaced repetition without reloading all cards
       if (user) {
         await submitAnswer(questionId, score);
@@ -158,31 +200,48 @@ export default function LearningSessionPage() {
     } catch (error) {
       console.error("Error submitting answer:", error);
       
-      // Don't block the user when submission fails
-      toast.error("Antwort konnte nicht gespeichert werden. Fortfahren ist trotzdem möglich.");
+      // Store the answer locally if submitting fails
+      try {
+        await storePendingAction({
+          type: 'answer',
+          data: { questionId, score },
+          timestamp: new Date().toISOString()
+        });
+        
+        toast.info("Deine Antwort wurde lokal gespeichert und wird später synchronisiert.");
+      } catch (storageError) {
+        console.error("Error storing answer locally:", storageError);
+        toast.error("Antwort konnte nicht gespeichert werden. Fortfahren ist trotzdem möglich.");
+      }
     }
-  }, [user, submitAnswer]);
+  }, [user, submitAnswer, isOnline]);
 
   // Memoize the completion handler
   const handleComplete = useCallback(() => {
     setSessionFinished(true);
 
-    // Apply all pending updates when session is complete
-    applyPendingUpdates().catch(error => {
-      console.error("Error applying pending updates:", error);
-      toast.error("Einige Änderungen konnten nicht gespeichert werden.");
-    });
+    // Apply all pending updates when session is complete (only if online)
+    if (isOnline) {
+      applyPendingUpdates().catch(error => {
+        console.error("Error applying pending updates:", error);
+        toast.error("Einige Änderungen konnten nicht gespeichert werden.");
+      });
+    } else {
+      toast.info("Du bist offline. Deine Antworten werden synchronisiert, sobald du wieder online bist.");
+    }
     
     toast.success("Lernsession abgeschlossen! Gut gemacht!");
-  }, [applyPendingUpdates]);
+  }, [applyPendingUpdates, isOnline]);
 
   // Memoize the restart handler
   const handleRestart = useCallback(async () => {
-    // Apply any pending updates before restarting
-    try {
-      await applyPendingUpdates();
-    } catch (error) {
-      console.error("Error applying updates:", error);
+    // Apply any pending updates before restarting (if online)
+    if (isOnline) {
+      try {
+        await applyPendingUpdates();
+      } catch (error) {
+        console.error("Error applying updates:", error);
+      }
     }
     
     setCurrentIndex(0);
@@ -194,7 +253,7 @@ export default function LearningSessionPage() {
       const shuffled = [...dueQuestions].sort(() => Math.random() - 0.5);
       setSessionCards(shuffled);
     }
-  }, [applyPendingUpdates, dueQuestions]);
+  }, [applyPendingUpdates, dueQuestions, isOnline]);
 
   // Handle cases when not logged in but trying to access learning features that require login
   const requiresLoginButNotLoggedIn = !user && !loading && !sessionCards.length;
@@ -243,13 +302,25 @@ export default function LearningSessionPage() {
       <SessionContainer isMobile={isMobile}>
         <div className="container px-4 py-8">
           <Alert className="mb-6 border-amber-200 bg-amber-50">
-            <AlertTitle className="text-amber-800">Verbindungsprobleme</AlertTitle>
+            <AlertTitle className="text-amber-800">
+              {isOnline ? "Verbindungsprobleme" : "Du bist offline"}
+            </AlertTitle>
             <AlertDescription className="text-amber-700">
-              Das Laden der Karten dauert ungewöhnlich lange. Möglicherweise gibt es Verbindungsprobleme.
+              {isOnline 
+                ? "Das Laden der Karten dauert ungewöhnlich lange. Möglicherweise gibt es Verbindungsprobleme."
+                : "Du bist offline. Wenn du Karten dieser Kategorie zuvor bereits geladen hast, kannst du sie weiter lernen."
+              }
             </AlertDescription>
           </Alert>
           
           <div className="flex flex-col items-center gap-4 mt-8">
+            <div className="flex items-center justify-center mb-4">
+              {isOnline 
+                ? <Wifi size={48} className="text-amber-400" /> 
+                : <WifiOff size={48} className="text-amber-500" />
+              }
+            </div>
+            
             <button
               onClick={() => {
                 setLoadingTimedOut(false);
@@ -258,6 +329,16 @@ export default function LearningSessionPage() {
               className="px-4 py-2 bg-loklernen-ultramarine text-white rounded-md hover:bg-loklernen-sapphire"
             >
               Erneut versuchen
+            </button>
+            
+            <button
+              onClick={() => {
+                setFallbackMode(true);
+                setLoadingTimedOut(false);
+              }}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+            >
+              Übungsmodus verwenden
             </button>
             
             <button
@@ -277,7 +358,10 @@ export default function LearningSessionPage() {
     console.log("No cards available - showing empty state");
     return (
       <SessionContainer isMobile={isMobile}>
-        <EmptySessionState categoryParam={categoryParam} />
+        <EmptySessionState 
+          categoryParam={categoryParam} 
+          showError={!!error} 
+        />
       </SessionContainer>
     );
   }
@@ -290,7 +374,7 @@ export default function LearningSessionPage() {
           correctCount={correctCount} 
           totalCards={sessionCards.length}
           onRestart={handleRestart}
-          pendingUpdates={pendingUpdatesCount > 0}
+          pendingUpdates={pendingUpdatesCount > 0 || !isOnline}
         />
       </SessionContainer>
     );
@@ -307,10 +391,13 @@ export default function LearningSessionPage() {
           isMobile={isMobile} 
         />
 
-        {fallbackMode && (
+        {(fallbackMode || !isOnline) && (
           <Alert className="mb-4 mx-4 border-blue-200 bg-blue-50">
             <AlertDescription className="text-blue-700 text-sm">
-              Übungskarten werden angezeigt. Dein Lernfortschritt wird trotzdem gespeichert.
+              {!isOnline 
+                ? "Du bist offline. Änderungen werden gespeichert und später synchronisiert."
+                : "Übungskarten werden angezeigt. Dein Lernfortschritt wird trotzdem gespeichert."
+              }
             </AlertDescription>
           </Alert>
         )}

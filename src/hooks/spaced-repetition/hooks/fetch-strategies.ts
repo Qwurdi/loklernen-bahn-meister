@@ -8,6 +8,13 @@ import {
   fetchQuestionsByBox
 } from '../services';
 import { toast } from 'sonner';
+import { 
+  getQuestionsFromCache,
+  saveQuestionsToCache,
+  getProgressFromCache,
+  saveProgressToCache,
+  hasCachedData 
+} from '@/lib/offline-storage';
 
 // Cache mechanism for questions to reduce database load
 const questionCache = new Map();
@@ -41,7 +48,7 @@ export async function fetchQuestions(
   if (cachedData && !options.bypassCache) {
     const { timestamp, data } = cachedData;
     if (Date.now() - timestamp < CACHE_TIMEOUT) {
-      console.log('Using cached question data');
+      console.log('Using cached question data from memory');
       return data;
     } else {
       // Cache expired
@@ -57,6 +64,39 @@ export async function fetchQuestions(
   
   try {
     let result;
+    
+    // First check if we're online
+    const isOnline = navigator.onLine;
+    
+    // If offline, try to use indexed DB cache
+    if (!isOnline) {
+      console.log('Device is offline, attempting to load from IndexedDB cache');
+      
+      // Check if we have cached data for this category
+      const hasCached = await hasCachedData(category, subcategory);
+      
+      if (hasCached) {
+        const cachedQuestions = await getQuestionsFromCache(category, subcategory);
+        const cachedProgress = await getProgressFromCache();
+        
+        // Filter progress to match our criteria
+        const filteredProgress = cachedProgress.filter(p => {
+          const questionMatches = cachedQuestions.some(q => q.id === p.question_id);
+          return questionMatches;
+        });
+        
+        if (cachedQuestions.length > 0) {
+          console.log(`Successfully loaded ${cachedQuestions.length} questions from offline cache`);
+          return { 
+            questions: cachedQuestions.slice(0, batchSize), 
+            progressData: filteredProgress 
+          };
+        }
+      }
+      
+      console.warn('No offline data available for this category');
+      // Will continue to try online fetch - might fail but worth trying
+    }
     
     // Practice mode strategy
     if (options.practiceMode) {
@@ -89,12 +129,20 @@ export async function fetchQuestions(
       );
     }
     
-    // Cache successful results
+    // Cache successful results in memory
     if (result.questions.length > 0) {
       questionCache.set(cacheKey, {
         timestamp: Date.now(),
         data: result
       });
+      
+      // Also cache to IndexedDB for offline use
+      try {
+        await saveQuestionsToCache(result.questions, category, subcategory);
+        await saveProgressToCache(result.progressData);
+      } catch (cacheError) {
+        console.error("Error saving to offline cache:", cacheError);
+      }
     }
     
     return result;
@@ -105,6 +153,24 @@ export async function fetchQuestions(
     if (cachedData) {
       console.log('Using cached data as fallback after error');
       return cachedData.data;
+    }
+    
+    // Try to use IndexedDB cache as fallback
+    console.log('Attempting to load from IndexedDB cache after online fetch error');
+    try {
+      const cachedQuestions = await getQuestionsFromCache(category, subcategory);
+      const cachedProgress = await getProgressFromCache();
+      
+      if (cachedQuestions.length > 0) {
+        console.log(`Using ${cachedQuestions.length} questions from offline cache as fallback`);
+        toast.info("Verwende Offline-Daten. Einige Inhalte könnten veraltet sein.");
+        return { 
+          questions: cachedQuestions.slice(0, batchSize), 
+          progressData: cachedProgress 
+        };
+      }
+    } catch (offlineError) {
+      console.error("Error accessing offline cache:", offlineError);
     }
     
     // Fallback to practice mode if other strategies fail
@@ -235,9 +301,9 @@ async function fetchDueQuestionStrategy(
       selectedCategories
     );
     
-    // Create timeout promise
+    // Create timeout promise with increased time
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Timeout fetching user progress')), 5000);
+      setTimeout(() => reject(new Error('Timeout fetching user progress')), 8000);
     });
     
     // Race the fetch against the timeout
@@ -280,9 +346,9 @@ async function fetchDueQuestionStrategy(
       selectedCategories
     );
     
-    // Create timeout promise for new questions
+    // Create timeout promise for new questions with increased time
     const newQuestionsTimeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Timeout fetching new questions')), 4000);
+      setTimeout(() => reject(new Error('Timeout fetching new questions')), 8000);
     });
     
     // Race the fetch against the timeout

@@ -1,7 +1,7 @@
-
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { calculateNextReviewDate } from '../../utils';
-import { updateUserProgress, updateUserStats } from '../user-progress';
+import { updateUserProgress } from '../progress-updates';
+import { updateUserStats } from '../user-stats';
 import { supabase } from '@/integrations/supabase/client';
 
 // Mock Supabase client

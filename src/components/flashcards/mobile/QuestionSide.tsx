@@ -12,12 +12,17 @@ interface QuestionSideProps {
 }
 
 export default function QuestionSide({ question, onShowAnswer }: QuestionSideProps) {
+  // Check if this is a multiple choice question
+  const isMultipleChoice = question.question_type === "MC_single" || question.question_type === "MC_multi";
+  
   // Use dynamic text sizing based on question length
   const textSizeClass = useDynamicTextSize(question?.text || '', 'question');
   
   return (
     <div className="flex flex-col h-full p-4 bg-white">
-      <div className="bg-blue-50 px-3 py-1.5 rounded-full text-xs text-blue-600 self-start mb-3">Signal</div>
+      <div className="bg-blue-50 px-3 py-1.5 rounded-full text-xs text-blue-600 self-start mb-3">
+        {question.question_type === "open" ? "Signal" : "Multiple Choice"}
+      </div>
       
       {/* Question text moved above image for visibility */}
       <h2 className={`${textSizeClass} font-medium mb-4 text-gray-900`}>
@@ -40,7 +45,7 @@ export default function QuestionSide({ question, onShowAnswer }: QuestionSidePro
         onClick={onShowAnswer}
       >
         <Lightbulb className="h-5 w-5 mr-2" />
-        Signal anzeigen
+        {isMultipleChoice ? "Antwortoptionen anzeigen" : "Signal anzeigen"}
       </Button>
     </div>
   );

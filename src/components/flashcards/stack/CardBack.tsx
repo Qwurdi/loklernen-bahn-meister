@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import ZoomableImage from '@/components/common/ZoomableImage';
 import { useIsMobile } from '@/hooks/use-mobile';
+import MultipleChoiceQuestion from '../MultipleChoiceQuestion';
+import { useState } from 'react';
 
 // Update interface to use generics
 interface CardBackProps<T extends Question = Question> {
@@ -14,6 +16,23 @@ interface CardBackProps<T extends Question = Question> {
 // Add generic type parameter to the component
 export default function CardBack<T extends Question = Question>({ question, onAnswer }: CardBackProps<T>) {
   const isMobile = useIsMobile();
+  const isMultipleChoice = question.question_type === "MC_single" || question.question_type === "MC_multi";
+  
+  // For MC questions, use our new component
+  if (isMultipleChoice && onAnswer) {
+    return (
+      <div className="card-face back h-full w-full p-6 flex flex-col card-white rounded-xl shadow-md">
+        <div className="text-sm font-medium uppercase text-blue-600 mb-3">Wähle die richtige Antwort</div>
+        <div className="flex-1 overflow-y-auto">
+          <MultipleChoiceQuestion 
+            question={question} 
+            onAnswer={onAnswer} 
+            isMobile={isMobile}
+          />
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="card-face back h-full w-full p-6 flex flex-col card-white rounded-xl shadow-md">
@@ -79,7 +98,7 @@ export default function CardBack<T extends Question = Question>({ question, onAn
       </div>
       
       {/* Action buttons with enhanced styling */}
-      {onAnswer && (
+      {onAnswer && !isMultipleChoice && (
         <div className="sticky bottom-4 mt-auto">
           <div className="flex justify-between space-x-2">
             <Button 

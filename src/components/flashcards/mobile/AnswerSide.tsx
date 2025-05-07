@@ -4,6 +4,7 @@ import { Question } from "@/types/questions";
 import FlashcardActionButton from "../FlashcardActionButton";
 import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
 import ZoomableImage from "@/components/common/ZoomableImage";
+import MultipleChoiceQuestion from "../MultipleChoiceQuestion";
 
 interface AnswerSideProps {
   question: Question;
@@ -18,6 +19,28 @@ export default function AnswerSide({
   onKnown, 
   onNotKnown 
 }: AnswerSideProps) {
+  // Check if this is a multiple choice question
+  const isMultipleChoice = question.question_type === "MC_single" || question.question_type === "MC_multi";
+  
+  // For multiple choice questions, use the new component
+  if (isMultipleChoice) {
+    return (
+      <div className="flex flex-col h-full p-4 bg-white">
+        <div className="bg-blue-50 px-3 py-1.5 rounded-full text-xs text-blue-600 self-start mb-3">
+          Wähle die richtige Antwort
+        </div>
+        
+        <div className="flex-1 overflow-y-auto">
+          <MultipleChoiceQuestion
+            question={question}
+            onAnswer={(isCorrect) => isCorrect ? onKnown() : onNotKnown()}
+            isMobile={true}
+          />
+        </div>
+      </div>
+    );
+  }
+  
   // Get the correct answer text
   const answerText = question?.answers?.[0]?.text || '';
   

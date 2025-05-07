@@ -13,10 +13,14 @@ export default function CardFront<T extends Question = Question>({ question }: C
   // Use dynamic text sizing based on question length
   const textSizeClass = useDynamicTextSize(question?.text || '', 'question');
   
+  // Check if this is a multiple choice question
+  const isMultipleChoice = question.question_type === "MC_single" || question.question_type === "MC_multi";
+  
   return (
     <div className="absolute inset-0 rounded-2xl overflow-hidden bg-white p-6 flex flex-col">
       <div className="text-xs uppercase tracking-wider text-blue-600 font-medium mb-2 bg-blue-50 self-start px-2 py-1 rounded-full">
         {question.sub_category}
+        {isMultipleChoice && <span className="ml-2 text-pink-600">Multiple Choice</span>}
       </div>
       
       <h2 className={`${textSizeClass} text-gray-800 font-medium mb-4`}>
@@ -36,7 +40,7 @@ export default function CardFront<T extends Question = Question>({ question }: C
       )}
       
       <div className="mt-auto text-sm text-gray-500 text-center">
-        Tippe, um die Antwort zu sehen
+        Tippe, um {isMultipleChoice ? "Antwortoptionen" : "die Antwort"} zu sehen
       </div>
     </div>
   );

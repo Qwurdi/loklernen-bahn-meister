@@ -2,6 +2,8 @@
 import React from 'react';
 import { Answer, QuestionType } from '@/types/questions';
 import { useDynamicTextSize } from '@/hooks/useDynamicTextSize';
+import { SafeRichText } from '@/components/ui/rich-text/SafeRichText';
+import { getTextValue } from '@/types/rich-text';
 
 interface AnswerPreviewProps {
   answer: Answer;
@@ -12,7 +14,7 @@ export const AnswerPreview: React.FC<AnswerPreviewProps> = ({
   answer, 
   questionType 
 }) => {
-  const textSize = useDynamicTextSize(answer.text, 'answer');
+  const textSize = useDynamicTextSize(getTextValue(answer.text), 'answer');
   
   return (
     <div 
@@ -36,7 +38,9 @@ export const AnswerPreview: React.FC<AnswerPreviewProps> = ({
             {answer.isCorrect && <div className="h-2 w-2 rounded-sm bg-green-500" />}
           </div>
         )}
-        <span className={textSize}>{answer.text || "Leere Antwort"}</span>
+        <span className={textSize}>
+          <SafeRichText content={answer.text || "Leere Antwort"} />
+        </span>
       </div>
     </div>
   );

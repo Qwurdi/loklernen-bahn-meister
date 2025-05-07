@@ -25,7 +25,7 @@ export const SignalQuestionAnswer: React.FC<SignalQuestionAnswerProps> = ({
         className="min-h-[100px] resize-none"
       />
       
-      <Alert variant="info" className="bg-blue-50 text-blue-800 border-blue-200">
+      <Alert className="bg-blue-50 text-blue-800 border-blue-200">
         <AlertCircle className="h-4 w-4 text-blue-500" />
         <AlertDescription className="text-sm">
           Signalfragen werden immer als offene Fragen mit einer korrekten Antwort konfiguriert.

@@ -4,6 +4,8 @@ import { Question } from '@/types/questions';
 import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { SafeRichText } from '@/components/ui/rich-text/SafeRichText';
+import { getTextValue } from '@/types/rich-text';
 
 interface BoxContentViewProps {
   boxNumber: number;
@@ -93,7 +95,9 @@ export default function BoxContentView({
                   </div>
                 ) : (
                   <div className="flex flex-col h-full">
-                    <p className="text-xs text-gray-600 line-clamp-4 mb-2">{question.text}</p>
+                    <p className="text-xs text-gray-600 line-clamp-4 mb-2">
+                      <SafeRichText content={question.text} />
+                    </p>
                     <div className="mt-auto text-[10px] text-right text-loklernen-ultramarine group-hover:text-loklernen-ultramarine/80">Karte ansehen →</div>
                   </div>
                 )}

@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, X } from "lucide-react";
 import { SignalAnswerInput } from "../../SignalAnswerInput";
 import { Answer, QuestionType } from '@/types/questions';
+import { getTextValue } from '@/types/rich-text';
 
 interface AnswersSectionProps {
   questionType: QuestionType;
@@ -45,7 +46,7 @@ export const AnswersSection: React.FC<AnswersSectionProps> = ({
       
       {questionType === "open" && isSignalQuestion ? (
         <SignalAnswerInput
-          value={answers?.[0]?.text || ""}
+          value={getTextValue(answers?.[0]?.text || "")}
           onChange={(text) => handleAnswerChange(0, text)}
         />
       ) : (
@@ -63,7 +64,7 @@ export const AnswersSection: React.FC<AnswersSectionProps> = ({
               </Button>
               <Textarea
                 placeholder={`Antwort ${index + 1}`}
-                value={answer.text}
+                value={getTextValue(answer.text)}
                 onChange={(e) => handleAnswerChange(index, e.target.value)}
                 className="flex-1 min-h-[60px]"
               />

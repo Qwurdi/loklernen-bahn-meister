@@ -5,6 +5,7 @@ import { Question } from '@/types/questions';
 import FlashcardQuestionImage from '@/components/flashcards/FlashcardQuestionImage';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { getTextValue, getTextSubstring } from '@/types/rich-text';
+import { SafeRichText } from '@/components/ui/rich-text/SafeRichText';
 
 interface DueCardItemProps {
   card: any;

@@ -4,7 +4,7 @@ import { BasicInfoTab } from "@/components/admin/questions/BasicInfoTab";
 import { ContentTab } from "@/components/admin/questions/ContentTab";
 import { AnswersTab } from "@/components/admin/questions/AnswersTab";
 import { EditorTabContent } from "@/components/admin/questions/EditorTabs";
-import { QuestionCategory, RegulationCategory } from '@/types/questions';
+import { QuestionCategory, RegulationCategory, QuestionType } from '@/types/questions';
 
 interface TabContentProps {
   activeTab: string;
@@ -16,7 +16,7 @@ interface TabContentProps {
   regulationCategory?: RegulationCategory;
   imagePreview: string | null;
   answers: any[];
-  questionType: string;
+  questionType: QuestionType;
   onCategoryChange: (category: QuestionCategory) => void;
   onSubCategoryChange: (subCategory: string) => void;
   onDifficultyChange: (difficulty: number) => void;

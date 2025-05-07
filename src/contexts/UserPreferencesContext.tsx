@@ -46,17 +46,23 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
           }
           
           // If user has preferences stored in DB, use them
-          if (data?.regulation_preference) {
-            setRegulationPreferenceState(data.regulation_preference as RegulationFilterType);
-          } else {
-            // Otherwise use local storage or default
+          if (data) {
+            if (data.regulation_preference) {
+              setRegulationPreferenceState(data.regulation_preference as RegulationFilterType);
+            }
+            
+            if (data.editor_view_preference) {
+              setEditorViewPreferenceState(data.editor_view_preference as EditorViewType);
+            }
+          }
+          
+          // If not available in DB, use local storage
+          if (!data?.regulation_preference) {
             const storedPreference = localStorage.getItem(REGULATION_PREFERENCE_KEY) as RegulationFilterType | null;
             setRegulationPreferenceState(storedPreference || 'DS 301');
           }
           
-          if (data?.editor_view_preference) {
-            setEditorViewPreferenceState(data.editor_view_preference as EditorViewType);
-          } else {
+          if (!data?.editor_view_preference) {
             const storedViewPreference = localStorage.getItem(EDITOR_VIEW_PREFERENCE_KEY) as EditorViewType | null;
             setEditorViewPreferenceState(storedViewPreference || 'tabs');
           }

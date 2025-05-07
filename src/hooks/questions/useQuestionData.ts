@@ -27,7 +27,8 @@ export const useQuestionData = (id?: string, initialData?: any) => {
           image_url: questionToEdit.image_url,
           answers: questionToEdit.answers,
           created_by: questionToEdit.created_by,
-          regulation_category: questionToEdit.regulation_category || "both"
+          regulation_category: questionToEdit.regulation_category || "both",
+          hint: questionToEdit.hint
         }));
         
         if (questionToEdit.image_url) {

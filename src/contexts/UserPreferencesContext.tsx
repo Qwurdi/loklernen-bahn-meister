@@ -41,28 +41,37 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
             .eq('user_id', user.id)
             .single();
             
-          if (error && error.code !== 'PGRST116') {
+          if (error) {
             console.error('Error loading user preferences:', error);
+            
+            // If it's specifically a column not found error, we can still proceed
+            // with any data we might have, or fall back to localStorage
+            if (error.code !== 'PGRST116') {
+              console.error('Unexpected error when loading user preferences:', error);
+            }
           }
           
-          // If user has preferences stored in DB, use them
+          // If user has preferences stored in DB and we got valid data back, use them
           if (data) {
+            // Check each preference individually to make it more resilient
             if (data.regulation_preference) {
               setRegulationPreferenceState(data.regulation_preference as RegulationFilterType);
             }
             
+            // The editor_view_preference might not exist in the database yet
             if (data.editor_view_preference) {
               setEditorViewPreferenceState(data.editor_view_preference as EditorViewType);
             }
           }
           
-          // If not available in DB, use local storage
-          if (!data?.regulation_preference) {
+          // If regulation preference is not in DB or we got an error, use local storage
+          if (!data || !data.regulation_preference) {
             const storedPreference = localStorage.getItem(REGULATION_PREFERENCE_KEY) as RegulationFilterType | null;
             setRegulationPreferenceState(storedPreference || 'DS 301');
           }
           
-          if (!data?.editor_view_preference) {
+          // If editor view preference is not in DB or we got an error, use local storage
+          if (!data || !data.editor_view_preference) {
             const storedViewPreference = localStorage.getItem(EDITOR_VIEW_PREFERENCE_KEY) as EditorViewType | null;
             setEditorViewPreferenceState(storedViewPreference || 'tabs');
           }
@@ -135,8 +144,13 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
           });
           
         if (error) {
-          console.error('Error saving editor view preference:', error);
-          return;
+          // If there's an error related to the column not existing, this is expected
+          // until we run the SQL migration to add the column
+          if (error.message?.includes('editor_view_preference')) {
+            console.log('editor_view_preference column not yet added to database, skipping DB save');
+          } else {
+            console.error('Error saving editor view preference:', error);
+          }
         }
       }
     } catch (error) {

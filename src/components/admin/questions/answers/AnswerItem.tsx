@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { GripVertical, X } from "lucide-react";
 import { Answer, QuestionType } from '@/types/questions';
+import { getTextValue } from '@/types/rich-text';
 
 interface AnswerItemProps {
   index: number;
@@ -25,6 +26,8 @@ export const AnswerItem: React.FC<AnswerItemProps> = ({
   showDeleteButton,
   questionType
 }) => {
+  const textValue = getTextValue(answer.text);
+  
   return (
     <div className="flex items-start gap-2 rounded-md border bg-card p-3 hover:border-gray-300 transition-colors">
       <div className="mt-1 flex items-center gap-2">
@@ -50,7 +53,7 @@ export const AnswerItem: React.FC<AnswerItemProps> = ({
       </div>
       
       <Textarea
-        value={answer.text}
+        value={textValue}
         onChange={(e) => handleAnswerChange(index, e.target.value)}
         placeholder={`Antwortoption ${index + 1}`}
         className="flex-1 min-h-[60px]"

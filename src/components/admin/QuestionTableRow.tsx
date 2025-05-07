@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/tooltip";
 import { Question } from "@/types/questions";
 import { TableCell, TableRow } from "@/components/ui/table";
+import { SafeRichText } from "@/components/ui/rich-text/SafeRichText";
+import { getTextValue } from "@/types/rich-text";
 
 interface QuestionTableRowProps {
   question: Question;
@@ -40,7 +42,9 @@ const QuestionTableRow: React.FC<QuestionTableRowProps> = ({
               />
             </div>
           )}
-          <span className="line-clamp-2">{question.text}</span>
+          <div className="line-clamp-2">
+            <SafeRichText content={question.text} />
+          </div>
         </div>
       </TableCell>
       <TableCell>
@@ -63,7 +67,9 @@ const QuestionTableRow: React.FC<QuestionTableRowProps> = ({
           </TooltipTrigger>
           <TooltipContent side="bottom" className="max-w-sm">
             <p className="font-semibold">Erste Antwort:</p>
-            <p className="mt-1">{firstAnswer}</p>
+            <div className="mt-1">
+              <SafeRichText content={firstAnswer} />
+            </div>
           </TooltipContent>
         </Tooltip>
       </TableCell>

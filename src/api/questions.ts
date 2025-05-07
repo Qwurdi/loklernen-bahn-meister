@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { CreateQuestionDTO, Question, QuestionCategory, Answer } from "@/types/questions";
 import { Json } from "@/integrations/supabase/types";
 import { signalSubCategories, betriebsdienstSubCategories } from "@/api/categories/types";
-import { isStructuredContent, plainTextToStructured } from "@/types/rich-text";
+import { isStructuredContent, plainTextToStructured, getTextValue } from "@/types/rich-text";
 
 // Helper function to convert database answers (Json) to Answer[]
 export function transformAnswers(jsonAnswers: Json): Answer[] {
@@ -11,11 +11,23 @@ export function transformAnswers(jsonAnswers: Json): Answer[] {
       // Safely check if answer is an object and access its properties
       if (typeof answer === 'object' && answer !== null) {
         const text = 'text' in answer ? answer.text : '';
-        // Convert string answers to structured content if they're already structured
-        const parsedText = typeof text === 'object' ? text : String(text || '');
+        // Process text content
+        let processedText = text;
+        
+        // Handle JSON string that might be structured content
+        if (typeof text === 'string' && text.trim().startsWith('{')) {
+          try {
+            const parsed = JSON.parse(text);
+            if (isStructuredContent(parsed)) {
+              processedText = parsed;
+            }
+          } catch (e) {
+            // Keep original text if parsing fails
+          }
+        }
         
         return {
-          text: parsedText,
+          text: processedText,
           isCorrect: 'isCorrect' in answer ? Boolean(answer.isCorrect) : false
         };
       }
@@ -53,7 +65,7 @@ function transformQuestion(dbQuestion: any): Question {
 }
 
 // Helper function to prepare content for database storage
-function prepareContentForStorage(content: string | any): string {
+export function prepareContentForStorage(content: string | any): string {
   if (typeof content === 'string') {
     return content;
   }
@@ -73,6 +85,20 @@ function prepareContentForStorage(content: string | any): string {
   }
   
   return String(content) || '';
+}
+
+// Helper function to prepare answer for database storage
+export function prepareAnswerForStorage(answer: Answer): { text: string, isCorrect: boolean } {
+  let processedText = typeof answer.text === 'string' 
+    ? answer.text 
+    : isStructuredContent(answer.text) 
+      ? JSON.stringify(answer.text) 
+      : String(answer.text || '');
+      
+  return {
+    text: processedText,
+    isCorrect: answer.isCorrect
+  };
 }
 
 export async function fetchQuestions(category?: QuestionCategory, sub_category?: string, regulation_category?: string) {
@@ -105,10 +131,7 @@ export async function createQuestion(question: CreateQuestionDTO) {
   const processedText = prepareContentForStorage(question.text);
   
   // Convert Answer[] to a JSON structure compatible with Supabase
-  const supabaseAnswers: Json = question.answers.map(answer => ({
-    text: typeof answer.text === 'string' ? answer.text : JSON.stringify(answer.text),
-    isCorrect: answer.isCorrect
-  }));
+  const supabaseAnswers: Json = question.answers.map(prepareAnswerForStorage);
 
   const { data, error } = await supabase
     .from('questions')
@@ -150,7 +173,6 @@ export async function uploadQuestionImage(file: File, userId: string) {
   return data.publicUrl;
 }
 
-// Helper function to seed initial questions for each subcategory
 export async function seedInitialQuestions(userId: string) {
   // Import categories from the centralized categories API
   const { signalSubCategories } = await import('./categories/types');
@@ -203,10 +225,7 @@ export async function duplicateQuestion(originalQuestion: Question): Promise<Que
     const processedText = prepareContentForStorage(duplicateData.text);
     
     // Convert answers to proper format
-    const supabaseAnswers: Json = duplicateData.answers.map(answer => ({
-      text: typeof answer.text === 'string' ? answer.text : JSON.stringify(answer.text),
-      isCorrect: answer.isCorrect
-    }));
+    const supabaseAnswers: Json = duplicateData.answers.map(prepareAnswerForStorage);
 
     const { data, error } = await supabase
       .from('questions')

@@ -1,5 +1,6 @@
 
 import { Answer, CreateQuestionDTO } from "@/types/questions";
+import { getTextValue } from "@/types/rich-text";
 
 export const validateQuestionForm = (formData: Partial<CreateQuestionDTO>): string[] => {
   const errors: string[] = [];
@@ -9,7 +10,7 @@ export const validateQuestionForm = (formData: Partial<CreateQuestionDTO>): stri
     return errors;
   }
   
-  if (!formData.text?.trim()) {
+  if (!formData.text || !getTextValue(formData.text).trim()) {
     errors.push("Bitte geben Sie einen Fragetext ein.");
   }
   
@@ -26,7 +27,7 @@ export const validateQuestionForm = (formData: Partial<CreateQuestionDTO>): stri
     errors.push("Bitte geben Sie mindestens eine Antwort ein.");
   } else {
     // Check if any answer text is empty
-    if (formData.answers.some(a => !a?.text?.trim())) {
+    if (formData.answers.some(a => !a?.text || !getTextValue(a.text).trim())) {
       errors.push("Bitte geben Sie für alle Antworten einen Text ein.");
     }
     

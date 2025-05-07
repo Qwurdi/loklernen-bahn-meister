@@ -2,11 +2,12 @@
 import { useState } from "react";
 import { CreateQuestionDTO } from "@/types/questions";
 import { supabase } from "@/integrations/supabase/client";
-import { uploadQuestionImage, createQuestion } from "@/api/questions";
+import { uploadQuestionImage, createQuestion, prepareContentForStorage, prepareAnswerForStorage } from "@/api/questions";
 import { toast } from "sonner";
 import { Json } from "@/integrations/supabase/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { getTextValue } from "@/types/rich-text";
 
 export const useQuestionSubmit = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -56,12 +57,7 @@ export const useQuestionSubmit = () => {
         }
       }
       
-      // Sanitize answer data to ensure it's correctly formatted
-      const sanitizedAnswers = formData.answers.map(answer => ({
-        text: answer.text || "",
-        isCorrect: typeof answer.isCorrect === 'boolean' ? answer.isCorrect : false
-      }));
-      
+      // Create proper question data for saving
       const questionData: CreateQuestionDTO = {
         category: formData.category,
         sub_category: formData.sub_category,
@@ -69,17 +65,24 @@ export const useQuestionSubmit = () => {
         difficulty: formData.difficulty || 1,
         text: formData.text,
         image_url: finalImageUrl,
-        answers: sanitizedAnswers,
+        answers: formData.answers.map(answer => ({
+          text: answer.text,
+          isCorrect: typeof answer.isCorrect === 'boolean' ? answer.isCorrect : false
+        })),
         created_by: userId,
         regulation_category: formData.category === "Signale" ? formData.regulation_category : undefined,
-        hint: formData.hint  // Include hint in the question data
+        hint: formData.hint
       };
       
       if (isEditMode && id) {
         toast.info("Frage wird aktualisiert...");
         
-        const supabaseAnswers: Json = sanitizedAnswers.map(answer => ({
-          text: answer.text,
+        // Convert question text to database format
+        const processedText = prepareContentForStorage(questionData.text);
+        
+        // Convert answers to database format
+        const processedAnswers: Json = questionData.answers.map(answer => ({
+          text: prepareContentForStorage(answer.text),
           isCorrect: answer.isCorrect
         }));
         
@@ -90,12 +93,12 @@ export const useQuestionSubmit = () => {
             sub_category: questionData.sub_category,
             question_type: questionData.question_type,
             difficulty: questionData.difficulty,
-            text: questionData.text,
+            text: processedText,
             image_url: questionData.image_url,
-            answers: supabaseAnswers,
+            answers: processedAnswers,
             updated_at: new Date().toISOString(),
             regulation_category: questionData.regulation_category,
-            hint: questionData.hint  // Include hint in the update
+            hint: questionData.hint
           })
           .eq('id', id);
         

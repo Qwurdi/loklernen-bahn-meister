@@ -10,6 +10,8 @@ import { useNavigate } from "react-router-dom";
 import { duplicateQuestion } from "@/api/questions";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { SafeRichText } from "@/components/ui/rich-text/SafeRichText";
+import { getTextValue } from "@/types/rich-text";
 
 interface QuestionCardProps {
   question: Question;
@@ -28,13 +30,18 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDuplicating, setIsDuplicating] = useState(false);
-  const textSize = useDynamicTextSize(question.text);
+  const textSize = useDynamicTextSize(getTextValue(question.text));
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
   // Extract only correct answers
   const correctAnswers = question.answers.filter(answer => answer.isCorrect);
-  const answerTextSize = useDynamicTextSize(correctAnswers.length > 0 ? correctAnswers[0].text : "", "answer");
+  const answerTextSize = useDynamicTextSize(
+    correctAnswers.length > 0 
+      ? getTextValue(correctAnswers[0].text)
+      : "", 
+    "answer"
+  );
   
   const handleDuplicateClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -74,14 +81,16 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             )}
             <span className="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">
               {question.question_type === "open" ? "Offen" : 
-               question.question_type === "MC_single" ? "Single Choice" : "Multiple Choice"}
+                question.question_type === "MC_single" ? "Single Choice" : "Multiple Choice"}
             </span>
           </div>
         </div>
       </CardHeader>
       
       <CardContent className="p-4 flex-grow overflow-hidden flex flex-col">
-        <div className={`${textSize} line-clamp-2 mb-2`} dangerouslySetInnerHTML={{ __html: question.text }} />
+        <div className={`${textSize} line-clamp-2 mb-2`}>
+          <SafeRichText content={question.text} />
+        </div>
         
         {/* Correct answers section */}
         {correctAnswers.length > 0 && (
@@ -93,7 +102,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                   key={index}
                   className={`${answerTextSize} bg-green-50 border border-green-100 rounded-md p-1.5 line-clamp-2 text-green-800`}
                 >
-                  {answer.text}
+                  <SafeRichText content={answer.text} />
                 </div>
               ))}
             </div>

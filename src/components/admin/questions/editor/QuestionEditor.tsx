@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,12 +16,13 @@ import { SignalQuestionAnswer } from "@/components/admin/questions/answers/Signa
 import { MultipleChoiceAnswers } from "@/components/admin/questions/answers/MultipleChoiceAnswers";
 import { QuestionCategory, RegulationCategory, QuestionType, Answer } from '@/types/questions';
 import { useImagePaste } from "@/hooks/questions/useImagePaste";
+import { StructuredContent } from "@/types/rich-text";
 
 interface QuestionEditorProps {
   category: QuestionCategory;
   subCategory: string;
   difficulty: number;
-  text: string;
+  text: string | StructuredContent;
   hint?: string | null;
   isSignalQuestion: boolean;
   regulationCategory?: RegulationCategory;
@@ -32,7 +34,7 @@ interface QuestionEditorProps {
   onDifficultyChange: (difficulty: number) => void;
   onQuestionTypeChange: (type: QuestionType) => void;
   onRegulationCategoryChange: (regulationCategory: RegulationCategory) => void;
-  onTextChange: (value: string) => void;
+  onTextChange: (value: string | StructuredContent) => void;
   onHintChange: (value: string) => void;
   onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handlePastedImage?: (file: File) => void;

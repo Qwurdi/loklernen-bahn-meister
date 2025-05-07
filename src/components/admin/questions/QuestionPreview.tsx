@@ -2,9 +2,11 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Answer, RegulationCategory } from '@/types/questions';
+import { SafeRichText } from '@/components/ui/rich-text/SafeRichText';
+import { StructuredContent } from '@/types/rich-text';
 
 interface QuestionPreviewProps {
-  text: string;
+  text: string | StructuredContent;
   imagePreview: string | null;
   answers: Answer[];
   category: string;
@@ -29,7 +31,9 @@ export const QuestionPreview = ({
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          <div className="font-medium">{text || "Fragetext erscheint hier"}</div>
+          <div className="font-medium">
+            {text ? <SafeRichText content={text} /> : "Fragetext erscheint hier"}
+          </div>
           
           {imagePreview && (
             <div className="overflow-hidden rounded-md border">
@@ -47,7 +51,9 @@ export const QuestionPreview = ({
               {answers?.map((answer, index) => (
                 <li key={index} className="flex items-center gap-2">
                   <div className={`h-3 w-3 shrink-0 rounded-full ${answer.isCorrect ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                  <span>{answer.text || `Antwort ${index + 1}`}</span>
+                  <div>
+                    <SafeRichText content={answer.text || `Antwort ${index + 1}`} />
+                  </div>
                 </li>
               ))}
             </ul>

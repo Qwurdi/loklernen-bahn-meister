@@ -1,25 +1,36 @@
 
 import React from 'react';
-import { SignalAnswerInput } from "@/components/admin/SignalAnswerInput";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { getTextValue, StructuredContent } from '@/types/rich-text';
 
 interface SignalQuestionAnswerProps {
-  answerText: string;
-  onAnswerChange: (text: string) => void;
+  answerText: string | StructuredContent;
+  onAnswerChange: (value: string) => void;
 }
 
 export const SignalQuestionAnswer: React.FC<SignalQuestionAnswerProps> = ({
   answerText,
   onAnswerChange
 }) => {
+  const textValue = getTextValue(answerText);
+  
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
-        Für Signalfragen ist nur eine korrekte Antwort möglich.
-      </p>
-      <SignalAnswerInput
-        value={answerText || ""}
-        onChange={(text) => onAnswerChange(text)}
+      <Textarea
+        placeholder="Geben Sie die korrekte Antwort ein"
+        value={textValue}
+        onChange={(e) => onAnswerChange(e.target.value)}
+        className="min-h-[100px] resize-none"
       />
+      
+      <Alert variant="info" className="bg-blue-50 text-blue-800 border-blue-200">
+        <AlertCircle className="h-4 w-4 text-blue-500" />
+        <AlertDescription className="text-sm">
+          Signalfragen werden immer als offene Fragen mit einer korrekten Antwort konfiguriert.
+        </AlertDescription>
+      </Alert>
     </div>
   );
 };

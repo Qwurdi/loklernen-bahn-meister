@@ -1,6 +1,7 @@
 
 import { useState, useMemo } from 'react';
 import { Question, QuestionCategory, RegulationCategory, RegulationFilterType } from '@/types/questions';
+import { getTextValue } from '@/types/rich-text';
 
 interface UseQuestionFiltersProps {
   questions: Question[] | undefined;
@@ -22,7 +23,8 @@ export function useQuestionFilters({
     if (!questions) return [];
     
     return questions.filter(question => {
-      const matchesSearch = question.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      const questionTextString = getTextValue(question.text).toLowerCase();
+      const matchesSearch = questionTextString.includes(searchQuery.toLowerCase()) ||
                           question.sub_category.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = categoryFilter === "all" || question.category === categoryFilter;
       const matchesSubCategory = !subCategoryFilter || question.sub_category === subCategoryFilter;

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Question } from '@/types/questions';
 import FlashcardQuestionImage from '@/components/flashcards/FlashcardQuestionImage';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { getTextValue, getTextSubstring } from '@/types/rich-text';
 
 interface DueCardItemProps {
   card: any;
@@ -20,6 +21,8 @@ export default function DueCardItem({
   onMouseEnter, 
   onMouseLeave 
 }: DueCardItemProps) {
+  const questionText = getTextValue(question.text);
+  
   return (
     <Link 
       to={`/karteikarten/lernen?questionId=${card.question_id}`} 
@@ -44,7 +47,7 @@ export default function DueCardItem({
             </AspectRatio>
           ) : (
             <div className="text-xs line-clamp-2 overflow-hidden text-center text-gray-600">
-              {question.text.length > 30 ? `${question.text.substring(0, 30)}...` : question.text}
+              {questionText.length > 30 ? getTextSubstring(question.text, 0, 30) + "..." : questionText}
             </div>
           )}
           <div className="mt-auto pt-1 text-[8px] text-gray-400 text-center w-full truncate">

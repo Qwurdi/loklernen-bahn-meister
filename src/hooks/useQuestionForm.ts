@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Answer, QuestionType } from "@/types/questions";
@@ -9,6 +10,7 @@ import { useQuestionSubmit } from "./questions/useQuestionSubmit";
 import { useQuestionDuplicate } from "./questions/useQuestionDuplicate";
 import { validateQuestionForm } from "./questions/useQuestionValidation";
 import { toast } from "sonner";
+import { StructuredContent } from "@/types/rich-text";
 
 interface UseQuestionFormProps {
   id?: string;
@@ -99,7 +101,7 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
   };
 
   // Handle rich text changes
-  const handleRichTextChange = (value: string) => {
+  const handleRichTextChange = (value: string | StructuredContent) => {
     setFormData(prev => ({ ...prev, text: value }));
   };
 

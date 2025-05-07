@@ -114,20 +114,26 @@ function renderTextWithMarks(text: string, marks: TextNode['marks'] = []): React
   return marks.reduce((content, mark) => {
     switch (mark.type) {
       case 'bold':
-        return <strong>{content}</strong>;
+        return <strong key={`bold-${Math.random()}`}>{content}</strong>;
       
       case 'italic':
-        return <em>{content}</em>;
+        return <em key={`italic-${Math.random()}`}>{content}</em>;
       
       case 'underline':
-        return <span className="underline">{content}</span>;
+        return <span key={`underline-${Math.random()}`} className="underline">{content}</span>;
       
       case 'code':
-        return <code className="bg-gray-100 px-1 rounded">{content}</code>;
+        return <code key={`code-${Math.random()}`} className="bg-gray-100 px-1 rounded">{content}</code>;
       
       case 'link':
         return mark.attrs?.href ? (
-          <a href={mark.attrs.href} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+          <a 
+            key={`link-${Math.random()}`}
+            href={mark.attrs.href} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-blue-600 hover:underline"
+          >
             {content}
           </a>
         ) : content;

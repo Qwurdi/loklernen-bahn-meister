@@ -7,7 +7,7 @@ import Link from '@tiptap/extension-link';
 import { Bold, Italic, List, ListOrdered, Heading2, Code, Link as LinkIcon, Underline as UnderlineIcon } from 'lucide-react';
 import { Toggle } from '@/components/ui/toggle';
 import { Toolbar } from '@/components/ui/toolbar';
-import { StructuredContent } from '@/types/rich-text';
+import { StructuredContent, Mark, TextNode } from '@/types/rich-text';
 
 interface RichTextEditorProps {
   value: string | StructuredContent;
@@ -31,51 +31,40 @@ const extensions = [
 
 // Convert TipTap content to our structured format
 function tiptapToStructured(htmlContent: string): StructuredContent {
-  // This is a simplified version - a real implementation would parse the HTML
-  // and convert it to our structured format
-  // For now, we're creating a simple paragraph-based structure
-  
   const parser = new DOMParser();
   const doc = parser.parseFromString(htmlContent, 'text/html');
-  const nodes: any[] = [];
+  const nodes: TextNode[] = [];
   
-  // Basic conversion of HTML elements to structured nodes
+  // Process each top-level element
   Array.from(doc.body.childNodes).forEach((node) => {
     if (node.nodeType === Node.ELEMENT_NODE) {
       const element = node as HTMLElement;
       
       switch (element.tagName.toLowerCase()) {
         case 'p':
-          nodes.push({
-            type: 'paragraph',
-            content: element.textContent || '',
-          });
+          nodes.push(processTextElement(element, 'paragraph'));
           break;
         
         case 'h2':
         case 'h3':
-          nodes.push({
-            type: 'heading',
-            content: element.textContent || '',
-            attrs: {
-              level: parseInt(element.tagName.charAt(1)),
-            },
-          });
+          nodes.push(processTextElement(element, 'heading', {
+            level: parseInt(element.tagName.charAt(1))
+          }));
           break;
         
         case 'ul':
         case 'ol':
-          const listItems = Array.from(element.querySelectorAll('li')).map(li => ({
-            type: 'list-item',
-            content: li.textContent || '',
-          }));
+          const listType = element.tagName.toLowerCase() === 'ol' ? 'ol' : 'ul';
+          const listItems = Array.from(element.querySelectorAll('li')).map(li => 
+            processTextElement(li, 'list-item')
+          );
           
           nodes.push({
             type: 'list',
             content: listItems,
             attrs: {
-              ordered: element.tagName.toLowerCase() === 'ol',
-            },
+              ordered: listType === 'ol'
+            }
           });
           break;
         
@@ -90,9 +79,76 @@ function tiptapToStructured(htmlContent: string): StructuredContent {
   });
   
   return {
-    nodes,
+    nodes: nodes.length > 0 ? nodes : [{ type: 'paragraph', content: '' }],
     version: '1.0.0',
   };
+}
+
+// Helper function to process text elements and extract formatting marks
+function processTextElement(element: HTMLElement, nodeType: TextNode['type'], attrs?: Record<string, any>): TextNode {
+  // If the element has no child elements with formatting, return simple text node
+  if (!hasFormattingElements(element)) {
+    return {
+      type: nodeType,
+      content: element.textContent || '',
+      ...(attrs && { attrs })
+    };
+  }
+  
+  // Process element with formatting marks
+  const textContent = element.textContent || '';
+  const marks = extractMarksFromElement(element);
+  
+  return {
+    type: nodeType,
+    content: textContent,
+    marks: marks.length > 0 ? marks : undefined,
+    ...(attrs && { attrs })
+  };
+}
+
+// Check if an element contains any formatting elements
+function hasFormattingElements(element: HTMLElement): boolean {
+  return element.querySelector('strong, em, u, a, code') !== null;
+}
+
+// Extract formatting marks from an element
+function extractMarksFromElement(element: HTMLElement): Mark[] {
+  const marks: Mark[] = [];
+  
+  // Check for bold formatting
+  if (element.querySelector('strong') || element.closest('strong')) {
+    marks.push({ type: 'bold' });
+  }
+  
+  // Check for italic formatting
+  if (element.querySelector('em') || element.closest('em')) {
+    marks.push({ type: 'italic' });
+  }
+  
+  // Check for underline formatting
+  if (element.querySelector('u') || element.closest('u')) {
+    marks.push({ type: 'underline' });
+  }
+  
+  // Check for code formatting
+  if (element.querySelector('code') || element.closest('code')) {
+    marks.push({ type: 'code' });
+  }
+  
+  // Check for links
+  const linkEl = element.querySelector('a') || element.closest('a');
+  if (linkEl) {
+    const href = linkEl instanceof HTMLAnchorElement ? linkEl.getAttribute('href') : null;
+    if (href) {
+      marks.push({ 
+        type: 'link',
+        attrs: { href }
+      });
+    }
+  }
+  
+  return marks;
 }
 
 // Convert our structured format to HTML for TipTap
@@ -103,16 +159,16 @@ function structuredToHtml(content: StructuredContent): string {
   return content.nodes.map(node => {
     switch (node.type) {
       case 'paragraph':
-        return `<p>${node.content}</p>`;
+        return `<p>${formatTextWithMarks(node)}</p>`;
       
       case 'heading':
         const level = node.attrs?.level || 2;
-        return `<h${level}>${node.content}</h${level}>`;
+        return `<h${level}>${formatTextWithMarks(node)}</h${level}>`;
       
       case 'list':
         const listType = node.attrs?.ordered ? 'ol' : 'ul';
         const listItems = Array.isArray(node.content) 
-          ? node.content.map(item => `<li>${item.content}</li>`).join('')
+          ? node.content.map(item => `<li>${formatTextWithMarks(item)}</li>`).join('')
           : '';
         return `<${listType}>${listItems}</${listType}>`;
       
@@ -123,6 +179,42 @@ function structuredToHtml(content: StructuredContent): string {
         return '';
     }
   }).join('');
+}
+
+// Apply marks to text content
+function formatTextWithMarks(node: TextNode): string {
+  if (typeof node.content !== 'string') {
+    return '';
+  }
+  
+  let formattedText = node.content;
+  
+  // Apply marks if they exist
+  if (node.marks && node.marks.length > 0) {
+    node.marks.forEach(mark => {
+      switch (mark.type) {
+        case 'bold':
+          formattedText = `<strong>${formattedText}</strong>`;
+          break;
+        case 'italic':
+          formattedText = `<em>${formattedText}</em>`;
+          break;
+        case 'underline':
+          formattedText = `<u>${formattedText}</u>`;
+          break;
+        case 'code':
+          formattedText = `<code>${formattedText}</code>`;
+          break;
+        case 'link':
+          if (mark.attrs?.href) {
+            formattedText = `<a href="${mark.attrs.href}">${formattedText}</a>`;
+          }
+          break;
+      }
+    });
+  }
+  
+  return formattedText;
 }
 
 export function RichTextEditor({ 

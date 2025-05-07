@@ -92,7 +92,7 @@ export const useQuestionSubmit = () => {
             difficulty: questionData.difficulty,
             text: processedText,
             image_url: questionData.image_url,
-            answers: processedAnswers,
+            answers: processedAnswers as any,
             updated_at: new Date().toISOString(),
             regulation_category: questionData.regulation_category,
             hint: questionData.hint

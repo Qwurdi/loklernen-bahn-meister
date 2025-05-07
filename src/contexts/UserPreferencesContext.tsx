@@ -44,32 +44,28 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
           if (error) {
             console.error('Error loading user preferences:', error);
             
-            // If it's specifically a column not found error, we can still proceed
-            // with any data we might have, or fall back to localStorage
-            if (error.code !== 'PGRST116') {
-              console.error('Unexpected error when loading user preferences:', error);
-            }
-            
             // If there was an error, use local storage as fallback
-            const storedPreference = localStorage.getItem(REGULATION_PREFERENCE_KEY) as RegulationFilterType | null;
-            setRegulationPreferenceState(storedPreference || 'DS 301');
+            // Load regulation preference from local storage
+            const storedRegPreference = localStorage.getItem(REGULATION_PREFERENCE_KEY) as RegulationFilterType | null;
+            setRegulationPreferenceState(storedRegPreference || 'DS 301');
             
+            // Load editor view preference from local storage
             const storedViewPreference = localStorage.getItem(EDITOR_VIEW_PREFERENCE_KEY) as EditorViewType | null;
             setEditorViewPreferenceState(storedViewPreference || 'tabs');
           } 
           // Only try to access data properties if we don't have an error
           else if (data) {
-            // Check each preference individually to make it more resilient
-            if (data.regulation_preference) {
+            // Handle regulation preference
+            if ('regulation_preference' in data && data.regulation_preference) {
               setRegulationPreferenceState(data.regulation_preference as RegulationFilterType);
             } else {
               // Fallback to localStorage if property doesn't exist in data
-              const storedPreference = localStorage.getItem(REGULATION_PREFERENCE_KEY) as RegulationFilterType | null;
-              setRegulationPreferenceState(storedPreference || 'DS 301');
+              const storedRegPreference = localStorage.getItem(REGULATION_PREFERENCE_KEY) as RegulationFilterType | null;
+              setRegulationPreferenceState(storedRegPreference || 'DS 301');
             }
             
-            // The editor_view_preference might not exist in the database yet
-            if (data.editor_view_preference) {
+            // Handle editor view preference
+            if ('editor_view_preference' in data && data.editor_view_preference) {
               setEditorViewPreferenceState(data.editor_view_preference as EditorViewType);
             } else {
               // Fallback to localStorage if property doesn't exist in data
@@ -79,8 +75,8 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
           }
         } else {
           // For non-authenticated users, use local storage
-          const storedPreference = localStorage.getItem(REGULATION_PREFERENCE_KEY) as RegulationFilterType | null;
-          setRegulationPreferenceState(storedPreference || 'DS 301');
+          const storedRegPreference = localStorage.getItem(REGULATION_PREFERENCE_KEY) as RegulationFilterType | null;
+          setRegulationPreferenceState(storedRegPreference || 'DS 301');
           
           const storedViewPreference = localStorage.getItem(EDITOR_VIEW_PREFERENCE_KEY) as EditorViewType | null;
           setEditorViewPreferenceState(storedViewPreference || 'tabs');

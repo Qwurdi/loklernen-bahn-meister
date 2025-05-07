@@ -2,7 +2,8 @@
 import React from 'react';
 import { QuestionCategorySelector } from './QuestionCategorySelector';
 import { QuestionSubCategorySelector } from './QuestionSubCategorySelector';
-import { QuestionCategory, RegulationCategory } from '@/types/questions';
+import { QuestionTypeSelector } from './QuestionTypeSelector';
+import { QuestionCategory, RegulationCategory, QuestionType } from '@/types/questions';
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -13,11 +14,13 @@ interface BasicInfoTabProps {
   category: QuestionCategory;
   subCategory: string;
   difficulty: number;
+  questionType: QuestionType;
   isSignalQuestion: boolean;
   regulationCategory?: RegulationCategory;
   onCategoryChange: (category: QuestionCategory) => void;
   onSubCategoryChange: (subCategory: string) => void;
   onDifficultyChange: (difficulty: number) => void;
+  onQuestionTypeChange: (type: QuestionType) => void;
   onRegulationCategoryChange?: (regulationCategory: RegulationCategory) => void;
 }
 
@@ -25,11 +28,13 @@ export const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
   category,
   subCategory,
   difficulty,
+  questionType,
   isSignalQuestion,
   regulationCategory = "both",
   onCategoryChange,
   onSubCategoryChange,
   onDifficultyChange,
+  onQuestionTypeChange,
   onRegulationCategoryChange
 }) => {
   return (
@@ -50,6 +55,12 @@ export const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
           </div>
         </CardContent>
       </Card>
+
+      <QuestionTypeSelector
+        questionType={questionType}
+        onChange={onQuestionTypeChange}
+        isSignalQuestion={isSignalQuestion}
+      />
 
       <Card>
         <CardContent className="pt-6">

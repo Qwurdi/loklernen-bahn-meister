@@ -33,6 +33,7 @@ const QuestionEditorPage: React.FC = () => {
     handleSubCategoryChange,
     handleDifficultyChange,
     handleRegulationCategoryChange,
+    handleQuestionTypeChange,
     handleAnswerChange,
     handleImageChange,
     handlePastedImage,
@@ -140,6 +141,7 @@ const QuestionEditorPage: React.FC = () => {
             onCategoryChange={handleCategoryChange}
             onSubCategoryChange={handleSubCategoryChange}
             onDifficultyChange={handleDifficultyChange}
+            onQuestionTypeChange={handleQuestionTypeChange}
             onRegulationCategoryChange={handleRegulationCategoryChange}
             onTextChange={handleRichTextChange}
             onImageChange={handleImageChange}

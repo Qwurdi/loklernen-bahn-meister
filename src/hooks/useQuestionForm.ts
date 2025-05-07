@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Answer } from "@/types/questions";
+import { Answer, QuestionType } from "@/types/questions";
 import { useQuestionImage } from "./questions/useQuestionImage";
 import { useQuestionFormState } from "./questions/useQuestionFormState";
 import { useQuestionAnswers } from "./questions/useQuestionAnswers";
@@ -45,7 +45,8 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
     handleCategoryChange,
     handleSubCategoryChange,
     handleDifficultyChange,
-    handleRegulationCategoryChange
+    handleRegulationCategoryChange,
+    handleQuestionTypeChange
   } = useQuestionFormState({ 
     initialData, 
     userId: user?.id || 'anonymous' 
@@ -102,6 +103,7 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
     handleSubCategoryChange,
     handleDifficultyChange,
     handleRegulationCategoryChange,
+    handleQuestionTypeChange,
     handleAnswerChange,
     handleImageChange,
     handlePastedImage,

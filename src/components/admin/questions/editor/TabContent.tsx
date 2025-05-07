@@ -20,6 +20,7 @@ interface TabContentProps {
   onCategoryChange: (category: QuestionCategory) => void;
   onSubCategoryChange: (subCategory: string) => void;
   onDifficultyChange: (difficulty: number) => void;
+  onQuestionTypeChange: (type: QuestionType) => void;
   onRegulationCategoryChange: (regulationCategory: RegulationCategory) => void;
   onTextChange: (value: string) => void;
   onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -45,6 +46,7 @@ export const TabContent: React.FC<TabContentProps> = ({
   onCategoryChange,
   onSubCategoryChange,
   onDifficultyChange,
+  onQuestionTypeChange,
   onRegulationCategoryChange,
   onTextChange,
   onImageChange,
@@ -62,11 +64,13 @@ export const TabContent: React.FC<TabContentProps> = ({
           category={category}
           subCategory={subCategory}
           difficulty={difficulty}
+          questionType={questionType}
           isSignalQuestion={isSignalQuestion}
           regulationCategory={regulationCategory}
           onCategoryChange={onCategoryChange}
           onSubCategoryChange={onSubCategoryChange}
           onDifficultyChange={onDifficultyChange}
+          onQuestionTypeChange={onQuestionTypeChange}
           onRegulationCategoryChange={isSignalQuestion ? onRegulationCategoryChange : undefined}
         />
       </EditorTabContent>

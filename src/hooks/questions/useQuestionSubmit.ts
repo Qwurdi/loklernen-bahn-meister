@@ -4,7 +4,6 @@ import { CreateQuestionDTO } from "@/types/questions";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadQuestionImage, createQuestion, prepareContentForStorage, prepareAnswerForStorage } from "@/api/questions";
 import { toast } from "sonner";
-import { Json } from "@/integrations/supabase/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { getTextValue } from "@/types/rich-text";
@@ -92,7 +91,7 @@ export const useQuestionSubmit = () => {
             difficulty: questionData.difficulty,
             text: processedText,
             image_url: questionData.image_url,
-            answers: processedAnswers as any,
+            answers: processedAnswers,
             updated_at: new Date().toISOString(),
             regulation_category: questionData.regulation_category,
             hint: questionData.hint

@@ -32,6 +32,10 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
+  // Extract only correct answers
+  const correctAnswers = question.answers.filter(answer => answer.isCorrect);
+  const answerTextSize = useDynamicTextSize(correctAnswers.length > 0 ? correctAnswers[0].text : "", "answer");
+  
   const handleDuplicateClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
@@ -76,9 +80,27 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         </div>
       </CardHeader>
       
-      <CardContent className="p-4 flex-grow overflow-hidden">
-        <div className={`${textSize} line-clamp-3 mb-2`} dangerouslySetInnerHTML={{ __html: question.text }} />
+      <CardContent className="p-4 flex-grow overflow-hidden flex flex-col">
+        <div className={`${textSize} line-clamp-2 mb-2`} dangerouslySetInnerHTML={{ __html: question.text }} />
         
+        {/* Correct answers section */}
+        {correctAnswers.length > 0 && (
+          <div className="mt-2">
+            <p className="text-xs font-medium text-gray-500 mb-1">Antworten:</p>
+            <div className="space-y-1">
+              {correctAnswers.map((answer, index) => (
+                <div 
+                  key={index}
+                  className={`${answerTextSize} bg-green-50 border border-green-100 rounded-md p-1.5 line-clamp-2 text-green-800`}
+                >
+                  {answer.text}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Image preview */}
         {question.image_url && (
           <div className="mt-2 h-24 rounded-md border overflow-hidden bg-gray-50">
             <img 

@@ -1,8 +1,10 @@
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import CategoryCard from "@/components/common/CategoryCard";
 import { RegulationFilterType } from "@/types/regulation";
-import { fetchCategoriesByParent } from "@/api/categories";
+import { useCategoryMetadata } from "./useCategoryMetadata";
+import { filterCategoriesByRegulation } from "./CategoryRegulationFilter";
+import EmptyRegulationState from "./EmptyRegulationState";
 
 interface CategoryStats {
   correct: number;
@@ -38,81 +40,13 @@ export default function CategoryGrid({
   regulationFilter,
   isPro = false,
 }: CategoryGridProps) {
-  const [categoryMetadata, setCategoryMetadata] = useState<Record<string, { isPro: boolean, isPlanned: boolean }>>({});
-  
-  // Fetch categories to determine which are pro and which are planned
-  useEffect(() => {
-    const fetchCategoryMetadata = async () => {
-      try {
-        const parent = categories.some(cat => 
-          ["Rangieren", "Züge fahren", "PZB & Sicherungsanlagen"].includes(cat)
-        ) ? 'Betriebsdienst' : 'Signale';
-        
-        const dbCategories = await fetchCategoriesByParent(parent);
-        
-        // Create a map of category name to metadata (isPro and isPlanned status)
-        const metadataMap = dbCategories.reduce((map: Record<string, { isPro: boolean, isPlanned: boolean }>, cat) => {
-          map[cat.name] = { 
-            isPro: !!cat.isPro,
-            isPlanned: !!cat.isPlanned
-          };
-          return map;
-        }, {});
-        
-        setCategoryMetadata(metadataMap);
-      } catch (error) {
-        console.error("Error fetching category metadata:", error);
-        // Fallback for Betriebsdienst categories that are typically Pro
-        if (categories.some(cat => ["Rangieren", "Züge fahren"].includes(cat))) {
-          const DEFAULT_PRO_CATEGORIES = [
-            "Rangieren", 
-            "Züge fahren", 
-            "PZB & Sicherungsanlagen", 
-            "Kommunikation", 
-            "Besonderheiten", 
-            "Unregelmäßigkeiten"
-          ];
-          
-          const fallbackMap = categories.reduce((map: Record<string, { isPro: boolean, isPlanned: boolean }>, cat) => {
-            map[cat] = { 
-              isPro: DEFAULT_PRO_CATEGORIES.includes(cat),
-              isPlanned: false // Default to false for isPlanned in fallback
-            };
-            return map;
-          }, {});
-          
-          setCategoryMetadata(fallbackMap);
-        }
-      }
-    };
-    
-    fetchCategoryMetadata();
-  }, [categories]);
+  const { categoryMetadata, isLoading } = useCategoryMetadata(categories);
   
   // Filter categories based on regulation preference
-  const visibleCategories = categories.filter(subcategory => {
-    const cardCounts = categoryCardCounts?.[subcategory];
-    
-    if (regulationFilter !== "all" && cardCounts) {
-      // Include cards if they match the regulation OR have "Beide"/"both" regulation OR have no specific regulation set
-      const hasCardsForRegulation = 
-        (cardCounts.byRegulation[regulationFilter] > 0) || 
-        (cardCounts.byRegulation["Beide"] > 0) || 
-        (cardCounts.byRegulation["both"] > 0) ||
-        (cardCounts.byRegulation["Allgemein"] > 0);
-        
-      return hasCardsForRegulation;
-    }
-    
-    return true;
-  });
+  const visibleCategories = filterCategoriesByRegulation(categories, categoryCardCounts, regulationFilter);
   
   if (visibleCategories.length === 0) {
-    return (
-      <div className="text-center py-8 px-4 border border-gray-200 rounded-lg bg-white">
-        <p className="text-gray-600">Keine Kategorien für das ausgewählte Regelwerk verfügbar.</p>
-      </div>
-    );
+    return <EmptyRegulationState />;
   }
   
   return (

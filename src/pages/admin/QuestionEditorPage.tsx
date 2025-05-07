@@ -4,7 +4,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuestions } from "@/hooks/useQuestions";
 import { useQuestionForm } from "@/hooks/useQuestionForm";
 import { QuestionFormHeader } from "@/components/admin/questions/QuestionFormHeader";
-import { EditorTabs } from "@/components/admin/questions/EditorTabs";
 import { PreviewModal } from "@/components/admin/questions/PreviewModal";
 import { useAutoSave } from "@/hooks/questions/useAutoSave";
 import { toast } from "sonner";
@@ -12,7 +11,7 @@ import { FormErrors } from "@/components/admin/questions/editor/FormErrors";
 import { AutoSaveIndicator } from "@/components/admin/questions/editor/AutoSaveIndicator";
 import { DraftDialog } from "@/components/admin/questions/editor/DraftDialog";
 import { NavigationWarning } from "@/components/admin/questions/editor/NavigationWarning";
-import { TabContent } from "@/components/admin/questions/editor/TabContent";
+import { QuestionEditor } from "@/components/admin/questions/editor/QuestionEditor";
 
 const QuestionEditorPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,7 +20,6 @@ const QuestionEditorPage: React.FC = () => {
   const [showDraftDialog, setShowDraftDialog] = useState(false);
   const [draftData, setDraftData] = useState<any>(null);
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("basics");
   
   const {
     isEditMode,
@@ -94,10 +92,6 @@ const QuestionEditorPage: React.FC = () => {
     }
   };
 
-  const handleChangeTab = (value: string) => {
-    setActiveTab(value);
-  };
-
   const handleToggleAnswerCorrectness = (index: number) => {
     toggleAnswerCorrectness(index, formData.question_type!);
   };
@@ -126,33 +120,30 @@ const QuestionEditorPage: React.FC = () => {
       />
 
       <form onSubmit={handleSubmit}>
-        <EditorTabs defaultValue={activeTab} onValueChange={handleChangeTab}>
-          <TabContent 
-            activeTab={activeTab}
-            category={formData.category!}
-            subCategory={formData.sub_category || ""}
-            difficulty={formData.difficulty || 1}
-            text={formData.text || ""}
-            isSignalQuestion={isSignalQuestion}
-            regulationCategory={formData.regulation_category}
-            imagePreview={imagePreview}
-            answers={formData.answers || []}
-            questionType={formData.question_type!}
-            onCategoryChange={handleCategoryChange}
-            onSubCategoryChange={handleSubCategoryChange}
-            onDifficultyChange={handleDifficultyChange}
-            onQuestionTypeChange={handleQuestionTypeChange}
-            onRegulationCategoryChange={handleRegulationCategoryChange}
-            onTextChange={handleRichTextChange}
-            onImageChange={handleImageChange}
-            handlePastedImage={handlePastedImage}
-            removeImage={removeImage}
-            handleAnswerChange={handleAnswerChange}
-            toggleAnswerCorrectness={handleToggleAnswerCorrectness}
-            removeAnswer={removeAnswer}
-            addAnswer={addAnswer}
-          />
-        </EditorTabs>
+        <QuestionEditor 
+          category={formData.category!}
+          subCategory={formData.sub_category || ""}
+          difficulty={formData.difficulty || 1}
+          text={formData.text || ""}
+          isSignalQuestion={isSignalQuestion}
+          regulationCategory={formData.regulation_category}
+          imagePreview={imagePreview}
+          answers={formData.answers || []}
+          questionType={formData.question_type!}
+          onCategoryChange={handleCategoryChange}
+          onSubCategoryChange={handleSubCategoryChange}
+          onDifficultyChange={handleDifficultyChange}
+          onQuestionTypeChange={handleQuestionTypeChange}
+          onRegulationCategoryChange={handleRegulationCategoryChange}
+          onTextChange={handleRichTextChange}
+          onImageChange={handleImageChange}
+          handlePastedImage={handlePastedImage}
+          removeImage={removeImage}
+          handleAnswerChange={handleAnswerChange}
+          toggleAnswerCorrectness={handleToggleAnswerCorrectness}
+          removeAnswer={removeAnswer}
+          addAnswer={addAnswer}
+        />
       </form>
       
       <PreviewModal

@@ -93,6 +93,11 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
     await duplicateQuestionFunc(id!, questions);
   };
 
+  // Handle toggling answer correctness with question type
+  const toggleAnswerWithQuestionType = (index: number, questionType: QuestionType) => {
+    toggleAnswerCorrectness(index, questionType);
+  };
+
   return {
     isEditMode,
     isLoading,
@@ -108,7 +113,7 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
     handleImageChange,
     handlePastedImage,
     removeImage,
-    toggleAnswerCorrectness,
+    toggleAnswerCorrectness: toggleAnswerWithQuestionType,
     addAnswer,
     removeAnswer,
     handleSubmit,

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Answer, QuestionType } from "@/types/questions";
 import { toast } from "sonner";
@@ -70,7 +69,7 @@ export const useQuestionAnswers = (
     }
   };
 
-  const toggleAnswerCorrectness = (index: number, questionType: QuestionType) => {
+  const toggleAnswerCorrectness = (index: number, questionType: QuestionType = "MC_multi") => {
     try {
       // Validate index and questionType
       if (index < 0 || index >= answers.length) {
@@ -79,22 +78,25 @@ export const useQuestionAnswers = (
         return;
       }
       
-      if (!questionType || !["MC_single", "MC_multi", "open"].includes(questionType)) {
-        console.error("Invalid question type:", questionType);
-        toast.error("Ungültiger Fragetyp");
-        return;
-      }
+      console.log("Toggling answer", index, "for question type", questionType);
       
       const newAnswers = [...answers];
       
       if (questionType === "MC_single") {
-        newAnswers.forEach(answer => answer.isCorrect = false);
+        // For single-choice, uncheck all answers and check the clicked one
+        newAnswers.forEach((answer, i) => {
+          answer.isCorrect = i === index;
+        });
+      } else if (questionType === "open") {
+        // For open questions, always keep the answer correct
+        newAnswers[index].isCorrect = true;
+      } else {
+        // For multiple-choice, toggle the clicked answer
+        newAnswers[index] = { 
+          ...newAnswers[index], 
+          isCorrect: !newAnswers[index].isCorrect 
+        };
       }
-      
-      newAnswers[index] = { 
-        ...newAnswers[index], 
-        isCorrect: !newAnswers[index].isCorrect 
-      };
       
       updateAnswersWithCallback(newAnswers);
     } catch (error) {
@@ -127,6 +129,12 @@ export const useQuestionAnswers = (
       // Ensure there's always at least one answer
       if (newAnswers.length === 0) {
         newAnswers.push({ text: "", isCorrect: true });
+      }
+      
+      // If we're removing the only correct answer in single-choice, make another one correct
+      const hasCorrect = newAnswers.some(a => a.isCorrect);
+      if (!hasCorrect) {
+        newAnswers[0].isCorrect = true;
       }
       
       updateAnswersWithCallback(newAnswers);

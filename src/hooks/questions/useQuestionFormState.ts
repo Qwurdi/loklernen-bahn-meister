@@ -28,11 +28,12 @@ export const useQuestionFormState = ({ initialData, userId }: UseQuestionFormSta
   };
   
   const handleCategoryChange = (category: QuestionCategory) => {
+    // Set appropriate defaults based on category  
     const defaultSubCategory = category === "Signale" 
       ? "Haupt- und Vorsignale"
       : "Grundlagen Bahnbetrieb";
     
-    // Set appropriate defaults based on category  
+    // When changing category, set appropriate question type
     const defaultQuestionType = category === "Signale" 
       ? "open" 
       : "MC_single";
@@ -72,6 +73,8 @@ export const useQuestionFormState = ({ initialData, userId }: UseQuestionFormSta
   };
   
   const handleQuestionTypeChange = (questionType: QuestionType) => {
+    console.log("Changing question type to:", questionType);
+    
     // Adjust answers based on question type change
     let updatedAnswers = [...(formData.answers || [])];
     

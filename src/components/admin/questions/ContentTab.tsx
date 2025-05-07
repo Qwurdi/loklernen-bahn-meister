@@ -5,13 +5,14 @@ import { QuestionTextEditor } from './content/QuestionTextEditor';
 import { ImageUpload } from './content/ImageUpload';
 import { HintField } from './content/HintField';
 import { useImagePaste } from '@/hooks/questions/useImagePaste';
+import { StructuredContent } from '@/types/rich-text';
 
 interface ContentTabProps {
-  text: string;
-  hint?: string | null;
+  text: string | StructuredContent;
+  hint?: string | StructuredContent | null;
   imagePreview: string | null;
-  onTextChange: (value: string) => void;
-  onHintChange?: (value: string) => void;
+  onTextChange: (value: string | StructuredContent) => void;
+  onHintChange?: (value: string | StructuredContent) => void;
   onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handlePastedImage?: (file: File) => void;
   removeImage: () => void;

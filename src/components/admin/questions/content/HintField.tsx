@@ -2,13 +2,14 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { HelpCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { RichTextEditor } from '@/components/ui/rich-text/RichTextEditor';
+import { StructuredContent } from '@/types/rich-text';
 
 interface HintFieldProps {
-  hint: string | null | undefined;
-  onChange: (value: string) => void;
+  hint: string | StructuredContent | null | undefined;
+  onChange: (value: string | StructuredContent) => void;
 }
 
 export const HintField: React.FC<HintFieldProps> = ({ hint, onChange }) => {
@@ -31,12 +32,11 @@ export const HintField: React.FC<HintFieldProps> = ({ hint, onChange }) => {
         </TooltipProvider>
       </div>
       
-      <Textarea
-        id="hint"
+      <RichTextEditor
+        value={hint || ''}
+        onChange={onChange}
         placeholder="Geben Sie hier einen Hinweis ein, der den Lernenden helfen könnte..."
-        value={hint || ""}
-        onChange={(e) => onChange(e.target.value)}
-        className="min-h-[80px] resize-y"
+        minHeight="80px"
       />
     </div>
   );

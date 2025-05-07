@@ -21,10 +21,11 @@ describe('spaced repetition utils', () => {
 
   describe('calculateNextReviewDate', () => {
     it('should calculate next review date for Box 1', () => {
-      const result = calculateNextReviewDate(1);
+      const today = new Date();
+      const result = calculateNextReviewDate(today, 1);
       
       // Should return date one day in future
-      const tomorrow = new Date();
+      const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
       
       const resultDate = new Date(result);
@@ -36,10 +37,11 @@ describe('spaced repetition utils', () => {
     });
     
     it('should calculate next review date for Box 3', () => {
-      const result = calculateNextReviewDate(3);
+      const today = new Date();
+      const result = calculateNextReviewDate(today, 3);
       
       // Should return date 7 days in future
-      const future = new Date();
+      const future = new Date(today);
       future.setDate(future.getDate() + 7);
       
       const resultDate = new Date(result);
@@ -51,10 +53,11 @@ describe('spaced repetition utils', () => {
     });
     
     it('should handle default case (invalid box number)', () => {
-      const result = calculateNextReviewDate(10); // Non-existent box
+      const today = new Date();
+      const result = calculateNextReviewDate(today, 10); // Non-existent box
       
       // Should default to 1 day
-      const tomorrow = new Date();
+      const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
       
       const resultDate = new Date(result);

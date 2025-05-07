@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Question } from "@/types/questions";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
 import HintButton from "./HintButton";
+import { SafeRichText } from "@/components/ui/rich-text/SafeRichText";
 
 interface MultipleChoiceQuestionProps {
   question: Question;
@@ -22,7 +24,9 @@ export default function MultipleChoiceQuestion({
   const [submitted, setSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   
-  const textSizeClass = useDynamicTextSize(question.text);
+  const textSizeClass = useDynamicTextSize(
+    typeof question.text === 'string' ? question.text : 'medium'
+  );
   const isSingleChoice = question.question_type === 'MC_single';
   
   // Calculate correct answer indices for validation
@@ -72,7 +76,7 @@ export default function MultipleChoiceQuestion({
     <div className="w-full flex flex-col">
       {/* Question text */}
       <div className={`${textSizeClass} mb-4 font-medium`}>
-        {question.text}
+        <SafeRichText content={question.text} />
       </div>
       
       {/* Hint button - no longer auto shows, only on request */}
@@ -121,7 +125,7 @@ export default function MultipleChoiceQuestion({
                         : 'text-gray-700'
                   }`}
                 >
-                  {answer.text}
+                  <SafeRichText content={answer.text} />
                 </label>
                 {submitted && answer.isCorrect && (
                   <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
@@ -167,7 +171,7 @@ export default function MultipleChoiceQuestion({
                         : 'text-gray-700'
                   }`}
                 >
-                  {answer.text}
+                  <SafeRichText content={answer.text} />
                 </label>
                 {submitted && answer.isCorrect && (
                   <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />

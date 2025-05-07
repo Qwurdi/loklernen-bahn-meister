@@ -1,8 +1,8 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { CreateQuestionDTO, Question, QuestionCategory, Answer } from "@/types/questions";
 import { Json } from "@/integrations/supabase/types";
 import { signalSubCategories, betriebsdienstSubCategories } from "@/api/categories/types";
+import { isStructuredContent, plainTextToStructured } from "@/types/rich-text";
 
 // Helper function to convert database answers (Json) to Answer[]
 export function transformAnswers(jsonAnswers: Json): Answer[] {
@@ -10,8 +10,12 @@ export function transformAnswers(jsonAnswers: Json): Answer[] {
     return jsonAnswers.map(answer => {
       // Safely check if answer is an object and access its properties
       if (typeof answer === 'object' && answer !== null) {
+        const text = 'text' in answer ? answer.text : '';
+        // Convert string answers to structured content if they're already structured
+        const parsedText = typeof text === 'object' ? text : String(text || '');
+        
         return {
-          text: 'text' in answer ? String(answer.text || '') : '',
+          text: parsedText,
           isCorrect: 'isCorrect' in answer ? Boolean(answer.isCorrect) : false
         };
       }
@@ -24,10 +28,51 @@ export function transformAnswers(jsonAnswers: Json): Answer[] {
 
 // Helper function to transform database questions to application questions
 function transformQuestion(dbQuestion: any): Question {
+  // Check if text is in structured format
+  const questionText = dbQuestion.text;
+  let parsedText = questionText;
+  
+  // Try to parse JSON text if it's a string that might be JSON
+  if (typeof questionText === 'string' && questionText.trim().startsWith('{')) {
+    try {
+      const parsedJson = JSON.parse(questionText);
+      if (isStructuredContent(parsedJson)) {
+        parsedText = parsedJson;
+      }
+    } catch (e) {
+      // If parsing fails, keep the original string
+      console.log("Not valid JSON structured content:", e);
+    }
+  }
+  
   return {
     ...dbQuestion,
+    text: parsedText,
     answers: transformAnswers(dbQuestion.answers)
   };
+}
+
+// Helper function to prepare content for database storage
+function prepareContentForStorage(content: string | any): string {
+  if (typeof content === 'string') {
+    return content;
+  }
+  
+  // If it's already structured content, stringify it
+  if (isStructuredContent(content)) {
+    return JSON.stringify(content);
+  }
+  
+  // If it's an object but not valid structured content, convert to plain text
+  if (typeof content === 'object') {
+    try {
+      return JSON.stringify(content);
+    } catch (e) {
+      return String(content) || '';
+    }
+  }
+  
+  return String(content) || '';
 }
 
 export async function fetchQuestions(category?: QuestionCategory, sub_category?: string, regulation_category?: string) {
@@ -56,9 +101,12 @@ export async function fetchQuestions(category?: QuestionCategory, sub_category?:
 }
 
 export async function createQuestion(question: CreateQuestionDTO) {
+  // Convert text content to proper format for storage
+  const processedText = prepareContentForStorage(question.text);
+  
   // Convert Answer[] to a JSON structure compatible with Supabase
   const supabaseAnswers: Json = question.answers.map(answer => ({
-    text: answer.text,
+    text: typeof answer.text === 'string' ? answer.text : JSON.stringify(answer.text),
     isCorrect: answer.isCorrect
   }));
 
@@ -69,12 +117,12 @@ export async function createQuestion(question: CreateQuestionDTO) {
       sub_category: question.sub_category,
       question_type: question.question_type,
       difficulty: question.difficulty,
-      text: question.text,
+      text: processedText,
       image_url: question.image_url,
       answers: supabaseAnswers,
       created_by: question.created_by,
       regulation_category: question.regulation_category,
-      hint: question.hint // Add the hint field
+      hint: question.hint
     }])
     .select()
     .single();
@@ -151,8 +199,12 @@ export async function duplicateQuestion(originalQuestion: Question): Promise<Que
       hint: originalQuestion.hint // Retain the hint when duplicating
     };
 
+    // Process text content for storage
+    const processedText = prepareContentForStorage(duplicateData.text);
+    
+    // Convert answers to proper format
     const supabaseAnswers: Json = duplicateData.answers.map(answer => ({
-      text: answer.text,
+      text: typeof answer.text === 'string' ? answer.text : JSON.stringify(answer.text),
       isCorrect: answer.isCorrect
     }));
 
@@ -163,12 +215,12 @@ export async function duplicateQuestion(originalQuestion: Question): Promise<Que
         sub_category: duplicateData.sub_category,
         question_type: duplicateData.question_type,
         difficulty: duplicateData.difficulty,
-        text: duplicateData.text,
+        text: processedText,
         image_url: duplicateData.image_url,
         answers: supabaseAnswers,
         created_by: duplicateData.created_by,
         regulation_category: duplicateData.regulation_category,
-        hint: duplicateData.hint // Include hint in the inserted data
+        hint: duplicateData.hint
       }])
       .select()
       .single();

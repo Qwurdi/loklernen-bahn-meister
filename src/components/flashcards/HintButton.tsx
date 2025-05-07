@@ -1,62 +1,67 @@
 
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Lightbulb } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { HelpCircle, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Answer } from '@/types/questions';
+import { SafeRichText } from '@/components/ui/rich-text/SafeRichText';
+import { StructuredContent } from '@/types/rich-text';
 
 interface HintButtonProps {
   hint?: string | null;
-  question: string;
-  answers?: Array<{ text: string, isCorrect: boolean }>;
+  question: string | StructuredContent;
+  answers?: Answer[];
 }
 
-export default function HintButton({ hint, question, answers = [] }: HintButtonProps) {
-  const [showHint, setShowHint] = useState(false);
+export default function HintButton({ hint, question, answers }: HintButtonProps) {
+  const [isOpen, setIsOpen] = useState(false);
 
-  // Generate a generic hint if no custom hint is provided
-  const getGeneratedHint = (): string => {
-    // If we have answers with at least one correct one
-    if (answers && answers.length > 0) {
-      const correctAnswers = answers.filter(a => a.isCorrect);
-      if (correctAnswers.length > 0) {
-        const firstCorrectAnswer = correctAnswers[0].text;
-        const words = firstCorrectAnswer.split(' ');
-        
-        if (words.length <= 3) {
-          return `Die Antwort beginnt mit "${words[0]}..."`;
-        } else {
-          return `Die richtige Antwort hat etwas mit "${words[1]} ${words[2]}" zu tun.`;
-        }
-      }
-    }
-    
-    // Default hint based on question length
-    const words = question.split(' ');
-    if (words.length > 5) {
-      return `Achten Sie auf die Begriffe "${words[2]}" und "${words[3]}" in der Frage.`;
-    } else {
-      return "Überlegen Sie, was die Hauptbedeutung dieses Elements im Eisenbahnbetrieb ist.";
-    }
-  };
+  // If no hint provided, don't show the button
+  if (!hint) return null;
 
-  const displayHint = hint || getGeneratedHint();
-  
   return (
-    <div>
-      {!showHint ? (
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => setShowHint(true)}
-          className="text-xs text-gray-500 hover:text-gray-700 flex items-center"
-        >
-          <Lightbulb className="h-3 w-3 mr-1" />
-          Tipp anzeigen
-        </Button>
-      ) : (
-        <div className="hint-text animate-fade-in">
-          {displayHint}
-        </div>
-      )}
-    </div>
+    <>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="text-muted-foreground flex gap-2 hover:bg-gray-100"
+        onClick={() => setIsOpen(true)}
+      >
+        <HelpCircle className="h-4 w-4" />
+        <span className="text-xs">Hinweis anzeigen</span>
+      </Button>
+
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>Hinweis</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 rounded-full"
+                onClick={() => setIsOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="mb-3">
+            <p className="text-sm font-medium text-muted-foreground mb-1">Frage:</p>
+            <div className="p-3 bg-gray-50 rounded-md">
+              <SafeRichText content={question} />
+            </div>
+          </div>
+
+          <div>
+            <p className="text-sm font-medium text-blue-600 mb-1">Hinweis:</p>
+            <div className="p-3 bg-blue-50 rounded-md border border-blue-100">
+              <SafeRichText content={hint} />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

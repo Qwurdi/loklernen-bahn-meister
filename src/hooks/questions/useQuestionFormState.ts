@@ -1,118 +1,82 @@
+
 import { useState } from "react";
-import { QuestionCategory, QuestionType, CreateQuestionDTO, RegulationCategory } from "@/types/questions";
+import { QuestionCategory, QuestionType, RegulationCategory } from "@/types/questions";
+import { StructuredContent, plainTextToStructured } from "@/types/rich-text";
 
 interface UseQuestionFormStateProps {
-  initialData?: Partial<CreateQuestionDTO>;
+  initialData?: Partial<{
+    category: QuestionCategory;
+    sub_category: string;
+    question_type: QuestionType;
+    difficulty: number;
+    text: string | StructuredContent;
+    regulation_category: RegulationCategory;
+    hint?: string | null;
+    answers: { text: string | StructuredContent; isCorrect: boolean }[];
+  }>;
   userId: string;
 }
 
 export const useQuestionFormState = ({ initialData, userId }: UseQuestionFormStateProps) => {
-  const [formData, setFormData] = useState<Partial<CreateQuestionDTO>>({
-    category: "Signale" as QuestionCategory,
-    sub_category: "Haupt- und Vorsignale",
-    question_type: "open" as QuestionType,
-    difficulty: 1,
-    text: "",
-    image_url: null,
-    answers: [{ text: "", isCorrect: true }],
-    created_by: userId,
-    regulation_category: "both" as RegulationCategory,
-    hint: "",
-    ...initialData
+  const [formData, setFormData] = useState({
+    category: initialData?.category || "Signale",
+    sub_category: initialData?.sub_category || "",
+    question_type: initialData?.question_type || "open",
+    difficulty: initialData?.difficulty || 1,
+    text: initialData?.text || "",
+    regulation_category: initialData?.regulation_category || "both",
+    hint: initialData?.hint || null,
+    answers: initialData?.answers || [{ text: "", isCorrect: true }],
+    created_by: userId
   });
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
+
   const handleCategoryChange = (category: QuestionCategory) => {
-    // Set appropriate defaults based on category  
-    const defaultSubCategory = category === "Signale" 
-      ? "Haupt- und Vorsignale"
-      : "Grundlagen Bahnbetrieb";
-    
-    // When changing category, set appropriate question type
-    const defaultQuestionType = category === "Signale" 
-      ? "open" 
-      : "MC_single";
-    
-    // When changing category, reset answers to sensible defaults
-    let defaultAnswers;
-    if (category === "Signale") {
-      // For signal questions, just one answer that's correct
-      defaultAnswers = [{ text: "", isCorrect: true }];
-    } else {
-      // For Betriebsdienst questions with MC_single, set up multiple options with one correct
-      defaultAnswers = [
-        { text: "", isCorrect: true },
-        { text: "", isCorrect: false },
-      ];
-    }
+    setFormData(prev => {
+      const questionType = category === "Signale" ? "open" : prev.question_type;
       
-    setFormData(prev => ({ 
-      ...prev, 
-      category,
-      sub_category: defaultSubCategory,
-      question_type: defaultQuestionType,
-      answers: defaultAnswers
-    }));
-  };
-  
-  const handleSubCategoryChange = (subCategory: string) => {
-    setFormData(prev => ({ ...prev, sub_category: subCategory }));
-  };
-  
-  const handleDifficultyChange = (newDifficulty: number) => {
-    setFormData(prev => ({ ...prev, difficulty: newDifficulty }));
+      let answers = prev.answers;
+      if (category === "Signale" && questionType === "open" && (!answers || answers.length === 0)) {
+        answers = [{ text: "", isCorrect: true }];
+      }
+      
+      return {
+        ...prev,
+        category,
+        question_type: questionType,
+        answers,
+      };
+    });
   };
 
-  const handleRegulationCategoryChange = (regulationCategory: RegulationCategory) => {
-    setFormData(prev => ({ ...prev, regulation_category: regulationCategory }));
+  const handleSubCategoryChange = (sub_category: string) => {
+    setFormData(prev => ({ ...prev, sub_category }));
   };
-  
-  const handleQuestionTypeChange = (questionType: QuestionType) => {
-    console.log("Changing question type to:", questionType);
-    
-    // Adjust answers based on question type change
-    let updatedAnswers = [...(formData.answers || [])];
-    
-    if (questionType === "MC_single" && updatedAnswers.length > 0) {
-      // For MC_single, ensure only one answer is marked correct
-      const hasCorrect = updatedAnswers.some(a => a.isCorrect);
+
+  const handleQuestionTypeChange = (question_type: QuestionType) => {
+    setFormData(prev => {
+      // Convert existing answers to appropriate format
+      const answers = question_type === "open"
+        ? [{ text: prev.answers?.[0]?.text || "", isCorrect: true }]
+        : prev.answers?.map(answer => ({
+            ...answer,
+            isCorrect: question_type === "MC_single" ? answer === prev.answers[0] : answer.isCorrect
+          })) || [{ text: "", isCorrect: true }, { text: "", isCorrect: false }];
       
-      if (!hasCorrect && updatedAnswers.length > 0) {
-        updatedAnswers[0].isCorrect = true;
-      } else if (updatedAnswers.filter(a => a.isCorrect).length > 1) {
-        // If multiple answers are marked correct, keep only the first one correct
-        const firstCorrectIndex = updatedAnswers.findIndex(a => a.isCorrect);
-        updatedAnswers = updatedAnswers.map((a, idx) => ({
-          ...a,
-          isCorrect: idx === firstCorrectIndex
-        }));
-      }
-      
-      // Ensure we have at least 2 answers for MC questions
-      if (updatedAnswers.length < 2) {
-        updatedAnswers.push({ text: "", isCorrect: false });
-      }
-    } else if (questionType === "MC_multi") {
-      // Ensure we have at least 2 answers for MC questions
-      if (updatedAnswers.length < 2) {
-        updatedAnswers.push({ text: "", isCorrect: false });
-      }
-    } else if (questionType === "open") {
-      // For open questions, only one answer that's correct
-      updatedAnswers = [{ text: updatedAnswers[0]?.text || "", isCorrect: true }];
-    }
-    
-    setFormData(prev => ({ 
-      ...prev, 
-      question_type: questionType,
-      answers: updatedAnswers
-    }));
+      return { ...prev, question_type, answers };
+    });
+  };
+
+  const handleDifficultyChange = (difficulty: number) => {
+    setFormData(prev => ({ ...prev, difficulty }));
+  };
+
+  const handleRegulationCategoryChange = (regulation_category: RegulationCategory) => {
+    setFormData(prev => ({ ...prev, regulation_category }));
   };
 
   const handleHintChange = (hint: string) => {
@@ -125,9 +89,9 @@ export const useQuestionFormState = ({ initialData, userId }: UseQuestionFormSta
     handleInputChange,
     handleCategoryChange,
     handleSubCategoryChange,
+    handleQuestionTypeChange,
     handleDifficultyChange,
     handleRegulationCategoryChange,
-    handleQuestionTypeChange,
     handleHintChange
   };
 };

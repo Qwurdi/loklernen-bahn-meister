@@ -8,6 +8,7 @@ import FlashcardActionButton from "./FlashcardActionButton";
 import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
 import ZoomableImage from "@/components/common/ZoomableImage";
 import MultipleChoiceQuestion from "./MultipleChoiceQuestion";
+import { SafeRichText } from "@/components/ui/rich-text/SafeRichText";
 
 interface FlashcardItemDesktopProps {
   question: Question;
@@ -30,8 +31,16 @@ export default function FlashcardItemDesktop({
   const isMultipleChoice = question.question_type === "MC_single" || question.question_type === "MC_multi";
   
   // Use dynamic text sizing
-  const questionTextClass = useDynamicTextSize(question?.text || '', 'question');
-  const answerTextClass = useDynamicTextSize(question?.answers?.[0]?.text || '', 'answer');
+  const questionTextClass = useDynamicTextSize(
+    typeof question?.text === 'string' ? question.text : 'medium',
+    'question'
+  );
+  const answerTextClass = useDynamicTextSize(
+    typeof question?.answers?.[0]?.text === 'string' 
+      ? question?.answers?.[0]?.text 
+      : 'medium',
+    'answer'
+  );
   
   // Handler for MC question answers
   const handleMCAnswer = (isCorrect: boolean) => {
@@ -49,7 +58,7 @@ export default function FlashcardItemDesktop({
           <div className="flex flex-col h-full">
             {/* Question text first */}
             <h2 className={`${questionTextClass} font-medium mb-6 text-gray-900`}>
-              {question?.text}
+              <SafeRichText content={question.text} />
             </h2>
             
             {/* Image with zoomable functionality */}
@@ -98,19 +107,9 @@ export default function FlashcardItemDesktop({
                 <div className="flex-1 overflow-y-auto pb-20">
                   {/* Answer content with proper styling */}
                   <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6">
-                    {question?.category === "Signale" ? (
-                      <div className="space-y-2">
-                        {question?.answers?.[0]?.text.split('\n').map((line, i) => (
-                          <p key={i} className={`${answerTextClass} font-medium text-blue-800`}>
-                            {line}
-                          </p>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className={`${answerTextClass} font-medium text-blue-800`}>
-                        {question?.answers?.[0]?.text}
-                      </p>
-                    )}
+                    <div className={`${answerTextClass} font-medium text-blue-800`}>
+                      <SafeRichText content={question?.answers?.[0]?.text || ''} />
+                    </div>
                   </div>
                   
                   {/* Image with ZoomableImage */}

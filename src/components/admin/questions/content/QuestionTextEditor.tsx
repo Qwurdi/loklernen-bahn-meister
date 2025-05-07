@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { RichTextEditor } from '@/components/ui/rich-text/RichTextEditor';
+import { StructuredContent } from '@/types/rich-text';
 
 interface QuestionTextEditorProps {
-  text: string;
-  onTextChange: (value: string) => void;
+  text: string | StructuredContent;
+  onTextChange: (value: string | StructuredContent) => void;
 }
 
 export const QuestionTextEditor: React.FC<QuestionTextEditorProps> = ({

@@ -6,6 +6,7 @@ import { Lightbulb } from "lucide-react";
 import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
 import ZoomableImage from "@/components/common/ZoomableImage";
 import HintButton from "../HintButton";
+import { SafeRichText } from "@/components/ui/rich-text/SafeRichText";
 
 interface QuestionSideProps {
   question: Question;
@@ -17,7 +18,10 @@ export default function QuestionSide({ question, onShowAnswer }: QuestionSidePro
   const isMultipleChoice = question.question_type === "MC_single" || question.question_type === "MC_multi";
   
   // Use dynamic text sizing based on question length
-  const textSizeClass = useDynamicTextSize(question?.text || '', 'question');
+  const textSizeClass = useDynamicTextSize(
+    typeof question?.text === 'string' ? question.text : 'medium',
+    'question'
+  );
   
   return (
     <div className="flex flex-col h-full p-4 bg-white">
@@ -26,9 +30,9 @@ export default function QuestionSide({ question, onShowAnswer }: QuestionSidePro
       </div>
       
       {/* Question text moved above image for visibility */}
-      <h2 className={`${textSizeClass} font-medium mb-4 text-gray-900`}>
-        {question?.text}
-      </h2>
+      <div className={`${textSizeClass} font-medium mb-4 text-gray-900`}>
+        <SafeRichText content={question.text} />
+      </div>
       
       {/* Add the hint button */}
       <div className="mb-4">

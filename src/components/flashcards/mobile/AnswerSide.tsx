@@ -5,6 +5,7 @@ import FlashcardActionButton from "../FlashcardActionButton";
 import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
 import ZoomableImage from "@/components/common/ZoomableImage";
 import MultipleChoiceQuestion from "../MultipleChoiceQuestion";
+import { SafeRichText } from "@/components/ui/rich-text/SafeRichText";
 
 interface AnswerSideProps {
   question: Question;
@@ -45,7 +46,10 @@ export default function AnswerSide({
   const answerText = question?.answers?.[0]?.text || '';
   
   // Use dynamic text sizing based on answer length
-  const textSizeClass = useDynamicTextSize(answerText, 'answer');
+  const textSizeClass = useDynamicTextSize(
+    typeof answerText === 'string' ? answerText : 'medium',
+    'answer'
+  );
   
   return (
     <div className="flex flex-col h-full p-4 bg-white">
@@ -55,19 +59,9 @@ export default function AnswerSide({
       <div className="flex-1 flex flex-col overflow-y-auto pb-24">
         {/* Answer content with clear text */}
         <div className="bg-blue-50 p-4 rounded-xl w-full shadow-sm border border-blue-100 mb-6">
-          {question?.category === "Signale" ? (
-            <div className="space-y-3">
-              {answerText.split('\n').map((line, i) => (
-                <p key={i} className={`${textSizeClass} font-bold text-blue-800`}>
-                  {line}
-                </p>
-              ))}
-            </div>
-          ) : (
-            <p className={`${textSizeClass} font-medium text-blue-800`}>
-              {answerText}
-            </p>
-          )}
+          <div className={`${textSizeClass} font-bold text-blue-800`}>
+            <SafeRichText content={answerText} />
+          </div>
         </div>
         
         {/* Image container with ZoomableImage */}

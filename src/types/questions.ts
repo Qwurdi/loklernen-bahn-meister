@@ -1,5 +1,6 @@
 
 import { Json } from "@/integrations/supabase/types";
+import { StructuredContent } from "./rich-text";
 
 export type QuestionCategory = 'Signale' | 'Betriebsdienst';
 export type QuestionType = 'MC_single' | 'MC_multi' | 'open';
@@ -7,7 +8,7 @@ export type RegulationCategory = 'DS 301' | 'DV 301' | 'both';
 export type RegulationFilterType = RegulationCategory | 'all';
 
 export interface Answer {
-  text: string;
+  text: string | StructuredContent;
   isCorrect: boolean;
 }
 
@@ -17,7 +18,7 @@ export interface Question {
   sub_category: string;
   question_type: QuestionType;
   difficulty: number;
-  text: string;
+  text: string | StructuredContent;
   image_url: string | null;
   answers: Answer[];
   created_by: string;
@@ -33,7 +34,7 @@ export interface CreateQuestionDTO {
   sub_category: string;
   question_type: QuestionType;
   difficulty: number;
-  text: string;
+  text: string | StructuredContent;
   image_url?: string | null;
   answers: Answer[];
   created_by: string;

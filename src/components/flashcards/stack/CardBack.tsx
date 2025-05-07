@@ -5,6 +5,7 @@ import { CheckCircle2, XCircle } from 'lucide-react';
 import ZoomableImage from '@/components/common/ZoomableImage';
 import { useIsMobile } from '@/hooks/use-mobile';
 import MultipleChoiceQuestion from '../MultipleChoiceQuestion';
+import { SafeRichText } from '@/components/ui/rich-text/SafeRichText';
 
 // Update interface to use generics
 interface CardBackProps<T extends Question = Question> {
@@ -53,7 +54,7 @@ export default function CardBack<T extends Question = Question>({ question, onAn
                       key={idx} 
                       className="text-blue-800 font-medium"
                     >
-                      {answer.text}
+                      <SafeRichText content={answer.text} />
                     </div>
                   ))}
               </div>
@@ -77,7 +78,9 @@ export default function CardBack<T extends Question = Question>({ question, onAn
                           <XCircle className="h-4 w-4 text-gray-400" />
                         )}
                       </div>
-                      <div>{answer.text}</div>
+                      <div>
+                        <SafeRichText content={answer.text} />
+                      </div>
                     </div>
                   </li>
                 ))}

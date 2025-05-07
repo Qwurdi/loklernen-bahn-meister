@@ -3,6 +3,7 @@ import React from 'react';
 import { Question } from '@/types/questions';
 import { useDynamicTextSize } from '@/hooks/useDynamicTextSize';
 import HintButton from '../HintButton';
+import { SafeRichText } from '@/components/ui/rich-text/SafeRichText';
 
 // Update interface to use generics
 interface CardFrontProps<T extends Question = Question> {
@@ -12,7 +13,10 @@ interface CardFrontProps<T extends Question = Question> {
 // Add the generic type parameter to the component
 export default function CardFront<T extends Question = Question>({ question }: CardFrontProps<T>) {
   // Use dynamic text sizing based on question length
-  const textSizeClass = useDynamicTextSize(question?.text || '', 'question');
+  const textSizeClass = useDynamicTextSize(
+    typeof question?.text === 'string' ? question.text : 'medium', 
+    'question'
+  );
   
   // Check if this is a multiple choice question
   const isMultipleChoice = question.question_type === "MC_single" || question.question_type === "MC_multi";
@@ -33,9 +37,9 @@ export default function CardFront<T extends Question = Question>({ question }: C
         )}
       </div>
       
-      <h2 className={`${textSizeClass} text-gray-800 font-medium mb-4`}>
-        {question.text}
-      </h2>
+      <div className={`${textSizeClass} text-gray-800 font-medium mb-4`}>
+        <SafeRichText content={question.text} />
+      </div>
       
       {/* Add the hint button */}
       <div className="mb-4">
@@ -51,7 +55,7 @@ export default function CardFront<T extends Question = Question>({ question }: C
         <div className="flex-1 flex items-center justify-center">
           <img 
             src={question.image_url}
-            alt={`Signal: ${question.text}`}
+            alt={`Signal: ${typeof question.text === 'string' ? question.text : 'Signal'}`}
             className="max-h-[200px] object-contain rounded-lg"
             loading="eager" // Force eager loading for current card
           />

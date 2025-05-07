@@ -81,10 +81,7 @@ export const useQuestionSubmit = () => {
         const processedText = prepareContentForStorage(questionData.text);
         
         // Convert answers to database format
-        const processedAnswers: Json = questionData.answers.map(answer => ({
-          text: prepareContentForStorage(answer.text),
-          isCorrect: answer.isCorrect
-        }));
+        const processedAnswers = questionData.answers.map(prepareAnswerForStorage);
         
         const { error } = await supabase
           .from('questions')

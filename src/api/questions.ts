@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { CreateQuestionDTO, Question, QuestionCategory, Answer } from "@/types/questions";
 import { Json } from "@/integrations/supabase/types";
 import { signalSubCategories, betriebsdienstSubCategories } from "@/api/categories/types";
-import { isStructuredContent, plainTextToStructured, getTextValue } from "@/types/rich-text";
+import { isStructuredContent, plainTextToStructured, getTextValue, StructuredContent } from "@/types/rich-text";
 
 // Helper function to convert database answers (Json) to Answer[]
 export function transformAnswers(jsonAnswers: Json): Answer[] {
@@ -12,7 +12,7 @@ export function transformAnswers(jsonAnswers: Json): Answer[] {
       if (typeof answer === 'object' && answer !== null) {
         const text = 'text' in answer ? answer.text : '';
         // Process text content
-        let processedText = text;
+        let processedText: string | StructuredContent = '';
         
         // Handle JSON string that might be structured content
         if (typeof text === 'string' && text.trim().startsWith('{')) {
@@ -20,10 +20,18 @@ export function transformAnswers(jsonAnswers: Json): Answer[] {
             const parsed = JSON.parse(text);
             if (isStructuredContent(parsed)) {
               processedText = parsed;
+            } else {
+              processedText = String(text);
             }
           } catch (e) {
             // Keep original text if parsing fails
+            processedText = String(text);
           }
+        } else if (typeof text === 'string') {
+          processedText = text;
+        } else {
+          // Convert non-string values to string
+          processedText = String(text);
         }
         
         return {
@@ -42,7 +50,7 @@ export function transformAnswers(jsonAnswers: Json): Answer[] {
 function transformQuestion(dbQuestion: any): Question {
   // Check if text is in structured format
   const questionText = dbQuestion.text;
-  let parsedText = questionText;
+  let parsedText: string | StructuredContent = questionText;
   
   // Try to parse JSON text if it's a string that might be JSON
   if (typeof questionText === 'string' && questionText.trim().startsWith('{')) {
@@ -65,7 +73,7 @@ function transformQuestion(dbQuestion: any): Question {
 }
 
 // Helper function to prepare content for database storage
-export function prepareContentForStorage(content: string | any): string {
+export function prepareContentForStorage(content: string | StructuredContent): string {
   if (typeof content === 'string') {
     return content;
   }

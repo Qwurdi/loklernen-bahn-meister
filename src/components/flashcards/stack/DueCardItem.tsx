@@ -48,7 +48,10 @@ export default function DueCardItem({
             </AspectRatio>
           ) : (
             <div className="text-xs line-clamp-2 overflow-hidden text-center text-gray-600">
-              {questionText.length > 30 ? getTextSubstring(question.text, 0, 30) + "..." : questionText}
+              {questionText.length > 30 ? 
+                getTextSubstring(question.text, 0, 30) + "..." : 
+                questionText
+              }
             </div>
           )}
           <div className="mt-auto pt-1 text-[8px] text-gray-400 text-center w-full truncate">

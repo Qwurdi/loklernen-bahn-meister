@@ -131,7 +131,7 @@ export async function createQuestion(question: CreateQuestionDTO) {
   const processedText = prepareContentForStorage(question.text);
   
   // Convert Answer[] to a JSON structure compatible with Supabase
-  const supabaseAnswers: Json = question.answers.map(prepareAnswerForStorage);
+  const supabaseAnswers = question.answers.map(prepareAnswerForStorage);
 
   const { data, error } = await supabase
     .from('questions')

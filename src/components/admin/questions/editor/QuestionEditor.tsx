@@ -4,8 +4,11 @@ import { EditorTabs } from '../EditorTabs';
 import { BasicInfoTab } from '../BasicInfoTab';
 import { ContentTab } from '../ContentTab';
 import { AnswersTab } from '../AnswersTab';
+import { SinglePageEditor } from './SinglePageEditor';
+import { EditorViewToggle } from './EditorViewToggle';
 import { Answer, QuestionCategory, RegulationCategory, QuestionType } from '@/types/questions';
 import { StructuredContent } from '@/types/rich-text'; 
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 
 interface QuestionEditorProps {
   category: QuestionCategory;
@@ -60,48 +63,87 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
   removeAnswer,
   addAnswer
 }) => {
+  const { editorViewPreference, setEditorViewPreference } = useUserPreferences();
+  
+  const handleViewChange = (view: 'tabs' | 'single') => {
+    setEditorViewPreference(view);
+  };
+
   return (
-    <EditorTabs>
-      <EditorTabs.Content value="basics" title="Grunddaten" icon="Settings">
-        <BasicInfoTab
+    <div>
+      <EditorViewToggle view={editorViewPreference} onChange={handleViewChange} />
+
+      {editorViewPreference === 'tabs' ? (
+        <EditorTabs>
+          <EditorTabs.Content value="basics" title="Grunddaten" icon="Settings">
+            <BasicInfoTab
+              category={category}
+              subCategory={subCategory}
+              difficulty={difficulty}
+              questionType={questionType}
+              isSignalQuestion={isSignalQuestion}
+              regulationCategory={regulationCategory}
+              onCategoryChange={onCategoryChange}
+              onSubCategoryChange={onSubCategoryChange}
+              onDifficultyChange={onDifficultyChange}
+              onQuestionTypeChange={onQuestionTypeChange}
+              onRegulationCategoryChange={onRegulationCategoryChange}
+            />
+          </EditorTabs.Content>
+          
+          <EditorTabs.Content value="content" title="Inhalt" icon="FileText">
+            <ContentTab
+              text={text}
+              hint={hint}
+              imagePreview={imagePreview}
+              onTextChange={onTextChange}
+              onHintChange={onHintChange}
+              onImageChange={onImageChange}
+              handlePastedImage={handlePastedImage}
+              removeImage={removeImage}
+            />
+          </EditorTabs.Content>
+          
+          <EditorTabs.Content value="answers" title="Antworten" icon="ListChecks">
+            <AnswersTab
+              answers={answers}
+              questionType={questionType}
+              isSignalQuestion={isSignalQuestion}
+              handleAnswerChange={handleAnswerChange}
+              toggleAnswerCorrectness={toggleAnswerCorrectness}
+              removeAnswer={removeAnswer}
+              addAnswer={addAnswer}
+            />
+          </EditorTabs.Content>
+        </EditorTabs>
+      ) : (
+        <SinglePageEditor
           category={category}
           subCategory={subCategory}
           difficulty={difficulty}
-          questionType={questionType}
+          text={text}
+          hint={hint}
           isSignalQuestion={isSignalQuestion}
           regulationCategory={regulationCategory}
+          imagePreview={imagePreview}
+          answers={answers}
+          questionType={questionType}
           onCategoryChange={onCategoryChange}
           onSubCategoryChange={onSubCategoryChange}
           onDifficultyChange={onDifficultyChange}
           onQuestionTypeChange={onQuestionTypeChange}
           onRegulationCategoryChange={onRegulationCategoryChange}
-        />
-      </EditorTabs.Content>
-      
-      <EditorTabs.Content value="content" title="Inhalt" icon="FileText">
-        <ContentTab
-          text={text}
-          hint={hint}
-          imagePreview={imagePreview}
           onTextChange={onTextChange}
           onHintChange={onHintChange}
           onImageChange={onImageChange}
           handlePastedImage={handlePastedImage}
           removeImage={removeImage}
-        />
-      </EditorTabs.Content>
-      
-      <EditorTabs.Content value="answers" title="Antworten" icon="ListChecks">
-        <AnswersTab
-          answers={answers}
-          questionType={questionType}
-          isSignalQuestion={isSignalQuestion}
           handleAnswerChange={handleAnswerChange}
           toggleAnswerCorrectness={toggleAnswerCorrectness}
           removeAnswer={removeAnswer}
           addAnswer={addAnswer}
         />
-      </EditorTabs.Content>
-    </EditorTabs>
+      )}
+    </div>
   );
 };

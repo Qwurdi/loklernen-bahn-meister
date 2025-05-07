@@ -12,6 +12,7 @@ import { AutoSaveIndicator } from "@/components/admin/questions/editor/AutoSaveI
 import { DraftDialog } from "@/components/admin/questions/editor/DraftDialog";
 import { NavigationWarning } from "@/components/admin/questions/editor/NavigationWarning";
 import { QuestionEditor } from "@/components/admin/questions/editor/QuestionEditor";
+import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 
 const QuestionEditorPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,7 +20,9 @@ const QuestionEditorPage: React.FC = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [showDraftDialog, setShowDraftDialog] = useState(false);
   const [draftData, setDraftData] = useState<any>(null);
+  const [hasShownViewHint, setHasShownViewHint] = useState(false);
   const navigate = useNavigate();
+  const { editorViewPreference } = useUserPreferences();
   
   const {
     isEditMode,
@@ -64,6 +67,17 @@ const QuestionEditorPage: React.FC = () => {
       console.error("Error checking for draft:", error);
     }
   }, [loadDraft, isEditMode]);
+
+  // Show a toast notification about the view toggle feature
+  useEffect(() => {
+    if (!hasShownViewHint) {
+      toast.info(
+        "Tipp: Sie können zwischen Tabs und Einseiten-Ansicht wechseln",
+        { duration: 5000 }
+      );
+      setHasShownViewHint(true);
+    }
+  }, [hasShownViewHint]);
 
   const isSignalQuestion = formData.category === "Signale";
 

@@ -73,7 +73,8 @@ export async function createQuestion(question: CreateQuestionDTO) {
       image_url: question.image_url,
       answers: supabaseAnswers,
       created_by: question.created_by,
-      regulation_category: question.regulation_category
+      regulation_category: question.regulation_category,
+      hint: question.hint // Add the hint field
     }])
     .select()
     .single();
@@ -146,7 +147,8 @@ export async function duplicateQuestion(originalQuestion: Question): Promise<Que
       image_url: originalQuestion.image_url,
       answers: originalQuestion.answers,
       created_by: user.id, // Use current user's ID instead of original creator
-      regulation_category: originalQuestion.regulation_category
+      regulation_category: originalQuestion.regulation_category,
+      hint: originalQuestion.hint // Retain the hint when duplicating
     };
 
     const supabaseAnswers: Json = duplicateData.answers.map(answer => ({
@@ -165,7 +167,8 @@ export async function duplicateQuestion(originalQuestion: Question): Promise<Que
         image_url: duplicateData.image_url,
         answers: supabaseAnswers,
         created_by: duplicateData.created_by,
-        regulation_category: duplicateData.regulation_category
+        regulation_category: duplicateData.regulation_category,
+        hint: duplicateData.hint // Include hint in the inserted data
       }])
       .select()
       .single();

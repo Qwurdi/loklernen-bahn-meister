@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Answer, QuestionType } from "@/types/questions";
@@ -46,7 +45,8 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
     handleSubCategoryChange,
     handleDifficultyChange,
     handleRegulationCategoryChange,
-    handleQuestionTypeChange
+    handleQuestionTypeChange,
+    handleHintChange
   } = useQuestionFormState({ 
     initialData, 
     userId: user?.id || 'anonymous' 
@@ -98,6 +98,11 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
     toggleAnswerCorrectness(index, questionType);
   };
 
+  // Handle rich text changes
+  const handleRichTextChange = (value: string) => {
+    setFormData(prev => ({ ...prev, text: value }));
+  };
+
   return {
     isEditMode,
     isLoading,
@@ -109,6 +114,8 @@ export const useQuestionForm = ({ id, initialData }: UseQuestionFormProps = {}) 
     handleDifficultyChange,
     handleRegulationCategoryChange,
     handleQuestionTypeChange,
+    handleHintChange,
+    handleRichTextChange,
     handleAnswerChange,
     handleImageChange,
     handlePastedImage,

@@ -52,6 +52,7 @@ export type Database = {
           created_at: string
           created_by: string
           difficulty: number
+          hint: string | null
           id: string
           image_url: string | null
           question_type: Database["public"]["Enums"]["question_type"]
@@ -67,6 +68,7 @@ export type Database = {
           created_at?: string
           created_by: string
           difficulty: number
+          hint?: string | null
           id?: string
           image_url?: string | null
           question_type: Database["public"]["Enums"]["question_type"]
@@ -82,6 +84,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           difficulty?: number
+          hint?: string | null
           id?: string
           image_url?: string | null
           question_type?: Database["public"]["Enums"]["question_type"]

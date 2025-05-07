@@ -1,11 +1,11 @@
-
 import React, { useState } from "react";
 import { Question } from "@/types/questions";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, HelpCircle } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
+import HintButton from "./HintButton";
 
 interface MultipleChoiceQuestionProps {
   question: Question;
@@ -21,7 +21,6 @@ export default function MultipleChoiceQuestion({
   const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
-  const [showHint, setShowHint] = useState(false);
   
   const textSizeClass = useDynamicTextSize(question.text);
   const isSingleChoice = question.question_type === 'MC_single';
@@ -30,17 +29,6 @@ export default function MultipleChoiceQuestion({
   const correctAnswerIndices = question.answers
     .map((answer, index) => answer.isCorrect ? index : -1)
     .filter(index => index !== -1);
-  
-  // Set a timeout to show the hint after 3 seconds
-  React.useEffect(() => {
-    if (!submitted && !showHint) {
-      const timer = setTimeout(() => {
-        setShowHint(true);
-      }, 3000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [submitted, showHint]);
   
   const handleSingleChoiceChange = (value: string) => {
     const index = parseInt(value, 10);
@@ -80,21 +68,6 @@ export default function MultipleChoiceQuestion({
     setSubmitted(true);
   };
   
-  // Get a subtle hint from the correct answers, if any
-  const getHint = () => {
-    if (correctAnswerIndices.length === 0) return "Keine Hinweise verfügbar.";
-    
-    const firstCorrectAnswer = question.answers[correctAnswerIndices[0]];
-    const words = firstCorrectAnswer.text.split(' ');
-    
-    if (words.length <= 3) {
-      return `Hinweis: Die Antwort beginnt mit "${words[0]}..."`;
-    } else {
-      // For longer answers, give a more substantial hint
-      return `Hinweis: Die richtige Antwort hat etwas mit "${words[1]} ${words[2]}" zu tun.`;
-    }
-  };
-  
   return (
     <div className="w-full flex flex-col">
       {/* Question text */}
@@ -102,24 +75,14 @@ export default function MultipleChoiceQuestion({
         {question.text}
       </div>
       
-      {/* Hint button or auto-hint after delay */}
+      {/* Hint button - no longer auto shows, only on request */}
       {!submitted && (
         <div className="mb-4">
-          {!showHint ? (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setShowHint(true)}
-              className="text-xs text-gray-500 hover:text-gray-700"
-            >
-              <HelpCircle className="h-3 w-3 mr-1" />
-              Tipp anzeigen
-            </Button>
-          ) : (
-            <div className="text-xs bg-blue-50 p-2 rounded text-blue-600 animate-fade-in">
-              {getHint()}
-            </div>
-          )}
+          <HintButton 
+            hint={question.hint}
+            question={question.text}
+            answers={question.answers}
+          />
         </div>
       )}
       

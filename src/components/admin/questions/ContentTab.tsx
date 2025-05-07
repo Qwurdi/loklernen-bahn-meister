@@ -3,12 +3,15 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { QuestionTextEditor } from './content/QuestionTextEditor';
 import { ImageUpload } from './content/ImageUpload';
+import { HintField } from './content/HintField';
 import { useImagePaste } from '@/hooks/questions/useImagePaste';
 
 interface ContentTabProps {
   text: string;
+  hint?: string | null;
   imagePreview: string | null;
   onTextChange: (value: string) => void;
+  onHintChange?: (value: string) => void;
   onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handlePastedImage?: (file: File) => void;
   removeImage: () => void;
@@ -16,8 +19,10 @@ interface ContentTabProps {
 
 export const ContentTab: React.FC<ContentTabProps> = ({
   text,
+  hint,
   imagePreview,
   onTextChange,
+  onHintChange,
   onImageChange,
   handlePastedImage,
   removeImage
@@ -32,6 +37,14 @@ export const ContentTab: React.FC<ContentTabProps> = ({
           <QuestionTextEditor text={text} onTextChange={onTextChange} />
         </CardContent>
       </Card>
+      
+      {onHintChange && (
+        <Card>
+          <CardContent className="pt-6">
+            <HintField hint={hint} onChange={onHintChange} />
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardContent className="pt-6">

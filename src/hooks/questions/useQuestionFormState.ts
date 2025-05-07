@@ -17,6 +17,7 @@ export const useQuestionFormState = ({ initialData, userId }: UseQuestionFormSta
     answers: [{ text: "", isCorrect: true }],
     created_by: userId,
     regulation_category: "both" as RegulationCategory,
+    hint: "",
     ...initialData
   });
 
@@ -114,6 +115,10 @@ export const useQuestionFormState = ({ initialData, userId }: UseQuestionFormSta
     }));
   };
 
+  const handleHintChange = (hint: string) => {
+    setFormData(prev => ({ ...prev, hint }));
+  };
+
   return {
     formData,
     setFormData,
@@ -122,6 +127,7 @@ export const useQuestionFormState = ({ initialData, userId }: UseQuestionFormSta
     handleSubCategoryChange,
     handleDifficultyChange,
     handleRegulationCategoryChange,
-    handleQuestionTypeChange
+    handleQuestionTypeChange,
+    handleHintChange
   };
 };

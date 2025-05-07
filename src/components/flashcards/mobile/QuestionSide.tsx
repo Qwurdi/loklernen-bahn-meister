@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Lightbulb } from "lucide-react";
 import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
 import ZoomableImage from "@/components/common/ZoomableImage";
+import HintButton from "../HintButton";
 
 interface QuestionSideProps {
   question: Question;
@@ -28,6 +29,15 @@ export default function QuestionSide({ question, onShowAnswer }: QuestionSidePro
       <h2 className={`${textSizeClass} font-medium mb-4 text-gray-900`}>
         {question?.text}
       </h2>
+      
+      {/* Add the hint button */}
+      <div className="mb-4">
+        <HintButton 
+          hint={question.hint}
+          question={question.text}
+          answers={question.answers}
+        />
+      </div>
       
       {/* Image container with ZoomableImage */}
       <div className="flex-1 flex items-center justify-center mb-4">

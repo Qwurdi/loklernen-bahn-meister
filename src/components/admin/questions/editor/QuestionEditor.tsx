@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Star } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ImageUpload } from "@/components/admin/questions/content/ImageUpload";
+import { HintField } from "@/components/admin/questions/content/HintField";
 import { SignalQuestionAnswer } from "@/components/admin/questions/answers/SignalQuestionAnswer";
 import { MultipleChoiceAnswers } from "@/components/admin/questions/answers/MultipleChoiceAnswers";
 import { QuestionCategory, RegulationCategory, QuestionType, Answer } from '@/types/questions';
@@ -21,6 +21,7 @@ interface QuestionEditorProps {
   subCategory: string;
   difficulty: number;
   text: string;
+  hint?: string | null;
   isSignalQuestion: boolean;
   regulationCategory?: RegulationCategory;
   imagePreview: string | null;
@@ -32,6 +33,7 @@ interface QuestionEditorProps {
   onQuestionTypeChange: (type: QuestionType) => void;
   onRegulationCategoryChange: (regulationCategory: RegulationCategory) => void;
   onTextChange: (value: string) => void;
+  onHintChange: (value: string) => void;
   onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handlePastedImage?: (file: File) => void;
   removeImage: () => void;
@@ -46,6 +48,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
   subCategory,
   difficulty,
   text,
+  hint,
   isSignalQuestion,
   regulationCategory = 'both',
   imagePreview,
@@ -57,6 +60,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
   onQuestionTypeChange,
   onRegulationCategoryChange,
   onTextChange,
+  onHintChange,
   onImageChange,
   handlePastedImage,
   removeImage,
@@ -197,6 +201,12 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                   minHeight="150px"
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <HintField hint={hint} onChange={onHintChange} />
             </CardContent>
           </Card>
 

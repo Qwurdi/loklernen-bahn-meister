@@ -32,6 +32,8 @@ const QuestionEditorPage: React.FC = () => {
     handleDifficultyChange,
     handleRegulationCategoryChange,
     handleQuestionTypeChange,
+    handleHintChange,
+    handleRichTextChange,
     handleAnswerChange,
     handleImageChange,
     handlePastedImage,
@@ -125,6 +127,7 @@ const QuestionEditorPage: React.FC = () => {
           subCategory={formData.sub_category || ""}
           difficulty={formData.difficulty || 1}
           text={formData.text || ""}
+          hint={formData.hint}
           isSignalQuestion={isSignalQuestion}
           regulationCategory={formData.regulation_category}
           imagePreview={imagePreview}
@@ -136,6 +139,7 @@ const QuestionEditorPage: React.FC = () => {
           onQuestionTypeChange={handleQuestionTypeChange}
           onRegulationCategoryChange={handleRegulationCategoryChange}
           onTextChange={handleRichTextChange}
+          onHintChange={handleHintChange}
           onImageChange={handleImageChange}
           handlePastedImage={handlePastedImage}
           removeImage={removeImage}

@@ -25,6 +25,7 @@ export interface Question {
   created_at: string;
   updated_at: string;
   regulation_category?: RegulationCategory;
+  hint?: string | null;
 }
 
 export interface CreateQuestionDTO {
@@ -37,6 +38,7 @@ export interface CreateQuestionDTO {
   answers: Answer[];
   created_by: string;
   regulation_category?: RegulationCategory;
+  hint?: string | null;
 }
 
 // New type for category progress tracking

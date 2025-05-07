@@ -2,6 +2,7 @@
 import React from 'react';
 import { Question } from '@/types/questions';
 import { useDynamicTextSize } from '@/hooks/useDynamicTextSize';
+import HintButton from '../HintButton';
 
 // Update interface to use generics
 interface CardFrontProps<T extends Question = Question> {
@@ -35,6 +36,15 @@ export default function CardFront<T extends Question = Question>({ question }: C
       <h2 className={`${textSizeClass} text-gray-800 font-medium mb-4`}>
         {question.text}
       </h2>
+      
+      {/* Add the hint button */}
+      <div className="mb-4">
+        <HintButton 
+          hint={question.hint}
+          question={question.text}
+          answers={question.answers}
+        />
+      </div>
       
       {/* Optimized image loading with loading="eager" for current card */}
       {question.image_url && (

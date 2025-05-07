@@ -71,7 +71,8 @@ export const useQuestionSubmit = () => {
         image_url: finalImageUrl,
         answers: sanitizedAnswers,
         created_by: userId,
-        regulation_category: formData.category === "Signale" ? formData.regulation_category : undefined
+        regulation_category: formData.category === "Signale" ? formData.regulation_category : undefined,
+        hint: formData.hint  // Include hint in the question data
       };
       
       if (isEditMode && id) {
@@ -93,7 +94,8 @@ export const useQuestionSubmit = () => {
             image_url: questionData.image_url,
             answers: supabaseAnswers,
             updated_at: new Date().toISOString(),
-            regulation_category: questionData.regulation_category
+            regulation_category: questionData.regulation_category,
+            hint: questionData.hint  // Include hint in the update
           })
           .eq('id', id);
         

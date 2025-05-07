@@ -12,6 +12,7 @@ export interface Category {
   created_at?: string;
   updated_at?: string;
   isPro?: boolean;
+  isPlanned?: boolean;
 }
 
 // Signal subcategories array

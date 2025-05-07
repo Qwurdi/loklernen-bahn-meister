@@ -16,6 +16,7 @@ export type Database = {
           description: string | null
           icon: string | null
           id: string
+          isPlanned: boolean
           isPro: boolean
           name: string
           parent_category: string
@@ -27,6 +28,7 @@ export type Database = {
           description?: string | null
           icon?: string | null
           id?: string
+          isPlanned?: boolean
           isPro?: boolean
           name: string
           parent_category: string
@@ -38,6 +40,7 @@ export type Database = {
           description?: string | null
           icon?: string | null
           id?: string
+          isPlanned?: boolean
           isPro?: boolean
           name?: string
           parent_category?: string

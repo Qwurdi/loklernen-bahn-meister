@@ -15,7 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Category } from "@/api/categories";
 import { useCategories } from "@/hooks/useCategories";
 import { QuestionCategory } from "@/types/questions";
-import { Edit, Trash2, AlertTriangle, Folder, Loader2 } from "lucide-react";
+import { Edit, Trash2, AlertTriangle, Folder, Loader2, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface CategoryListProps {
@@ -27,7 +27,8 @@ interface CategoryListProps {
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").max(50, "Name must be less than 50 characters"),
   description: z.string().max(200, "Description must be less than 200 characters").optional(),
-  isPro: z.boolean().default(false)
+  isPro: z.boolean().default(false),
+  isPlanned: z.boolean().default(false)
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -44,7 +45,8 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, parentCategory 
     defaultValues: {
       name: "",
       description: "",
-      isPro: false
+      isPro: false,
+      isPlanned: false
     }
   });
 
@@ -53,7 +55,8 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, parentCategory 
     form.reset({
       name: category.name,
       description: category.description || "",
-      isPro: category.isPro || false
+      isPro: category.isPro || false,
+      isPlanned: category.isPlanned || false
     });
   };
 
@@ -65,7 +68,8 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, parentCategory 
       updates: {
         name: values.name,
         description: values.description || undefined,
-        isPro: values.isPro
+        isPro: values.isPro,
+        isPlanned: values.isPlanned
       }
     });
     setEditCategory(null);
@@ -127,11 +131,19 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, parentCategory 
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-gray-900 flex items-center gap-2">
                     {category.name}
-                    {category.isPro && (
-                      <Badge className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-black">
-                        PRO
-                      </Badge>
-                    )}
+                    <div className="flex gap-1">
+                      {category.isPro && (
+                        <Badge className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-black">
+                          PRO
+                        </Badge>
+                      )}
+                      {category.isPlanned && (
+                        <Badge className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gradient-to-r from-blue-400 to-blue-500 text-white flex items-center">
+                          <Clock className="h-3 w-3 mr-1" />
+                          GEPLANT
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                   {category.description && (
                     <div className="mt-1 text-sm text-gray-500 truncate">{category.description}</div>
@@ -222,6 +234,27 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, parentCategory 
                         <FormLabel className="font-medium">Pro-Kategorie</FormLabel>
                         <p className="text-sm text-gray-500">
                           Diese Kategorie ist nur für Pro-Nutzer verfügbar
+                        </p>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="isPlanned"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="font-medium">Geplante Kategorie</FormLabel>
+                        <p className="text-sm text-gray-500">
+                          Diese Kategorie ist in Planung und wird bald verfügbar sein
                         </p>
                       </div>
                     </FormItem>

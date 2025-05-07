@@ -3,7 +3,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ExternalLink, Lock } from "lucide-react";
+import { ExternalLink, Lock, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CategoryStats {
@@ -22,6 +22,7 @@ interface CategoryCardProps {
   selectable?: boolean;
   isLocked?: boolean;
   isPro?: boolean;
+  isPlanned?: boolean;
   stats?: CategoryStats;
   regulationCategory?: string;
 }
@@ -36,6 +37,7 @@ export default function CategoryCard({
   selectable = false,
   isLocked = false,
   isPro = false,
+  isPlanned = false,
   stats,
   regulationCategory
 }: CategoryCardProps) {
@@ -60,7 +62,7 @@ export default function CategoryCard({
         isSelected 
           ? "border-loklernen-ultramarine/80 shadow-md shadow-loklernen-ultramarine/20" 
           : "border-gray-200 shadow-md shadow-black/10 hover:shadow-lg hover:shadow-black/20", 
-        isLocked ? "opacity-80" : ""
+        isLocked || isPlanned ? "opacity-80" : ""
       )}
       onClick={handleCardClick}
     >
@@ -77,17 +79,26 @@ export default function CategoryCard({
         <div className="mb-2 flex justify-between items-center">
           <h3 className="font-medium text-lg text-gray-800 line-clamp-1">{title}</h3>
           
-          {isPro && (
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-black">
-              PRO
-            </span>
-          )}
-          
-          {regulationCategory && (
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
-              {regulationCategory}
-            </span>
-          )}
+          <div className="flex gap-1">
+            {isPro && (
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-black">
+                PRO
+              </span>
+            )}
+            
+            {isPlanned && (
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gradient-to-r from-blue-400 to-blue-500 text-white flex items-center">
+                <Clock className="h-3 w-3 mr-0.5" />
+                GEPLANT
+              </span>
+            )}
+            
+            {regulationCategory && (
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
+                {regulationCategory}
+              </span>
+            )}
+          </div>
         </div>
         
         {/* Progress bar - slimmer and more subtle */}
@@ -133,7 +144,7 @@ export default function CategoryCard({
           <p className="text-xs text-gray-500 line-clamp-2 mb-4">{description}</p>
         )}
         
-        {/* Card footer - Link or Locked status */}
+        {/* Card footer - Link or Locked/Planned status */}
         <div className="mt-auto">
           {isLocked ? (
             <div className="flex items-center text-sm text-gray-500">
@@ -141,6 +152,11 @@ export default function CategoryCard({
               <span>
                 {isPro ? "Pro-Funktion" : "Bitte anmelden"}
               </span>
+            </div>
+          ) : isPlanned ? (
+            <div className="flex items-center text-sm text-blue-500">
+              <Clock size={14} className="mr-1" />
+              <span>Demnächst verfügbar</span>
             </div>
           ) : link ? (
             <Link

@@ -38,11 +38,11 @@ export default function CategoryGrid({
   regulationFilter,
   isPro = false,
 }: CategoryGridProps) {
-  const [categoryProStatus, setCategoryProStatus] = useState<Record<string, boolean>>({});
+  const [categoryMetadata, setCategoryMetadata] = useState<Record<string, { isPro: boolean, isPlanned: boolean }>>({});
   
-  // Fetch categories to determine which are pro
+  // Fetch categories to determine which are pro and which are planned
   useEffect(() => {
-    const fetchProStatus = async () => {
+    const fetchCategoryMetadata = async () => {
       try {
         const parent = categories.some(cat => 
           ["Rangieren", "Züge fahren", "PZB & Sicherungsanlagen"].includes(cat)
@@ -50,15 +50,18 @@ export default function CategoryGrid({
         
         const dbCategories = await fetchCategoriesByParent(parent);
         
-        // Create a map of category name to isPro status
-        const proStatusMap = dbCategories.reduce((map: Record<string, boolean>, cat) => {
-          map[cat.name] = !!cat.isPro;
+        // Create a map of category name to metadata (isPro and isPlanned status)
+        const metadataMap = dbCategories.reduce((map: Record<string, { isPro: boolean, isPlanned: boolean }>, cat) => {
+          map[cat.name] = { 
+            isPro: !!cat.isPro,
+            isPlanned: !!cat.isPlanned
+          };
           return map;
         }, {});
         
-        setCategoryProStatus(proStatusMap);
+        setCategoryMetadata(metadataMap);
       } catch (error) {
-        console.error("Error fetching category PRO status:", error);
+        console.error("Error fetching category metadata:", error);
         // Fallback for Betriebsdienst categories that are typically Pro
         if (categories.some(cat => ["Rangieren", "Züge fahren"].includes(cat))) {
           const DEFAULT_PRO_CATEGORIES = [
@@ -70,17 +73,20 @@ export default function CategoryGrid({
             "Unregelmäßigkeiten"
           ];
           
-          const fallbackMap = categories.reduce((map: Record<string, boolean>, cat) => {
-            map[cat] = DEFAULT_PRO_CATEGORIES.includes(cat);
+          const fallbackMap = categories.reduce((map: Record<string, { isPro: boolean, isPlanned: boolean }>, cat) => {
+            map[cat] = { 
+              isPro: DEFAULT_PRO_CATEGORIES.includes(cat),
+              isPlanned: false // Default to false for isPlanned in fallback
+            };
             return map;
           }, {});
           
-          setCategoryProStatus(fallbackMap);
+          setCategoryMetadata(fallbackMap);
         }
       }
     };
     
-    fetchProStatus();
+    fetchCategoryMetadata();
   }, [categories]);
   
   // Filter categories based on regulation preference
@@ -123,8 +129,10 @@ export default function CategoryGrid({
         const dueCards = stats?.due || 0;
         const masteredCards = stats?.mastered || 0;
         
-        // Determine if this category is a Pro category from the database or fallback
-        const isCategoryPro = categoryProStatus[subcategory] || false;
+        // Get category metadata
+        const metadata = categoryMetadata[subcategory] || { isPro: false, isPlanned: false };
+        const isCategoryPro = metadata.isPro;
+        const isCategoryPlanned = metadata.isPlanned;
         
         return (
           <CategoryCard
@@ -132,7 +140,9 @@ export default function CategoryGrid({
             title={subcategory}
             description={stats 
               ? `${Math.round(progress)}% gelernt`
-              : "Lerne die wichtigsten Signale dieser Kategorie"}
+              : isCategoryPlanned 
+                ? "Demnächst verfügbar" 
+                : "Lerne die wichtigsten Signale dieser Kategorie"}
             progress={progress}
             link={`/karteikarten/${subcategory.toLowerCase().includes('signal') ? 'signale' : 'betriebsdienst'}/${encodeURIComponent(subcategory.toLowerCase().replace(/[^a-z0-9]+/g, '-'))}`}
             isSelected={selectedCategories.includes(subcategory)}
@@ -140,6 +150,7 @@ export default function CategoryGrid({
             selectable={isSelectable}
             isLocked={isPro && isCategoryPro}
             isPro={isCategoryPro}
+            isPlanned={isCategoryPlanned}
             stats={{
               totalCards,
               dueCards,

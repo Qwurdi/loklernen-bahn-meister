@@ -21,7 +21,8 @@ interface CategoryFormProps {
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").max(50, "Name must be less than 50 characters"),
   description: z.string().max(200, "Description must be less than 200 characters").optional(),
-  isPro: z.boolean().default(false)
+  isPro: z.boolean().default(false),
+  isPlanned: z.boolean().default(false)
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -35,7 +36,8 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ parentCategory }) => {
     defaultValues: {
       name: "",
       description: "",
-      isPro: false
+      isPro: false,
+      isPlanned: false
     }
   });
 
@@ -44,7 +46,8 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ parentCategory }) => {
       name: values.name.trim(),
       description: values.description?.trim() || undefined,
       parent_category: parentCategory,
-      isPro: values.isPro
+      isPro: values.isPro,
+      isPlanned: values.isPlanned
     });
 
     // Reset form after submission
@@ -114,6 +117,28 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ parentCategory }) => {
                     <FormLabel className="font-medium">Pro-Kategorie</FormLabel>
                     <p className="text-sm text-gray-500">
                       Diese Kategorie ist nur für Pro-Nutzer verfügbar
+                    </p>
+                  </div>
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="isPlanned"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 mt-2">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="font-medium">Geplante Kategorie</FormLabel>
+                    <p className="text-sm text-gray-500">
+                      Diese Kategorie ist in Planung und wird bald verfügbar sein
                     </p>
                   </div>
                 </FormItem>

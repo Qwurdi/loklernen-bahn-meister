@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Question } from "@/types/questions";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle, HelpCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
@@ -21,6 +21,7 @@ export default function MultipleChoiceQuestion({
   const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
+  const [showHint, setShowHint] = useState(false);
   
   const textSizeClass = useDynamicTextSize(question.text);
   const isSingleChoice = question.question_type === 'MC_single';
@@ -29,6 +30,17 @@ export default function MultipleChoiceQuestion({
   const correctAnswerIndices = question.answers
     .map((answer, index) => answer.isCorrect ? index : -1)
     .filter(index => index !== -1);
+  
+  // Set a timeout to show the hint after 3 seconds
+  React.useEffect(() => {
+    if (!submitted && !showHint) {
+      const timer = setTimeout(() => {
+        setShowHint(true);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [submitted, showHint]);
   
   const handleSingleChoiceChange = (value: string) => {
     const index = parseInt(value, 10);
@@ -51,7 +63,6 @@ export default function MultipleChoiceQuestion({
       const selectedIsCorrect = question.answers[selectedAnswers[0]]?.isCorrect || false;
       setIsCorrect(selectedIsCorrect);
       setSubmitted(true);
-      onAnswer(selectedIsCorrect);
       return;
     }
     
@@ -67,7 +78,21 @@ export default function MultipleChoiceQuestion({
     const isFullyCorrect = allCorrectSelected && noIncorrectSelected;
     setIsCorrect(isFullyCorrect);
     setSubmitted(true);
-    onAnswer(isFullyCorrect);
+  };
+  
+  // Get a subtle hint from the correct answers, if any
+  const getHint = () => {
+    if (correctAnswerIndices.length === 0) return "Keine Hinweise verfügbar.";
+    
+    const firstCorrectAnswer = question.answers[correctAnswerIndices[0]];
+    const words = firstCorrectAnswer.text.split(' ');
+    
+    if (words.length <= 3) {
+      return `Hinweis: Die Antwort beginnt mit "${words[0]}..."`;
+    } else {
+      // For longer answers, give a more substantial hint
+      return `Hinweis: Die richtige Antwort hat etwas mit "${words[1]} ${words[2]}" zu tun.`;
+    }
   };
   
   return (
@@ -76,6 +101,27 @@ export default function MultipleChoiceQuestion({
       <div className={`${textSizeClass} mb-4 font-medium`}>
         {question.text}
       </div>
+      
+      {/* Hint button or auto-hint after delay */}
+      {!submitted && (
+        <div className="mb-4">
+          {!showHint ? (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setShowHint(true)}
+              className="text-xs text-gray-500 hover:text-gray-700"
+            >
+              <HelpCircle className="h-3 w-3 mr-1" />
+              Tipp anzeigen
+            </Button>
+          ) : (
+            <div className="text-xs bg-blue-50 p-2 rounded text-blue-600 animate-fade-in">
+              {getHint()}
+            </div>
+          )}
+        </div>
+      )}
       
       <div className={`space-y-3 mb-6 ${isMobile ? 'pr-1' : ''}`}>
         {/* Single choice radio buttons */}
@@ -91,10 +137,10 @@ export default function MultipleChoiceQuestion({
                 key={index} 
                 className={`flex items-start space-x-2 p-3 rounded-md border ${
                   submitted && answer.isCorrect
-                    ? 'bg-green-50 border-green-200' 
+                    ? 'mc-option-correct' 
                     : submitted && selectedAnswers.includes(index) && !answer.isCorrect
-                      ? 'bg-red-50 border-red-200' 
-                      : 'bg-white border-gray-200'
+                      ? 'mc-option-incorrect' 
+                      : 'hover:bg-gray-50 border-gray-200'
                 }`}
               >
                 <RadioGroupItem 
@@ -133,10 +179,10 @@ export default function MultipleChoiceQuestion({
                 key={index} 
                 className={`flex items-start space-x-2 p-3 rounded-md border ${
                   submitted && answer.isCorrect
-                    ? 'bg-green-50 border-green-200' 
+                    ? 'mc-option-correct' 
                     : submitted && selectedAnswers.includes(index) && !answer.isCorrect
-                      ? 'bg-red-50 border-red-200' 
-                      : 'bg-white border-gray-200'
+                      ? 'mc-option-incorrect' 
+                      : 'hover:bg-gray-50 border-gray-200'
                 }`}
               >
                 <Checkbox 
@@ -183,7 +229,7 @@ export default function MultipleChoiceQuestion({
         </Button>
       ) : (
         <div className="mt-4 flex flex-col">
-          <div className={`mb-3 font-medium ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+          <div className={`mb-3 font-medium ${isCorrect ? 'text-green-600' : 'text-red-600'} mc-feedback`}>
             {isCorrect 
               ? "Korrekt! Gut gemacht!" 
               : "Nicht ganz richtig. Die richtige Antwort ist markiert."}

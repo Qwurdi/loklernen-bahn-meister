@@ -24,7 +24,9 @@ export default function FlashcardItemMobile({
   onKnown,
   onNotKnown
 }: FlashcardItemMobileProps) {
-  // Use our custom hook for swipe behavior
+  const isMultipleChoice = question.question_type === "MC_single" || question.question_type === "MC_multi";
+  
+  // Use our custom hook for swipe behavior - disable swipe for MC questions
   const { 
     cardRef, 
     swipeState, 
@@ -36,7 +38,8 @@ export default function FlashcardItemMobile({
     onSwipeRight: onKnown,
     onShowAnswer,
     isFlipped: flipped,
-    isAnswered: answered
+    isAnswered: answered,
+    disableSwipe: isMultipleChoice && flipped // Disable swipe for MC questions when the card is flipped
   });
 
   return (
@@ -64,11 +67,13 @@ export default function FlashcardItemMobile({
         )}
       </Card>
 
-      {/* Visual swipe indicator overlay */}
-      <SwipeIndicator 
-        dragDelta={swipeState.dragDelta} 
-        swipeThreshold={SWIPE_THRESHOLD} 
-      />
+      {/* Visual swipe indicator overlay - only for non-MC questions or front side */}
+      {(!isMultipleChoice || !flipped) && (
+        <SwipeIndicator 
+          dragDelta={swipeState.dragDelta} 
+          swipeThreshold={SWIPE_THRESHOLD} 
+        />
+      )}
     </div>
   );
 }

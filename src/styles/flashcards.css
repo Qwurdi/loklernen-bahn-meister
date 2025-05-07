@@ -40,3 +40,38 @@
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Styles for hints */
+.hint-text {
+  font-size: 0.85rem;
+  padding: 0.5rem;
+  background-color: rgba(239, 246, 255, 0.7);
+  border-radius: 0.25rem;
+  border: 1px solid rgba(191, 219, 254, 0.5);
+  color: #3b82f6;
+  margin-bottom: 1rem;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Button styles */
+.hint-button {
+  font-size: 0.75rem;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  background-color: transparent;
+  transition: all 0.2s ease;
+}
+
+.hint-button:hover {
+  background-color: rgba(0,0,0,0.05);
+  color: #374151;
+}
+
+/* Fade-in animation for hint reveal */
+.hint-reveal {
+  animation: fadeIn 0.3s ease;
+}
+

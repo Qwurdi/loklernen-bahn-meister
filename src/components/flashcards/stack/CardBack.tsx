@@ -5,7 +5,6 @@ import { CheckCircle2, XCircle } from 'lucide-react';
 import ZoomableImage from '@/components/common/ZoomableImage';
 import { useIsMobile } from '@/hooks/use-mobile';
 import MultipleChoiceQuestion from '../MultipleChoiceQuestion';
-import { useState } from 'react';
 
 // Update interface to use generics
 interface CardBackProps<T extends Question = Question> {
@@ -97,8 +96,8 @@ export default function CardBack<T extends Question = Question>({ question, onAn
         )}
       </div>
       
-      {/* Action buttons with enhanced styling */}
-      {onAnswer && !isMultipleChoice && (
+      {/* Action buttons with enhanced styling - Only for open questions */}
+      {onAnswer && question.question_type === 'open' && (
         <div className="sticky bottom-4 mt-auto">
           <div className="flex justify-between space-x-2">
             <Button 

@@ -80,7 +80,7 @@ export default function AnswerSide({
         )}
       </div>
       
-      {/* Floating action buttons with fixed positioning */}
+      {/* Floating action buttons with fixed positioning - only for open questions */}
       {!answered && (
         <div className="absolute left-0 right-0 bottom-4 flex justify-center items-center">
           <div className="flex justify-center items-center space-x-6">

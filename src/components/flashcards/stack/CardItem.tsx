@@ -25,6 +25,7 @@ export default function CardItem<T extends Question = Question>({
 }: CardItemProps<T>) {
   const [isFlipped, setIsFlipped] = useState(false);
   const isMobile = useIsMobile();
+  const isMultipleChoice = question.question_type === 'MC_single' || question.question_type === 'MC_multi';
   
   const {
     cardRef,
@@ -34,7 +35,7 @@ export default function CardItem<T extends Question = Question>({
   } = useCardSwipe({
     onSwipeLeft: () => onSwipe?.('left'),
     onSwipeRight: () => onSwipe?.('right'),
-    disabled: swipeDisabled || isPreview || !isFlipped, // Only enable swipe when showing answer
+    disabled: swipeDisabled || isPreview || !isFlipped || isMultipleChoice, // Disable swipe for MC questions
     dragThreshold: 80
   });
 
@@ -48,6 +49,15 @@ export default function CardItem<T extends Question = Question>({
   // Handle button answers (desktop only)
   const handleAnswer = (known: boolean) => {
     if (isPreview || swipeDisabled) return;
+    
+    // For multiple choice questions, the correctness has already been determined in MultipleChoiceQuestion
+    // Just pass it through to the parent component
+    if (isMultipleChoice) {
+      onSwipe?.(known ? 'right' : 'left');
+      return;
+    }
+    
+    // For open questions, use the swipe mechanism
     onSwipe?.(known ? 'right' : 'left');
   };
 
@@ -80,7 +90,7 @@ export default function CardItem<T extends Question = Question>({
         damping: 20
       }}
       onClick={handleCardTap}
-      {...(isMobile && !isPreview && !swipeDisabled ? handlers : {})}
+      {...(isMobile && !isPreview && !swipeDisabled && !isMultipleChoice ? handlers : {})}
     >
       <div className="w-full h-full relative overflow-hidden rounded-2xl" style={{ perspective: '1000px' }}>
         {/* Front card face with improved animation */}
@@ -121,8 +131,8 @@ export default function CardItem<T extends Question = Question>({
         </div>
       </div>
       
-      {/* Enhanced swipe hints for mobile */}
-      {isFlipped && !isPreview && isMobile && (
+      {/* Enhanced swipe hints for mobile - only for open questions */}
+      {isFlipped && !isPreview && isMobile && !isMultipleChoice && (
         <SwipeHint
           direction={swipeDirection}
           dragDelta={dragState.dragDelta}

@@ -7,6 +7,7 @@ interface SwipeHandlerProps {
   onShowAnswer?: () => void;
   isFlipped: boolean;
   isAnswered: boolean;
+  disableSwipe?: boolean; // New prop to disable swipes (for MC questions)
 }
 
 interface SwipeState {
@@ -26,7 +27,8 @@ export function useCardSwipe({
   onSwipeRight,
   onShowAnswer,
   isFlipped,
-  isAnswered
+  isAnswered,
+  disableSwipe = false // Default to false for backward compatibility
 }: SwipeHandlerProps) {
   const [swipeState, setSwipeState] = useState<SwipeState>({
     dragStartX: null,
@@ -40,6 +42,9 @@ export function useCardSwipe({
   
   // Touch handling for swipe gestures with improved mechanics
   const handleTouchStart = (e: React.TouchEvent) => {
+    // Don't capture if swipe is disabled and card is flipped
+    if (disableSwipe && isFlipped) return;
+    
     // Immediately prevent default to stop scrolling
     e.preventDefault();
     
@@ -54,6 +59,9 @@ export function useCardSwipe({
   };
   
   const handleTouchMove = (e: React.TouchEvent) => {
+    // Don't handle move if swipe is disabled and card is flipped
+    if (disableSwipe && isFlipped) return;
+    
     // Always prevent default for touch move on cards
     e.preventDefault();
     
@@ -84,6 +92,9 @@ export function useCardSwipe({
   };
   
   const handleTouchEnd = () => {
+    // Don't handle end if swipe is disabled and card is flipped
+    if (disableSwipe && isFlipped) return;
+    
     const { dragStartX, dragDelta } = swipeState;
     
     if (dragStartX === null || isAnswered) return;
@@ -153,6 +164,14 @@ export function useCardSwipe({
   // Calculate card styles during drag
   const getCardStyle = () => {
     const { dragDelta, isDragging } = swipeState;
+    
+    // No dragging allowed if card is flipped and swipe is disabled (for MC questions)
+    if (disableSwipe && isFlipped) {
+      return {
+        transform: "none",
+        transition: "transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.2s ease"
+      };
+    }
     
     if (dragDelta === 0) {
       return {

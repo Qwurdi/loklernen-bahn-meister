@@ -9,8 +9,8 @@ interface CategoryCardCounts {
 
 export const filterCategoriesByRegulation = (
   categories: string[],
-  categoryCardCounts?: Record<string, CategoryCardCounts>,
-  regulationFilter: RegulationFilterType
+  regulationFilter: RegulationFilterType,
+  categoryCardCounts?: Record<string, CategoryCardCounts>
 ): string[] => {
   if (regulationFilter === "all") {
     return categories;

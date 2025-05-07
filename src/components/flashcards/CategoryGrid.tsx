@@ -42,8 +42,8 @@ export default function CategoryGrid({
 }: CategoryGridProps) {
   const { categoryMetadata, isLoading } = useCategoryMetadata(categories);
   
-  // Filter categories based on regulation preference
-  const visibleCategories = filterCategoriesByRegulation(categories, categoryCardCounts, regulationFilter);
+  // Filter categories based on regulation preference - Updated parameter order
+  const visibleCategories = filterCategoriesByRegulation(categories, regulationFilter, categoryCardCounts);
   
   if (visibleCategories.length === 0) {
     return <EmptyRegulationState />;

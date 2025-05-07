@@ -14,3 +14,13 @@
     transform: translateY(0) scale(1);
   }
 }
+
+/* Spinner Animation */
+@keyframes spinner-rotation {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.spinner-rotate {
+  animation: spinner-rotation 1s linear infinite;
+}

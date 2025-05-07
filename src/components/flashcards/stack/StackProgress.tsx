@@ -36,10 +36,20 @@ export default function StackProgress({
         <Progress 
           value={percentage} 
           className="h-1.5 bg-gray-200" 
-          indicatorClassName="bg-gradient-ultramarine animate-gradient-shift"
+          indicatorClassName="bg-gradient-ultramarine"
+          style={{
+            backgroundSize: '200% 200%',
+            animation: 'gradient-shift 2s linear infinite'
+          }}
         />
-        {/* Percentage display removed */}
       </div>
+      <style jsx global>{`
+        @keyframes gradient-shift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+      `}</style>
     </div>
   );
 }

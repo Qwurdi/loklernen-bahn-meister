@@ -12,7 +12,7 @@ interface QuestionEditorProps {
   subCategory: string;
   difficulty: number;
   text: string | StructuredContent;
-  hint?: string | null;
+  hint?: string | StructuredContent | null;
   isSignalQuestion: boolean;
   regulationCategory?: RegulationCategory;
   imagePreview: string | null;
@@ -24,7 +24,7 @@ interface QuestionEditorProps {
   onQuestionTypeChange: (type: QuestionType) => void;
   onRegulationCategoryChange?: (regulationCategory: RegulationCategory) => void;
   onTextChange: (value: string | StructuredContent) => void;
-  onHintChange?: (value: string) => void;
+  onHintChange?: (value: string | StructuredContent) => void;
   onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handlePastedImage?: (file: File) => void;
   removeImage: () => void;

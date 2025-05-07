@@ -14,11 +14,12 @@ interface EditorTabContentProps {
   title: string;
   icon: string;
   children: React.ReactNode;
+  className?: string;
 }
 
-const EditorTabContent: React.FC<EditorTabContentProps> = ({ value, children }) => {
+export const EditorTabContent: React.FC<EditorTabContentProps> = ({ value, children, className = "" }) => {
   return (
-    <TabsContent value={value}>
+    <TabsContent value={value} className={className}>
       {children}
     </TabsContent>
   );

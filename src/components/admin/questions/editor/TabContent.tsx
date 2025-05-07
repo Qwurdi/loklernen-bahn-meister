@@ -5,13 +5,14 @@ import { ContentTab } from "@/components/admin/questions/ContentTab";
 import { AnswersTab } from "@/components/admin/questions/AnswersTab";
 import { EditorTabContent } from "@/components/admin/questions/EditorTabs";
 import { QuestionCategory, RegulationCategory, QuestionType } from '@/types/questions';
+import { StructuredContent } from '@/types/rich-text';
 
 interface TabContentProps {
   activeTab: string;
   category: QuestionCategory;
   subCategory: string;
   difficulty: number;
-  text: string;
+  text: string | StructuredContent;
   isSignalQuestion: boolean;
   regulationCategory?: RegulationCategory;
   imagePreview: string | null;
@@ -22,11 +23,11 @@ interface TabContentProps {
   onDifficultyChange: (difficulty: number) => void;
   onQuestionTypeChange: (type: QuestionType) => void;
   onRegulationCategoryChange: (regulationCategory: RegulationCategory) => void;
-  onTextChange: (value: string) => void;
+  onTextChange: (value: string | StructuredContent) => void;
   onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handlePastedImage?: (file: File) => void;
   removeImage: () => void;
-  handleAnswerChange: (index: number, value: string) => void;
+  handleAnswerChange: (index: number, value: string | StructuredContent) => void;
   toggleAnswerCorrectness: (index: number) => void;
   removeAnswer: (index: number) => void;
   addAnswer: () => void;
@@ -59,7 +60,7 @@ export const TabContent: React.FC<TabContentProps> = ({
 }) => {
   return (
     <>
-      <EditorTabContent value="basics" className={activeTab === "basics" ? "" : "hidden"}>
+      <EditorTabContent value="basics" title="Grunddaten" icon="Settings" className={activeTab === "basics" ? "" : "hidden"}>
         <BasicInfoTab
           category={category}
           subCategory={subCategory}
@@ -75,7 +76,7 @@ export const TabContent: React.FC<TabContentProps> = ({
         />
       </EditorTabContent>
       
-      <EditorTabContent value="content" className={activeTab === "content" ? "" : "hidden"}>
+      <EditorTabContent value="content" title="Inhalt" icon="FileText" className={activeTab === "content" ? "" : "hidden"}>
         <ContentTab
           text={text}
           imagePreview={imagePreview}
@@ -86,7 +87,7 @@ export const TabContent: React.FC<TabContentProps> = ({
         />
       </EditorTabContent>
       
-      <EditorTabContent value="answers" className={activeTab === "answers" ? "" : "hidden"}>
+      <EditorTabContent value="answers" title="Antworten" icon="ListChecks" className={activeTab === "answers" ? "" : "hidden"}>
         <AnswersTab
           answers={answers}
           questionType={questionType}

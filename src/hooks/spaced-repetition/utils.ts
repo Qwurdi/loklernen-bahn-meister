@@ -9,5 +9,10 @@ export function calculateNextReviewDate(date: Date, intervalDays: number): Date 
   return nextDate;
 }
 
+// Apply spacing factor to interval
+export function applySpacingFactor(interval: number, factor: number = 2.5): number {
+  return Math.round(interval * factor);
+}
+
 // Export the transformQuestion function to maintain backwards compatibility
 export { transformQuestion };

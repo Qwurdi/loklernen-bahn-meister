@@ -52,11 +52,6 @@ const QuestionEditorPage: React.FC = () => {
     isEditMode
   });
 
-  // Handle rich text changes
-  const handleRichTextChange = (value: string) => {
-    setFormData(prev => ({ ...prev, text: value }));
-  };
-
   // Load draft on initial load if available
   useEffect(() => {
     try {

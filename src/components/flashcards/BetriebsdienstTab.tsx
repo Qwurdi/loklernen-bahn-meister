@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState } from "react";
 import { RegulationFilterType } from "@/types/regulation";
-import { fetchCategoriesByParent } from "@/api/categories";
+import { fetchCategoriesByParent } from "@/api/categories/index";
 import CategoryGrid from "@/components/flashcards/CategoryGrid";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 

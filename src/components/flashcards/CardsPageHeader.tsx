@@ -28,7 +28,7 @@ export default function CardsPageHeader({
   };
 
   const handleGuestStartLearning = () => {
-    navigate('/karteikarten/signale'); // Beispiel für Gast-Lernstart
+    navigate('/karteikarten/lernen?category=Signale');
   };
 
   return (

@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Question, QuestionCategory } from '@/types/questions';
@@ -25,102 +24,87 @@ export function useSpacedRepetition(
   const [error, setError] = useState<Error | null>(null);
   const [pendingUpdates, setPendingUpdates] = useState<{questionId: string, score: number}[]>([]);
   
-  // Default to 'all' if regulationCategory is not provided
   const regulationCategory = options.regulationCategory || "all";
   const boxNumber = options.boxNumber;
+  const batchSize = options.batchSize || 15;
   
-  // Optimized batch size - ideal for didactic and technical balance
-  const batchSize = options.batchSize || 15; // Default to 15 cards per session
-  
-  // Move loadDueQuestions to useCallback to avoid recreation on every render
   const loadDueQuestions = useCallback(async () => {
-    if (!user) {
-      setLoading(false);
-      setDueQuestions([]);
-      return;
-    }
-    
-    try {
-      setLoading(true);
-      setError(null);
-      console.log(`Loading questions with category=${category}, subcategory=${subcategory}, regulation=${regulationCategory}, practice=${options.practiceMode}`);
+    setLoading(true);
+    setError(null); // Reset error at the beginning
 
-      // Handle practice mode differently - just load questions without checking if they're due
-      if (options.practiceMode) {
+    try {
+      if (!user) {
+        // For non-authenticated users, load questions in practice mode
+        console.log(`Loading practice questions for guest user with category=${category}, subcategory=${subcategory}, regulation=${regulationCategory}, batchSize=${batchSize}`);
         const practiceQuestions = await fetchPracticeQuestions(
-          category, 
-          subcategory, 
-          regulationCategory, 
+          category,
+          subcategory,
+          regulationCategory,
           batchSize
         );
         setDueQuestions(practiceQuestions);
-        setLoading(false);
-        return;
+      } else {
+        // Logic for authenticated users
+        console.log(`Loading questions for authenticated user: category=${category}, subcategory=${subcategory}, regulation=${regulationCategory}, practiceMode=${options.practiceMode}, boxNumber=${boxNumber}, batchSize=${batchSize}`);
+
+        if (options.practiceMode) {
+          const practiceQuestions = await fetchPracticeQuestions(
+            category, 
+            subcategory, 
+            regulationCategory, 
+            batchSize
+          );
+          setDueQuestions(practiceQuestions);
+        } else if (boxNumber !== undefined) {
+          const boxProgress = await fetchQuestionsByBox(user.id, boxNumber);
+          const questionsFromBox = boxProgress
+            .filter(p => p.questions) // Ensure questions exist
+            .map(p => transformQuestion(p.questions));
+          console.log(`Loaded ${questionsFromBox.length} questions from box ${boxNumber}`);
+          setDueQuestions(questionsFromBox);
+          setProgress(boxProgress);
+        } else {
+          // Regular spaced repetition mode for authenticated users
+          const filteredProgressData = await fetchUserProgress(user.id, category, subcategory, regulationCategory);
+          const questionsWithProgress = filteredProgressData
+            .filter(p => p.questions) // Ensure questions exist
+            .map(p => transformQuestion(p.questions));
+          console.log("Questions with progress:", questionsWithProgress.length);
+
+          if (questionsWithProgress.length >= batchSize) {
+            setDueQuestions(questionsWithProgress.slice(0, batchSize));
+            setProgress(filteredProgressData);
+          } else {
+            // Fetch new questions if not enough questions with progress
+            const questionIdsWithProgress = filteredProgressData
+              .filter(p => p.questions?.id)
+              .map(p => p.question_id);
+            console.log("Question IDs with progress:", questionIdsWithProgress.length);
+
+            const neededNewQuestions = batchSize - questionsWithProgress.length;
+            const newQuestions = await fetchNewQuestions(
+              category, 
+              subcategory, 
+              regulationCategory, 
+              questionIdsWithProgress, 
+              neededNewQuestions // Fetch only the remaining number of questions needed
+            );
+
+            const allQuestions = [
+              ...questionsWithProgress,
+              ...newQuestions.map(transformQuestion)
+            ].slice(0, batchSize); // Ensure total does not exceed batchSize
+            
+            console.log("Final questions count for session:", allQuestions.length);
+            setDueQuestions(allQuestions);
+            setProgress(filteredProgressData);
+          }
+        }
       }
-      
-      // If a specific box is requested, only fetch questions from that box
-      if (boxNumber !== undefined) {
-        const boxProgress = await fetchQuestionsByBox(user.id, boxNumber);
-        
-        // Transform the questions from the box data
-        const questionsFromBox = boxProgress
-          .filter(p => p.questions) // Ensure questions exist
-          .map(p => transformQuestion(p.questions));
-          
-        console.log(`Loaded ${questionsFromBox.length} questions from box ${boxNumber}`);
-        
-        setDueQuestions(questionsFromBox);
-        setProgress(boxProgress);
-        setLoading(false);
-        return;
-      }
-      
-      // Regular spaced repetition mode
-      const filteredProgressData = await fetchUserProgress(user.id, category, subcategory, regulationCategory);
-      
-      // Transform the questions from the progress data
-      const questionsWithProgress = filteredProgressData
-        .filter(p => p.questions) // Ensure questions exist
-        .map(p => transformQuestion(p.questions));
-        
-      console.log("Questions with progress:", questionsWithProgress.length);
-
-      // If we have enough questions with progress, no need to fetch new ones
-      if (questionsWithProgress.length >= batchSize) {
-        setDueQuestions(questionsWithProgress.slice(0, batchSize));
-        setProgress(filteredProgressData);
-        setLoading(false);
-        return;
-      }
-
-      // Otherwise, fetch new questions (those without progress)
-      // Get the IDs of questions that already have progress
-      const questionIdsWithProgress = filteredProgressData
-        .filter(p => p.questions?.id)
-        .map(p => p.question_id);
-        
-      console.log("Question IDs with progress:", questionIdsWithProgress.length);
-
-      const newQuestions = await fetchNewQuestions(
-        category, 
-        subcategory, 
-        regulationCategory, 
-        questionIdsWithProgress, 
-        batchSize
-      );
-
-      // Combine progress questions and new questions, and limit to batch size
-      const allQuestions = [
-        ...questionsWithProgress,
-        ...newQuestions.map(transformQuestion)
-      ].slice(0, batchSize);
-      
-      console.log("Final questions count:", allQuestions.length);
-      setDueQuestions(allQuestions);
-      setProgress(filteredProgressData);
-    } catch (error) {
-      console.error('Error loading questions:', error);
-      setError(error instanceof Error ? error : new Error('Unknown error loading questions'));
+    } catch (err) {
+      console.error('Error loading questions:', err);
+      setError(err instanceof Error ? err : new Error('Unknown error loading questions'));
+      setDueQuestions([]); // Ensure dueQuestions is empty on error
     } finally {
       setLoading(false);
     }

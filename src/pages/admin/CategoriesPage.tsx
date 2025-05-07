@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useCategories } from "@/hooks/useCategories";
@@ -18,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import CategoryList from "@/components/admin/categories/CategoryList";
 import CategoryForm from "@/components/admin/categories/CategoryForm";
-import { initializeDefaultCategories } from "@/api/categories";
+import { initializeDefaultCategories } from "@/api/categories/index";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { 

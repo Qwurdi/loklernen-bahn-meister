@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Label } from "@/components/ui/label";
 import {
@@ -8,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { fetchCategoriesByParent, signalSubCategories, betriebsdienstSubCategories } from "@/api/categories";
+import { fetchCategoriesByParent, signalSubCategories, betriebsdienstSubCategories } from "@/api/categories/index";
 
 interface QuestionSubCategorySelectorProps {
   category: "Signale" | "Betriebsdienst";

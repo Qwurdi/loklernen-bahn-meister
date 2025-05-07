@@ -1,5 +1,4 @@
 
-// Replace the reference to handleAnswerChange in QuestionEditor.tsx
 import React from 'react';
 import { EditorTabs } from '../EditorTabs';
 import { BasicInfoTab } from '../BasicInfoTab';
@@ -63,7 +62,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
 }) => {
   return (
     <EditorTabs>
-      <EditorTabs.Tab title="Grunddaten" icon="Settings">
+      <EditorTabs.Content value="basics" title="Grunddaten" icon="Settings">
         <BasicInfoTab
           category={category}
           subCategory={subCategory}
@@ -77,9 +76,9 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
           onQuestionTypeChange={onQuestionTypeChange}
           onRegulationCategoryChange={onRegulationCategoryChange}
         />
-      </EditorTabs.Tab>
+      </EditorTabs.Content>
       
-      <EditorTabs.Tab title="Inhalt" icon="FileText">
+      <EditorTabs.Content value="content" title="Inhalt" icon="FileText">
         <ContentTab
           text={text}
           hint={hint}
@@ -90,9 +89,9 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
           handlePastedImage={handlePastedImage}
           removeImage={removeImage}
         />
-      </EditorTabs.Tab>
+      </EditorTabs.Content>
       
-      <EditorTabs.Tab title="Antworten" icon="ListChecks">
+      <EditorTabs.Content value="answers" title="Antworten" icon="ListChecks">
         <AnswersTab
           answers={answers}
           questionType={questionType}
@@ -102,7 +101,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
           removeAnswer={removeAnswer}
           addAnswer={addAnswer}
         />
-      </EditorTabs.Tab>
+      </EditorTabs.Content>
     </EditorTabs>
   );
 };

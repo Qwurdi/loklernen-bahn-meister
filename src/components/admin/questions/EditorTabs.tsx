@@ -9,7 +9,22 @@ interface EditorTabsProps {
   onValueChange?: (value: string) => void;
 }
 
-export const EditorTabs: React.FC<EditorTabsProps> = ({ 
+interface EditorTabContentProps {
+  value: string;
+  title: string;
+  icon: string;
+  children: React.ReactNode;
+}
+
+const EditorTabContent: React.FC<EditorTabContentProps> = ({ value, children }) => {
+  return (
+    <TabsContent value={value}>
+      {children}
+    </TabsContent>
+  );
+};
+
+export const EditorTabs: React.FC<EditorTabsProps> & { Content: React.FC<EditorTabContentProps> } = ({ 
   children, 
   defaultValue = "basics",
   onValueChange
@@ -39,14 +54,4 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
   );
 };
 
-export const EditorTabContent: React.FC<{
-  value: string;
-  className?: string;
-  children: React.ReactNode;
-}> = ({ value, className, children }) => {
-  return (
-    <TabsContent value={value} className={className}>
-      {children}
-    </TabsContent>
-  );
-};
+EditorTabs.Content = EditorTabContent;

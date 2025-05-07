@@ -7,12 +7,13 @@ import { SignalQuestionAnswer } from './answers/SignalQuestionAnswer';
 import { MultipleChoiceAnswers } from './answers/MultipleChoiceAnswers';
 import { AnswerPreviewSection } from './answers/AnswerPreviewSection';
 import { Answer, QuestionType } from '@/types/questions';
+import { StructuredContent } from '@/types/rich-text';
 
 interface AnswersTabProps {
   answers: Answer[];
   questionType: QuestionType;
   isSignalQuestion: boolean;
-  handleAnswerChange: (index: number, value: string) => void;
+  handleAnswerChange: (index: number, value: string | StructuredContent) => void;
   toggleAnswerCorrectness: (index: number) => void;
   removeAnswer: (index: number) => void;
   addAnswer: () => void;
@@ -28,7 +29,7 @@ export const AnswersTab: React.FC<AnswersTabProps> = ({
   addAnswer
 }) => {
   // Handler for signal question answer changes
-  const handleSignalAnswerChange = (text: string) => {
+  const handleSignalAnswerChange = (text: string | StructuredContent) => {
     handleAnswerChange(0, text);
   };
 

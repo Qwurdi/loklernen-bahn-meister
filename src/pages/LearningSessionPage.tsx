@@ -15,6 +15,9 @@ import { Question } from "@/types/questions";
 import { useCategories } from "@/hooks/useCategories"; // Added useCategories
 import { Category } from "@/api/categories/types"; // Added Category type
 
+// Define a new type for access status
+type AccessStatus = "pending" | "allowed" | "denied_auth" | "denied_pro" | "not_found" | "no_selection";
+
 export default function LearningSessionPage() {
   console.log("LearningSessionPage: Initializing component");
 
@@ -27,58 +30,137 @@ export default function LearningSessionPage() {
   const [correctCount, setCorrectCount] = useState(0);
   const [sessionCards, setSessionCards] = useState<Question[]>([]);
   const [sessionFinished, setSessionFinished] = useState(false);
+  const [resolvedSessionTitle, setResolvedSessionTitle] = useState<string>(""); // For updating title with names
 
-  const { categories, isLoading: categoriesLoading, error: categoriesError } = useCategories(); // Added
-  const [categoryRequiresAuth, setCategoryRequiresAuth] = useState<boolean | null>(null); // Added
-  const [categoryFound, setCategoryFound] = useState<boolean | null>(null); // Added
+  const { categories, isLoading: categoriesLoading, error: categoriesDbError } = useCategories(); // Added
+  const [accessStatus, setAccessStatus] = useState<AccessStatus>("pending");
 
-  // Get session parameters from URL
   const {
-    categoryParam,
-    subcategoryParam,
+    singleCategoryIdentifier,
+    multipleCategoryIdentifiers,
     regulationParam,
     boxParam,
-    sessionTitle
+    sessionTitle: initialSessionTitle, // Renamed to avoid conflict
+    practiceMode
   } = useSessionParams();
 
-  console.log("Learning session parameters:", {
-    category: categoryParam,
-    subcategory: subcategoryParam,
+  // Combine single and multiple identifiers for the hook
+  const categoryIdentifiersForHook = multipleCategoryIdentifiers && multipleCategoryIdentifiers.length > 0 
+    ? multipleCategoryIdentifiers 
+    : (singleCategoryIdentifier ? [singleCategoryIdentifier] : []);
+
+  useEffect(() => {
+    setResolvedSessionTitle(initialSessionTitle); // Set initial title
+  }, [initialSessionTitle]);
+
+  console.log("Learning session parameters from hook:", {
+    singleCategoryIdentifier,
+    multipleCategoryIdentifiers,
     regulation: regulationParam,
-    box: boxParam
+    box: boxParam,
+    practiceMode
   });
 
-  // Effect to check category and authentication requirements
   useEffect(() => {
-    if (categoriesLoading || !categoryParam) {
-      setCategoryFound(null);
-      setCategoryRequiresAuth(null);
+    if (categoriesLoading) {
+      setAccessStatus("pending");
+      return;
+    }
+    if (categoriesDbError) {
+      toast.error("Fehler beim Laden der Kategoriedaten.", { description: categoriesDbError.message });
+      setAccessStatus("not_found"); // Or a new error state
       return;
     }
 
-    const currentCategory = categories.find(
-      (cat: Category) => cat.name === categoryParam || cat.id === categoryParam
-    );
-
-    if (currentCategory) {
-      setCategoryFound(true);
-      const requiresAuth = !!currentCategory.requiresAuth;
-      setCategoryRequiresAuth(requiresAuth);
-      if (requiresAuth && !user) {
-        toast.info("Für diese Kategorie ist eine Anmeldung erforderlich.", {
-          description: "Bitte melde dich an, um auf diese Lernkarten zuzugreifen.",
-        });
-        navigate("/login", { replace: true, state: { from: location.pathname } });
+    // If no specific category is selected (e.g., for global due cards review)
+    if (!singleCategoryIdentifier && (!multipleCategoryIdentifiers || multipleCategoryIdentifiers.length === 0)) {
+      setAccessStatus("no_selection"); // Or "allowed" if global review doesn't need these checks
+      // Potentially update title for global review if not already handled by useSessionParams
+      if (!initialSessionTitle.includes("Fällige Karten")) {
+        setResolvedSessionTitle("Fällige Karten (Alle Kategorien)");
       }
-    } else {
-      setCategoryFound(false);
-      setCategoryRequiresAuth(null);
+      return;
     }
-  }, [categories, categoriesLoading, categoryParam, user, navigate, location, sessionTitle]);
 
+    let targetCategories: Category[] = [];
+    let notFoundIdentifiers: string[] = [];
 
-  // Pass both category, subcategory and regulation preference to the hook
-  // Use optimized batch size of 15 cards per session
+    if (multipleCategoryIdentifiers && multipleCategoryIdentifiers.length > 0) {
+      targetCategories = multipleCategoryIdentifiers.map(idOrName => {
+        const found = categories.find(cat => cat.name === idOrName || cat.id === idOrName);
+        if (!found) notFoundIdentifiers.push(idOrName);
+        return found;
+      }).filter(Boolean) as Category[];
+      
+      if (notFoundIdentifiers.length > 0) {
+        toast.error("Einige Kategorien wurden nicht gefunden:", { description: notFoundIdentifiers.join(', ') });
+        setAccessStatus("not_found");
+        return;
+      }
+      // Update session title for multiple categories if needed (e.g. with count)
+      setResolvedSessionTitle(`Auswahl (${targetCategories.length} Kategorien)`);
+
+    } else if (singleCategoryIdentifier) {
+      const foundCat = categories.find(cat => cat.name === singleCategoryIdentifier || cat.id === singleCategoryIdentifier);
+      if (foundCat) {
+        targetCategories = [foundCat];
+        setResolvedSessionTitle(foundCat.name); // Update title with actual category name
+      } else {
+        notFoundIdentifiers.push(singleCategoryIdentifier);
+        toast.error("Kategorie nicht gefunden:", { description: singleCategoryIdentifier });
+        setAccessStatus("not_found");
+        return;
+      }
+    }
+
+    if (targetCategories.length === 0 && (singleCategoryIdentifier || multipleCategoryIdentifiers)) {
+      // This case should ideally be caught above, but as a safeguard
+      if (!toast.isActive("cat_not_found")) { // Prevent duplicate toasts
+        toast.error("Die angeforderten Lernkategorien wurden nicht gefunden.", { id: "cat_not_found" });
+      }
+      setAccessStatus("not_found");
+      return;
+    }
+
+    let requiresAuthNeeded = false;
+    let proRequired = false;
+
+    for (const cat of targetCategories) {
+      if (cat.requiresAuth) {
+        requiresAuthNeeded = true;
+      }
+      if (cat.isPro) {
+        proRequired = true;
+      }
+    }
+
+    const isUserPro = !!user?.user_metadata?.is_pro_member; // Adjust to your actual pro member check
+
+    if (requiresAuthNeeded && !user) {
+      toast.info("Für diese Auswahl ist eine Anmeldung erforderlich.", {
+        description: "Bitte melde dich an, um auf diese Lernkarten zuzugreifen.",
+      });
+      // Save current path to redirect back after login
+      const returnTo = location.pathname + location.search;
+      navigate("/login", { replace: true, state: { from: returnTo } });
+      setAccessStatus("denied_auth");
+      return;
+    }
+
+    if (proRequired && !isUserPro) {
+      toast.error("Premium-Funktion erforderlich.", {
+        description: "Einige der ausgewählten Kategorien sind nur für Premium-Mitglieder verfügbar.",
+      });
+      // Navigate to dashboard or a premium upsell page
+      navigate("/dashboard", { replace: true, state: { showProUpsell: true } });
+      setAccessStatus("denied_pro");
+      return;
+    }
+
+    setAccessStatus("allowed");
+
+  }, [categories, categoriesLoading, categoriesDbError, singleCategoryIdentifier, multipleCategoryIdentifiers, user, navigate, location, initialSessionTitle]);
+
   const {
     loading: questionsLoading, // Renamed from 'loading'
     dueQuestions,
@@ -86,32 +168,31 @@ export default function LearningSessionPage() {
     applyPendingUpdates,
     pendingUpdatesCount
   } = useSpacedRepetition(
-    categoryParam,
-    subcategoryParam,
+    categoryIdentifiersForHook, // Use the combined identifiers
     {
-      practiceMode: false,
+      practiceMode: practiceMode,
       regulationCategory: regulationParam,
       boxNumber: boxParam,
       batchSize: 15 // Ideal batch size for balance between performance and cognitive load
     }
   );
 
-  console.log("LearningSessionPage: Loaded questions count:", dueQuestions?.length || 0);
+  console.log("LearningSessionPage: Loaded questions count:", dueQuestions?.length || 0, "for categories:", categoryIdentifiersForHook.join(', '));
 
   useEffect(() => {
-    // Only shuffle and set cards if category is found and auth requirements are met (or not applicable)
-    if (categoryFound === false || (categoryRequiresAuth === true && !user)) {
-        setSessionCards([]); // Clear cards if auth fails or category not found
-        return;
+    if (accessStatus !== "allowed" && accessStatus !== "no_selection") { // no_selection means global review, proceed to load cards
+      setSessionCards([]);
+      return;
     }
     if (!questionsLoading && dueQuestions.length > 0) {
-      // Shuffle the cards to create a mixed learning session
       const shuffled = [...dueQuestions].sort(() => Math.random() - 0.5);
       setSessionCards(shuffled);
+      console.log("Session cards set:", shuffled.length);
     } else if (!questionsLoading && dueQuestions.length === 0) {
-      setSessionCards([]); // Ensure sessionCards is empty if no due questions
+      setSessionCards([]);
+      console.log("No due questions, session cards set to empty.");
     }
-  }, [questionsLoading, dueQuestions, categoryFound, categoryRequiresAuth, user]);
+  }, [questionsLoading, dueQuestions, accessStatus]);
 
   const handleAnswer = async (questionId: string, score: number) => {
     // Consider scores >= 4 as correct
@@ -149,36 +230,34 @@ export default function LearningSessionPage() {
     }
   };
 
-  // Render loading states
-  if (categoriesLoading && categoryParam) { // Show specific loading if categoryParam is present
-    return <FlashcardLoadingState />; // Message: "Lade Kategorieinformationen..." (implicit)
+  // Render loading states based on accessStatus
+  if (accessStatus === "pending" || (categoriesLoading && (singleCategoryIdentifier || multipleCategoryIdentifiers))) {
+    return <FlashcardLoadingState message="Lade Kategorieinformationen..." />;
   }
 
-  if (categoryParam && categoryFound === false && !categoriesLoading) {
+  if (accessStatus === "not_found") {
     return (
       <SessionContainer isMobile={isMobile}>
-        {/* Using EmptySessionState for simplicity, assuming it can handle a generic message or shows a relevant one */}
-        <EmptySessionState message={`Die Kategorie "${sessionTitle}" wurde nicht gefunden.`} />
+        <EmptySessionState message={`Die angeforderte Kategorie oder Kategorien wurden nicht gefunden.`} />
       </SessionContainer>
     );
   }
 
-  if (categoryRequiresAuth === true && !user && categoryParam) {
+  if (accessStatus === "denied_auth" || accessStatus === "denied_pro") {
     // This state is brief due to navigation, but a loading indicator is good.
-    return <FlashcardLoadingState />; // Message: "Weiterleitung zum Login..." (implicit)
+    return <FlashcardLoadingState message="Weiterleitung..." />;
   }
   
-  // Render loading state for questions
-  if (questionsLoading) {
-    return <FlashcardLoadingState />; // Message: "Lade Lernkarten..." (implicit)
+  // Render loading state for questions if access is allowed or no specific selection
+  if (questionsLoading && (accessStatus === "allowed" || accessStatus === "no_selection")) {
+    return <FlashcardLoadingState message="Lade Lernkarten..." />;
   }
 
-  // Render empty state when no cards are available
-  // This covers: category found but no cards, or no categoryParam provided.
-  if (!sessionCards.length && (categoryFound === true || !categoryParam)) {
+  // Render empty state when no cards are available (and access is allowed or no selection)
+  if ((accessStatus === "allowed" || accessStatus === "no_selection") && !sessionCards.length && !questionsLoading) {
     return (
       <SessionContainer isMobile={isMobile}>
-        <EmptySessionState categoryParam={categoryParam} />
+        <EmptySessionState categoryName={resolvedSessionTitle || "Auswahl"} />
       </SessionContainer>
     );
   }
@@ -192,6 +271,7 @@ export default function LearningSessionPage() {
           totalCards={sessionCards.length}
           onRestart={handleRestart}
           pendingUpdates={pendingUpdatesCount > 0}
+          sessionTitle={resolvedSessionTitle}
         />
       </SessionContainer>
     );
@@ -199,38 +279,41 @@ export default function LearningSessionPage() {
 
   // Render main learning session UI with our new card stack
   // This part should only render if a category is resolved (or no categoryParam) and cards are ready
-  if ((categoryFound === true && (categoryRequiresAuth === false || (categoryRequiresAuth === true && !!user))) || !categoryParam ) {
-     if (sessionCards.length > 0) { // Ensure cards are loaded before rendering stack
-        return (
-            <SessionContainer isMobile={isMobile} fullHeight={isMobile}>
-            <main className={`flex-1 ${isMobile ? 'px-0 pt-2 pb-16 overflow-hidden flex flex-col' : 'container px-4 py-8'}`}>
-                <SessionHeader
-                sessionTitle={sessionTitle}
-                categoryParam={categoryParam}
-                isMobile={isMobile}
-                />
-
-                <CardStackSession
-                sessionCards={sessionCards}
-                currentIndex={currentIndex}
-                setCurrentIndex={setCurrentIndex}
-                onAnswer={handleAnswer}
-                onComplete={handleComplete}
-                isMobile={isMobile}
-                />
-            </main>
-            </SessionContainer>
-        );
-     } else if (!questionsLoading) { // If not loading and no cards, show empty state (already handled above, but as a fallback)
-        return (
-            <SessionContainer isMobile={isMobile}>
-                <EmptySessionState categoryParam={categoryParam} />
-            </SessionContainer>
-        );
-     }
+  if ((accessStatus === "allowed" || accessStatus === "no_selection") && sessionCards.length > 0) {
+    return (
+      <SessionContainer isMobile={isMobile} fullHeight={isMobile}>
+        <main className={`flex-1 ${isMobile ? 'px-0 pt-2 pb-16 overflow-hidden flex flex-col' : 'container px-4 py-8'}`}>
+          <SessionHeader
+            sessionTitle={resolvedSessionTitle} // Use resolved title
+            // categoryParam={categoryForHook} // Pass the identifier used for fetching
+            isMobile={isMobile}
+          />
+          <CardStackSession
+            sessionCards={sessionCards}
+            currentIndex={currentIndex}
+            setCurrentIndex={setCurrentIndex}
+            onAnswer={handleAnswer}
+            onComplete={handleComplete}
+            isMobile={isMobile}
+          />
+        </main>
+      </SessionContainer>
+    );
   }
   
-  // Fallback or if still resolving state, show loading.
-  // This helps prevent rendering nothing if conditions are missed.
-  return <FlashcardLoadingState />;
+  // Fallback if none of the above conditions met (e.g., still resolving or unexpected state)
+  // or if accessStatus is an error type not yet resulting in navigation
+  if (!questionsLoading && (accessStatus === "allowed" || accessStatus === "no_selection") && sessionCards.length === 0) {
+    // This case should be covered by the EmptySessionState above, but as a safety net
+     return (
+      <SessionContainer isMobile={isMobile}>
+        <EmptySessionState categoryName={resolvedSessionTitle || "Auswahl"} />
+      </SessionContainer>
+    );
+  }
+
+  // Default fallback loading state if no other condition is met
+  // (e.g. if accessStatus is an error state but navigation hasn't happened yet)
+  console.log("Fallback loading state rendered, accessStatus:", accessStatus);
+  return <FlashcardLoadingState message="Sitzung wird vorbereitet..." />;
 }

@@ -13,8 +13,7 @@ import {
 } from './services';
 
 export function useSpacedRepetition(
-  category: QuestionCategory, 
-  subcategory?: string,
+  categoryIdentifiers: string | string[], // New parameter: can be a single ID/name or an array
   options: SpacedRepetitionOptions = {}
 ): SpacedRepetitionResult {
   const { user } = useAuth();
@@ -27,30 +26,48 @@ export function useSpacedRepetition(
   const regulationCategory = options.regulationCategory || "all";
   const boxNumber = options.boxNumber;
   const batchSize = options.batchSize || 15;
-  
+
   const loadDueQuestions = useCallback(async () => {
     setLoading(true);
-    setError(null); // Reset error at the beginning
+    setError(null);
+
+    const identifiers = Array.isArray(categoryIdentifiers) ? categoryIdentifiers : (categoryIdentifiers ? [categoryIdentifiers] : []);
+
+    // Handle practice mode: requires category identifiers.
+    // If in practice mode and no identifiers are provided, skip loading questions.
+    if (options.practiceMode && identifiers.length === 0) {
+      console.warn("useSpacedRepetition: Practice mode selected but no category identifiers provided. Skipping question load.");
+      setDueQuestions([]);
+      setLoading(false);
+      return;
+    }
+
+    // Log if fetching all due cards in normal mode (no categories specified).
+    // For box mode, categoryIdentifiers are not the primary filter for fetching box questions,
+    // so an empty identifiers array doesn't stop the process at this stage.
+    // For normal mode (no practice, no box), if identifiers is empty, it signals to fetch all due cards.
+    if (identifiers.length === 0 && !options.practiceMode && boxNumber === undefined) {
+      console.log("useSpacedRepetition: No category identifiers provided for normal learning session. Will fetch all due cards for the user.");
+    }
+    // Note: The previous unconditional early exit for identifiers.length === 0 was removed to allow
+    // fetching all due cards when no categories are specified in normal mode.
+    // The service functions (fetchUserProgress, fetchNewQuestions) now handle empty identifiers.
 
     try {
       if (!user) {
-        // For non-authenticated users, load questions in practice mode
-        console.log(`Loading practice questions for guest user with category=${category}, subcategory=${subcategory}, regulation=${regulationCategory}, batchSize=${batchSize}`);
+        console.log(`Loading practice questions for guest user with categories=${identifiers.join(', ')}, regulation=${regulationCategory}, batchSize=${batchSize}`);
         const practiceQuestions = await fetchPracticeQuestions(
-          category,
-          subcategory,
+          identifiers,
           regulationCategory,
           batchSize
         );
         setDueQuestions(practiceQuestions);
       } else {
-        // Logic for authenticated users
-        console.log(`Loading questions for authenticated user: category=${category}, subcategory=${subcategory}, regulation=${regulationCategory}, practiceMode=${options.practiceMode}, boxNumber=${boxNumber}, batchSize=${batchSize}`);
+        console.log(`Loading questions for authenticated user: categories=${identifiers.join(', ')}, regulation=${regulationCategory}, practiceMode=${options.practiceMode}, boxNumber=${boxNumber}, batchSize=${batchSize}`);
 
         if (options.practiceMode) {
           const practiceQuestions = await fetchPracticeQuestions(
-            category, 
-            subcategory, 
+            identifiers,
             regulationCategory, 
             batchSize
           );
@@ -64,8 +81,11 @@ export function useSpacedRepetition(
           setDueQuestions(questionsFromBox);
           setProgress(boxProgress);
         } else {
-          // Regular spaced repetition mode for authenticated users
-          const filteredProgressData = await fetchUserProgress(user.id, category, subcategory, regulationCategory);
+          const filteredProgressData = await fetchUserProgress(
+            user.id, 
+            identifiers,
+            regulationCategory
+          );
           const questionsWithProgress = filteredProgressData
             .filter(p => p.questions) // Ensure questions exist
             .map(p => transformQuestion(p.questions));
@@ -75,7 +95,6 @@ export function useSpacedRepetition(
             setDueQuestions(questionsWithProgress.slice(0, batchSize));
             setProgress(filteredProgressData);
           } else {
-            // Fetch new questions if not enough questions with progress
             const questionIdsWithProgress = filteredProgressData
               .filter(p => p.questions?.id)
               .map(p => p.question_id);
@@ -83,8 +102,7 @@ export function useSpacedRepetition(
 
             const neededNewQuestions = batchSize - questionsWithProgress.length;
             const newQuestions = await fetchNewQuestions(
-              category, 
-              subcategory, 
+              identifiers,
               regulationCategory, 
               questionIdsWithProgress, 
               neededNewQuestions // Fetch only the remaining number of questions needed
@@ -108,7 +126,7 @@ export function useSpacedRepetition(
     } finally {
       setLoading(false);
     }
-  }, [user, category, subcategory, options.practiceMode, regulationCategory, boxNumber, batchSize]);
+  }, [user, categoryIdentifiers, options.practiceMode, regulationCategory, boxNumber, batchSize]);
 
   useEffect(() => {
     loadDueQuestions();

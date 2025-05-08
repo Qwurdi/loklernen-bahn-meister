@@ -14,17 +14,22 @@ export type AccessStatus =
 interface UseSessionAccessProps {
   singleCategoryIdentifier?: string;
   multipleCategoryIdentifiers?: string[];
+  isParentCategory?: boolean;
+  resolvedCategoryIdentifiers?: string[];
   practiceMode?: boolean;
 }
 
 export function useSessionAccess({
   singleCategoryIdentifier,
   multipleCategoryIdentifiers,
+  isParentCategory = false,
+  resolvedCategoryIdentifiers = [],
   practiceMode = false
 }: UseSessionAccessProps) {
   const { user, loading: userLoading } = useAuth();
   const { categories, isLoading: categoriesLoading } = useCategories();
   const [accessStatus, setAccessStatus] = useState<AccessStatus>("loading");
+  const [resolvedSessionTitle, setResolvedSessionTitle] = useState<string>("");
 
   useEffect(() => {
     // Wait for user and categories to load
@@ -42,7 +47,8 @@ export function useSessionAccess({
     // If no category is selected, set special status
     if (
       (!singleCategoryIdentifier || singleCategoryIdentifier === "") &&
-      (!multipleCategoryIdentifiers || multipleCategoryIdentifiers.length === 0)
+      (!multipleCategoryIdentifiers || multipleCategoryIdentifiers.length === 0) &&
+      (!resolvedCategoryIdentifiers || resolvedCategoryIdentifiers.length === 0)
     ) {
       setAccessStatus("no_selection");
       return;
@@ -57,7 +63,9 @@ export function useSessionAccess({
     // Check if any selected category requires authentication
     let anyRequiresAuth = false;
     
-    if (multipleCategoryIdentifiers && multipleCategoryIdentifiers.length > 0) {
+    if (resolvedCategoryIdentifiers && resolvedCategoryIdentifiers.length > 0) {
+      anyRequiresAuth = resolvedCategoryIdentifiers.some(categoryRequiresAuth);
+    } else if (multipleCategoryIdentifiers && multipleCategoryIdentifiers.length > 0) {
       anyRequiresAuth = multipleCategoryIdentifiers.some(categoryRequiresAuth);
     } else if (singleCategoryIdentifier) {
       anyRequiresAuth = categoryRequiresAuth(singleCategoryIdentifier);
@@ -67,11 +75,7 @@ export function useSessionAccess({
     if (anyRequiresAuth && !user) {
       setAccessStatus("denied_auth");
       toast("Anmeldung erforderlich", {
-        description: "Für diese Kategorie ist eine Anmeldung erforderlich.",
-        action: {
-          label: "Anmelden",
-          onClick: () => window.location.href = "/login"
-        }
+        description: "Für diese Kategorie ist eine Anmeldung erforderlich."
       });
     } else {
       setAccessStatus("allowed");
@@ -83,8 +87,14 @@ export function useSessionAccess({
     categoriesLoading,
     singleCategoryIdentifier,
     multipleCategoryIdentifiers,
+    resolvedCategoryIdentifiers,
     practiceMode
   ]);
 
-  return { accessStatus };
+  return { 
+    accessStatus,
+    resolvedSessionTitle,
+    setResolvedSessionTitle,
+    categoriesLoading
+  };
 }

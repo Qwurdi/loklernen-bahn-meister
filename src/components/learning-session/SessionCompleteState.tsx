@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, RefreshCw } from 'lucide-react';
@@ -6,21 +7,29 @@ import { Progress } from '@/components/ui/progress';
 interface SessionCompleteStateProps {
   correctCount: number;
   totalCards: number;
-  onRestart: () => void;
-  onRestartIncorrect?: (cardIds: number[]) => void; // Neue Prop für das Wiederholen von Fehlern
-  incorrectCardIds?: number[]; // IDs der falsch beantworteten Karten
+  totalQuestions: number; // Added to match usage in SessionContent
+  answeredCount: number; // Added to match usage in SessionContent
+  onReset: () => void;
+  onRestartIncorrect?: (cardIds: number[]) => void;
+  incorrectCardIds?: number[];
   pendingUpdates?: boolean;
 }
 
 export default function SessionCompleteState({ 
   correctCount, 
   totalCards, 
-  onRestart,
+  totalQuestions, 
+  answeredCount,
+  onReset,
   onRestartIncorrect,
   incorrectCardIds,
   pendingUpdates = false
 }: SessionCompleteStateProps) {
-  const percentage = Math.round((correctCount / totalCards) * 100);
+  // Use totalQuestions and answeredCount if provided, otherwise fallback to totalCards and correctCount
+  const displayTotal = totalQuestions || totalCards;
+  const displayCorrect = answeredCount || correctCount;
+  
+  const percentage = Math.round((displayCorrect / displayTotal) * 100) || 0;
   const hasIncorrectCards = incorrectCardIds && incorrectCardIds.length > 0;
   
   return (
@@ -33,7 +42,7 @@ export default function SessionCompleteState({
       
       <div className="w-full max-w-md space-y-2">
         <p className="text-lg font-medium">
-          Du hast <span className="text-green-600 font-bold">{correctCount}</span> von {totalCards} Karten 
+          Du hast <span className="text-green-600 font-bold">{displayCorrect}</span> von {displayTotal} Karten 
           richtig beantwortet.
         </p>
         <Progress value={percentage} className="h-2" />
@@ -49,7 +58,7 @@ export default function SessionCompleteState({
         
         <div className="space-y-2">
           <Button 
-            onClick={onRestart} 
+            onClick={onReset} 
             className="w-full"
             disabled={pendingUpdates}
           >

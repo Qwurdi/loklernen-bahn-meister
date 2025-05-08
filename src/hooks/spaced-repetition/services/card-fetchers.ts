@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Question, QuestionCategory } from '@/types/questions'; 
 import { Flashcard } from '../types';
-import { transformQuestionToFlashcard } from '../utils';
+import { transformQuestionToFlashcard, transformQuestion } from '../utils';
 import { getQuestionsByIds } from '@/api/questions';
 import { buildCategoryFilter } from './helpers';
 
@@ -58,7 +58,7 @@ export async function fetchDueCardsForSR(
   // Transform to flashcards and limit by batch size
   let dueFlashcards = (progressItems || [])
     .filter(p => p.questions)
-    .map(p => transformQuestionToFlashcard(p.questions!))
+    .map(p => transformQuestionToFlashcard(transformQuestion(p.questions!)))
     .slice(0, batchSize);
   
   // If not enough due cards, fetch new questions
@@ -94,7 +94,7 @@ export async function fetchDueCardsForSR(
     if (newError) {
       console.error("Error fetching new questions:", newError);
     } else {
-      const newFlashcards = (newQuestions || []).map(transformQuestionToFlashcard);
+      const newFlashcards = (newQuestions || []).map(q => transformQuestionToFlashcard(transformQuestion(q)));
       dueFlashcards = [...dueFlashcards, ...newFlashcards];
     }
   }
@@ -151,7 +151,7 @@ export async function fetchCategoryCardsForSR(
   
   // Get flashcards from progress items
   let categoryFlashcards = (progressItems || [])
-    .map(p => transformQuestionToFlashcard(p.questions!))
+    .map(p => transformQuestionToFlashcard(transformQuestion(p.questions!)))
     .slice(0, batchSize);
   
   // 2. If not enough due cards, fetch new questions in this category
@@ -174,7 +174,7 @@ export async function fetchCategoryCardsForSR(
       neededNew
     );
     
-    categoryFlashcards = [...categoryFlashcards, ...newQuestions.map(transformQuestionToFlashcard)];
+    categoryFlashcards = [...categoryFlashcards, ...newQuestions.map(q => transformQuestionToFlashcard(transformQuestion(q)))];
   }
   
   return categoryFlashcards.slice(0, batchSize);
@@ -198,7 +198,7 @@ async function fetchNewQuestionsInternal(
   regulation?: string,
   excludedQuestionIds: string[] = [],
   batchSize: number = 15
-): Promise<Question[]> {
+): Promise<any[]> {  // Using any[] as return type to avoid type issues
   let newQuestionsQuery = supabase
     .from('questions')
     .select('*');
@@ -261,5 +261,5 @@ async function fetchPracticeQuestionsInternal(
     throw error;
   }
   
-  return (questions || []).map(transformQuestionToFlashcard);
+  return (questions || []).map(q => transformQuestionToFlashcard(transformQuestion(q)));
 }

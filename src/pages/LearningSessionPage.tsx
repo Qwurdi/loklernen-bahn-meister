@@ -8,6 +8,7 @@ import { useSessionState } from "@/hooks/learning-session/useSessionState";
 import { useSessionInitialization } from "@/hooks/learning-session/useSessionInitialization";
 import SessionContainer from "@/components/learning-session/SessionContainer";
 import SessionContent from "@/components/learning-session/SessionContent";
+import { useSpacedRepetition } from "@/hooks/spaced-repetition";
 
 export default function LearningSessionPage() {
   console.log("LearningSessionPage: Initializing component");
@@ -62,6 +63,16 @@ export default function LearningSessionPage() {
     return [];
   }, [multipleCategoryIdentifiers, singleCategoryIdentifier, isParentCategory, resolvedCategoryIdentifiers]);
 
+  // Initialize spaced repetition hook
+  const spacedRepetitionData = useSpacedRepetition(
+    user?.id,
+    {
+      practiceMode,
+      regulationCategory: regulationParam,
+      boxNumber: boxParam
+    }
+  );
+
   // Set up session state and handlers
   const {
     currentIndex,
@@ -76,14 +87,10 @@ export default function LearningSessionPage() {
     handleComplete,
     handleRestart,
     handleRestartIncorrect,
-    initializeSession
+    loading: sessionStateLoading,
+    error: sessionStateError
   } = useSessionState({
-    userId: user?.id,
-    practiceMode,
-    regulationParam,
-    boxParam,
-    categoryIdentifiers: categoryIdentifiersForHook,
-    resolvedSessionTitle: resolvedParentTitle || resolvedSessionTitle || initialSessionTitle
+    spaceRepetitionData
   });
 
   // Initialize session based on URL params
@@ -94,32 +101,29 @@ export default function LearningSessionPage() {
     categoryIdentifiers: categoryIdentifiersForHook,
     regulationParam,
     boxParam,
-    initializeSession
+    initializeSession: spacedRepetitionData.startNewSession
   });
 
   // Set final session title based on all available information
   const finalSessionTitle = resolvedParentTitle || resolvedSessionTitle || initialSessionTitle;
 
+  // Calculate if session is empty
+  const isEmpty = !sessionStateLoading && sessionCards.length === 0;
+  
   return (
     <SessionContainer isMobile={isMobile} fullHeight={isMobile}>
       <SessionContent
         accessStatus={accessStatus}
-        categoriesLoading={categoriesLoading}
-        questionsLoading={questionsLoading}
-        sessionCards={sessionCards}
-        sessionTitle={finalSessionTitle}
-        isMobile={isMobile}
-        currentIndex={currentIndex}
-        setCurrentIndex={setCurrentIndex}
-        correctCount={correctCount}
-        totalCards={sessionCards.length}
-        sessionFinished={sessionFinished}
-        pendingUpdatesCount={pendingUpdatesCount}
-        incorrectCardIdsInCurrentSession={incorrectCardIdsInCurrentSession}
-        onAnswer={handleAnswer}
+        loading={categoriesLoading || questionsLoading || sessionStateLoading}
+        isEmpty={isEmpty}
+        isComplete={sessionFinished}
+        categoryId={singleCategoryIdentifier}
+        subcategory={singleCategoryIdentifier}
+        totalQuestions={sessionCards.length}
+        answeredCount={correctCount}
+        onNext={handleComplete}
         onComplete={handleComplete}
-        onRestart={handleRestart}
-        onRestartIncorrect={handleRestartIncorrect}
+        onReset={handleRestart}
       />
     </SessionContainer>
   );

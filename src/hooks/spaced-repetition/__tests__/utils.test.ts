@@ -1,7 +1,7 @@
 
 import { transformQuestionToFlashcard, transformQuestion } from '../utils';
 import { describe, it, expect } from 'vitest';
-import { Question } from '@/types/questions';
+import { Question, QuestionCategory, QuestionType } from '@/types/questions';
 
 describe('Spaced Repetition Utils', () => {
   it('transforms a question to a flashcard', () => {
@@ -13,11 +13,11 @@ describe('Spaced Repetition Utils', () => {
         { text: 'Answer 1', isCorrect: true },
         { text: 'Answer 2', isCorrect: false }
       ],
-      category: 'Test',
+      category: 'Signale' as QuestionCategory, // Fixed category type
       sub_category: 'Subcategory',
-      question_type: 'mc_single',
+      question_type: 'MC_single' as QuestionType, // Fixed question type
       difficulty: 2,
-      image_url: null, // Add this property
+      image_url: null,
       created_by: 'user-1',
       revision: 1,
       created_at: '2023-01-01',
@@ -37,9 +37,9 @@ describe('Spaced Repetition Utils', () => {
         { text: 'Answer 1', isCorrect: true },
         { text: 'Answer 2', isCorrect: false }
       ]),
-      category: 'Test',
+      category: 'Signale' as QuestionCategory, // Fixed category type
       sub_category: 'Subcategory',
-      question_type: 'mc_single',
+      question_type: 'MC_single' as QuestionType, // Fixed question type
       difficulty: 2,
       image_url: null,
       created_by: 'user-1',
@@ -64,9 +64,9 @@ describe('Spaced Repetition Utils', () => {
         { text: 'Answer 1', isCorrect: true },
         { text: 'Answer 2', isCorrect: false }
       ],
-      category: 'Test',
+      category: 'Signale' as QuestionCategory, // Fixed category type
       sub_category: 'Subcategory',
-      question_type: 'mc_single',
+      question_type: 'MC_single' as QuestionType, // Fixed question type
       difficulty: 2,
       image_url: null,
       created_by: 'user-1',

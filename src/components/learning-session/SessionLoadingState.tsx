@@ -7,7 +7,7 @@ interface SessionLoadingStateProps {
 }
 
 const SessionLoadingState: React.FC<SessionLoadingStateProps> = ({ message }) => {
-  return <FlashcardLoadingState />;
+  return <FlashcardLoadingState message={message} />;
 };
 
 export default SessionLoadingState;

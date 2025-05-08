@@ -4,7 +4,11 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import '@/styles/animations.css';
 
-export default function FlashcardLoadingState() {
+interface FlashcardLoadingStateProps {
+  message?: string;
+}
+
+export default function FlashcardLoadingState({ message = "Lade Karteikarten..." }: FlashcardLoadingStateProps) {
   return (
     <div className="flex min-h-screen flex-col bg-black text-white">
       <Navbar />
@@ -15,7 +19,7 @@ export default function FlashcardLoadingState() {
               <div 
                 className="mb-4 h-12 w-12 rounded-full border-4 border-loklernen-ultramarine border-t-transparent mx-auto spinner-rotate"
               />
-              <p className="text-white">Lade Karteikarten...</p>
+              <p className="text-white">{message}</p>
             </div>
           </div>
         </div>

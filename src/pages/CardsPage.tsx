@@ -71,7 +71,6 @@ export default function CardsPage() {
           )}
           
           <CardsPageHeader 
-            user={user}
             selectedCategories={selectedCategories}
             onClearSelection={clearSelection}
             onStartLearningSelected={handleStartLearningSelected}

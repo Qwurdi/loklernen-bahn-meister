@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
@@ -19,53 +18,94 @@ import FlashcardHeader from "@/components/flashcards/FlashcardHeader";
 import { useIsMobile } from "@/hooks/use-mobile";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import CardStack from "@/components/flashcards/stack/CardStack";
+import EmptySessionState from '@/components/learning-session/EmptySessionState';
 
 // Helper to map URL subcategory param back to original subcategory string (case sensitive)
 function mapUrlToSubcategory(urlSubcategory?: string): string | undefined {
   if (!urlSubcategory) return undefined;
-  const normalizedParam = urlSubcategory.toLowerCase();
+  const normalizedParam = urlSubcategory.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
-  const found = signalSubCategories.find((subcat) => 
+  // This is a simplified example; a more robust mapping might be needed
+  const knownSubcategories = [...signalSubCategories]; // Add Betriebsdienst subcategories if needed
+  const found = knownSubcategories.find((subcat) => 
     subcat.toLowerCase().replace(/[^a-z0-9]+/g, '-') === normalizedParam
   );
-  return found;
+  return found || urlSubcategory; // Fallback to original if not found, assuming it might be correct
 }
 
 export default function FlashcardPage() {
   console.log("FlashcardPage: Initializing component");
   
-  const { subcategory: urlSubcategory } = useParams<{ subcategory: string }>();
-  const subcategory = mapUrlToSubcategory(urlSubcategory); // map to original subcategory
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { subcategory: urlSubcategoryParam } = useParams<{ subcategory: string }>();
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [sessionFinished, setSessionFinished] = useState(false);
-  const [isPracticeMode] = useState(true);
   const { regulationPreference } = useUserPreferences();
-  const [searchParams, setSearchParams] = useSearchParams();
   const isMobile = useIsMobile();
   
-  // Get regulation filter from URL or default to user preference
   const regulationParam = searchParams.get("regelwerk") as RegulationFilterType || regulationPreference;
 
-  // Pass the regulation preference to the hook
+  // Determine mainCategory and subCategory for fetching questions
+  let mainCategoryForHook: QuestionCategory = 'Signale'; // Default
+  let subCategoryForHook: string | undefined = undefined;
+
+  const categoryUrlQueryParam = searchParams.get('category');
+  const categoriesUrlQueryParam = searchParams.getAll('categories');
+
+  if (urlSubcategoryParam) {
+    const mappedSubcategory = mapUrlToSubcategory(urlSubcategoryParam);
+    if (mappedSubcategory) {
+      const pathSegments = window.location.pathname.split('/');
+      if (pathSegments.includes('signale')) {
+        mainCategoryForHook = 'Signale';
+      } else if (pathSegments.includes('betriebsdienst')) {
+        mainCategoryForHook = 'Betriebsdienst';
+      }
+      subCategoryForHook = mappedSubcategory;
+    }
+  } else if (categoryUrlQueryParam) {
+    if (categoryUrlQueryParam.toLowerCase() === 'signale') {
+      mainCategoryForHook = 'Signale';
+    } else if (categoryUrlQueryParam.toLowerCase() === 'betriebsdienst') {
+      mainCategoryForHook = 'Betriebsdienst';
+    } else {
+      const potentialSubCategory = mapUrlToSubcategory(categoryUrlQueryParam);
+      if (signalSubCategories.map(s => s.toLowerCase()).includes(potentialSubCategory?.toLowerCase() || '')) {
+         mainCategoryForHook = 'Signale';
+         subCategoryForHook = potentialSubCategory;
+      } else {
+         mainCategoryForHook = 'Signale';
+      }
+    }
+  } else if (categoriesUrlQueryParam.length > 0) {
+    const isBetriebsdienstLikely = categoriesUrlQueryParam.some(
+      cat => cat.toLowerCase().includes('betriebsdienst')
+    );
+    mainCategoryForHook = isBetriebsdienstLikely ? 'Betriebsdienst' : 'Signale';
+  }
+
+  const isPracticeMode = !user;
+
   const {
     loading,
     dueQuestions: questions,
     submitAnswer
   } = useSpacedRepetition(
-    "Signale" as QuestionCategory, 
-    subcategory, 
+    mainCategoryForHook,
+    subCategoryForHook,
     { 
       practiceMode: isPracticeMode,
       regulationCategory: regulationParam
     }
   );
 
+  console.log(`FlashcardPage: Loading for mainCat: ${mainCategoryForHook}, subCat: ${subCategoryForHook}, practice: ${isPracticeMode}`);
   console.log("FlashcardPage: Loaded questions count:", questions?.length || 0);
 
-  // Query to get total due cards count for today
   const { data: dueTodayStats } = useQuery({
     queryKey: ['dueTodayCount', user?.id, regulationParam],
     queryFn: async () => {
@@ -101,7 +141,6 @@ export default function FlashcardPage() {
     toast.success("Gut gemacht! Du hast alle Karten dieser Kategorie bearbeitet!");
   };
 
-  // Update regulation filter when it changes
   const handleRegulationChange = (value: RegulationFilterType) => {
     setSearchParams(params => {
       params.set("regelwerk", value);
@@ -109,7 +148,6 @@ export default function FlashcardPage() {
     });
   };
 
-  // Apply mobile mode styles
   useEffect(() => {
     if (isMobile) {
       document.body.style.overflow = 'hidden';
@@ -126,11 +164,35 @@ export default function FlashcardPage() {
     return <FlashcardLoadingState />;
   }
 
-  if (!loading && questions.length === 0) {
-    return <FlashcardEmptyState />;
+  if (!loading && questions.length === 0 && !sessionFinished) {
+    const boxUrlParam = searchParams.get('box');
+    const questionIdUrlParam = searchParams.get('questionId');
+    const dueUrlParam = searchParams.get('due');
+    const isGuest = !user;
+
+    const isGuestLearningSpecificCategory =
+      isGuest &&
+      (!!categoryUrlQueryParam || categoriesUrlQueryParam.length > 0 || !!urlSubcategoryParam) &&
+      !boxUrlParam &&
+      !questionIdUrlParam &&
+      dueUrlParam !== 'true';
+
+    if (isGuestLearningSpecificCategory) {
+      return (
+        <EmptySessionState
+          categoryParam={mainCategoryForHook}
+          isGuestLearningCategory={true}
+        />
+      );
+    } else {
+      if (dueUrlParam === 'true') {
+        return <FlashcardEmptyState />;
+      } else {
+        return <EmptySessionState categoryParam={mainCategoryForHook} />;
+      }
+    }
   }
 
-  // Handle session completion
   if (sessionFinished) {
     return (
       <div className="flex min-h-screen flex-col bg-black text-white">
@@ -140,7 +202,7 @@ export default function FlashcardPage() {
             <h2 className="text-2xl font-bold mb-4">Kategorie abgeschlossen!</h2>
             <p className="text-gray-300 mb-6">
               Du hast {correctCount} von {questions.length} Karten richtig beantwortet.
-              ({Math.round((correctCount / questions.length) * 100)}%)
+              ({questions.length > 0 ? Math.round((correctCount / questions.length) * 100) : 0}%)
             </p>
             <div className="flex justify-center">
               <Button 
@@ -165,12 +227,11 @@ export default function FlashcardPage() {
       <main className="flex-1">
         <div className={`${isMobile ? 'px-0 pt-0 pb-16 h-full' : 'container px-4 py-6'}`}>
           <FlashcardHeader 
-            subcategory={subcategory}
+            subcategory={subCategoryForHook || mainCategoryForHook}
             isPracticeMode={isPracticeMode}
             onRegulationChange={handleRegulationChange}
           />
           
-          {/* Card Stack */}
           <div className="h-full pt-2">
             <CardStack 
               questions={questions}

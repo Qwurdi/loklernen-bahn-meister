@@ -1,4 +1,3 @@
-
 import React from "react";
 import AccessTierCard from "@/components/common/AccessTierCard";
 import SpacedRepetitionTooltip from "@/components/flashcards/stack/SpacedRepetitionTooltip";
@@ -26,7 +25,7 @@ export default function AccessTiersSection() {
               "Sofort verfügbar"
             ]}
             buttonLabel="Jetzt lernen"
-            buttonLink="/karteikarten/signale/haupt-vorsignale"
+            buttonLink="/karteikarten/lernen?category=Signale"
           />
           
           <SpacedRepetitionTooltip message="Mit unserem Spaced-Repetition-System lernst du effektiver und behältst Wissen langfristig. Dein persönlicher Lernfortschritt wird gespeichert und optimiert.">

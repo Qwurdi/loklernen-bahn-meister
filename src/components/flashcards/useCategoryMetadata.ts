@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { fetchCategoriesByParent } from "@/api/categories";
+import { fetchCategoriesByParent } from "@/api/categories/index";
 
 interface CategoryMetadata {
   isPro: boolean;

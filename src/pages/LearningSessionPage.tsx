@@ -1,131 +1,236 @@
-
-import { useMemo } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useSessionParams } from "@/hooks/learning-session/useSessionParams";
-import { useParentCategory } from "@/hooks/learning-session/useParentCategory";
-import { useSessionAccess } from "@/hooks/learning-session/useSessionAccess";
-import { useSessionState } from "@/hooks/learning-session/useSessionState";
-import { useSessionInitialization } from "@/hooks/learning-session/useSessionInitialization";
-import SessionContainer from "@/components/learning-session/SessionContainer";
-import SessionContent from "@/components/learning-session/SessionContent";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom"; // Added useLocation
 import { useSpacedRepetition } from "@/hooks/spaced-repetition";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
+import FlashcardLoadingState from "@/components/flashcards/FlashcardLoadingState";
+import { useSessionParams } from "@/hooks/learning-session/useSessionParams";
+import SessionContainer from "@/components/learning-session/SessionContainer";
+import SessionHeader from "@/components/learning-session/SessionHeader";
+import EmptySessionState from "@/components/learning-session/EmptySessionState";
+import SessionCompleteState from "@/components/learning-session/SessionCompleteState";
+import CardStackSession from "@/components/learning-session/CardStackSession";
+import { Question } from "@/types/questions";
+import { useCategories } from "@/hooks/useCategories"; // Added useCategories
+import { Category } from "@/api/categories/types"; // Added Category type
 
 export default function LearningSessionPage() {
   console.log("LearningSessionPage: Initializing component");
 
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation(); // Added
   const isMobile = useIsMobile();
-  
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [sessionCards, setSessionCards] = useState<Question[]>([]);
+  const [sessionFinished, setSessionFinished] = useState(false);
+
+  const { categories, isLoading: categoriesLoading, error: categoriesError } = useCategories(); // Added
+  const [categoryRequiresAuth, setCategoryRequiresAuth] = useState<boolean | null>(null); // Added
+  const [categoryFound, setCategoryFound] = useState<boolean | null>(null); // Added
+
   // Get session parameters from URL
   const {
-    singleCategoryIdentifier,
-    multipleCategoryIdentifiers,
+    categoryParam,
+    subcategoryParam,
     regulationParam,
     boxParam,
-    sessionTitle: initialSessionTitle,
-    practiceMode
+    sessionTitle
   } = useSessionParams();
 
-  // Check if this is a parent category and resolve subcategories
-  const {
-    isParentCategory,
-    resolvedCategoryIdentifiers,
-    resolvedParentTitle
-  } = useParentCategory(singleCategoryIdentifier);
-
-  // Determine access status and handle auth/permissions
-  const {
-    accessStatus,
-    resolvedSessionTitle,
-    setResolvedSessionTitle,
-    categoriesLoading
-  } = useSessionAccess({
-    singleCategoryIdentifier,
-    multipleCategoryIdentifiers,
-    isParentCategory,
-    resolvedCategoryIdentifiers,
-    practiceMode
+  console.log("Learning session parameters:", {
+    category: categoryParam,
+    subcategory: subcategoryParam,
+    regulation: regulationParam,
+    box: boxParam
   });
 
-  // Memoize categoryIdentifiersForHook to prevent re-renders
-  const categoryIdentifiersForHook = useMemo(() => {
-    // If we resolved subcategories for a parent category, use those
-    if (isParentCategory && resolvedCategoryIdentifiers.length > 0) {
-      return resolvedCategoryIdentifiers;
+  // Effect to check category and authentication requirements
+  useEffect(() => {
+    if (categoriesLoading || !categoryParam) {
+      setCategoryFound(null);
+      setCategoryRequiresAuth(null);
+      return;
     }
-    // Otherwise use the original logic
-    if (multipleCategoryIdentifiers && multipleCategoryIdentifiers.length > 0) {
-      return multipleCategoryIdentifiers;
-    }
-    if (singleCategoryIdentifier) {
-      return [singleCategoryIdentifier];
-    }
-    return [];
-  }, [multipleCategoryIdentifiers, singleCategoryIdentifier, isParentCategory, resolvedCategoryIdentifiers]);
 
-  // Initialize spaced repetition hook
-  const spacedRepetitionData = useSpacedRepetition(
-    user?.id,
+    const currentCategory = categories.find(
+      (cat: Category) => cat.name === categoryParam || cat.id === categoryParam
+    );
+
+    if (currentCategory) {
+      setCategoryFound(true);
+      const requiresAuth = !!currentCategory.requiresAuth;
+      setCategoryRequiresAuth(requiresAuth);
+      if (requiresAuth && !user) {
+        toast.info("Für diese Kategorie ist eine Anmeldung erforderlich.", {
+          description: "Bitte melde dich an, um auf diese Lernkarten zuzugreifen.",
+        });
+        navigate("/login", { replace: true, state: { from: location.pathname } });
+      }
+    } else {
+      setCategoryFound(false);
+      setCategoryRequiresAuth(null);
+    }
+  }, [categories, categoriesLoading, categoryParam, user, navigate, location, sessionTitle]);
+
+
+  // Pass both category, subcategory and regulation preference to the hook
+  // Use optimized batch size of 15 cards per session
+  const {
+    loading: questionsLoading, // Renamed from 'loading'
+    dueQuestions,
+    submitAnswer,
+    applyPendingUpdates,
+    pendingUpdatesCount
+  } = useSpacedRepetition(
+    categoryParam,
+    subcategoryParam,
     {
-      practiceMode,
+      practiceMode: false,
       regulationCategory: regulationParam,
-      boxNumber: boxParam
+      boxNumber: boxParam,
+      batchSize: 15 // Ideal batch size for balance between performance and cognitive load
     }
   );
 
-  // Set up session state and handlers
-  const {
-    currentIndex,
-    setCurrentIndex,
-    correctCount,
-    sessionCards,
-    sessionFinished,
-    questionsLoading,
-    pendingUpdatesCount,
-    incorrectCardIdsInCurrentSession,
-    handleAnswer,
-    handleComplete,
-    handleRestart,
-    handleRestartIncorrect,
-    loading: sessionStateLoading,
-    error: sessionStateError
-  } = useSessionState({
-    spaceRepetitionData: spacedRepetitionData
-  });
+  console.log("LearningSessionPage: Loaded questions count:", dueQuestions?.length || 0);
 
-  // Initialize session based on URL params
-  useSessionInitialization({
-    userId: user?.id,
-    practiceMode,
-    accessStatus,
-    categoryIdentifiers: categoryIdentifiersForHook,
-    regulationParam,
-    boxParam,
-    initializeSession: spacedRepetitionData.startNewSession
-  });
+  useEffect(() => {
+    // Only shuffle and set cards if category is found and auth requirements are met (or not applicable)
+    if (categoryFound === false || (categoryRequiresAuth === true && !user)) {
+        setSessionCards([]); // Clear cards if auth fails or category not found
+        return;
+    }
+    if (!questionsLoading && dueQuestions.length > 0) {
+      // Shuffle the cards to create a mixed learning session
+      const shuffled = [...dueQuestions].sort(() => Math.random() - 0.5);
+      setSessionCards(shuffled);
+    } else if (!questionsLoading && dueQuestions.length === 0) {
+      setSessionCards([]); // Ensure sessionCards is empty if no due questions
+    }
+  }, [questionsLoading, dueQuestions, categoryFound, categoryRequiresAuth, user]);
 
-  // Set final session title based on all available information
-  const finalSessionTitle = resolvedParentTitle || resolvedSessionTitle || initialSessionTitle;
+  const handleAnswer = async (questionId: string, score: number) => {
+    // Consider scores >= 4 as correct
+    if (score >= 4) {
+      setCorrectCount(prev => prev + 1);
+    }
 
-  // Calculate if session is empty
-  const isEmpty = !sessionStateLoading && sessionCards.length === 0;
+    // Submit answer for spaced repetition without reloading all cards
+    if (user) {
+      await submitAnswer(questionId, score);
+    }
+  };
+
+  const handleComplete = () => {
+    setSessionFinished(true);
+
+    // Apply all pending updates when session is complete
+    applyPendingUpdates().then(() => {
+      toast.success("Lernsession abgeschlossen! Gut gemacht!");
+    });
+  };
+
+  const handleRestart = async () => {
+    // Apply any pending updates before restarting
+    await applyPendingUpdates();
+
+    setCurrentIndex(0);
+    setCorrectCount(0);
+    setSessionFinished(false);
+
+    // Reset will shuffle cards again
+    if (dueQuestions.length > 0) {
+      const shuffled = [...dueQuestions].sort(() => Math.random() - 0.5);
+      setSessionCards(shuffled);
+    }
+  };
+
+  // Render loading states
+  if (categoriesLoading && categoryParam) { // Show specific loading if categoryParam is present
+    return <FlashcardLoadingState />; // Message: "Lade Kategorieinformationen..." (implicit)
+  }
+
+  if (categoryParam && categoryFound === false && !categoriesLoading) {
+    return (
+      <SessionContainer isMobile={isMobile}>
+        {/* Using EmptySessionState for simplicity, assuming it can handle a generic message or shows a relevant one */}
+        <EmptySessionState message={`Die Kategorie "${sessionTitle}" wurde nicht gefunden.`} />
+      </SessionContainer>
+    );
+  }
+
+  if (categoryRequiresAuth === true && !user && categoryParam) {
+    // This state is brief due to navigation, but a loading indicator is good.
+    return <FlashcardLoadingState />; // Message: "Weiterleitung zum Login..." (implicit)
+  }
   
-  return (
-    <SessionContainer isMobile={isMobile} fullHeight={isMobile}>
-      <SessionContent
-        accessStatus={accessStatus}
-        loading={categoriesLoading || questionsLoading || sessionStateLoading}
-        isEmpty={isEmpty}
-        isComplete={sessionFinished}
-        categoryId={singleCategoryIdentifier}
-        subcategory={singleCategoryIdentifier}
-        totalQuestions={sessionCards.length}
-        answeredCount={correctCount}
-        onNext={handleComplete}
-        onComplete={handleComplete}
-        onReset={handleRestart}
-      />
-    </SessionContainer>
-  );
+  // Render loading state for questions
+  if (questionsLoading) {
+    return <FlashcardLoadingState />; // Message: "Lade Lernkarten..." (implicit)
+  }
+
+  // Render empty state when no cards are available
+  // This covers: category found but no cards, or no categoryParam provided.
+  if (!sessionCards.length && (categoryFound === true || !categoryParam)) {
+    return (
+      <SessionContainer isMobile={isMobile}>
+        <EmptySessionState categoryParam={categoryParam} />
+      </SessionContainer>
+    );
+  }
+  
+  // Render finished session state
+  if (sessionFinished) {
+    return (
+      <SessionContainer isMobile={isMobile}>
+        <SessionCompleteState
+          correctCount={correctCount}
+          totalCards={sessionCards.length}
+          onRestart={handleRestart}
+          pendingUpdates={pendingUpdatesCount > 0}
+        />
+      </SessionContainer>
+    );
+  }
+
+  // Render main learning session UI with our new card stack
+  // This part should only render if a category is resolved (or no categoryParam) and cards are ready
+  if ((categoryFound === true && (categoryRequiresAuth === false || (categoryRequiresAuth === true && !!user))) || !categoryParam ) {
+     if (sessionCards.length > 0) { // Ensure cards are loaded before rendering stack
+        return (
+            <SessionContainer isMobile={isMobile} fullHeight={isMobile}>
+            <main className={`flex-1 ${isMobile ? 'px-0 pt-2 pb-16 overflow-hidden flex flex-col' : 'container px-4 py-8'}`}>
+                <SessionHeader
+                sessionTitle={sessionTitle}
+                categoryParam={categoryParam}
+                isMobile={isMobile}
+                />
+
+                <CardStackSession
+                sessionCards={sessionCards}
+                currentIndex={currentIndex}
+                setCurrentIndex={setCurrentIndex}
+                onAnswer={handleAnswer}
+                onComplete={handleComplete}
+                isMobile={isMobile}
+                />
+            </main>
+            </SessionContainer>
+        );
+     } else if (!questionsLoading) { // If not loading and no cards, show empty state (already handled above, but as a fallback)
+        return (
+            <SessionContainer isMobile={isMobile}>
+                <EmptySessionState categoryParam={categoryParam} />
+            </SessionContainer>
+        );
+     }
+  }
+  
+  // Fallback or if still resolving state, show loading.
+  // This helps prevent rendering nothing if conditions are missed.
+  return <FlashcardLoadingState />;
 }

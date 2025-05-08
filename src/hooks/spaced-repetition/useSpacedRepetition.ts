@@ -1,181 +1,167 @@
-
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Question, QuestionCategory } from '@/types/questions';
-import { SpacedRepetitionOptions, UserProgress, SpacedRepetitionResult, SessionType, Flashcard } from './types';
-import { transformQuestionToFlashcard } from './utils';
+import { SpacedRepetitionOptions, UserProgress, SpacedRepetitionResult } from './types';
+import { transformQuestion } from './utils';
 import {
   fetchUserProgress,
+  fetchNewQuestions,
+  fetchPracticeQuestions,
+  fetchQuestionsByBox,
   updateUserProgress,
-  updateUserStats,
-  fetchSpecificCardsForSR,
-  fetchDueCardsForSR,
-  fetchCategoryCardsForSR,
-  fetchAllCardsForSR,
+  updateUserStats
 } from './services';
 
 export function useSpacedRepetition(
-  userId: string | undefined,
-  options: SpacedRepetitionOptions = {},
-  initialCardIdsToLoad?: number[]
+  category: QuestionCategory, 
+  subcategory?: string,
+  options: SpacedRepetitionOptions = {}
 ): SpacedRepetitionResult {
-  const { user: authUser } = useAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [dueQuestions, setDueQuestions] = useState<Flashcard[]>([]);
+  const [dueQuestions, setDueQuestions] = useState<Question[]>([]);
   const [progress, setProgress] = useState<UserProgress[]>([]);
   const [error, setError] = useState<Error | null>(null);
   const [pendingUpdates, setPendingUpdates] = useState<{questionId: string, score: number}[]>([]);
-  const [incorrectCardIdsInCurrentSession, setIncorrectCardIdsInCurrentSession] = useState<number[]>([]);
-  const [currentSessionType, setCurrentSessionType] = useState<SessionType | null>(null);
-  const [currentCategory, setCurrentCategory] = useState<string | undefined>(undefined);
-  const [currentRegulation, setCurrentRegulation] = useState<string | undefined>(options.regulationCategory);
-
-  // batchSize aus Optionen oder Standardwert
+  
+  const regulationCategory = options.regulationCategory || "all";
+  const boxNumber = options.boxNumber;
   const batchSize = options.batchSize || 15;
-
-  const loadInitialCards = useCallback(async (cardIds?: number[]) => {
+  
+  const loadDueQuestions = useCallback(async () => {
     setLoading(true);
-    setError(null);
-    let fetchedCards: Flashcard[] = [];
-    let fetchedProgress: UserProgress[] = [];
+    setError(null); // Reset error at the beginning
+
     try {
-      if (cardIds && cardIds.length > 0) {
-        fetchedCards = await fetchSpecificCardsForSR(cardIds, currentRegulation);
-        if (userId) {
-          fetchedProgress = await fetchUserProgress(userId, [], currentRegulation);
-        }
-      } else if (currentSessionType) {
-        if (userId && currentSessionType === 'due') {
-          fetchedCards = await fetchDueCardsForSR(userId, currentRegulation, { ...options, batchSize });
-          fetchedProgress = await fetchUserProgress(userId, [], currentRegulation);
-        } else if (currentSessionType === 'category' && currentCategory) {
-          // Cast currentCategory to QuestionCategory if needed, or handle as appropriate
-          fetchedCards = await fetchCategoryCardsForSR(
-            currentCategory as QuestionCategory, 
-            userId, 
-            currentRegulation, 
-            { ...options, batchSize }
+      if (!user) {
+        // For non-authenticated users, load questions in practice mode
+        console.log(`Loading practice questions for guest user with category=${category}, subcategory=${subcategory}, regulation=${regulationCategory}, batchSize=${batchSize}`);
+        const practiceQuestions = await fetchPracticeQuestions(
+          category,
+          subcategory,
+          regulationCategory,
+          batchSize
+        );
+        setDueQuestions(practiceQuestions);
+      } else {
+        // Logic for authenticated users
+        console.log(`Loading questions for authenticated user: category=${category}, subcategory=${subcategory}, regulation=${regulationCategory}, practiceMode=${options.practiceMode}, boxNumber=${boxNumber}, batchSize=${batchSize}`);
+
+        if (options.practiceMode) {
+          const practiceQuestions = await fetchPracticeQuestions(
+            category, 
+            subcategory, 
+            regulationCategory, 
+            batchSize
           );
-          if (userId) {
-            fetchedProgress = await fetchUserProgress(userId, [], currentRegulation);
+          setDueQuestions(practiceQuestions);
+        } else if (boxNumber !== undefined) {
+          const boxProgress = await fetchQuestionsByBox(user.id, boxNumber);
+          const questionsFromBox = boxProgress
+            .filter(p => p.questions) // Ensure questions exist
+            .map(p => transformQuestion(p.questions));
+          console.log(`Loaded ${questionsFromBox.length} questions from box ${boxNumber}`);
+          setDueQuestions(questionsFromBox);
+          setProgress(boxProgress);
+        } else {
+          // Regular spaced repetition mode for authenticated users
+          const filteredProgressData = await fetchUserProgress(user.id, category, subcategory, regulationCategory);
+          const questionsWithProgress = filteredProgressData
+            .filter(p => p.questions) // Ensure questions exist
+            .map(p => transformQuestion(p.questions));
+          console.log("Questions with progress:", questionsWithProgress.length);
+
+          if (questionsWithProgress.length >= batchSize) {
+            setDueQuestions(questionsWithProgress.slice(0, batchSize));
+            setProgress(filteredProgressData);
+          } else {
+            // Fetch new questions if not enough questions with progress
+            const questionIdsWithProgress = filteredProgressData
+              .filter(p => p.questions?.id)
+              .map(p => p.question_id);
+            console.log("Question IDs with progress:", questionIdsWithProgress.length);
+
+            const neededNewQuestions = batchSize - questionsWithProgress.length;
+            const newQuestions = await fetchNewQuestions(
+              category, 
+              subcategory, 
+              regulationCategory, 
+              questionIdsWithProgress, 
+              neededNewQuestions // Fetch only the remaining number of questions needed
+            );
+
+            const allQuestions = [
+              ...questionsWithProgress,
+              ...newQuestions.map(transformQuestion)
+            ].slice(0, batchSize); // Ensure total does not exceed batchSize
+            
+            console.log("Final questions count for session:", allQuestions.length);
+            setDueQuestions(allQuestions);
+            setProgress(filteredProgressData);
           }
-        } else if (userId && currentSessionType === 'all') {
-          fetchedCards = await fetchAllCardsForSR(userId, currentRegulation, { ...options, batchSize });
-          fetchedProgress = await fetchUserProgress(userId, [], currentRegulation);
-        } else if (currentSessionType === 'guest' && currentCategory) {
-          // Cast currentCategory to QuestionCategory if needed, or handle as appropriate
-          fetchedCards = await fetchCategoryCardsForSR(
-            currentCategory as QuestionCategory, 
-            undefined, 
-            currentRegulation, 
-            { ...options, batchSize }
-          );
         }
       }
-      setDueQuestions(fetchedCards);
-      setProgress(fetchedProgress);
     } catch (err) {
-      console.error('Error loading initial cards:', err);
-      setError(err instanceof Error ? err : new Error('Unknown error loading cards'));
-      setDueQuestions([]);
-      setProgress([]);
+      console.error('Error loading questions:', err);
+      setError(err instanceof Error ? err : new Error('Unknown error loading questions'));
+      setDueQuestions([]); // Ensure dueQuestions is empty on error
     } finally {
       setLoading(false);
     }
-  }, [userId, currentSessionType, currentCategory, currentRegulation, options, batchSize]);
+  }, [user, category, subcategory, options.practiceMode, regulationCategory, boxNumber, batchSize]);
 
   useEffect(() => {
-    if (initialCardIdsToLoad && initialCardIdsToLoad.length > 0) {
-      // Session-Typ setzen, falls Karten direkt geladen werden
-      setCurrentSessionType('specific_ids');
-      loadInitialCards(initialCardIdsToLoad);
-    } else if (currentSessionType) {
-      loadInitialCards();
-    } else {
-      setLoading(false);
-      setDueQuestions([]);
+    loadDueQuestions();
+  }, [loadDueQuestions]);
+
+  // New function - Submit answer without immediate reload
+  const submitAnswer = async (questionId: string, score: number) => {
+    if (!user) return;
+
+    try {
+      // Add to pending updates
+      setPendingUpdates(prev => [...prev, {questionId, score}]);
+      
+      const currentProgress = progress.find(p => p.question_id === questionId);
+      
+      // Update progress in the background, don't await the result
+      updateUserProgress(user.id, questionId, score, currentProgress)
+        .catch(err => console.error('Background update error:', err));
+      
+      // Update stats in the background, don't await the result
+      updateUserStats(user.id, score)
+        .catch(err => console.error('Background stats update error:', err));
+        
+    } catch (error) {
+      console.error('Error submitting answer:', error);
+      setError(error instanceof Error ? error : new Error('Unknown error submitting answer'));
     }
-  }, [loadInitialCards, initialCardIdsToLoad, currentSessionType]);
+  };
 
-  const startNewSession = useCallback(
-    async (type: SessionType, category?: string, regulation?: string, cardIdsToLoad?: number[]) => {
-      setLoading(true);
-      setError(null);
-      setIncorrectCardIdsInCurrentSession([]);
-      
-      setCurrentSessionType(type);
-      setCurrentCategory(category);
-      setCurrentRegulation(regulation);
-
-      if (cardIdsToLoad && cardIdsToLoad.length > 0) {
-        await loadInitialCards(cardIdsToLoad);
-      } else {
-        // loadInitialCards wird durch den useEffect oben aufgerufen
-        await loadInitialCards();
-      }
-    },
-    [loadInitialCards] 
-  );
-
-  const submitAnswer = useCallback(
-    async (cardId: number, isCorrect: boolean) => {
-      if (!userId && currentSessionType !== 'guest') {
-        console.warn("submitAnswer called without userId for a non-guest session.");
-        return; 
-      }
-
-      if (!isCorrect) {
-        setIncorrectCardIdsInCurrentSession(prev => [...new Set([...prev, cardId])]);
-      }
-      
-      if (userId) {
-        try {
-          const questionIdStr = cardId.toString();
-          setPendingUpdates(prev => [...prev, { questionId: questionIdStr, score: isCorrect ? 5 : 1 }]);
-          const currentProgressItem = progress.find(p => p.question_id === questionIdStr);
-          // Führen Sie Updates im Hintergrund aus
-          updateUserProgress(userId, questionIdStr, isCorrect ? 5 : 1, currentProgressItem)
-            .catch(err => console.error('Background update error:', err));
-          updateUserStats(userId, isCorrect ? 5 : 1)
-            .catch(err => console.error('Background stats update error:', err));
-        } catch (error) {
-          console.error('Error submitting answer:', error);
-        }
-      }
-    },
-    [userId, progress, currentSessionType]
-  );
-
-  const applyPendingUpdates = useCallback(async () => {
-    if (!userId || pendingUpdates.length === 0) return Promise.resolve();
+  // Function to apply all pending updates and reload questions
+  const applyPendingUpdates = async () => {
+    if (!user || pendingUpdates.length === 0) return;
     
     setLoading(true);
     try {
+      // Ensure all updates are complete
       for (const {questionId, score} of pendingUpdates) {
-        const currentProgressItem = progress.find(p => p.question_id === questionId);
-        await updateUserProgress(userId, questionId, score, currentProgressItem);
+        const currentProgress = progress.find(p => p.question_id === questionId);
+        await updateUserProgress(user.id, questionId, score, currentProgress);
       }
+      
+      // Clear pending updates
       setPendingUpdates([]);
-      // Nach dem Anwenden von Updates, die Karten neu laden
-      await loadInitialCards(); 
+      
+      // Reload questions
+      await loadDueQuestions();
     } catch (error) {
       console.error('Error applying updates:', error);
       setError(error instanceof Error ? error : new Error('Unknown error applying updates'));
     } finally {
       setLoading(false);
     }
-    return Promise.resolve();
-  }, [userId, pendingUpdates, progress, loadInitialCards]);
-
-  const reloadQuestions = useCallback(async () => {
-    if (currentSessionType === 'specific_ids' && initialCardIdsToLoad && initialCardIdsToLoad.length > 0) {
-      await loadInitialCards(initialCardIdsToLoad);
-    } else if (currentSessionType) {
-      await loadInitialCards();
-    }
-    return Promise.resolve();
-  }, [loadInitialCards, currentSessionType, initialCardIdsToLoad]);
-
+  };
 
   return {
     loading,
@@ -185,8 +171,6 @@ export function useSpacedRepetition(
     submitAnswer,
     pendingUpdatesCount: pendingUpdates.length,
     applyPendingUpdates,
-    reloadQuestions,
-    startNewSession,
-    incorrectCardIdsInCurrentSession,
+    reloadQuestions: loadDueQuestions
   };
 }

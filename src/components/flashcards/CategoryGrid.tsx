@@ -1,11 +1,10 @@
+
 import React from "react";
 import CategoryCard from "@/components/common/CategoryCard";
 import { RegulationFilterType } from "@/types/regulation";
+import { useCategoryMetadata } from "./useCategoryMetadata";
 import { filterCategoriesByRegulation } from "./CategoryRegulationFilter";
 import EmptyRegulationState from "./EmptyRegulationState";
-import { Category } from "@/api/categories/types";
-import { User } from "@supabase/supabase-js";
-import { useAuth } from "@/contexts/AuthContext";
 
 interface CategoryStats {
   correct: number;
@@ -21,15 +20,14 @@ interface CategoryCardCounts {
 }
 
 interface CategoryGridProps {
-  categories: Category[];
+  categories: string[];
   categoryCardCounts?: Record<string, CategoryCardCounts>;
   progressStats?: Record<string, CategoryStats>;
   selectedCategories: string[];
-  onSelectCategory: (categoryIdentifier: string) => void;
+  onSelectCategory: (subcategory: string) => void;
   isSelectable: boolean;
   regulationFilter: RegulationFilterType;
-  user: User | null;
-  parentCategoryType: "Signale" | "Betriebsdienst";
+  isPro?: boolean;
 }
 
 export default function CategoryGrid({
@@ -40,78 +38,59 @@ export default function CategoryGrid({
   onSelectCategory,
   isSelectable,
   regulationFilter,
-  user,
-  parentCategoryType,
+  isPro = false,
 }: CategoryGridProps) {
-  const visibleCategories = filterCategoriesByRegulation(
-    categories, 
-    regulationFilter, 
-    categoryCardCounts
-  );
+  const { categoryMetadata, isLoading } = useCategoryMetadata(categories);
   
-  if (visibleCategories.length === 0 && categories.length > 0) {
-    return <EmptyRegulationState regulation={regulationFilter} />;
+  // Filter categories based on regulation preference - Updated parameter order
+  const visibleCategories = filterCategoriesByRegulation(categories, regulationFilter, categoryCardCounts);
+  
+  if (visibleCategories.length === 0) {
+    return <EmptyRegulationState />;
   }
   
-  if (categories.length === 0) {
-     return (
-      <div className="text-center py-10 text-gray-500">
-        <p>Für den Bereich "{parentCategoryType}" sind aktuell keine Kategorien verfügbar.</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {visibleCategories.map((category) => {
-        const stats = progressStats?.[category.name];
-        const cardCounts = categoryCardCounts?.[category.name];
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {visibleCategories.map((subcategory) => {
+        const stats = progressStats?.[subcategory];
+        const cardCounts = categoryCardCounts?.[subcategory];
         
+        // Calculate progress percentage
         const progress = stats ? Math.round((stats.correct / Math.max(1, stats.total)) * 100) : 0;
         
+        // Calculate card stats
         const totalCards = cardCounts?.total || 0;
         const dueCards = stats?.due || 0;
         const masteredCards = stats?.mastered || 0;
         
-        const isUserPro = !!user?.user_metadata?.is_pro_member || !!user?.app_metadata?.is_pro; 
-
-        let isLocked = false;
-        if (category.requiresAuth && !user) {
-          isLocked = true;
-        } else if (category.isPro && !isUserPro) {
-          isLocked = true;
-        }
-
-        const categoryLink = `/karteikarten/lernen?category=${encodeURIComponent(category.id)}`;
-
+        // Get category metadata
+        const metadata = categoryMetadata[subcategory] || { isPro: false, isPlanned: false };
+        const isCategoryPro = metadata.isPro;
+        const isCategoryPlanned = metadata.isPlanned;
+        
         return (
           <CategoryCard
-            key={category.id}
-            title={category.name}
-            description={
-              category.description || 
-              (stats 
-                ? `${Math.round(progress)}% gelernt`
-                : category.isPlanned 
-                  ? "Demnächst verfügbar" 
-                  : `Lerne die Grundlagen für ${category.name}`)
-            }
+            key={subcategory}
+            title={subcategory}
+            description={stats 
+              ? `${Math.round(progress)}% gelernt`
+              : isCategoryPlanned 
+                ? "Demnächst verfügbar" 
+                : "Lerne die wichtigsten Signale dieser Kategorie"}
             progress={progress}
-            link={categoryLink}
-            isSelected={selectedCategories.includes(category.name) || selectedCategories.includes(category.id)}
-            onSelect={() => onSelectCategory(category.name)}
-            selectable={isSelectable && !isLocked}
-            isLocked={isLocked}
-            isPro={category.isPro}
-            isPlanned={category.isPlanned}
-            requiresAuth={category.requiresAuth}
+            link={`/karteikarten/${subcategory.toLowerCase().includes('signal') ? 'signale' : 'betriebsdienst'}/${encodeURIComponent(subcategory.toLowerCase().replace(/[^a-z0-9]+/g, '-'))}`}
+            isSelected={selectedCategories.includes(subcategory)}
+            onSelect={() => onSelectCategory(subcategory)}
+            selectable={isSelectable}
+            isLocked={isPro && isCategoryPro}
+            isPro={isCategoryPro}
+            isPlanned={isCategoryPlanned}
             stats={{
               totalCards,
               dueCards,
               masteredCards
             }}
             regulationCategory={regulationFilter !== "all" ? regulationFilter : undefined}
-            parentCategoryType={parentCategoryType}
           />
         );
       })}

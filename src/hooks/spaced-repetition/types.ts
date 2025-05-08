@@ -1,3 +1,4 @@
+
 import { Question, QuestionCategory } from '@/types/questions';
 
 export interface UserProgress {
@@ -25,14 +26,12 @@ export interface SpacedRepetitionOptions {
 export interface SpacedRepetitionResult {
   loading: boolean;
   error: Error | null;
-  dueQuestions: Flashcard[]; // Geändert zu Flashcard[]
+  dueQuestions: Question[];
   progress: UserProgress[];
-  submitAnswer: (questionId: number, score: number | boolean) => Promise<void>; // questionId zu number, score zu number | boolean (abhängig von userAnswer)
+  submitAnswer: (questionId: string, score: number) => Promise<void>;
   pendingUpdatesCount: number;
   applyPendingUpdates: () => Promise<void>;
   reloadQuestions: () => Promise<void>;
-  startNewSession: (type: SessionType, category?: string, regulation?: string, cardIdsToLoad?: number[]) => Promise<void>; // Hinzugefügt
-  incorrectCardIdsInCurrentSession: number[]; // Hinzugefügt
 }
 
 export interface BoxStats {
@@ -41,17 +40,6 @@ export interface BoxStats {
   due: number;
   regulationCategory?: string; // Added for regulation-specific stats
 }
-
-// Definition für Flashcard (kann identisch zu Question sein oder spezifische Felder haben)
-// Wenn Question bereits alle nötigen Felder für eine Flashcard enthält, kann man auch Question verwenden.
-// Für dieses Beispiel nehmen wir an, Flashcard ist ein Alias oder eine Erweiterung von Question.
-export type Flashcard = Question & {
-  // Zusätzliche Felder spezifisch für die Darstellung als Flashcard, falls vorhanden
-  transformedContent?: any; // Beispiel
-};
-
-// Definition für SessionType
-export type SessionType = 'due' | 'category' | 'all' | 'guest' | 'specific_ids';
 
 export interface LearningBoxOptions {
   userId: string;

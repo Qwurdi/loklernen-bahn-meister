@@ -1,6 +1,6 @@
+
 import React from "react";
 import { RegulationFilterType } from "@/types/regulation";
-import { Category } from "@/api/categories/types"; // Added
 
 interface CategoryCardCounts {
   total: number;
@@ -8,18 +8,19 @@ interface CategoryCardCounts {
 }
 
 export const filterCategoriesByRegulation = (
-  categories: Category[], // Changed from string[] to Category[]
+  categories: string[],
   regulationFilter: RegulationFilterType,
-  categoryCardCounts?: Record<string, CategoryCardCounts> // Key is category.name
-): Category[] => { // Return type changed to Category[]
+  categoryCardCounts?: Record<string, CategoryCardCounts>
+): string[] => {
   if (regulationFilter === "all") {
     return categories;
   }
   
-  return categories.filter(category => { // Iterate over Category objects
-    const cardCounts = categoryCardCounts?.[category.name]; // Access by category.name
+  return categories.filter(subcategory => {
+    const cardCounts = categoryCardCounts?.[subcategory];
     
     if (cardCounts) {
+      // Include cards if they match the regulation OR have "Beide"/"both" regulation OR have no specific regulation set
       const hasCardsForRegulation = 
         (cardCounts.byRegulation[regulationFilter] > 0) || 
         (cardCounts.byRegulation["Beide"] > 0) || 
@@ -28,9 +29,7 @@ export const filterCategoriesByRegulation = (
         
       return hasCardsForRegulation;
     }
-    // If no card counts for this category, include it by default, 
-    // or decide if it should be excluded if counts are essential.
-    // For now, keeping the original behavior of including it.
+    
     return true;
   });
 };

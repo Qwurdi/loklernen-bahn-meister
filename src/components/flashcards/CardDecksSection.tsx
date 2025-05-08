@@ -1,13 +1,14 @@
+
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Signal, BookOpen } from "lucide-react";
 import SignaleTab from "./SignaleTab";
 import BetriebsdienstTab from "./BetriebsdienstTab";
+import { RegulationFilterType } from "@/types/regulation";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
-import { User } from "@supabase/supabase-js";
 
 interface CardDecksSectionProps {
-  user: User | null;
+  user: any;
   activeTab: "signale" | "betriebsdienst";
   onTabChange: (value: string) => void;
   selectedCategories: string[];
@@ -64,7 +65,6 @@ export default function CardDecksSection({
             onSelectCategory={onSelectCategory}
             isSelectable={!!user}
             regulationFilter={regulationPreference}
-            user={user}
           />
         </TabsContent>
         

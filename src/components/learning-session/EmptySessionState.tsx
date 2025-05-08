@@ -1,61 +1,42 @@
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import { QuestionCategory } from "@/types/questions";
 
 interface EmptySessionStateProps {
-  categoryName?: string;
-  categoryId?: string; // Added to match usage in SessionContent
-  subcategory?: string; // Added to match usage in SessionContent
+  categoryParam?: QuestionCategory; // Made optional as message can be standalone
   isGuestLearningCategory?: boolean;
-  message?: string; 
+  message?: string; // New prop
 }
 
-export default function EmptySessionState({ 
-  categoryId,
-  categoryName, 
-  subcategory,
-  isGuestLearningCategory, 
-  message 
-}: EmptySessionStateProps) {
+export default function EmptySessionState({ categoryParam, isGuestLearningCategory, message }: EmptySessionStateProps) {
   const navigate = useNavigate();
   
-  // Simplified navigation path
-  const getCategoryPath = () => "/karteikarten";
+  const getCategoryPath = () => {
+    if (!categoryParam) return "/karteikarten"; // Default if no categoryParam
+    return categoryParam === "Betriebsdienst" 
+      ? "/karteikarten/betriebsdienst" 
+      : "/karteikarten";
+  };
 
-  let title: string;
-  let description: string;
+  let title = message ? "Information" : (isGuestLearningCategory ? "Keine Karten gefunden" : "Keine Karten fällig!");
+  let description = message ? message : (isGuestLearningCategory
+    ? "In der ausgewählten Kategorie wurden keine Karten gefunden. Bitte wähle eine andere Kategorie oder versuche es später erneut."
+    : "Aktuell sind keine Karten zur Wiederholung fällig. Schaue später wieder vorbei oder wähle eine Kategorie, um neue Karten zu lernen.");
 
-  if (message) {
-    // If a specific message is provided, use it directly
-    title = "Information"; // Or a more generic title if message implies it
-    description = message;
-  } else if (isGuestLearningCategory) {
-    title = "Keine Karten gefunden";
-    description = `In der Kategorie "${categoryName || subcategory || 'Auswahl'}" wurden keine Karten gefunden. Bitte wähle eine andere Kategorie oder versuche es später erneut.`;
-  } else {
-    // Default messages when no specific message prop is passed
-    if ((categoryName && categoryName !== "Auswahl" && categoryName !== "Fällige Karten (Alle Kategorien)") || 
-        (subcategory && subcategory !== "Auswahl")) {
-      title = `Keine Karten für "${categoryName || subcategory}"`;
-      description = `Für "${categoryName || subcategory}" sind aktuell keine Karten zur Wiederholung fällig oder es gibt keine neuen Karten zum Lernen. Schaue später wieder vorbei oder wähle eine andere Lernoption.`;
-    } else { // Covers "Auswahl", "Fällige Karten (Alle Kategorien)", or undefined categoryName
-      title = "Keine Karten fällig";
-      description = "Aktuell sind keine Karten zur Wiederholung fällig. Schaue später wieder vorbei oder wähle eine Kategorie, um neue Karten zu lernen.";
-    }
+  if (message && !categoryParam) { // If it's a generic message not tied to a category context for navigation
+    // Potentially hide the button or change its text/destination
   }
-
-  // Determine if the button to navigate to categories should be shown
-  const showButton = !message || (categoryName && categoryName !== "Auswahl") || (subcategory && subcategory !== "Auswahl");
 
   return (
     <main className="flex-1 container py-12 flex flex-col items-center justify-center">
       <Card className="p-6 max-w-md text-center bg-gray-900 border-gray-800">
         <h2 className="text-2xl font-bold mb-4 text-white">{title}</h2>
         <p className="text-gray-300 mb-6">{description}</p>
-        {showButton && (
+        {/* Conditionally render button if it makes sense, e.g. not for a generic message */}
+        {(!message || categoryParam) && (
           <Button onClick={() => navigate(getCategoryPath())} className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90">
-            Zu den Kategorien
+            Zu Kategorien
           </Button>
         )}
       </Card>

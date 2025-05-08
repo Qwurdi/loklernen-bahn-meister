@@ -20,7 +20,6 @@ export type Database = {
           isPro: boolean
           name: string
           parent_category: string
-          requiresAuth: boolean | null
           updated_at: string | null
         }
         Insert: {
@@ -33,7 +32,6 @@ export type Database = {
           isPro?: boolean
           name: string
           parent_category: string
-          requiresAuth?: boolean | null
           updated_at?: string | null
         }
         Update: {
@@ -46,7 +44,6 @@ export type Database = {
           isPro?: boolean
           name?: string
           parent_category?: string
-          requiresAuth?: boolean | null
           updated_at?: string | null
         }
         Relationships: []

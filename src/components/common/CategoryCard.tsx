@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -22,10 +23,8 @@ interface CategoryCardProps {
   isLocked?: boolean;
   isPro?: boolean;
   isPlanned?: boolean;
-  requiresAuth?: boolean; // Added
   stats?: CategoryStats;
   regulationCategory?: string;
-  parentCategoryType?: "Signale" | "Betriebsdienst"; // Added
 }
 
 export default function CategoryCard({
@@ -39,10 +38,8 @@ export default function CategoryCard({
   isLocked = false,
   isPro = false,
   isPlanned = false,
-  requiresAuth = false, // Added
   stats,
-  regulationCategory,
-  parentCategoryType // Added
+  regulationCategory
 }: CategoryCardProps) {
   const handleCardClick = (e: React.MouseEvent) => {
     if (selectable && onSelect) {
@@ -82,17 +79,13 @@ export default function CategoryCard({
         <div className="mb-2 flex justify-between items-center">
           <h3 className="font-medium text-lg text-gray-800 line-clamp-1">{title}</h3>
           
-          <div className="flex gap-1 flex-wrap items-center"> {/* Added flex-wrap and items-center */}
+          <div className="flex gap-1">
             {isPro && (
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-black">
                 PRO
               </span>
             )}
-            {requiresAuth && (
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white">
-                LOGIN
-              </span>
-            )}
+            
             {isPlanned && (
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gradient-to-r from-blue-400 to-blue-500 text-white flex items-center">
                 <Clock className="h-3 w-3 mr-0.5" />
@@ -157,7 +150,7 @@ export default function CategoryCard({
             <div className="flex items-center text-sm text-gray-500">
               <Lock size={14} className="mr-1" />
               <span>
-                {requiresAuth && !isPro ? "Bitte anmelden" : (isPro ? "Pro-Funktion" : "Gesperrt")}
+                {isPro ? "Pro-Funktion" : "Bitte anmelden"}
               </span>
             </div>
           ) : isPlanned ? (

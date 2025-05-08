@@ -7,30 +7,17 @@ import { Progress } from '@/components/ui/progress';
 interface SessionCompleteStateProps {
   correctCount: number;
   totalCards: number;
-  totalQuestions: number; // Added to match usage in SessionContent
-  answeredCount: number; // Added to match usage in SessionContent
-  onReset: () => void;
-  onRestartIncorrect?: (cardIds: number[]) => void;
-  incorrectCardIds?: number[];
+  onRestart: () => void;
   pendingUpdates?: boolean;
 }
 
 export default function SessionCompleteState({ 
   correctCount, 
   totalCards, 
-  totalQuestions, 
-  answeredCount,
-  onReset,
-  onRestartIncorrect,
-  incorrectCardIds,
+  onRestart,
   pendingUpdates = false
 }: SessionCompleteStateProps) {
-  // Use totalQuestions and answeredCount if provided, otherwise fallback to totalCards and correctCount
-  const displayTotal = totalQuestions || totalCards;
-  const displayCorrect = answeredCount || correctCount;
-  
-  const percentage = Math.round((displayCorrect / displayTotal) * 100) || 0;
-  const hasIncorrectCards = incorrectCardIds && incorrectCardIds.length > 0;
+  const percentage = Math.round((correctCount / totalCards) * 100);
   
   return (
     <div className="flex flex-col items-center justify-center h-full py-8 px-4 space-y-8 text-center">
@@ -42,7 +29,7 @@ export default function SessionCompleteState({
       
       <div className="w-full max-w-md space-y-2">
         <p className="text-lg font-medium">
-          Du hast <span className="text-green-600 font-bold">{displayCorrect}</span> von {displayTotal} Karten 
+          Du hast <span className="text-green-600 font-bold">{correctCount}</span> von {totalCards} Karten 
           richtig beantwortet.
         </p>
         <Progress value={percentage} className="h-2" />
@@ -58,28 +45,16 @@ export default function SessionCompleteState({
         
         <div className="space-y-2">
           <Button 
-            onClick={onReset} 
+            onClick={onRestart} 
             className="w-full"
             disabled={pendingUpdates}
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             Neue Runde starten
           </Button>
-
-          {hasIncorrectCards && onRestartIncorrect && (
-            <Button 
-              onClick={() => onRestartIncorrect(incorrectCardIds!)} 
-              className="w-full mt-2"
-              variant="outline"
-              disabled={pendingUpdates}
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Fehler wiederholen ({incorrectCardIds!.length})
-            </Button>
-          )}
           
           <p className="text-xs text-gray-500">
-            Starte eine neue Lernsession oder wiederhole die falsch beantworteten Karten.
+            Starte eine neue Lernsession mit denselben Karten oder kehre zurück zur Kartenübersicht.
           </p>
         </div>
       </div>

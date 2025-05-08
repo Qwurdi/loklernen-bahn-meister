@@ -1,37 +1,18 @@
-import { Question } from '@/types/questions';
-import { Flashcard } from './types';
-import { Json } from '@/integrations/supabase/types';
 
-/**
- * Transforms a Question object to a Flashcard object
- */
-export function transformQuestionToFlashcard(question: Question): Flashcard {
-  return {
-    ...question,
-    // Add any additional Flashcard-specific fields here if needed
-  };
+import { Question } from "@/types/questions";
+import { transformQuestion } from "@/api/questions";
+
+// Calculate the next review date based on the current date and interval
+export function calculateNextReviewDate(date: Date, intervalDays: number): Date {
+  const nextDate = new Date(date);
+  nextDate.setDate(nextDate.getDate() + intervalDays);
+  return nextDate;
 }
 
-/**
- * Transforms a question from the database format
- */
-export function transformQuestion(question: any): Question {
-  // Handle the case when answers is a string (JSON)
-  let parsedAnswers = question.answers;
-  
-  if (typeof question.answers === 'string') {
-    try {
-      parsedAnswers = JSON.parse(question.answers);
-    } catch (e) {
-      console.error('Failed to parse answers JSON', e);
-      parsedAnswers = []; // Fallback to empty array if parsing fails
-    }
-  }
-
-  return {
-    ...question,
-    answers: parsedAnswers,
-  };
+// Apply spacing factor to interval
+export function applySpacingFactor(interval: number, factor: number = 2.5): number {
+  return Math.round(interval * factor);
 }
 
-// Other utility functions can be added here
+// Export the transformQuestion function to maintain backwards compatibility
+export { transformQuestion };

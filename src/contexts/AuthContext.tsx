@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,19 +15,17 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Initialize state inside the component function body
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isNewUser, setIsNewUser] = useState(false);
 
   useEffect(() => {
-    // Mark component as mounted to prevent state updates after unmount
     let mounted = true;
     console.log("AuthContext: Initializing auth state");
 
     // Setup auth listener first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, currentSession) => {
       console.log("AuthContext: Auth state changed:", event);
       if (!mounted) return;
 
@@ -94,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       console.log("AuthContext: Cleaning up");
       mounted = false;
-      subscription.unsubscribe();
+      authListener.subscription.unsubscribe();
     };
   }, []); // Empty dependency array means this runs once on mount
 

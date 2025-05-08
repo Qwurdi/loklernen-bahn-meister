@@ -1,21 +1,15 @@
-import React from "react";
-import { useCategories } from "@/hooks/useCategories";
-// import { Category } from "@/api/categories/types"; // Category is implicitly typed by useCategories
+import React, { useEffect, useState } from "react";
+import { fetchCategoriesByParent, signalSubCategories } from "@/api/categories/index";
 import CategoryGrid from "./CategoryGrid";
 import { RegulationFilterType } from "@/types/regulation";
-import LoadingSpinner from "@/components/common/LoadingSpinner";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
-import { User } from "@supabase/supabase-js"; // Added for user prop type
 
 interface SignaleTabProps {
   progressStats?: Record<string, any>;
   categoryCardCounts?: Record<string, any>;
   selectedCategories: string[];
-  onSelectCategory: (categoryNameOrId: string) => void;
+  onSelectCategory: (subcategory: string) => void;
   isSelectable: boolean;
   regulationFilter: RegulationFilterType;
-  user: User | null; // Added user prop
 }
 
 export default function SignaleTab({
@@ -24,49 +18,50 @@ export default function SignaleTab({
   selectedCategories,
   onSelectCategory,
   isSelectable,
-  regulationFilter,
-  user // Added
+  regulationFilter
 }: SignaleTabProps) {
-  const { 
-    categories: allCategories, 
-    isLoading: categoriesLoading, 
-    error: categoriesError,
-    categoriesByParent 
-  } = useCategories();
+  const [categories, setCategories] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const signalCategories = categoriesByParent('Signale');
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const dbCategories = await fetchCategoriesByParent('Signale');
+        if (dbCategories && dbCategories.length > 0) {
+          setCategories(dbCategories.map(cat => cat.name));
+        } else {
+          // Fallback to hardcoded categories if none found in DB
+          setCategories([...signalSubCategories]);
+        }
+      } catch (error) {
+        console.error("Error loading Signal categories:", error);
+        // Fallback to hardcoded categories on error
+        setCategories([...signalSubCategories]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  if (categoriesLoading) {
-    return <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-      {[...Array(6)].map((_, i) => (
+    loadCategories();
+  }, []);
+  
+  if (isLoading) {
+    return <div className="grid gap-4 md:grid-cols-3">
+      {[1, 2, 3, 4, 5, 6].map(i => (
         <div key={i} className="h-40 bg-gray-100 rounded-lg animate-pulse"></div>
       ))}
     </div>;
   }
-
-  if (categoriesError) {
-    return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Fehler beim Laden der Signalkategorien</AlertTitle>
-        <AlertDescription>
-          {categoriesError.message || "Ein unbekannter Fehler ist aufgetreten."}
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
+  
   return (
     <CategoryGrid
-      categories={signalCategories}
+      categories={categories}
       progressStats={progressStats}
       categoryCardCounts={categoryCardCounts}
       selectedCategories={selectedCategories}
       onSelectCategory={onSelectCategory}
       isSelectable={isSelectable}
       regulationFilter={regulationFilter}
-      parentCategoryType="Signale"
-      user={user} // Pass user to CategoryGrid
     />
   );
 }

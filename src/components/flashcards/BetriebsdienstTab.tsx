@@ -1,21 +1,17 @@
-import React from "react"; // Removed useEffect, useState
+import React, { useEffect, useState } from "react";
 import { RegulationFilterType } from "@/types/regulation";
-// import { fetchCategoriesByParent } from "@/api/categories/index"; // Removed
-import { useCategories } from "@/hooks/useCategories"; // Added
-// import { Category } from "@/api/categories/types"; // Implicitly typed
+import { fetchCategoriesByParent } from "@/api/categories/index";
 import CategoryGrid from "@/components/flashcards/CategoryGrid";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Added
-import { AlertCircle } from "lucide-react"; // Added
 
 interface BetriebsdienstTabProps {
   progressStats?: Record<string, any>;
   categoryCardCounts?: Record<string, any>;
-  selectedCategories: string[]; // This will likely change to Category[] or IDs later
-  onSelectCategory: (categoryNameOrId: string) => void; // Keep as string for now
+  selectedCategories: string[];
+  onSelectCategory: (subcategory: string) => void;
   isSelectable: boolean;
   regulationFilter: RegulationFilterType;
-  user: any; // Kept as any to match existing, but should be User | null from Supabase
+  user: any;
 }
 
 export default function BetriebsdienstTab({
@@ -25,59 +21,82 @@ export default function BetriebsdienstTab({
   onSelectCategory,
   isSelectable,
   regulationFilter,
-  user // user prop is already here
+  user
 }: BetriebsdienstTabProps) {
-  const { 
-    categories: allCategories, 
-    isLoading: categoriesLoading, 
-    error: categoriesError,
-    categoriesByParent 
-  } = useCategories();
+  const [categories, setCategories] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const betriebsdienstCategories = categoriesByParent('Betriebsdienst');
+  useEffect(() => {
+    const loadCategories = async () => {
+      setIsLoading(true);
+      try {
+        const dbCategories = await fetchCategoriesByParent('Betriebsdienst');
+        if (dbCategories && dbCategories.length > 0) {
+          // Map to just category names for compatibility with existing code
+          setCategories(dbCategories.map(cat => cat.name));
+        } else {
+          console.warn("No Betriebsdienst categories found in database, using fallback.");
+          // Fallback to hardcoded categories if none found in DB
+          setCategories([
+            "Grundlagen Bahnbetrieb",
+            "UVV & Arbeitsschutz",
+            "Rangieren",
+            "Züge fahren",
+            "PZB & Sicherungsanlagen",
+            "Kommunikation",
+            "Besonderheiten",
+            "Unregelmäßigkeiten"
+          ]);
+        }
+      } catch (error) {
+        console.error("Error loading Betriebsdienst categories:", error);
+        // Fallback to hardcoded categories on error
+        setCategories([
+          "Grundlagen Bahnbetrieb",
+          "UVV & Arbeitsschutz",
+          "Rangieren",
+          "Züge fahren",
+          "PZB & Sicherungsanlagen",
+          "Kommunikation",
+          "Besonderheiten",
+          "Unregelmäßigkeiten"
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  if (categoriesLoading) {
+    loadCategories();
+  }, []);
+  
+  if (isLoading) {
     return (
       <div className="py-8 flex justify-center">
         <LoadingSpinner />
       </div>
     );
   }
-
-  if (categoriesError) {
-    return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Fehler beim Laden der Betriebsdienstkategorien</AlertTitle>
-        <AlertDescription>
-          {categoriesError.message || "Ein unbekannter Fehler ist aufgetreten."}
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  // Fallback to a default set if API fails or returns empty for some reason,
-  // but ideally, useCategories hook should handle this or provide a way to initialize.
-  // For now, if betriebsdienstCategories is empty but no error, it means no categories are set up.
-  // CategoryGrid should handle an empty categories array gracefully.
   
-  // The DEFAULT_PRO_CATEGORIES array is removed as this logic will be handled by CategoryGrid
-  // based on the isPro and requiresAuth flags from the Category objects.
+  // Define which categories require PRO - this will be replaced by database isPro flag in the future
+  const DEFAULT_PRO_CATEGORIES = [
+    "Rangieren", 
+    "Züge fahren", 
+    "PZB & Sicherungsanlagen", 
+    "Kommunikation", 
+    "Besonderheiten", 
+    "Unregelmäßigkeiten"
+  ];
 
   return (
     <CategoryGrid
-      // Pass full category objects to CategoryGrid.
-      // CategoryGrid will need to be updated to accept Category[]
-      categories={betriebsdienstCategories}
+      categories={categories}
       categoryCardCounts={categoryCardCounts}
       progressStats={progressStats}
       selectedCategories={selectedCategories}
       onSelectCategory={onSelectCategory}
       isSelectable={isSelectable}
       regulationFilter={regulationFilter}
-      user={user} // user is already passed
-      // parentCategoryType is for styling/theming inside CategoryGrid if needed
-      parentCategoryType="Betriebsdienst"
+      isPro={!user} // If user is not logged in, all categories are treated as Pro (requiring login)
     />
   );
 }

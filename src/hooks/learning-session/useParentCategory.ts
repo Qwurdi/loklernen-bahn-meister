@@ -4,7 +4,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { QuestionCategory } from "@/types/questions";
 
 // Parent categories constants
-const PARENT_CATEGORIES: QuestionCategory[] = ["Signale", "Betriebsdienst"];
+const PARENT_CATEGORIES = ["Signale", "Betriebsdienst"];
 
 export function useParentCategory(singleCategoryIdentifier?: string) {
   const { categories, isLoading: categoriesLoading } = useCategories();
@@ -16,7 +16,7 @@ export function useParentCategory(singleCategoryIdentifier?: string) {
     if (categoriesLoading || !singleCategoryIdentifier) return;
     
     // Check if the singleCategoryIdentifier is a parent category
-    if (PARENT_CATEGORIES.includes(singleCategoryIdentifier as QuestionCategory)) {
+    if (PARENT_CATEGORIES.includes(singleCategoryIdentifier)) {
       console.log(`Detected parent category: ${singleCategoryIdentifier}`);
       setIsParentCategory(true);
       

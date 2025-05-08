@@ -1,22 +1,31 @@
 
-// Export all functions from questions.ts
+// Export SR card fetching functions
+export {
+  fetchDueCardsForSR,
+  fetchCategoryCardsForSR,
+  fetchSpecificCardsForSR,
+  fetchAllCardsForSR,
+} from './card-fetchers';
+
+// Export user progress functions
 export {
   fetchUserProgress,
-  fetchNewQuestions,
-  fetchPracticeQuestions,
-  fetchQuestionsByBox
-} from './questions';
+  fetchQuestionsByBox,
+} from './user-progress-queries';
 
-// Export all functions from user-progress.ts
+// Export question query functions
+export {
+  fetchNewQuestions,
+  fetchPracticeQuestions
+} from './question-queries';
+
+// Export user progress update functions
 export {
   updateUserProgress,
   updateUserStats
 } from './user-progress';
 
-// Export the new SR-specific functions
+// Export helpers
 export {
-  fetchDueCardsForSR,
-  fetchCategoryCardsForSR,
-  fetchSpecificCardsForSR,
-  fetchAllCardsForSR
-} from './questions';
+  buildCategoryFilter
+} from './helpers';

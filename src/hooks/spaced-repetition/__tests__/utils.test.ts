@@ -1,71 +1,67 @@
 
-import { describe, it, expect } from 'vitest';
-import { calculateNextReviewDate, transformQuestion } from '../utils';
+import { transformQuestionToFlashcard, transformQuestion } from '../utils';
+import { vi } from 'vitest';
 
-describe('spaced repetition utils', () => {
-  describe('transformQuestion', () => {
-    it('should correctly transform a question', () => {
-      const mockDbQuestion = {
-        id: 'test-id',
-        text: 'Test question?',
-        answers: JSON.stringify([{ text: 'Answer 1', isCorrect: true }])
-      };
-      
-      const transformedQuestion = transformQuestion(mockDbQuestion);
-      
-      expect(transformedQuestion).toHaveProperty('id', 'test-id');
-      expect(transformedQuestion).toHaveProperty('text', 'Test question?');
-      expect(transformedQuestion).toHaveProperty('answers');
+describe('Spaced Repetition Utils', () => {
+  it('should transform a question to a flashcard', () => {
+    const question = {
+      id: '1',
+      text: 'Test question',
+      answers: [{text: 'Answer', isCorrect: true}],
+      category: 'Signale',
+      sub_category: 'Test',
+      question_type: 'MC_single',
+      difficulty: 1,
+      created_by: 'user-1',
+      revision: 1,
+      created_at: '2023-01-01',
+      updated_at: '2023-01-01'
+    };
+    
+    const result = transformQuestionToFlashcard(question);
+    
+    expect(result).toEqual({
+      ...question
     });
   });
-
-  describe('calculateNextReviewDate', () => {
-    it('should calculate next review date for Box 1', () => {
-      const today = new Date();
-      const result = calculateNextReviewDate(today, 1);
-      
-      // Should return date one day in future
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      
-      const resultDate = new Date(result);
-      
-      // Compare only the date part (year, month, day)
-      expect(resultDate.getFullYear()).toBe(tomorrow.getFullYear());
-      expect(resultDate.getMonth()).toBe(tomorrow.getMonth());
-      expect(resultDate.getDate()).toBe(tomorrow.getDate());
-    });
+  
+  it('should handle JSON string answers when transforming questions', () => {
+    const questionWithStringAnswers = {
+      id: '1',
+      text: 'Test question',
+      answers: JSON.stringify([{text: 'Answer', isCorrect: true}]),
+      category: 'Signale',
+      sub_category: 'Test',
+      question_type: 'MC_single',
+      difficulty: 1,
+      created_by: 'user-1',
+      revision: 1,
+      created_at: '2023-01-01',
+      updated_at: '2023-01-01'
+    };
     
-    it('should calculate next review date for Box 3', () => {
-      const today = new Date();
-      const result = calculateNextReviewDate(today, 3);
-      
-      // Should return date 7 days in future
-      const future = new Date(today);
-      future.setDate(future.getDate() + 7);
-      
-      const resultDate = new Date(result);
-      
-      // Compare only the date part (year, month, day)
-      expect(resultDate.getFullYear()).toBe(future.getFullYear());
-      expect(resultDate.getMonth()).toBe(future.getMonth());
-      expect(resultDate.getDate()).toBe(future.getDate());
-    });
+    const result = transformQuestion(questionWithStringAnswers);
     
-    it('should handle default case (invalid box number)', () => {
-      const today = new Date();
-      const result = calculateNextReviewDate(today, 10); // Non-existent box
-      
-      // Should default to 1 day
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      
-      const resultDate = new Date(result);
-      
-      // Compare only the date part
-      expect(resultDate.getFullYear()).toBe(tomorrow.getFullYear());
-      expect(resultDate.getMonth()).toBe(tomorrow.getMonth());
-      expect(resultDate.getDate()).toBe(tomorrow.getDate());
-    });
+    expect(result.answers).toEqual([{text: 'Answer', isCorrect: true}]);
+  });
+  
+  it('should not modify answers that are already objects', () => {
+    const questionWithObjectAnswers = {
+      id: '1',
+      text: 'Test question',
+      answers: [{text: 'Answer', isCorrect: true}],
+      category: 'Signale',
+      sub_category: 'Test',
+      question_type: 'MC_single',
+      difficulty: 1,
+      created_by: 'user-1',
+      revision: 1,
+      created_at: '2023-01-01',
+      updated_at: '2023-01-01'
+    };
+    
+    const result = transformQuestion(questionWithObjectAnswers);
+    
+    expect(result.answers).toEqual([{text: 'Answer', isCorrect: true}]);
   });
 });

@@ -1,40 +1,41 @@
+
 import {
   fetchDueCardsForSR,
   fetchCategoryCardsForSR,
   fetchSpecificCardsForSR,
   fetchAllCardsForSR
 } from '../index';
-import { QuestionCategory } from '@/types/questions';
+import { vi } from 'vitest';
 
 // Setup mocks
-jest.mock('@/integrations/supabase/client', () => ({
+vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: jest.fn().mockReturnValue({
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      in: jest.fn().mockReturnThis(),
-      or: jest.fn().mockReturnThis(),
-      not: jest.fn().mockReturnThis(),
-      limit: jest.fn().mockReturnThis(),
-      order: jest.fn().mockReturnThis(),
-      lte: jest.fn().mockReturnThis(),
-      then: jest.fn(cb => cb({ data: [], error: null }))
+    from: vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      or: vi.fn().mockReturnThis(),
+      not: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      lte: vi.fn().mockReturnThis(),
+      then: vi.fn(cb => cb({ data: [], error: null }))
     })
   }
 }));
 
-jest.mock('@/api/questions', () => ({
-  getQuestionsByIds: jest.fn().mockResolvedValue([])
+vi.mock('@/api/questions', () => ({
+  getQuestionsByIds: vi.fn().mockResolvedValue([])
 }));
 
 // Mock transformQuestionToFlashcard
-jest.mock('../../utils', () => ({
-  transformQuestionToFlashcard: jest.fn(q => ({ ...q, transformedForTest: true }))
+vi.mock('../../utils', () => ({
+  transformQuestionToFlashcard: vi.fn(q => ({ ...q, transformedForTest: true }))
 }));
 
 describe('Spaced Repetition Question Services', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('fetchDueCardsForSR', () => {
@@ -59,7 +60,7 @@ describe('Spaced Repetition Question Services', () => {
 
   describe('fetchCategoryCardsForSR', () => {
     it('should fetch cards for a specific category', async () => {
-      const category = 'Signale' as QuestionCategory;
+      const category = 'Signale';
       const userId = 'test-user-id';
       const regulation = 'DS 301';
       const options = { batchSize: 10 };
@@ -70,7 +71,7 @@ describe('Spaced Repetition Question Services', () => {
     });
 
     it('should handle guest mode (no userId)', async () => {
-      const category = 'Signale' as QuestionCategory;
+      const category = 'Signale';
       
       const result = await fetchCategoryCardsForSR(category, undefined);
       

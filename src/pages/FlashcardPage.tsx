@@ -19,6 +19,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import CardStack from "@/components/flashcards/stack/CardStack";
 import EmptySessionState from '@/components/learning-session/EmptySessionState';
+import { SessionType } from "@/hooks/spaced-repetition/types";
 
 // Helper to map URL subcategory param back to original subcategory string (case sensitive)
 function mapUrlToSubcategory(urlSubcategory?: string): string | undefined {
@@ -89,14 +90,15 @@ export default function FlashcardPage() {
   }
 
   const isPracticeMode = !user;
-
+  
+  // Fixed parameter order: userId, options, initialCardIdsToLoad
   const {
     loading,
     dueQuestions: questions,
-    submitAnswer
+    submitAnswer,
+    startNewSession // Make sure we expose this function
   } = useSpacedRepetition(
-    mainCategoryForHook,
-    subCategoryForHook,
+    user?.id, 
     { 
       practiceMode: isPracticeMode,
       regulationCategory: regulationParam
@@ -105,6 +107,20 @@ export default function FlashcardPage() {
 
   console.log(`FlashcardPage: Loading for mainCat: ${mainCategoryForHook}, subCat: ${subCategoryForHook}, practice: ${isPracticeMode}`);
   console.log("FlashcardPage: Loaded questions count:", questions?.length || 0);
+
+  // Use useEffect to start a new session when component mounts or when key parameters change
+  useEffect(() => {
+    if (loading) return;
+    
+    let sessionType: SessionType = 'category';
+    // For guest mode
+    if (isPracticeMode) {
+      sessionType = 'guest';
+    }
+    
+    console.log(`Starting new session with: type=${sessionType}, category=${mainCategoryForHook}, subcategory=${subCategoryForHook}, regulation=${regulationParam}`);
+    startNewSession(sessionType, mainCategoryForHook, regulationParam);
+  }, [startNewSession, mainCategoryForHook, regulationParam, isPracticeMode, loading]);
 
   const { data: dueTodayStats } = useQuery({
     queryKey: ['dueTodayCount', user?.id, regulationParam],

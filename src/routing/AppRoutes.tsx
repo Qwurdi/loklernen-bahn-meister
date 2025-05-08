@@ -1,4 +1,3 @@
-
 import { Suspense, lazy, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -95,7 +94,7 @@ const AppRoutes = () => {
         {/* Renamed Flashcard Routes */}
         <Route path="/karteikarten" element={<CardsPage />} />
         <Route path="/karteikarten/signale/:subcategory" element={<FlashcardPage />} />
-        <Route path="/karteikarten/lernen" element={<ProtectedRoute><LearningSessionPage /></ProtectedRoute>} />
+        <Route path="/karteikarten/lernen" element={<LearningSessionPage />} />
         <Route path="/karteikarten/betriebsdienst" element={<BetriebsdienstPage />} />
         <Route path="/karteikarten/betriebsdienst/:subcategory" element={<FlashcardPage />} />
         

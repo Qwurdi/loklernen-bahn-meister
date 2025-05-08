@@ -1,4 +1,3 @@
-
 import { QuestionCategory } from "@/types/questions";
 
 // Type definition for categories
@@ -13,6 +12,7 @@ export interface Category {
   updated_at?: string;
   isPro?: boolean;
   isPlanned?: boolean;
+  requiresAuth?: boolean; // Neues Feld hinzugefügt
 }
 
 // Signal subcategories array

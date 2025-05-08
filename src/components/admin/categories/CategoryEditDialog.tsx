@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,7 +16,8 @@ const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").max(50, "Name must be less than 50 characters"),
   description: z.string().max(200, "Description must be less than 200 characters").optional(),
   isPro: z.boolean().default(false),
-  isPlanned: z.boolean().default(false)
+  isPlanned: z.boolean().default(false),
+  requiresAuth: z.boolean().default(false) // Neues Feld hinzugefügt
 });
 
 export type CategoryFormValues = z.infer<typeof formSchema>;
@@ -44,7 +44,8 @@ const CategoryEditDialog: React.FC<CategoryEditDialogProps> = ({
       name: category?.name || "",
       description: category?.description || "",
       isPro: category?.isPro || false,
-      isPlanned: category?.isPlanned || false
+      isPlanned: category?.isPlanned || false,
+      requiresAuth: category?.requiresAuth || false // Neues Feld hinzugefügt
     }
   });
 
@@ -55,7 +56,8 @@ const CategoryEditDialog: React.FC<CategoryEditDialogProps> = ({
         name: category.name,
         description: category.description || "",
         isPro: category.isPro || false,
-        isPlanned: category.isPlanned || false
+        isPlanned: category.isPlanned || false,
+        requiresAuth: category.requiresAuth || false // Neues Feld hinzugefügt
       });
     }
   }, [category, form]);
@@ -141,6 +143,27 @@ const CategoryEditDialog: React.FC<CategoryEditDialogProps> = ({
                     <FormLabel className="font-medium">Geplante Kategorie</FormLabel>
                     <p className="text-sm text-gray-500">
                       Diese Kategorie ist in Planung und wird bald verfügbar sein
+                    </p>
+                  </div>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="requiresAuth"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="font-medium">Anmeldung erforderlich</FormLabel>
+                    <p className="text-sm text-gray-500">
+                      Benutzer müssen angemeldet sein, um auf diese Kategorie zuzugreifen.
                     </p>
                   </div>
                 </FormItem>

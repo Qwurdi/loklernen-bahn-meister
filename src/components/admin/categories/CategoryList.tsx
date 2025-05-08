@@ -34,7 +34,8 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, parentCategory 
         name: values.name,
         description: values.description || undefined,
         isPro: values.isPro,
-        isPlanned: values.isPlanned
+        isPlanned: values.isPlanned,
+        requiresAuth: values.requiresAuth // Neues Feld hinzugefügt
       }
     });
     setEditCategory(null);

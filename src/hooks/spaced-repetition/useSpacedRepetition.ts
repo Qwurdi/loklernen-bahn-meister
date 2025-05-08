@@ -49,7 +49,13 @@ export function useSpacedRepetition(
           fetchedCards = await fetchDueCardsForSR(userId, currentRegulation, { ...options, batchSize });
           fetchedProgress = await fetchUserProgress(userId, [], currentRegulation);
         } else if (currentSessionType === 'category' && currentCategory) {
-          fetchedCards = await fetchCategoryCardsForSR(currentCategory, userId, currentRegulation, { ...options, batchSize });
+          // Cast currentCategory to QuestionCategory if needed, or handle as appropriate
+          fetchedCards = await fetchCategoryCardsForSR(
+            currentCategory as QuestionCategory, 
+            userId, 
+            currentRegulation, 
+            { ...options, batchSize }
+          );
           if (userId) {
             fetchedProgress = await fetchUserProgress(userId, [], currentRegulation);
           }
@@ -57,7 +63,13 @@ export function useSpacedRepetition(
           fetchedCards = await fetchAllCardsForSR(userId, currentRegulation, { ...options, batchSize });
           fetchedProgress = await fetchUserProgress(userId, [], currentRegulation);
         } else if (currentSessionType === 'guest' && currentCategory) {
-          fetchedCards = await fetchCategoryCardsForSR(currentCategory, undefined, currentRegulation, { ...options, batchSize });
+          // Cast currentCategory to QuestionCategory if needed, or handle as appropriate
+          fetchedCards = await fetchCategoryCardsForSR(
+            currentCategory as QuestionCategory, 
+            undefined, 
+            currentRegulation, 
+            { ...options, batchSize }
+          );
         }
       }
       setDueQuestions(fetchedCards);
@@ -135,7 +147,7 @@ export function useSpacedRepetition(
   );
 
   const applyPendingUpdates = useCallback(async () => {
-    if (!userId || pendingUpdates.length === 0) return;
+    if (!userId || pendingUpdates.length === 0) return Promise.resolve();
     
     setLoading(true);
     try {
@@ -152,6 +164,7 @@ export function useSpacedRepetition(
     } finally {
       setLoading(false);
     }
+    return Promise.resolve();
   }, [userId, pendingUpdates, progress, loadInitialCards]);
 
   const reloadQuestions = useCallback(async () => {

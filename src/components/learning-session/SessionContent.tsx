@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { AccessStatus } from '@/hooks/learning-session/types';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
@@ -100,6 +99,8 @@ const SessionContent = ({
   if (isComplete) {
     return (
       <SessionCompleteState 
+        correctCount={answeredCount} 
+        totalCards={totalQuestions}
         totalQuestions={totalQuestions} 
         answeredCount={answeredCount}
         onReset={onReset} 

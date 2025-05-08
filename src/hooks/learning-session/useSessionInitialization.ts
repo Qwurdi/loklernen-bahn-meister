@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { SessionType } from "@/hooks/spaced-repetition/types";
-import { AccessStatus } from "./useSessionAccess";
+import { AccessStatus } from "./types";
 
 interface UseSessionInitializationProps {
   userId?: string;
@@ -11,7 +11,7 @@ interface UseSessionInitializationProps {
   categoryIdentifiers: string[];
   regulationParam?: string;
   boxParam?: number;
-  initializeSession: (sessionType: SessionType, categoryName?: string, cardIds?: number[]) => Promise<void>;
+  initializeSession: (sessionType: SessionType, categoryName?: string, regulation?: string, cardIdsToLoad?: number[]) => Promise<void>;
 }
 
 export function useSessionInitialization({
@@ -49,7 +49,7 @@ export function useSessionInitialization({
 
       if (accessStatus === "allowed" || accessStatus === "no_selection" || (practiceMode && accessStatus !== "denied_auth")) {
         console.log(`Initializing session with type: ${sessionType}, category: ${categoryNameToLoad}, regulation: ${regulationParam}, cardIds: ${cardIdsToLoad}`);
-        await initializeSession(sessionType, categoryNameToLoad, cardIdsToLoad);
+        await initializeSession(sessionType, categoryNameToLoad, regulationParam, cardIdsToLoad);
       }
     };
 

@@ -1,3 +1,4 @@
+
 import { useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -90,7 +91,7 @@ export default function LearningSessionPage() {
     loading: sessionStateLoading,
     error: sessionStateError
   } = useSessionState({
-    spaceRepetitionData
+    spaceRepetitionData: spacedRepetitionData
   });
 
   // Initialize session based on URL params

@@ -3,8 +3,8 @@ import React from 'react';
 import { Question } from '@/types/questions';
 
 interface CardStackSessionProps<T> {
-  onNext: () => void; // Added to match usage in SessionContent
-  onComplete: () => void; // Added to match usage in SessionContent
+  onNext: () => void;
+  onComplete: () => void;
 }
 
 const CardStackSession = ({

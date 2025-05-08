@@ -12,7 +12,7 @@ import SessionHeader from "@/components/learning-session/SessionHeader";
 import EmptySessionState from "@/components/learning-session/EmptySessionState";
 import SessionCompleteState from "@/components/learning-session/SessionCompleteState";
 import CardStackSession from "@/components/learning-session/CardStackSession";
-import { Question } from "@/types/questions";
+import { Question, QuestionCategory } from "@/types/questions";
 import { useCategories } from "@/hooks/useCategories"; 
 import { Category } from "@/api/categories/types"; 
 
@@ -137,6 +137,24 @@ export default function LearningSessionPage() {
     }
   }, [categories, categoriesLoading, categoryParam, user, navigate, location, isDueCardsView]);
 
+  // Fix: Properly cast the stripped category name to QuestionCategory when it's a parent category
+  const getCategoryForSpacedRepetition = (): QuestionCategory | null => {
+    if (isDueCardsView) {
+      return null;
+    }
+    
+    if (isParentCategory && categoryParam) {
+      const cleanCategoryName = stripRegulationInfo(categoryParam);
+      // Only return if it's actually "Signale" or "Betriebsdienst"
+      if (cleanCategoryName === "Signale" || cleanCategoryName === "Betriebsdienst") {
+        return cleanCategoryName as QuestionCategory;
+      }
+    }
+    
+    // For non-parent categories, just use the categoryParam directly
+    return categoryParam;
+  };
+
   // Pass both category, subcategory and regulation preference to the hook
   // Use optimized batch size of 15 cards per session
   const {
@@ -146,8 +164,8 @@ export default function LearningSessionPage() {
     applyPendingUpdates,
     pendingUpdatesCount
   } = useSpacedRepetition(
-    // For due cards view or parent categories, don't filter by category or use clean category name
-    isDueCardsView ? null : (isParentCategory ? stripRegulationInfo(categoryParam) : categoryParam),
+    // Use our helper function to get the properly typed category parameter
+    getCategoryForSpacedRepetition(),
     subcategoryParam,
     {
       practiceMode: false,

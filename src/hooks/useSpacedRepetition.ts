@@ -1,4 +1,3 @@
-
 // This file is now just re-exporting from the new structure
 // to maintain backward compatibility for existing imports
 export { useSpacedRepetition } from './spaced-repetition';

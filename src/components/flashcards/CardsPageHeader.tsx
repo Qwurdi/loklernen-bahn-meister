@@ -21,10 +21,8 @@ export default function CardsPageHeader({
   const navigate = useNavigate(); // Für Navigation
 
   const handleStartLearningGeneric = () => {
-    // TODO: Logik für intelligenten Lernstart für angemeldete Nutzer
-    // z.B. zu fälligen Karten, dann zu Empfehlungen etc.
-    // navigate('/karteikarten/lernen?due=true'); // Beispiel
-    toast.info("Intelligenter Lernstart wird implementiert.");
+    // Navigate to learning session page for all due cards
+    navigate('/karteikarten/lernen?sessionType=due'); 
   };
 
   const handleGuestStartLearning = () => {

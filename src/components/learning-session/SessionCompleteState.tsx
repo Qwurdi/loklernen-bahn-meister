@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, RefreshCw } from 'lucide-react';
@@ -8,6 +7,8 @@ interface SessionCompleteStateProps {
   correctCount: number;
   totalCards: number;
   onRestart: () => void;
+  onRestartIncorrect?: (cardIds: number[]) => void; // Neue Prop für das Wiederholen von Fehlern
+  incorrectCardIds?: number[]; // IDs der falsch beantworteten Karten
   pendingUpdates?: boolean;
 }
 
@@ -15,9 +16,12 @@ export default function SessionCompleteState({
   correctCount, 
   totalCards, 
   onRestart,
+  onRestartIncorrect,
+  incorrectCardIds,
   pendingUpdates = false
 }: SessionCompleteStateProps) {
   const percentage = Math.round((correctCount / totalCards) * 100);
+  const hasIncorrectCards = incorrectCardIds && incorrectCardIds.length > 0;
   
   return (
     <div className="flex flex-col items-center justify-center h-full py-8 px-4 space-y-8 text-center">
@@ -52,9 +56,21 @@ export default function SessionCompleteState({
             <RefreshCw className="h-4 w-4 mr-2" />
             Neue Runde starten
           </Button>
+
+          {hasIncorrectCards && onRestartIncorrect && (
+            <Button 
+              onClick={() => onRestartIncorrect(incorrectCardIds!)} 
+              className="w-full mt-2"
+              variant="outline"
+              disabled={pendingUpdates}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Fehler wiederholen ({incorrectCardIds!.length})
+            </Button>
+          )}
           
           <p className="text-xs text-gray-500">
-            Starte eine neue Lernsession mit denselben Karten oder kehre zurück zur Kartenübersicht.
+            Starte eine neue Lernsession oder wiederhole die falsch beantworteten Karten.
           </p>
         </div>
       </div>

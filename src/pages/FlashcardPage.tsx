@@ -144,7 +144,7 @@ export default function FlashcardPage() {
 
   const handleAnswer = async (questionId: string, score: number) => {
     if (user) {
-      await submitAnswer(questionId, score);
+      await submitAnswer(Number(questionId), score); // Convert questionId to number
     }
 
     if (score >= 4) {
@@ -196,7 +196,7 @@ export default function FlashcardPage() {
     if (isGuestLearningSpecificCategory) {
       return (
         <EmptySessionState
-          categoryParam={mainCategoryForHook}
+          categoryName={mainCategoryForHook}
           isGuestLearningCategory={true}
         />
       );
@@ -204,7 +204,7 @@ export default function FlashcardPage() {
       if (dueUrlParam === 'true') {
         return <FlashcardEmptyState />;
       } else {
-        return <EmptySessionState categoryParam={mainCategoryForHook} />;
+        return <EmptySessionState categoryName={mainCategoryForHook} />;
       }
     }
   }

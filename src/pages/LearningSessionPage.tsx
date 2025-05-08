@@ -12,9 +12,10 @@ import SessionCompleteState from "@/components/learning-session/SessionCompleteS
 import CardStackSession from "@/components/learning-session/CardStackSession";
 import { Flashcard, SessionType } from "@/hooks/spaced-repetition/types"; // Flashcard und SessionType importieren
 import { useCategories } from "@/hooks/useCategories"; // Added useCategories
-import { Category } from "@/api/categories/types"; // Added Category type
-import { useToast, Toast } from "@/hooks/use-toast"; // Toast-Typ importieren für customToastList
+import { QuestionCategory } from "@/types/questions"; // Import QuestionCategory type
+import { useToast } from "@/hooks/use-toast"; // Using useToast for toast management
 import { useQuestions } from "@/hooks/useQuestions";
+import { Category } from "@/api/categories/types"; // Import Category type for parent category handling
 
 const NO_CARDS_FOUND_TOAST_TITLE = "Keine Karten gefunden";
 
@@ -24,6 +25,9 @@ type AccessStatus = "pending" | "allowed" | "denied_auth" | "denied_pro" | "not_
 // Define a constant for the toast ID
 const NO_CARDS_FOUND_TOAST_ID = "no-cards-found-toast";
 
+// Parent categories constants
+const PARENT_CATEGORIES: QuestionCategory[] = ["Signale", "Betriebsdienst"];
+
 export default function LearningSessionPage() {
   console.log("LearningSessionPage: Initializing component");
 
@@ -31,7 +35,7 @@ export default function LearningSessionPage() {
   const navigate = useNavigate();
   const location = useLocation(); // Added
   const isMobile = useIsMobile();
-  const { toast: manageCustomToast, toasts: customToastList } = useToast(); // Destructure toasts from useToast with new names
+  const { toast: manageCustomToast, toasts: customToastList } = useToast(); // Use toast functions
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
@@ -41,6 +45,8 @@ export default function LearningSessionPage() {
 
   const { categories, isLoading: categoriesLoading, error: categoriesDbError } = useCategories(); // Added
   const [accessStatus, setAccessStatus] = useState<AccessStatus>("pending");
+  const [isParentCategory, setIsParentCategory] = useState(false);
+  const [resolvedCategoryIdentifiers, setResolvedCategoryIdentifiers] = useState<string[]>([]);
 
   const {
     singleCategoryIdentifier,
@@ -53,6 +59,11 @@ export default function LearningSessionPage() {
 
   // Memoize categoryIdentifiersForHook to prevent re-renders
   const categoryIdentifiersForHook = useMemo(() => {
+    // If we resolved subcategories for a parent category, use those
+    if (isParentCategory && resolvedCategoryIdentifiers.length > 0) {
+      return resolvedCategoryIdentifiers;
+    }
+    // Otherwise use the original logic
     if (multipleCategoryIdentifiers && multipleCategoryIdentifiers.length > 0) {
       return multipleCategoryIdentifiers;
     }
@@ -60,7 +71,7 @@ export default function LearningSessionPage() {
       return [singleCategoryIdentifier];
     }
     return [];
-  }, [multipleCategoryIdentifiers, singleCategoryIdentifier]);
+  }, [multipleCategoryIdentifiers, singleCategoryIdentifier, isParentCategory, resolvedCategoryIdentifiers]);
 
   // Memoize options for useSpacedRepetition to prevent re-renders
   const spacedRepetitionOptions = useMemo(() => ({
@@ -82,6 +93,32 @@ export default function LearningSessionPage() {
     practiceMode
   });
 
+  // New effect to check and handle parent categories
+  useEffect(() => {
+    if (categoriesLoading || !singleCategoryIdentifier) return;
+    
+    // Check if the singleCategoryIdentifier is a parent category
+    if (PARENT_CATEGORIES.includes(singleCategoryIdentifier as QuestionCategory)) {
+      console.log(`Detected parent category: ${singleCategoryIdentifier}`);
+      setIsParentCategory(true);
+      
+      // Find all subcategories for this parent category
+      const subcategories = categories
+        .filter(cat => cat.parent_category === singleCategoryIdentifier)
+        .map(cat => cat.name);
+        
+      if (subcategories.length > 0) {
+        console.log(`Resolved ${subcategories.length} subcategories for ${singleCategoryIdentifier}`, subcategories);
+        setResolvedCategoryIdentifiers(subcategories);
+        setResolvedSessionTitle(`${singleCategoryIdentifier} (alle Kategorien)`);
+      } else {
+        console.log(`No subcategories found for parent category: ${singleCategoryIdentifier}`);
+      }
+    } else {
+      setIsParentCategory(false);
+    }
+  }, [singleCategoryIdentifier, categories, categoriesLoading]);
+
   useEffect(() => {
     if (categoriesLoading) {
       setAccessStatus("pending");
@@ -98,12 +135,10 @@ export default function LearningSessionPage() {
     }
 
     // If no specific category is selected (e.g., for global due cards review)
-    if (!singleCategoryIdentifier && (!multipleCategoryIdentifiers || multipleCategoryIdentifiers.length === 0)) {
-      setAccessStatus("no_selection"); // Or "allowed" if global review doesn't need these checks
-      // Potentially update title for global review if not already handled by useSessionParams
-      if (!initialSessionTitle.includes("Fällige Karten")) {
-        setResolvedSessionTitle("Fällige Karten (Alle Kategorien)");
-      }
+    // Or if we're handling a parent category with resolved subcategories
+    if ((!singleCategoryIdentifier && (!multipleCategoryIdentifiers || multipleCategoryIdentifiers.length === 0)) ||
+        (isParentCategory && resolvedCategoryIdentifiers.length > 0)) {
+      setAccessStatus("allowed"); // We've either resolved subcategories or don't need categories
       return;
     }
 
@@ -130,6 +165,9 @@ export default function LearningSessionPage() {
       setResolvedSessionTitle(`Auswahl (${targetCategories.length} Kategorien)`);
 
     } else if (singleCategoryIdentifier) {
+      // If we already handled it as a parent category, skip this block
+      if (isParentCategory) return;
+      
       const foundCat = categories.find(cat => cat.name === singleCategoryIdentifier || cat.id === singleCategoryIdentifier);
       if (foundCat) {
         targetCategories = [foundCat];
@@ -148,9 +186,8 @@ export default function LearningSessionPage() {
 
     if (targetCategories.length === 0 && (singleCategoryIdentifier || multipleCategoryIdentifiers)) {
       // This case should ideally be caught above, but as a safeguard
-      // Prüfen, ob ein Toast mit der ID "cat_not_found" bereits aktiv ist
-      const isToastActive = customToastList.some((toast: Toast) => toast.id === "cat_not_found" && toast.open);
-      if (!isToastActive) { 
+      const existingToast = customToastList.some((toast) => toast.id === "cat_not_found" && toast.open);
+      if (!existingToast) { 
         manageCustomToast({
           id: "cat_not_found", // ID für den Toast
           title: "Die angeforderten Lernkategorien wurden nicht gefunden.",
@@ -202,7 +239,7 @@ export default function LearningSessionPage() {
 
     setAccessStatus("allowed");
 
-  }, [categories, categoriesLoading, categoriesDbError, singleCategoryIdentifier, multipleCategoryIdentifiers, user, navigate, location, initialSessionTitle, manageCustomToast, customToastList]);
+  }, [categories, categoriesLoading, categoriesDbError, singleCategoryIdentifier, multipleCategoryIdentifiers, user, navigate, location, initialSessionTitle, manageCustomToast, customToastList, isParentCategory, resolvedCategoryIdentifiers]);
 
   const {
     loading: questionsLoading,
@@ -236,16 +273,13 @@ export default function LearningSessionPage() {
       } else if (boxParam !== undefined) {
         sessionType = 'all'; // Der Hook filtert intern nach boxNumber via options
         // Hier könnte auch ein spezifischer 'box' Typ verwendet werden, wenn der Hook es unterstützt
-      } else if (multipleCategoryIdentifiers && multipleCategoryIdentifiers.length > 0) {
+      } else if (categoryIdentifiersForHook.length > 0) {
+        // Use resolved category identifiers (parent category handling)
         sessionType = 'category';
-        categoryNameToLoad = multipleCategoryIdentifiers.join(',');
-      } else if (singleCategoryIdentifier) {
-        sessionType = 'category';
-        categoryNameToLoad = singleCategoryIdentifier;
+        categoryNameToLoad = categoryIdentifiersForHook.join(',');
       } else if (practiceMode) {
         sessionType = 'guest';
-        if (singleCategoryIdentifier) categoryNameToLoad = singleCategoryIdentifier;
-        else if (multipleCategoryIdentifiers && multipleCategoryIdentifiers.length > 0) categoryNameToLoad = multipleCategoryIdentifiers.join(',');
+        if (categoryIdentifiersForHook.length > 0) categoryNameToLoad = categoryIdentifiersForHook.join(',');
       }
 
       if (accessStatus === "allowed" || accessStatus === "no_selection" || (practiceMode && accessStatus !== "denied_auth")) {
@@ -260,7 +294,7 @@ export default function LearningSessionPage() {
     if (user?.id || practiceMode) { // Stellt sicher, dass wir eine Benutzer-ID haben oder im Übungsmodus sind
         determineSessionTypeAndLoad();
     }
-  }, [accessStatus, user?.id, practiceMode, singleCategoryIdentifier, multipleCategoryIdentifiers, regulationParam, boxParam, location.search, startNewSession]); // startNewSession als Abhängigkeit hinzugefügt
+  }, [accessStatus, user?.id, practiceMode, categoryIdentifiersForHook, regulationParam, boxParam, location.search, startNewSession]); // Verwenden Sie categoryIdentifiersForHook statt der ursprünglichen Werte
 
 
   useEffect(() => {
@@ -280,7 +314,7 @@ export default function LearningSessionPage() {
 
   useEffect(() => {
     const isNoCardsToastActive = customToastList.some(
-      (t: Toast) => t.title === NO_CARDS_FOUND_TOAST_TITLE && t.open
+      (toast) => toast.title === NO_CARDS_FOUND_TOAST_TITLE && toast.open
     );
     if (
       (accessStatus === "allowed" || accessStatus === "no_selection") &&
@@ -333,16 +367,12 @@ export default function LearningSessionPage() {
     // Logik zur Bestimmung des SessionTyps für den Neustart (ähnlich wie Initialisierung)
     if (boxParam !== undefined) {
         sessionType = 'all'; // Hook filtert intern
-    } else if (multipleCategoryIdentifiers && multipleCategoryIdentifiers.length > 0) {
+    } else if (categoryIdentifiersForHook.length > 0) {
       sessionType = 'category';
-      categoryNameToLoad = multipleCategoryIdentifiers.join(',');
-    } else if (singleCategoryIdentifier) {
-      sessionType = 'category';
-      categoryNameToLoad = singleCategoryIdentifier;
+      categoryNameToLoad = categoryIdentifiersForHook.join(',');
     } else if (practiceMode) {
         sessionType = 'guest'; 
-        if (singleCategoryIdentifier) categoryNameToLoad = singleCategoryIdentifier;
-        else if (multipleCategoryIdentifiers && multipleCategoryIdentifiers.length > 0) categoryNameToLoad = multipleCategoryIdentifiers.join(',');
+        if (categoryIdentifiersForHook.length > 0) categoryNameToLoad = categoryIdentifiersForHook.join(',');
     }
 
     await startNewSession(
@@ -425,7 +455,6 @@ export default function LearningSessionPage() {
         <main className={`flex-1 ${isMobile ? 'px-0 pt-2 pb-16 overflow-hidden flex flex-col' : 'container px-4 py-8'}`}>
           <SessionHeader
             sessionTitle={resolvedSessionTitle} // Use resolved title
-            categoryParam={categoryIdentifiersForHook.length > 0 ? categoryIdentifiersForHook.join(', ') : undefined} // Pass the identifier used for fetching
             isMobile={isMobile}
           />
           <CardStackSession
@@ -442,8 +471,6 @@ export default function LearningSessionPage() {
   }
   
   // Fallback if none of the above conditions met (e.g., still resolving or unexpected state)
-  // Fallback if none of the above conditions met (e.g., still resolving or unexpected state)
-  // or if accessStatus is an error type not yet resulting in navigation
   if (!questionsLoading && (accessStatus === "allowed" || accessStatus === "no_selection") && sessionCards.length === 0) {
     // This case should be covered by the EmptySessionState above, but as a safety net
      return (
@@ -454,7 +481,6 @@ export default function LearningSessionPage() {
   }
 
   // Default fallback loading state if no other condition is met
-  // (e.g. if accessStatus is an error state but navigation hasn't happened yet)
   console.log("Fallback loading state rendered, accessStatus:", accessStatus);
   return <FlashcardLoadingState />;
 }

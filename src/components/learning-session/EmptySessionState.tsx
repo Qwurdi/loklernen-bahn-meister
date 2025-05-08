@@ -1,8 +1,7 @@
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-// QuestionCategory type might not be needed if we rely on categoryName string
-// import { QuestionCategory } from "@/types/questions"; 
 
 interface EmptySessionStateProps {
   categoryName?: string; // Added to use the name passed from LearningSessionPage

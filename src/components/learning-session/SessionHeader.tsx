@@ -1,39 +1,33 @@
+
+import React from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, List } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { QuestionCategory } from "@/types/questions";
+import { ChevronLeft } from "lucide-react";
 
 interface SessionHeaderProps {
   sessionTitle: string;
-  categoryParam?: QuestionCategory; // Made categoryParam optional
+  categoryParam?: string; // Will be unused now that we have the resolved title
   isMobile: boolean;
 }
 
-export default function SessionHeader({ 
-  sessionTitle, 
-  categoryParam, 
-  isMobile 
-}: SessionHeaderProps) {
-  const navigate = useNavigate();
-
-  // Determine the display title based on whether categoryParam is provided
-  const displayTitle = categoryParam ? `${sessionTitle}: ${categoryParam}` : sessionTitle;
-
+export default function SessionHeader({ sessionTitle, isMobile }: SessionHeaderProps) {
   return (
-    <header className="flex items-center justify-between p-4 bg-gray-800 text-white">
-      <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-        <ChevronLeft className="h-6 w-6" />
-      </Button>
-      <h1 className="text-lg font-semibold truncate px-2">
-        {displayTitle} 
-      </h1>
-      {isMobile ? (
-        <Button variant="ghost" size="icon" onClick={() => navigate("/cards")}>
-          <List className="h-6 w-6" />
-        </Button>
-      ) : (
-        <div style={{ width: '40px' }} /> // Placeholder to balance the header
-      )}
-    </header>
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center">
+        <Link to="/karteikarten">
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`${isMobile ? "px-2" : ""} text-white hover:bg-gray-800`}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            {!isMobile && <span className="ml-2">Zurück</span>}
+          </Button>
+        </Link>
+        <h2 className={`${isMobile ? "text-md" : "text-xl"} font-semibold ml-2 text-white`}>
+          {sessionTitle}
+        </h2>
+      </div>
+    </div>
   );
 }

@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Question, QuestionCategory } from '@/types/questions';
@@ -13,8 +14,8 @@ import {
 } from './services';
 
 export function useSpacedRepetition(
-  category: QuestionCategory, 
-  subcategory?: string,
+  category: QuestionCategory | null, 
+  subcategory?: string | null,
   options: SpacedRepetitionOptions = {}
 ): SpacedRepetitionResult {
   const { user } = useAuth();
@@ -37,8 +38,8 @@ export function useSpacedRepetition(
         // For non-authenticated users, load questions in practice mode
         console.log(`Loading practice questions for guest user with category=${category}, subcategory=${subcategory}, regulation=${regulationCategory}, batchSize=${batchSize}`);
         const practiceQuestions = await fetchPracticeQuestions(
-          category,
-          subcategory,
+          category as QuestionCategory, // Cast to QuestionCategory since it could be null
+          subcategory || undefined,
           regulationCategory,
           batchSize
         );
@@ -49,8 +50,8 @@ export function useSpacedRepetition(
 
         if (options.practiceMode) {
           const practiceQuestions = await fetchPracticeQuestions(
-            category, 
-            subcategory, 
+            category as QuestionCategory, // Cast to QuestionCategory since it could be null
+            subcategory || undefined, 
             regulationCategory, 
             batchSize
           );
@@ -65,7 +66,12 @@ export function useSpacedRepetition(
           setProgress(boxProgress);
         } else {
           // Regular spaced repetition mode for authenticated users
-          const filteredProgressData = await fetchUserProgress(user.id, category, subcategory, regulationCategory);
+          const filteredProgressData = await fetchUserProgress(
+            user.id, 
+            category as QuestionCategory, // Cast to QuestionCategory since it could be null
+            subcategory || undefined, 
+            regulationCategory
+          );
           const questionsWithProgress = filteredProgressData
             .filter(p => p.questions) // Ensure questions exist
             .map(p => transformQuestion(p.questions));
@@ -83,8 +89,8 @@ export function useSpacedRepetition(
 
             const neededNewQuestions = batchSize - questionsWithProgress.length;
             const newQuestions = await fetchNewQuestions(
-              category, 
-              subcategory, 
+              category as QuestionCategory, // Cast to QuestionCategory since it could be null
+              subcategory || undefined, 
               regulationCategory, 
               questionIdsWithProgress, 
               neededNewQuestions // Fetch only the remaining number of questions needed
@@ -114,7 +120,7 @@ export function useSpacedRepetition(
     loadDueQuestions();
   }, [loadDueQuestions]);
 
-  // New function - Submit answer without immediate reload
+  // Submit answer without immediate reload
   const submitAnswer = async (questionId: string, score: number) => {
     if (!user) return;
 

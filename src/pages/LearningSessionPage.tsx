@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom"; // Added useLocation
+import { useNavigate, useLocation } from "react-router-dom"; 
 import { useSpacedRepetition } from "@/hooks/spaced-repetition";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -12,15 +13,15 @@ import EmptySessionState from "@/components/learning-session/EmptySessionState";
 import SessionCompleteState from "@/components/learning-session/SessionCompleteState";
 import CardStackSession from "@/components/learning-session/CardStackSession";
 import { Question } from "@/types/questions";
-import { useCategories } from "@/hooks/useCategories"; // Added useCategories
-import { Category } from "@/api/categories/types"; // Added Category type
+import { useCategories } from "@/hooks/useCategories"; 
+import { Category } from "@/api/categories/types"; 
 
 export default function LearningSessionPage() {
   console.log("LearningSessionPage: Initializing component");
 
   const { user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation(); // Added
+  const location = useLocation(); 
   const isMobile = useIsMobile();
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -28,9 +29,9 @@ export default function LearningSessionPage() {
   const [sessionCards, setSessionCards] = useState<Question[]>([]);
   const [sessionFinished, setSessionFinished] = useState(false);
 
-  const { categories, isLoading: categoriesLoading, error: categoriesError } = useCategories(); // Added
-  const [categoryRequiresAuth, setCategoryRequiresAuth] = useState<boolean | null>(null); // Added
-  const [categoryFound, setCategoryFound] = useState<boolean | null>(null); // Added
+  const { categories, isLoading: categoriesLoading, error: categoriesError } = useCategories(); 
+  const [categoryRequiresAuth, setCategoryRequiresAuth] = useState<boolean | null>(null); 
+  const [categoryFound, setCategoryFound] = useState<boolean | null>(null); 
 
   // Get session parameters from URL
   const {
@@ -38,61 +39,79 @@ export default function LearningSessionPage() {
     subcategoryParam,
     regulationParam,
     boxParam,
-    sessionTitle
+    sessionTitle,
+    isDueCardsView
   } = useSessionParams();
 
   console.log("Learning session parameters:", {
     category: categoryParam,
     subcategory: subcategoryParam,
     regulation: regulationParam,
-    box: boxParam
+    box: boxParam,
+    isDueCardsView
   });
 
   // Effect to check category and authentication requirements
   useEffect(() => {
-    if (categoriesLoading || !categoryParam) {
+    if (categoriesLoading) {
       setCategoryFound(null);
       setCategoryRequiresAuth(null);
       return;
     }
 
-    const currentCategory = categories.find(
-      (cat: Category) => cat.name === categoryParam || cat.id === categoryParam
-    );
-
-    if (currentCategory) {
+    // If we're in a due cards view, we don't need to validate category existence
+    if (isDueCardsView) {
+      console.log("Due cards view - skipping category validation");
       setCategoryFound(true);
-      const requiresAuth = !!currentCategory.requiresAuth;
-      setCategoryRequiresAuth(requiresAuth);
-      if (requiresAuth && !user) {
-        toast.info("Für diese Kategorie ist eine Anmeldung erforderlich.", {
-          description: "Bitte melde dich an, um auf diese Lernkarten zuzugreifen.",
-        });
-        navigate("/login", { replace: true, state: { from: location.pathname } });
+      setCategoryRequiresAuth(false);
+      return;
+    }
+
+    // Only validate if we have a specific categoryParam
+    if (categoryParam) {
+      const currentCategory = categories.find(
+        (cat: Category) => cat.name === categoryParam || cat.id === categoryParam
+      );
+
+      if (currentCategory) {
+        setCategoryFound(true);
+        const requiresAuth = !!currentCategory.requiresAuth;
+        setCategoryRequiresAuth(requiresAuth);
+        if (requiresAuth && !user) {
+          toast.info("Für diese Kategorie ist eine Anmeldung erforderlich.", {
+            description: "Bitte melde dich an, um auf diese Lernkarten zuzugreifen.",
+          });
+          navigate("/login", { replace: true, state: { from: location.pathname } });
+        }
+      } else {
+        setCategoryFound(false);
+        setCategoryRequiresAuth(null);
       }
     } else {
-      setCategoryFound(false);
-      setCategoryRequiresAuth(null);
+      // No category provided but not in a due cards view
+      // This is an edge case that should be handled
+      setCategoryFound(true);
+      setCategoryRequiresAuth(false);
     }
-  }, [categories, categoriesLoading, categoryParam, user, navigate, location, sessionTitle]);
-
+  }, [categories, categoriesLoading, categoryParam, user, navigate, location, isDueCardsView]);
 
   // Pass both category, subcategory and regulation preference to the hook
   // Use optimized batch size of 15 cards per session
   const {
-    loading: questionsLoading, // Renamed from 'loading'
+    loading: questionsLoading,
     dueQuestions,
     submitAnswer,
     applyPendingUpdates,
     pendingUpdatesCount
   } = useSpacedRepetition(
-    categoryParam,
+    // For due cards view, don't filter by category
+    isDueCardsView ? null : categoryParam,
     subcategoryParam,
     {
       practiceMode: false,
       regulationCategory: regulationParam,
       boxNumber: boxParam,
-      batchSize: 15 // Ideal batch size for balance between performance and cognitive load
+      batchSize: 15
     }
   );
 
@@ -178,7 +197,11 @@ export default function LearningSessionPage() {
   if (!sessionCards.length && (categoryFound === true || !categoryParam)) {
     return (
       <SessionContainer isMobile={isMobile}>
-        <EmptySessionState categoryParam={categoryParam} />
+        <EmptySessionState message={
+          isDueCardsView 
+            ? "Es sind keine fälligen Karten vorhanden."
+            : `Keine Karten für "${sessionTitle}" verfügbar.`
+        } />
       </SessionContainer>
     );
   }
@@ -199,7 +222,7 @@ export default function LearningSessionPage() {
 
   // Render main learning session UI with our new card stack
   // This part should only render if a category is resolved (or no categoryParam) and cards are ready
-  if ((categoryFound === true && (categoryRequiresAuth === false || (categoryRequiresAuth === true && !!user))) || !categoryParam ) {
+  if ((categoryFound === true && (categoryRequiresAuth === false || (categoryRequiresAuth === true && !!user))) || isDueCardsView) {
      if (sessionCards.length > 0) { // Ensure cards are loaded before rendering stack
         return (
             <SessionContainer isMobile={isMobile} fullHeight={isMobile}>
@@ -221,16 +244,19 @@ export default function LearningSessionPage() {
             </main>
             </SessionContainer>
         );
-     } else if (!questionsLoading) { // If not loading and no cards, show empty state (already handled above, but as a fallback)
+     } else if (!questionsLoading) { // If not loading and no cards, show empty state
         return (
             <SessionContainer isMobile={isMobile}>
-                <EmptySessionState categoryParam={categoryParam} />
+                <EmptySessionState message={
+                  isDueCardsView 
+                    ? "Es sind keine fälligen Karten vorhanden."
+                    : `Keine Karten für "${sessionTitle}" verfügbar.`
+                } />
             </SessionContainer>
         );
      }
   }
   
   // Fallback or if still resolving state, show loading.
-  // This helps prevent rendering nothing if conditions are missed.
   return <FlashcardLoadingState />;
 }

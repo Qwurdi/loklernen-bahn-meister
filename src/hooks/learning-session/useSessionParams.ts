@@ -4,12 +4,13 @@ import { QuestionCategory } from "@/types/questions";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 
 interface SessionParams {
-  categoryParam: QuestionCategory;
+  categoryParam: QuestionCategory | null;  // Changed to allow null for due cards view
   subcategoryParam: string | null;
   regulationParam: string;
   boxParam?: number;
   sessionTitle: string;
-  practiceMode: boolean; // Flag für Übungsmodus
+  practiceMode: boolean;
+  isDueCardsView: boolean; // New flag to identify due cards view
 }
 
 export function useSessionParams(): SessionParams {
@@ -17,11 +18,17 @@ export function useSessionParams(): SessionParams {
   const { regulationPreference } = useUserPreferences();
   
   // Get category, subcategory, regulation preference and box number from URL parameters
-  const categoryParam = searchParams.get("category") as QuestionCategory || "Signale";
+  const categoryParamRaw = searchParams.get("category");
   const subcategoryParam = searchParams.get("subcategory");
   const regulationParam = searchParams.get("regelwerk") || regulationPreference;
   const boxParam = searchParams.get("box") ? parseInt(searchParams.get("box") || "0") : undefined;
   const practiceMode = searchParams.get("practice") === "true";
+
+  // Determine if we're in a due cards view (no specific category/subcategory)
+  const isDueCardsView = !categoryParamRaw && !subcategoryParam;
+
+  // Cast to QuestionCategory if provided, otherwise null
+  const categoryParam = categoryParamRaw as QuestionCategory | null;
 
   // Log params for debugging
   console.log("Session Params:", {
@@ -29,7 +36,8 @@ export function useSessionParams(): SessionParams {
     subcategory: subcategoryParam,
     regulation: regulationParam,
     box: boxParam,
-    practice: practiceMode
+    practice: practiceMode,
+    isDueCardsView
   });
 
   // Create a more descriptive title based on parameters
@@ -46,6 +54,10 @@ export function useSessionParams(): SessionParams {
     
     if (subcategoryParam) {
       title += `${subcategoryParam}`;
+    } else if (isDueCardsView) {
+      title += 'Fällige Karten';
+    } else if (categoryParam) {
+      title += `${categoryParam}`; 
     } else {
       title += 'Fällige Karten';
     }
@@ -66,6 +78,7 @@ export function useSessionParams(): SessionParams {
     regulationParam,
     boxParam,
     sessionTitle,
-    practiceMode
+    practiceMode,
+    isDueCardsView
   };
 }

@@ -8,7 +8,7 @@ import { transformQuestion } from '../utils';
  */
 export async function fetchUserProgress(
   userId: string,
-  category: QuestionCategory,
+  category?: QuestionCategory | null,
   subcategory?: string,
   regulationCategory: string = "all"
 ) {
@@ -30,9 +30,11 @@ export async function fetchUserProgress(
   let filteredProgressData = progressData || [];
   console.log("Got progress data:", filteredProgressData.length, "items");
   
-  // Filter by category
-  filteredProgressData = filteredProgressData.filter(p => 
-    p.questions?.category === category);
+  // Filter by category if specified
+  if (category) {
+    filteredProgressData = filteredProgressData.filter(p => 
+      p.questions?.category === category);
+  }
   
   // Filter by subcategory if specified
   if (subcategory) {
@@ -58,20 +60,22 @@ export async function fetchUserProgress(
  * Fetches new questions that the user hasn't seen yet
  */
 export async function fetchNewQuestions(
-  category: QuestionCategory,
+  category?: QuestionCategory | null,
   subcategory?: string,
   regulationCategory: string = "all",
   questionIdsWithProgress: string[] = [],
-  batchSize: number = 36  // Changed from 50 to 36 for consistency
+  batchSize: number = 36
 ) {
   console.log("Fetching new questions for category:", category, "subcategory:", subcategory, "regulation:", regulationCategory);
   // Build the query for new questions
-  let newQuestionsQuery = supabase
-    .from('questions')
-    .select('*')
-    .eq('category', category)
-    .limit(batchSize);
+  let newQuestionsQuery = supabase.from('questions').select('*');
     
+  // Filter by category if specified
+  if (category) {
+    newQuestionsQuery = newQuestionsQuery.eq('category', category);
+  }
+    
+  // Filter by subcategory if specified
   if (subcategory) {
     newQuestionsQuery = newQuestionsQuery.eq('sub_category', subcategory);
   }
@@ -82,6 +86,9 @@ export async function fetchNewQuestions(
       `regulation_category.eq.${regulationCategory},regulation_category.eq.both,regulation_category.is.null`
     );
   }
+
+  // Add limit and order
+  newQuestionsQuery = newQuestionsQuery.limit(batchSize);
 
   const { data: newQuestionsData, error: newQuestionsError } = await newQuestionsQuery;
   
@@ -106,19 +113,21 @@ export async function fetchNewQuestions(
  * Fetches questions for practice mode
  */
 export async function fetchPracticeQuestions(
-  category: QuestionCategory,
+  category?: QuestionCategory | null,
   subcategory?: string,
   regulationCategory: string = "all",
-  batchSize: number = 36  // Changed from 50 to 36 for consistency
+  batchSize: number = 36
 ) {
   console.log("Practice mode: Fetching questions for category:", category, "subcategory:", subcategory, "regulation:", regulationCategory);
   
-  let query = supabase
-    .from('questions')
-    .select('*')
-    .eq('category', category)
-    .limit(batchSize);
+  let query = supabase.from('questions').select('*');
     
+  // Filter by category if specified
+  if (category) {
+    query = query.eq('category', category);
+  }
+    
+  // Filter by subcategory if specified
   if (subcategory) {
     query = query.eq('sub_category', subcategory);
   }
@@ -127,6 +136,9 @@ export async function fetchPracticeQuestions(
   if (regulationCategory !== "all") {
     query = query.or(`regulation_category.eq.${regulationCategory},regulation_category.eq.both,regulation_category.is.null`);
   }
+
+  // Add limit
+  query = query.limit(batchSize);
 
   const { data: questions, error: questionsError } = await query;
 

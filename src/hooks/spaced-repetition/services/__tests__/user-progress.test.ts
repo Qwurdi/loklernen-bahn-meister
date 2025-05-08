@@ -1,5 +1,6 @@
+
 import { updateUserProgress, updateUserStats } from '../index';
-import { vi } from 'vitest';
+import { vi, describe, it, beforeEach, expect } from 'vitest';
 
 // Setup mocks
 vi.mock('@/integrations/supabase/client', () => ({

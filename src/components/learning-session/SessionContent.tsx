@@ -1,114 +1,119 @@
 
-import React from "react";
-import { AccessStatus } from "@/hooks/learning-session/useSessionAccess";
-import { Flashcard } from "@/hooks/spaced-repetition/types";
-import FlashcardLoadingState from "@/components/flashcards/FlashcardLoadingState";
-import EmptySessionState from "@/components/learning-session/EmptySessionState";
-import SessionCompleteState from "@/components/learning-session/SessionCompleteState";
-import CardStackSession from "@/components/learning-session/CardStackSession";
-import SessionHeader from "@/components/learning-session/SessionHeader";
+import React from 'react';
+import { AccessStatus } from '@/hooks/learning-session/types';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import EmptySessionState from './EmptySessionState';
+import SessionCompleteState from './SessionCompleteState';
+import CardStackSession from './CardStackSession';
 
 interface SessionContentProps {
   accessStatus: AccessStatus;
-  categoriesLoading: boolean;
-  questionsLoading: boolean;
-  sessionCards: Flashcard[];
-  sessionTitle: string;
-  isMobile: boolean;
-  currentIndex: number;
-  setCurrentIndex: (index: number) => void;
-  correctCount: number;
-  totalCards: number;
-  sessionFinished: boolean;
-  pendingUpdatesCount: number;
-  incorrectCardIdsInCurrentSession?: number[];
-  onAnswer: (questionId: string, score: number) => Promise<void>;
+  loading: boolean;
+  isEmpty: boolean;
+  isComplete: boolean;
+  categoryId?: string;
+  subcategory?: string;
+  totalQuestions: number;
+  answeredCount: number;
+  loadingMessage?: string;
+  onNext: () => void;
   onComplete: () => void;
-  onRestart: () => Promise<void>;
-  onRestartIncorrect: () => Promise<void>;
+  onReset: () => void;
 }
 
-export default function SessionContent({
+const SessionContent = ({
   accessStatus,
-  categoriesLoading,
-  questionsLoading,
-  sessionCards,
-  sessionTitle,
-  isMobile,
-  currentIndex,
-  setCurrentIndex,
-  correctCount,
-  totalCards,
-  sessionFinished,
-  pendingUpdatesCount,
-  incorrectCardIdsInCurrentSession = [],
-  onAnswer,
+  loading,
+  isEmpty,
+  isComplete,
+  categoryId,
+  subcategory,
+  totalQuestions,
+  answeredCount,
+  loadingMessage = 'Lade Karteikarten...',
+  onNext,
   onComplete,
-  onRestart,
-  onRestartIncorrect
-}: SessionContentProps) {
-
-  // Render loading states based on accessStatus
-  if (accessStatus === "pending" || categoriesLoading) {
-    return <FlashcardLoadingState />;
-  }
-
-  if (accessStatus === "not_found") {
+  onReset
+}: SessionContentProps) => {
+  // Loading state
+  if (loading) {
     return (
-      <EmptySessionState message={`Die angeforderte Kategorie oder Kategorien wurden nicht gefunden.`} />
+      <div className="flex flex-col items-center justify-center h-64">
+        <LoadingSpinner />
+        <p className="mt-4 text-gray-500">{loadingMessage}</p>
+      </div>
     );
   }
 
-  if (accessStatus === "denied_auth" || accessStatus === "denied_pro") {
-    // This state is brief due to navigation, but a loading indicator is good.
-    return <FlashcardLoadingState />;
-  }
-  
-  // Render loading state for questions if access is allowed or no specific selection
-  if (questionsLoading && (accessStatus === "allowed" || accessStatus === "no_selection")) {
-    return <FlashcardLoadingState />;
+  // Access denied states
+  if (accessStatus === 'pending') {
+    return (
+      <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <h2 className="text-xl font-medium text-yellow-800">Zugriff ausstehend</h2>
+        <p className="mt-2 text-yellow-700">Diese Kategorie wird noch für das Lernen vorbereitet.</p>
+      </div>
+    );
   }
 
-  // Render empty state when no cards are available
-  if ((accessStatus === "allowed" || accessStatus === "no_selection") && !sessionCards.length && !questionsLoading) {
-    return <EmptySessionState categoryName={sessionTitle || "Auswahl"} />;
-  }
-  
-  // Render finished session state
-  if (sessionFinished) {
+  if (accessStatus === 'not_found') {
     return (
-      <SessionCompleteState
-        correctCount={correctCount}
-        totalCards={totalCards}
-        onRestart={onRestart}
-        onRestartIncorrect={onRestartIncorrect}
-        incorrectCardIds={incorrectCardIdsInCurrentSession}
-        pendingUpdates={pendingUpdatesCount > 0}
+      <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
+        <h2 className="text-xl font-medium text-red-800">Kategorie nicht gefunden</h2>
+        <p className="mt-2 text-red-700">Die angeforderte Kategorie existiert nicht.</p>
+      </div>
+    );
+  }
+
+  if (accessStatus === 'denied_category') {
+    return (
+      <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
+        <h2 className="text-xl font-medium text-red-800">Zugriff verweigert</h2>
+        <p className="mt-2 text-red-700">Sie haben keinen Zugriff auf diese Kategorie.</p>
+      </div>
+    );
+  }
+
+  if (accessStatus === 'denied_pro') {
+    return (
+      <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
+        <h2 className="text-xl font-medium text-red-800">Pro-Funktion</h2>
+        <p className="mt-2 text-red-700">Diese Funktion erfordert ein Pro-Abonnement.</p>
+      </div>
+    );
+  }
+
+  if (accessStatus === 'no_selection') {
+    return (
+      <div className="p-6 bg-blue-50 border border-blue-200 rounded-lg">
+        <h2 className="text-xl font-medium text-blue-800">Keine Kategorie ausgewählt</h2>
+        <p className="mt-2 text-blue-700">Bitte wählen Sie eine Kategorie zum Lernen aus.</p>
+      </div>
+    );
+  }
+
+  // Empty state
+  if (isEmpty) {
+    return <EmptySessionState categoryId={categoryId} subcategory={subcategory} />;
+  }
+
+  // Complete state
+  if (isComplete) {
+    return (
+      <SessionCompleteState 
+        totalQuestions={totalQuestions} 
+        answeredCount={answeredCount}
+        onReset={onReset} 
       />
     );
   }
 
-  // Render main learning session UI with card stack
-  if ((accessStatus === "allowed" || accessStatus === "no_selection") && sessionCards.length > 0) {
-    return (
-      <main className={`flex-1 ${isMobile ? 'px-0 pt-2 pb-16 overflow-hidden flex flex-col' : 'container px-4 py-8'}`}>
-        <SessionHeader
-          sessionTitle={sessionTitle}
-          isMobile={isMobile}
-        />
-        <CardStackSession
-          sessionCards={sessionCards}
-          currentIndex={currentIndex}
-          setCurrentIndex={setCurrentIndex}
-          onAnswer={onAnswer}
-          onComplete={onComplete}
-          isMobile={isMobile}
-        />
-      </main>
-    );
-  }
-  
-  // Default fallback loading state if no other condition is met
-  console.log("Fallback loading state rendered, accessStatus:", accessStatus);
-  return <FlashcardLoadingState />;
-}
+  // Normal card stack view
+  return (
+    <CardStackSession
+      onNext={onNext}
+      onComplete={onComplete}
+    />
+  );
+};
+
+export default SessionContent;

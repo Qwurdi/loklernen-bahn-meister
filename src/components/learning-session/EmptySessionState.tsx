@@ -7,16 +7,24 @@ import { ChevronLeft, RefreshCw } from "lucide-react";
 interface EmptySessionStateProps {
   message?: string;
   categoryParam?: string | null;
+  isGuestLearningCategory?: boolean;
 }
 
-const EmptySessionState: React.FC<EmptySessionStateProps> = ({ message, categoryParam }) => {
+const EmptySessionState: React.FC<EmptySessionStateProps> = ({ 
+  message, 
+  categoryParam,
+  isGuestLearningCategory = false
+}) => {
   const navigate = useNavigate();
 
   const defaultMessage = categoryParam
     ? `Keine Karten für die Kategorie "${categoryParam}" verfügbar.`
     : "Keine Karten zum Lernen verfügbar.";
 
-  const displayMessage = message || defaultMessage;
+  // Special message for guests trying to access categories requiring authentication
+  const displayMessage = isGuestLearningCategory
+    ? "Bitte melde dich an, um auf diese Karten zuzugreifen."
+    : (message || defaultMessage);
 
   return (
     <div className="flex flex-col items-center justify-center p-8">
@@ -34,13 +42,22 @@ const EmptySessionState: React.FC<EmptySessionStateProps> = ({ message, category
             Zurück zur Übersicht
           </Button>
           
-          <Button
-            onClick={() => window.location.reload()}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Aktualisieren
-          </Button>
+          {isGuestLearningCategory ? (
+            <Button 
+              onClick={() => navigate("/login")} 
+              className="flex items-center gap-2"
+            >
+              Anmelden
+            </Button>
+          ) : (
+            <Button
+              onClick={() => window.location.reload()}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Aktualisieren
+            </Button>
+          )}
         </div>
       </div>
     </div>

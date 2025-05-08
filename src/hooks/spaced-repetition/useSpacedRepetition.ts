@@ -28,6 +28,7 @@ export function useSpacedRepetition(
   const regulationCategory = options.regulationCategory || "all";
   const boxNumber = options.boxNumber;
   const batchSize = options.batchSize || 15;
+  const includeAllSubcategories = options.includeAllSubcategories || false;
   
   const loadDueQuestions = useCallback(async () => {
     setLoading(true);
@@ -36,28 +37,35 @@ export function useSpacedRepetition(
     try {
       if (!user) {
         // For non-authenticated users, load questions in practice mode
-        console.log(`Loading practice questions for guest user with category=${category}, subcategory=${subcategory}, regulation=${regulationCategory}, batchSize=${batchSize}`);
+        console.log(`Loading practice questions for guest user with category=${category}, subcategory=${subcategory}, regulation=${regulationCategory}, batchSize=${batchSize}, includeAllSubcategories=${includeAllSubcategories}`);
         const practiceQuestions = await fetchPracticeQuestions(
           category as QuestionCategory, // Cast to QuestionCategory since it could be null
           subcategory || undefined,
           regulationCategory,
-          batchSize
+          batchSize,
+          includeAllSubcategories
         );
         setDueQuestions(practiceQuestions);
       } else {
         // Logic for authenticated users
-        console.log(`Loading questions for authenticated user: category=${category}, subcategory=${subcategory}, regulation=${regulationCategory}, practiceMode=${options.practiceMode}, boxNumber=${boxNumber}, batchSize=${batchSize}`);
+        console.log(`Loading questions for authenticated user: category=${category}, subcategory=${subcategory}, regulation=${regulationCategory}, practiceMode=${options.practiceMode}, boxNumber=${boxNumber}, batchSize=${batchSize}, includeAllSubcategories=${includeAllSubcategories}`);
 
         if (options.practiceMode) {
           const practiceQuestions = await fetchPracticeQuestions(
             category as QuestionCategory, // Cast to QuestionCategory since it could be null
             subcategory || undefined, 
             regulationCategory, 
-            batchSize
+            batchSize,
+            includeAllSubcategories
           );
           setDueQuestions(practiceQuestions);
         } else if (boxNumber !== undefined) {
-          const boxProgress = await fetchQuestionsByBox(user.id, boxNumber);
+          const boxProgress = await fetchQuestionsByBox(
+            user.id, 
+            boxNumber, 
+            regulationCategory,
+            includeAllSubcategories
+          );
           const questionsFromBox = boxProgress
             .filter(p => p.questions) // Ensure questions exist
             .map(p => transformQuestion(p.questions));
@@ -70,7 +78,8 @@ export function useSpacedRepetition(
             user.id, 
             category as QuestionCategory, // Cast to QuestionCategory since it could be null
             subcategory || undefined, 
-            regulationCategory
+            regulationCategory,
+            includeAllSubcategories
           );
           const questionsWithProgress = filteredProgressData
             .filter(p => p.questions) // Ensure questions exist
@@ -93,7 +102,8 @@ export function useSpacedRepetition(
               subcategory || undefined, 
               regulationCategory, 
               questionIdsWithProgress, 
-              neededNewQuestions // Fetch only the remaining number of questions needed
+              neededNewQuestions, // Fetch only the remaining number of questions needed
+              includeAllSubcategories
             );
 
             const allQuestions = [
@@ -114,7 +124,7 @@ export function useSpacedRepetition(
     } finally {
       setLoading(false);
     }
-  }, [user, category, subcategory, options.practiceMode, regulationCategory, boxNumber, batchSize]);
+  }, [user, category, subcategory, options.practiceMode, regulationCategory, boxNumber, batchSize, includeAllSubcategories]);
 
   useEffect(() => {
     loadDueQuestions();

@@ -10,9 +10,11 @@ export async function fetchUserProgress(
   userId: string,
   category?: QuestionCategory | null,
   subcategory?: string,
-  regulationCategory: string = "all"
+  regulationCategory: string = "all",
+  includeAllSubcategories: boolean = false
 ) {
   console.log("Loading due questions for user", userId, "with regulation", regulationCategory, "and subcategory", subcategory || "all");
+  console.log("Include all subcategories:", includeAllSubcategories);
   
   // First get progress data for questions that are due
   const { data: progressData, error: progressError } = await supabase
@@ -30,8 +32,17 @@ export async function fetchUserProgress(
   let filteredProgressData = progressData || [];
   console.log("Got progress data:", filteredProgressData.length, "items");
   
-  // Filter by category if specified
-  if (category) {
+  // Filter by category if specified and not loading all subcategories
+  if (category && !includeAllSubcategories) {
+    filteredProgressData = filteredProgressData.filter(p => 
+      p.questions?.category === category);
+  } else if (category && includeAllSubcategories) {
+    // For parent categories, include all questions where parent_category matches
+    console.log(`Loading all subcategories for parent category: ${category}`);
+    
+    // Need to match on parent_category (which would be "Signale" or "Betriebsdienst")
+    // For database structure where we don't have parent_category column in questions table,
+    // we can just use the category field directly
     filteredProgressData = filteredProgressData.filter(p => 
       p.questions?.category === category);
   }
@@ -64,14 +75,22 @@ export async function fetchNewQuestions(
   subcategory?: string,
   regulationCategory: string = "all",
   questionIdsWithProgress: string[] = [],
-  batchSize: number = 36
+  batchSize: number = 36,
+  includeAllSubcategories: boolean = false
 ) {
   console.log("Fetching new questions for category:", category, "subcategory:", subcategory, "regulation:", regulationCategory);
+  console.log("Include all subcategories:", includeAllSubcategories);
+  
   // Build the query for new questions
   let newQuestionsQuery = supabase.from('questions').select('*');
     
-  // Filter by category if specified
-  if (category) {
+  // Filter by category if specified and not loading all subcategories
+  if (category && !includeAllSubcategories) {
+    newQuestionsQuery = newQuestionsQuery.eq('category', category);
+  } else if (category && includeAllSubcategories) {
+    // For parent categories, include all questions where category matches
+    // This assumes we have direct parent categories in the database
+    // If we had a parent_category field, we would filter on that instead
     newQuestionsQuery = newQuestionsQuery.eq('category', category);
   }
     
@@ -116,14 +135,21 @@ export async function fetchPracticeQuestions(
   category?: QuestionCategory | null,
   subcategory?: string,
   regulationCategory: string = "all",
-  batchSize: number = 36
+  batchSize: number = 36,
+  includeAllSubcategories: boolean = false
 ) {
   console.log("Practice mode: Fetching questions for category:", category, "subcategory:", subcategory, "regulation:", regulationCategory);
+  console.log("Include all subcategories:", includeAllSubcategories);
   
   let query = supabase.from('questions').select('*');
     
-  // Filter by category if specified
-  if (category) {
+  // Filter by category if specified and not loading all subcategories  
+  if (category && !includeAllSubcategories) {
+    query = query.eq('category', category);
+  } else if (category && includeAllSubcategories) {
+    // For parent categories like "Signale" or "Betriebsdienst",
+    // we would ideally filter on parent_category field
+    // Without that field, we're using category directly
     query = query.eq('category', category);
   }
     
@@ -156,9 +182,11 @@ export async function fetchPracticeQuestions(
 export async function fetchQuestionsByBox(
   userId: string,
   boxNumber: number,
-  regulationCategory: string = "all"
+  regulationCategory: string = "all",
+  includeAllSubcategories: boolean = false
 ) {
   console.log(`Fetching questions for user ${userId} in box ${boxNumber} with regulation ${regulationCategory}`);
+  console.log("Include all subcategories:", includeAllSubcategories);
   
   const { data, error } = await supabase
     .from('user_progress')

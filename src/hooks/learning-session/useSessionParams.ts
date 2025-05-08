@@ -1,4 +1,3 @@
-
 import { useSearchParams } from "react-router-dom";
 import { QuestionCategory } from "@/types/questions";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
@@ -10,7 +9,7 @@ interface SessionParams {
   boxParam?: number;
   sessionTitle: string;
   practiceMode: boolean;
-  isDueCardsView: boolean; // New flag to identify due cards view
+  isDueCardsView: boolean; // Flag to identify due cards view
 }
 
 export function useSessionParams(): SessionParams {
@@ -40,6 +39,11 @@ export function useSessionParams(): SessionParams {
     isDueCardsView
   });
 
+  // Helper function to strip regulation info from category title for display
+  const stripRegulationInfo = (categoryName: string): string => {
+    return categoryName.replace(/\s*\((?:DS|DV)\s+301\)$/i, "");
+  };
+
   // Create a more descriptive title based on parameters
   const getSessionTitle = () => {
     let title = '';
@@ -57,7 +61,8 @@ export function useSessionParams(): SessionParams {
     } else if (isDueCardsView) {
       title += 'Fällige Karten';
     } else if (categoryParam) {
-      title += `${categoryParam}`; 
+      // Use category name for title display, but still keep any regulation info
+      title += `${categoryParam}`;
     } else {
       title += 'Fällige Karten';
     }

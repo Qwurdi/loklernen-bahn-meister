@@ -32,6 +32,7 @@ export default function LearningSessionPage() {
   const { categories, isLoading: categoriesLoading, error: categoriesError } = useCategories(); 
   const [categoryRequiresAuth, setCategoryRequiresAuth] = useState<boolean | null>(null); 
   const [categoryFound, setCategoryFound] = useState<boolean | null>(null); 
+  const [isParentCategory, setIsParentCategory] = useState<boolean>(false);
 
   // Get session parameters from URL
   const {
@@ -51,11 +52,20 @@ export default function LearningSessionPage() {
     isDueCardsView
   });
 
+  // Helper function to strip regulation info from category name
+  const stripRegulationInfo = (categoryName: string | null): string | null => {
+    if (!categoryName) return null;
+    
+    // Remove patterns like " (DS 301)" or " (DV 301)" from category name
+    return categoryName.replace(/\s*\((?:DS|DV)\s+301\)$/i, "");
+  };
+
   // Effect to check category and authentication requirements
   useEffect(() => {
     if (categoriesLoading) {
       setCategoryFound(null);
       setCategoryRequiresAuth(null);
+      setIsParentCategory(false);
       return;
     }
 
@@ -64,19 +74,49 @@ export default function LearningSessionPage() {
       console.log("Due cards view - skipping category validation");
       setCategoryFound(true);
       setCategoryRequiresAuth(false);
+      setIsParentCategory(false);
       return;
     }
 
     // Only validate if we have a specific categoryParam
     if (categoryParam) {
+      // Strip regulation information for comparing with database categories
+      const cleanCategoryName = stripRegulationInfo(categoryParam);
+      console.log("Clean category name for comparison:", cleanCategoryName);
+      
+      // Check if this is a parent category (Signale or Betriebsdienst)
+      if (cleanCategoryName === "Signale" || cleanCategoryName === "Betriebsdienst") {
+        console.log("Parent category detected:", cleanCategoryName);
+        setCategoryFound(true);
+        setIsParentCategory(true);
+        
+        // For parent categories, check auth requirements
+        const requiresAuth = cleanCategoryName === "Betriebsdienst";
+        setCategoryRequiresAuth(requiresAuth);
+        
+        // If authentication is required but user is not logged in
+        if (requiresAuth && !user) {
+          toast.info("Für diese Kategorie ist eine Anmeldung erforderlich.", {
+            description: "Bitte melde dich an, um auf diese Lernkarten zuzugreifen.",
+          });
+          navigate("/login", { replace: true, state: { from: location.pathname } });
+        }
+        return;
+      }
+      
+      // Look for the category in the database
       const currentCategory = categories.find(
-        (cat: Category) => cat.name === categoryParam || cat.id === categoryParam
+        (cat: Category) => 
+          cat.name === cleanCategoryName || 
+          cat.id === cleanCategoryName
       );
 
       if (currentCategory) {
         setCategoryFound(true);
+        setIsParentCategory(false);
         const requiresAuth = !!currentCategory.requiresAuth;
         setCategoryRequiresAuth(requiresAuth);
+        
         if (requiresAuth && !user) {
           toast.info("Für diese Kategorie ist eine Anmeldung erforderlich.", {
             description: "Bitte melde dich an, um auf diese Lernkarten zuzugreifen.",
@@ -86,12 +126,14 @@ export default function LearningSessionPage() {
       } else {
         setCategoryFound(false);
         setCategoryRequiresAuth(null);
+        setIsParentCategory(false);
       }
     } else {
       // No category provided but not in a due cards view
       // This is an edge case that should be handled
       setCategoryFound(true);
       setCategoryRequiresAuth(false);
+      setIsParentCategory(false);
     }
   }, [categories, categoriesLoading, categoryParam, user, navigate, location, isDueCardsView]);
 
@@ -104,14 +146,16 @@ export default function LearningSessionPage() {
     applyPendingUpdates,
     pendingUpdatesCount
   } = useSpacedRepetition(
-    // For due cards view, don't filter by category
-    isDueCardsView ? null : categoryParam,
+    // For due cards view or parent categories, don't filter by category or use clean category name
+    isDueCardsView ? null : (isParentCategory ? stripRegulationInfo(categoryParam) : categoryParam),
     subcategoryParam,
     {
       practiceMode: false,
       regulationCategory: regulationParam,
       boxNumber: boxParam,
-      batchSize: 15
+      batchSize: 15,
+      // For parent categories, fetch cards from all subcategories
+      includeAllSubcategories: isParentCategory
     }
   );
 
@@ -174,10 +218,10 @@ export default function LearningSessionPage() {
   }
 
   if (categoryParam && categoryFound === false && !categoriesLoading) {
+    const cleanCategoryName = stripRegulationInfo(categoryParam);
     return (
       <SessionContainer isMobile={isMobile}>
-        {/* Using EmptySessionState for simplicity, assuming it can handle a generic message or shows a relevant one */}
-        <EmptySessionState message={`Die Kategorie "${sessionTitle}" wurde nicht gefunden.`} />
+        <EmptySessionState message={`Die Kategorie "${cleanCategoryName}" wurde nicht gefunden.`} />
       </SessionContainer>
     );
   }
@@ -195,13 +239,27 @@ export default function LearningSessionPage() {
   // Render empty state when no cards are available
   // This covers: category found but no cards, or no categoryParam provided.
   if (!sessionCards.length && (categoryFound === true || !categoryParam)) {
+    // Special message for parent categories
+    let emptyMessage = isDueCardsView 
+      ? "Es sind keine fälligen Karten vorhanden."
+      : `Keine Karten für "${sessionTitle}" verfügbar.`;
+    
+    // Special message for parent categories
+    if (isParentCategory) {
+      const categoryName = stripRegulationInfo(categoryParam);
+      emptyMessage = `Keine Karten für die Kategorie "${categoryName}" verfügbar.`;
+      
+      if (categoryName === "Betriebsdienst") {
+        emptyMessage = "Für Betriebsdienst ist ein Konto erforderlich. Bitte melde dich an, um auf diese Kategorie zuzugreifen.";
+      }
+    }
+    
     return (
       <SessionContainer isMobile={isMobile}>
-        <EmptySessionState message={
-          isDueCardsView 
-            ? "Es sind keine fälligen Karten vorhanden."
-            : `Keine Karten für "${sessionTitle}" verfügbar.`
-        } />
+        <EmptySessionState 
+          message={emptyMessage}
+          isGuestLearningCategory={isParentCategory && categoryRequiresAuth === true && !user}
+        />
       </SessionContainer>
     );
   }

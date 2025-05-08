@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, List } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -6,7 +5,7 @@ import { QuestionCategory } from "@/types/questions";
 
 interface SessionHeaderProps {
   sessionTitle: string;
-  categoryParam: QuestionCategory;
+  categoryParam?: QuestionCategory; // Made categoryParam optional
   isMobile: boolean;
 }
 
@@ -16,46 +15,25 @@ export default function SessionHeader({
   isMobile 
 }: SessionHeaderProps) {
   const navigate = useNavigate();
-  
-  const getCategoryPath = () => {
-    return categoryParam === "Betriebsdienst" 
-      ? "/karteikarten/betriebsdienst" 
-      : "/karteikarten";
-  };
 
-  // Mobile-specific compact header
-  if (isMobile) {
-    return (
-      <div className="px-3 pt-2 pb-1">
-        <h2 className="text-xl font-semibold">{sessionTitle}</h2>
-      </div>
-    );
-  }
+  // Determine the display title based on whether categoryParam is provided
+  const displayTitle = categoryParam ? `${sessionTitle}: ${categoryParam}` : sessionTitle;
 
-  // Desktop header with back and category buttons
   return (
-    <div className="flex items-center justify-between mb-6">
-      <Button
-        variant="outline"
-        size="sm"
-        className="flex items-center border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800"
-        onClick={() => navigate(getCategoryPath())}
-      >
-        <ChevronLeft className="h-4 w-4 mr-1" />
-        Zurück
+    <header className="flex items-center justify-between p-4 bg-gray-800 text-white">
+      <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+        <ChevronLeft className="h-6 w-6" />
       </Button>
-      
-      <h2 className="text-xl font-semibold">{sessionTitle}</h2>
-      
-      <Button
-        variant="ghost"
-        size="sm"
-        className="flex items-center text-white hover:bg-gray-800"
-        onClick={() => navigate(getCategoryPath())}
-      >
-        <List className="h-4 w-4 mr-1" />
-        Alle Kategorien
-      </Button>
-    </div>
+      <h1 className="text-lg font-semibold truncate px-2">
+        {displayTitle} 
+      </h1>
+      {isMobile ? (
+        <Button variant="ghost" size="icon" onClick={() => navigate("/cards")}>
+          <List className="h-6 w-6" />
+        </Button>
+      ) : (
+        <div style={{ width: '40px' }} /> // Placeholder to balance the header
+      )}
+    </header>
   );
 }

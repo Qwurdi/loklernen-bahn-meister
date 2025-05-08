@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react"; // Added useMemo
 import { useNavigate, useLocation } from "react-router-dom"; // Added useLocation
 import { useSpacedRepetition } from "@/hooks/spaced-repetition";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,9 +14,13 @@ import CardStackSession from "@/components/learning-session/CardStackSession";
 import { Question } from "@/types/questions";
 import { useCategories } from "@/hooks/useCategories"; // Added useCategories
 import { Category } from "@/api/categories/types"; // Added Category type
+import { useToast, toast as globalToast } from "@/hooks/use-toast"; // Import toasts array
 
 // Define a new type for access status
 type AccessStatus = "pending" | "allowed" | "denied_auth" | "denied_pro" | "not_found" | "no_selection";
+
+// Define a constant for the toast ID
+const NO_CARDS_FOUND_TOAST_ID = "no-cards-found-toast";
 
 export default function LearningSessionPage() {
   console.log("LearningSessionPage: Initializing component");
@@ -25,6 +29,7 @@ export default function LearningSessionPage() {
   const navigate = useNavigate();
   const location = useLocation(); // Added
   const isMobile = useIsMobile();
+  const { toast, toasts } = useToast(); // Destructure toasts from useToast
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
@@ -44,10 +49,24 @@ export default function LearningSessionPage() {
     practiceMode
   } = useSessionParams();
 
-  // Combine single and multiple identifiers for the hook
-  const categoryIdentifiersForHook = multipleCategoryIdentifiers && multipleCategoryIdentifiers.length > 0 
-    ? multipleCategoryIdentifiers 
-    : (singleCategoryIdentifier ? [singleCategoryIdentifier] : []);
+  // Memoize categoryIdentifiersForHook to prevent re-renders
+  const categoryIdentifiersForHook = useMemo(() => {
+    if (multipleCategoryIdentifiers && multipleCategoryIdentifiers.length > 0) {
+      return multipleCategoryIdentifiers;
+    }
+    if (singleCategoryIdentifier) {
+      return [singleCategoryIdentifier];
+    }
+    return [];
+  }, [multipleCategoryIdentifiers, singleCategoryIdentifier]);
+
+  // Memoize options for useSpacedRepetition to prevent re-renders
+  const spacedRepetitionOptions = useMemo(() => ({
+    practiceMode: practiceMode,
+    regulationCategory: regulationParam,
+    boxNumber: boxParam,
+    batchSize: 15 // Ideal batch size for balance between performance and cognitive load
+  }), [practiceMode, regulationParam, boxParam]);
 
   useEffect(() => {
     setResolvedSessionTitle(initialSessionTitle); // Set initial title
@@ -168,13 +187,8 @@ export default function LearningSessionPage() {
     applyPendingUpdates,
     pendingUpdatesCount
   } = useSpacedRepetition(
-    categoryIdentifiersForHook, // Use the combined identifiers
-    {
-      practiceMode: practiceMode,
-      regulationCategory: regulationParam,
-      boxNumber: boxParam,
-      batchSize: 15 // Ideal batch size for balance between performance and cognitive load
-    }
+    categoryIdentifiersForHook, // Use memoized identifiers
+    spacedRepetitionOptions    // Use memoized options
   );
 
   console.log("LearningSessionPage: Loaded questions count:", dueQuestions?.length || 0, "for categories:", categoryIdentifiersForHook.join(', '));
@@ -193,6 +207,22 @@ export default function LearningSessionPage() {
       console.log("No due questions, session cards set to empty.");
     }
   }, [questionsLoading, dueQuestions, accessStatus]);
+
+  useEffect(() => {
+    if (
+      (accessStatus === "allowed" || accessStatus === "no_selection") &&
+      !questionsLoading &&
+      sessionCards.length === 0 &&
+      !toasts.some(t => t.id === NO_CARDS_FOUND_TOAST_ID && t.open)
+    ) {
+      toast({
+        id: NO_CARDS_FOUND_TOAST_ID,
+        title: "Keine Karten gefunden",
+        description: "Für deine Auswahl gibt es aktuell keine Lernkarten.",
+        variant: "destructive",
+      });
+    }
+  }, [questionsLoading, sessionCards, accessStatus, toast, toasts]); // Added sessionCards and accessStatus to dependencies
 
   const handleAnswer = async (questionId: string, score: number) => {
     // Consider scores >= 4 as correct
@@ -232,7 +262,7 @@ export default function LearningSessionPage() {
 
   // Render loading states based on accessStatus
   if (accessStatus === "pending" || (categoriesLoading && (singleCategoryIdentifier || multipleCategoryIdentifiers))) {
-    return <FlashcardLoadingState message="Lade Kategorieinformationen..." />;
+    return <FlashcardLoadingState />;
   }
 
   if (accessStatus === "not_found") {
@@ -245,12 +275,12 @@ export default function LearningSessionPage() {
 
   if (accessStatus === "denied_auth" || accessStatus === "denied_pro") {
     // This state is brief due to navigation, but a loading indicator is good.
-    return <FlashcardLoadingState message="Weiterleitung..." />;
+    return <FlashcardLoadingState />;
   }
   
   // Render loading state for questions if access is allowed or no specific selection
   if (questionsLoading && (accessStatus === "allowed" || accessStatus === "no_selection")) {
-    return <FlashcardLoadingState message="Lade Lernkarten..." />;
+    return <FlashcardLoadingState />;
   }
 
   // Render empty state when no cards are available (and access is allowed or no selection)
@@ -271,7 +301,6 @@ export default function LearningSessionPage() {
           totalCards={sessionCards.length}
           onRestart={handleRestart}
           pendingUpdates={pendingUpdatesCount > 0}
-          sessionTitle={resolvedSessionTitle}
         />
       </SessionContainer>
     );
@@ -285,7 +314,7 @@ export default function LearningSessionPage() {
         <main className={`flex-1 ${isMobile ? 'px-0 pt-2 pb-16 overflow-hidden flex flex-col' : 'container px-4 py-8'}`}>
           <SessionHeader
             sessionTitle={resolvedSessionTitle} // Use resolved title
-            // categoryParam={categoryForHook} // Pass the identifier used for fetching
+            categoryParam={categoryIdentifiersForHook} // Pass the identifier used for fetching
             isMobile={isMobile}
           />
           <CardStackSession
@@ -301,6 +330,7 @@ export default function LearningSessionPage() {
     );
   }
   
+  // Fallback if none of the above conditions met (e.g., still resolving or unexpected state)
   // Fallback if none of the above conditions met (e.g., still resolving or unexpected state)
   // or if accessStatus is an error type not yet resulting in navigation
   if (!questionsLoading && (accessStatus === "allowed" || accessStatus === "no_selection") && sessionCards.length === 0) {

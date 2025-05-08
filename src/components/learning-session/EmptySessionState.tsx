@@ -1,42 +1,56 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { QuestionCategory } from "@/types/questions";
+// QuestionCategory type might not be needed if we rely on categoryName string
+// import { QuestionCategory } from "@/types/questions"; 
 
 interface EmptySessionStateProps {
-  categoryParam?: QuestionCategory; // Made optional as message can be standalone
+  categoryName?: string; // Added to use the name passed from LearningSessionPage
   isGuestLearningCategory?: boolean;
-  message?: string; // New prop
+  message?: string; 
 }
 
-export default function EmptySessionState({ categoryParam, isGuestLearningCategory, message }: EmptySessionStateProps) {
+export default function EmptySessionState({ categoryName, isGuestLearningCategory, message }: EmptySessionStateProps) {
   const navigate = useNavigate();
   
-  const getCategoryPath = () => {
-    if (!categoryParam) return "/karteikarten"; // Default if no categoryParam
-    return categoryParam === "Betriebsdienst" 
-      ? "/karteikarten/betriebsdienst" 
-      : "/karteikarten";
-  };
+  // Simplified navigation path
+  const getCategoryPath = () => "/karteikarten";
 
-  let title = message ? "Information" : (isGuestLearningCategory ? "Keine Karten gefunden" : "Keine Karten fällig!");
-  let description = message ? message : (isGuestLearningCategory
-    ? "In der ausgewählten Kategorie wurden keine Karten gefunden. Bitte wähle eine andere Kategorie oder versuche es später erneut."
-    : "Aktuell sind keine Karten zur Wiederholung fällig. Schaue später wieder vorbei oder wähle eine Kategorie, um neue Karten zu lernen.");
+  let title: string;
+  let description: string;
 
-  if (message && !categoryParam) { // If it's a generic message not tied to a category context for navigation
-    // Potentially hide the button or change its text/destination
+  if (message) {
+    // If a specific message is provided, use it directly
+    title = "Information"; // Or a more generic title if message implies it
+    description = message;
+  } else if (isGuestLearningCategory) {
+    title = "Keine Karten gefunden";
+    description = `In der Kategorie "${categoryName || 'Auswahl'}" wurden keine Karten gefunden. Bitte wähle eine andere Kategorie oder versuche es später erneut.`;
+  } else {
+    // Default messages when no specific message prop is passed
+    if (categoryName && categoryName !== "Auswahl" && categoryName !== "Fällige Karten (Alle Kategorien)") {
+      title = `Keine Karten für "${categoryName}"`;
+      description = `Für "${categoryName}" sind aktuell keine Karten zur Wiederholung fällig oder es gibt keine neuen Karten zum Lernen. Schaue später wieder vorbei oder wähle eine andere Lernoption.`;
+    } else { // Covers "Auswahl", "Fällige Karten (Alle Kategorien)", or undefined categoryName
+      title = "Keine Karten fällig";
+      description = "Aktuell sind keine Karten zur Wiederholung fällig. Schaue später wieder vorbei oder wähle eine Kategorie, um neue Karten zu lernen.";
+    }
   }
+
+  // Determine if the button to navigate to categories should be shown
+  // Show if not a custom message, or if a category context exists.
+  // If it's a generic "Intelligenter Lernstart..." message, we might not want a button or a different one.
+  const showButton = !message || (categoryName && categoryName !== "Auswahl"); // Example: Don't show for generic "Auswahl" if it's an error
 
   return (
     <main className="flex-1 container py-12 flex flex-col items-center justify-center">
       <Card className="p-6 max-w-md text-center bg-gray-900 border-gray-800">
         <h2 className="text-2xl font-bold mb-4 text-white">{title}</h2>
         <p className="text-gray-300 mb-6">{description}</p>
-        {/* Conditionally render button if it makes sense, e.g. not for a generic message */}
-        {(!message || categoryParam) && (
+        {/* Show button to navigate to categories, unless it's a specific message that implies otherwise */}
+        {showButton && (
           <Button onClick={() => navigate(getCategoryPath())} className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90">
-            Zu Kategorien
+            Zu den Kategorien
           </Button>
         )}
       </Card>

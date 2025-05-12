@@ -1,189 +1,46 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+
+import { useEffect } from "react";
+import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { Button } from "@/components/ui/button";
-import { useSpacedRepetition } from "@/hooks/spaced-repetition";
-import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
-import { QuestionCategory } from "@/types/questions";
-import { signalSubCategories, betriebsdienstSubCategories } from "@/api/categories/types";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useUserPreferences } from "@/contexts/UserPreferencesContext";
-import { RegulationFilterType } from "@/types/regulation";
+import BottomNavigation from "@/components/layout/BottomNavigation";
 import FlashcardLoadingState from "@/components/flashcards/FlashcardLoadingState";
 import FlashcardEmptyState from "@/components/flashcards/FlashcardEmptyState";
 import FlashcardHeader from "@/components/flashcards/FlashcardHeader";
-import { useIsMobile } from "@/hooks/use-mobile";
-import BottomNavigation from "@/components/layout/BottomNavigation";
 import CardStack from "@/components/flashcards/stack/CardStack";
 import EmptySessionState from '@/components/learning-session/EmptySessionState';
-
-// Helper to map URL subcategory param back to original subcategory string (case sensitive)
-function mapUrlToSubcategory(urlSubcategory?: string): string | undefined {
-  if (!urlSubcategory) return undefined;
-  const normalizedParam = urlSubcategory.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-
-  // Include both Signal and Betriebsdienst subcategories in our search
-  const knownSubcategories = [...signalSubCategories, ...betriebsdienstSubCategories];
-  const found = knownSubcategories.find((subcat) => 
-    subcat.toLowerCase().replace(/[^a-z0-9]+/g, '-') === normalizedParam
-  );
-  return found || urlSubcategory; // Fallback to original if not found, assuming it might be correct
-}
-
-// Helper to determine if a subcategory belongs to Betriebsdienst
-function isBetriebsdienstCategory(subcategory?: string): boolean {
-  if (!subcategory) return false;
-  return betriebsdienstSubCategories.some(
-    cat => cat.toLowerCase() === subcategory.toLowerCase()
-  );
-}
+import FlashcardSessionComplete from "@/components/flashcards/FlashcardSessionComplete";
+import { useFlashcardSession } from "@/hooks/learning-session/useFlashcardSession";
 
 export default function FlashcardPage() {
   console.log("FlashcardPage: Initializing component");
   
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const { subcategory: urlSubcategoryParam } = useParams<{ subcategory: string }>();
-
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [correctCount, setCorrectCount] = useState(0);
-  const [sessionFinished, setSessionFinished] = useState(false);
-  const { regulationPreference } = useUserPreferences();
   const isMobile = useIsMobile();
   
-  const regulationParam = searchParams.get("regelwerk") as RegulationFilterType || regulationPreference;
-
-  // Determine mainCategory and subCategory for fetching questions
-  let mainCategoryForHook: QuestionCategory = 'Signale'; // Default
-  let subCategoryForHook: string | undefined = undefined;
-
-  const categoryUrlQueryParam = searchParams.get('category');
-  const parentCategoryParam = searchParams.get('parent_category');
-  const categoriesUrlQueryParam = searchParams.getAll('categories');
-
-  if (urlSubcategoryParam) {
-    const mappedSubcategory = mapUrlToSubcategory(urlSubcategoryParam);
-    
-    if (mappedSubcategory) {
-      // Check if this is a Betriebsdienst subcategory
-      if (isBetriebsdienstCategory(mappedSubcategory)) {
-        mainCategoryForHook = 'Betriebsdienst';
-      } else {
-        // Check path segments as a fallback
-        const pathSegments = window.location.pathname.split('/');
-        if (pathSegments.includes('betriebsdienst')) {
-          mainCategoryForHook = 'Betriebsdienst';
-        } else if (pathSegments.includes('signale')) {
-          mainCategoryForHook = 'Signale';
-        }
-      }
-      
-      subCategoryForHook = mappedSubcategory;
-    }
-  } else if (categoryUrlQueryParam) {
-    if (categoryUrlQueryParam.toLowerCase() === 'signale') {
-      mainCategoryForHook = 'Signale';
-    } else if (categoryUrlQueryParam.toLowerCase() === 'betriebsdienst') {
-      mainCategoryForHook = 'Betriebsdienst';
-    } else {
-      const potentialSubCategory = mapUrlToSubcategory(categoryUrlQueryParam);
-      
-      if (potentialSubCategory) {
-        // Determine if this subcategory belongs to Betriebsdienst
-        if (isBetriebsdienstCategory(potentialSubCategory)) {
-          mainCategoryForHook = 'Betriebsdienst';
-        } else if (signalSubCategories.map(s => s.toLowerCase()).includes(potentialSubCategory.toLowerCase())) {
-          mainCategoryForHook = 'Signale';
-        }
-        
-        subCategoryForHook = potentialSubCategory;
-      }
-    }
-  } else if (categoriesUrlQueryParam.length > 0) {
-    // Check if parent_category parameter is explicitly set
-    if (parentCategoryParam) {
-      if (parentCategoryParam.toLowerCase() === 'betriebsdienst') {
-        mainCategoryForHook = 'Betriebsdienst';
-      } else if (parentCategoryParam.toLowerCase() === 'signale') {
-        mainCategoryForHook = 'Signale';
-      }
-    } else {
-      // Check if any of the categories are Betriebsdienst categories
-      const hasBetriebsdienstCategory = categoriesUrlQueryParam.some(
-        cat => betriebsdienstSubCategories.some(
-          bcat => bcat.toLowerCase() === cat.toLowerCase()
-        )
-      );
-      
-      mainCategoryForHook = hasBetriebsdienstCategory ? 'Betriebsdienst' : 'Signale';
-    }
-  }
-
-  console.log(`FlashcardPage: Detected main category: ${mainCategoryForHook}`);
-  
-  const isPracticeMode = !user;
-
   const {
     loading,
-    dueQuestions: questions,
-    submitAnswer
-  } = useSpacedRepetition(
-    mainCategoryForHook,
+    questions,
+    user,
+    currentIndex,
+    setCurrentIndex,
+    correctCount,
+    sessionFinished,
     subCategoryForHook,
-    { 
-      practiceMode: isPracticeMode,
-      regulationCategory: regulationParam
+    mainCategoryForHook,
+    isPracticeMode,
+    handleAnswer,
+    handleComplete,
+    handleRegulationChange,
+    searchParams,
+    navigate
+  } = useFlashcardSession();
+
+  useEffect(() => {
+    if (sessionFinished) {
+      toast.success("Gut gemacht! Du hast alle Karten dieser Kategorie bearbeitet!");
     }
-  );
-
-  console.log(`FlashcardPage: Loading for mainCat: ${mainCategoryForHook}, subCat: ${subCategoryForHook}, practice: ${isPracticeMode}`);
-  console.log("FlashcardPage: Loaded questions count:", questions?.length || 0);
-
-  const { data: dueTodayStats } = useQuery({
-    queryKey: ['dueTodayCount', user?.id, regulationParam],
-    queryFn: async () => {
-      if (!user) return { count: 0 };
-      
-      const { count, error } = await supabase
-        .from('user_progress')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .lte('next_review_at', new Date().toISOString());
-        
-      if (error) throw error;
-      
-      return { count: count || 0 };
-    },
-    enabled: !!user
-  });
-
-  const remainingToday = (dueTodayStats?.count || 0);
-
-  const handleAnswer = async (questionId: string, score: number) => {
-    if (user) {
-      await submitAnswer(questionId, score);
-    }
-
-    if (score >= 4) {
-      setCorrectCount(prev => prev + 1);
-    }
-  };
-
-  const handleComplete = () => {
-    setSessionFinished(true);
-    toast.success("Gut gemacht! Du hast alle Karten dieser Kategorie bearbeitet!");
-  };
-
-  const handleRegulationChange = (value: RegulationFilterType) => {
-    setSearchParams(params => {
-      params.set("regelwerk", value);
-      return params;
-    });
-  };
+  }, [sessionFinished]);
 
   useEffect(() => {
     if (isMobile) {
@@ -197,10 +54,12 @@ export default function FlashcardPage() {
     }
   }, [isMobile]);
 
+  // Handle loading state
   if (loading) {
     return <FlashcardLoadingState />;
   }
 
+  // Handle empty state
   if (!loading && questions.length === 0 && !sessionFinished) {
     const boxUrlParam = searchParams.get('box');
     const questionIdUrlParam = searchParams.get('questionId');
@@ -209,7 +68,7 @@ export default function FlashcardPage() {
 
     const isGuestLearningSpecificCategory =
       isGuest &&
-      (!!categoryUrlQueryParam || categoriesUrlQueryParam.length > 0 || !!urlSubcategoryParam) &&
+      (!!searchParams.get('category') || searchParams.getAll('categories').length > 0 || !!searchParams.get('subcategory')) &&
       !boxUrlParam &&
       !questionIdUrlParam &&
       dueUrlParam !== 'true';
@@ -230,33 +89,16 @@ export default function FlashcardPage() {
     }
   }
 
+  // Handle completed session
   if (sessionFinished) {
-    return (
-      <div className="flex min-h-screen flex-col bg-black text-white">
-        <Navbar />
-        <main className="flex-1 container py-12 flex flex-col items-center justify-center">
-          <div className="p-6 max-w-md text-center bg-gray-900 rounded-xl shadow-lg border border-gray-800">
-            <h2 className="text-2xl font-bold mb-4">Kategorie abgeschlossen!</h2>
-            <p className="text-gray-300 mb-6">
-              Du hast {correctCount} von {questions.length} Karten richtig beantwortet.
-              ({questions.length > 0 ? Math.round((correctCount / questions.length) * 100) : 0}%)
-            </p>
-            <div className="flex justify-center">
-              <Button 
-                onClick={() => navigate('/karteikarten')}
-                className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90"
-              >
-                Zurück zur Übersicht
-              </Button>
-            </div>
-          </div>
-        </main>
-        {!isMobile && <Footer />}
-        {isMobile && <BottomNavigation />}
-      </div>
-    );
+    return <FlashcardSessionComplete 
+      correctCount={correctCount}
+      totalQuestions={questions.length}
+      isMobile={isMobile}
+    />;
   }
 
+  // Render the main flashcard view
   return (
     <div className={`flex flex-col ${isMobile ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-black text-white`}>
       <Navbar />

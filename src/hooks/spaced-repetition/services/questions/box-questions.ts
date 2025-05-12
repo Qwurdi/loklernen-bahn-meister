@@ -35,8 +35,9 @@ export async function fetchQuestionsByBox(
   
   if (regulationCategory !== "all") {
     filteredData = filteredData.filter(p => {
-      // Parse the questions JSON if needed
-      const questionData = p.questions;
+      // Progress entries from stored procedure may have a different structure
+      // Handle potential missing properties safely with optional chaining
+      const questionData = p.questions || p;
       return questionData?.regulation_category === regulationCategory || 
              questionData?.regulation_category === "both" || 
              !questionData?.regulation_category;

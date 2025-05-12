@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Question, QuestionCategory } from '@/types/questions';
@@ -72,13 +71,11 @@ export function useSpacedRepetition(
           
           // Make sure boxProgress is an array before trying to use array methods
           if (Array.isArray(boxProgress)) {
-            boxProgress
-              .filter(p => p.questions) // Ensure questions exist
-              .forEach(p => {
-                if (p.questions && p.question_id) {
-                  uniqueQuestionsMap.set(p.question_id, transformQuestion(p.questions));
-                }
-              });
+            boxProgress.forEach(p => {
+              if (p.questions && p.question_id) {
+                uniqueQuestionsMap.set(p.question_id, transformQuestion(p.questions));
+              }
+            });
               
             const questionsFromBox = Array.from(uniqueQuestionsMap.values());
             

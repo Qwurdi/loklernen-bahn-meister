@@ -66,10 +66,21 @@ export function useSpacedRepetition(
             regulationCategory,
             includeAllSubcategories
           );
-          const questionsFromBox = boxProgress
+          
+          // Ensure we don't have duplicate questions
+          const uniqueQuestionsMap = new Map<string, Question>();
+          
+          boxProgress
             .filter(p => p.questions) // Ensure questions exist
-            .map(p => transformQuestion(p.questions));
-          console.log(`Loaded ${questionsFromBox.length} questions from box ${boxNumber}`);
+            .forEach(p => {
+              if (p.questions && p.question_id) {
+                uniqueQuestionsMap.set(p.question_id, transformQuestion(p.questions));
+              }
+            });
+            
+          const questionsFromBox = Array.from(uniqueQuestionsMap.values());
+          
+          console.log(`Loaded ${questionsFromBox.length} unique questions from box ${boxNumber}`);
           setDueQuestions(questionsFromBox);
           setProgress(boxProgress);
         } else {
@@ -81,10 +92,21 @@ export function useSpacedRepetition(
             regulationCategory,
             includeAllSubcategories
           );
-          const questionsWithProgress = filteredProgressData
+          
+          // Ensure we don't have duplicate questions
+          const uniqueQuestionsMap = new Map<string, Question>();
+          
+          filteredProgressData
             .filter(p => p.questions) // Ensure questions exist
-            .map(p => transformQuestion(p.questions));
-          console.log("Questions with progress:", questionsWithProgress.length);
+            .forEach(p => {
+              if (p.questions && p.question_id) {
+                uniqueQuestionsMap.set(p.question_id, transformQuestion(p.questions));
+              }
+            });
+            
+          const questionsWithProgress = Array.from(uniqueQuestionsMap.values());
+            
+          console.log("Unique questions with progress:", questionsWithProgress.length);
 
           if (questionsWithProgress.length >= batchSize) {
             setDueQuestions(questionsWithProgress.slice(0, batchSize));

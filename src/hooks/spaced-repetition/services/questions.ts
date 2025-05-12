@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Question, QuestionCategory } from '@/types/questions';
 import { transformQuestion } from '../utils';
@@ -62,7 +61,18 @@ export async function fetchUserProgress(
       !p.questions?.regulation_category);
   }
   
-  console.log("Filtered progress data:", filteredProgressData.length, "items");
+  // Remove duplicate entries - keep only the most recent entry for each question
+  const questionIdsMap = new Map();
+  filteredProgressData.forEach(item => {
+    const existingItem = questionIdsMap.get(item.question_id);
+    if (!existingItem || new Date(item.updated_at) > new Date(existingItem.updated_at)) {
+      questionIdsMap.set(item.question_id, item);
+    }
+  });
+  
+  filteredProgressData = Array.from(questionIdsMap.values());
+  
+  console.log("Filtered progress data (after deduplication):", filteredProgressData.length, "items");
 
   return filteredProgressData;
 }
@@ -188,15 +198,12 @@ export async function fetchQuestionsByBox(
   console.log(`Fetching questions for user ${userId} in box ${boxNumber} with regulation ${regulationCategory}`);
   console.log("Include all subcategories:", includeAllSubcategories);
   
+  // Use a Common Table Expression (CTE) to select only the most recent entry for each question_id
   const { data, error } = await supabase
-    .from('user_progress')
-    .select(`
-      *,
-      questions(*)
-    `)
-    .eq('user_id', userId)
-    .eq('box_number', boxNumber)
-    .order('next_review_at', { ascending: true });
+    .rpc('get_latest_progress_by_box', { 
+      p_user_id: userId, 
+      p_box_number: boxNumber 
+    });
     
   if (error) {
     console.error("Error fetching questions by box:", error);
@@ -213,7 +220,7 @@ export async function fetchQuestionsByBox(
       !p.questions?.regulation_category);
   }
   
-  console.log(`Found ${filteredData.length} questions in box ${boxNumber}`);
+  console.log(`Found ${filteredData.length} questions in box ${boxNumber} (after deduplication)`);
   
   return filteredData;
 }

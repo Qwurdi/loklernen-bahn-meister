@@ -66,7 +66,7 @@ export default function LearningSessionPage() {
     {
       practiceMode: false,
       regulationCategory: regulationParam,
-      boxNumber: boxParam,
+      boxNumber: boxParam ? parseInt(boxParam, 10) : undefined, // Parse box number from string to number
       batchSize: 15,
       includeAllSubcategories: isParentCategory
     }

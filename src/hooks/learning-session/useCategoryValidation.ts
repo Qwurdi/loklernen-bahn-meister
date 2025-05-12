@@ -15,6 +15,8 @@ export function useCategoryValidation(
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const parentCategoryParam = searchParams.get('parent_category');
 
   const [categoryRequiresAuth, setCategoryRequiresAuth] = useState<boolean | null>(null);
   const [categoryFound, setCategoryFound] = useState<boolean | null>(null);
@@ -42,6 +44,17 @@ export function useCategoryValidation(
       setCategoryFound(true);
       setCategoryRequiresAuth(false);
       setIsParentCategory(false);
+      return;
+    }
+
+    // If parent_category param is present, prioritize it
+    if (parentCategoryParam) {
+      console.log("Parent category explicitly set:", parentCategoryParam);
+      if (parentCategoryParam === "Betriebsdienst" || parentCategoryParam === "Signale") {
+        setCategoryFound(true);
+        setIsParentCategory(true);
+        setCategoryRequiresAuth(parentCategoryParam === "Betriebsdienst" && !user);
+      }
       return;
     }
 
@@ -102,10 +115,15 @@ export function useCategoryValidation(
       setCategoryRequiresAuth(false);
       setIsParentCategory(false);
     }
-  }, [categories, categoriesLoading, categoryParam, user, navigate, location, isDueCardsView]);
+  }, [categories, categoriesLoading, categoryParam, user, navigate, location, isDueCardsView, parentCategoryParam]);
 
   // Fix: Properly cast the stripped category name to QuestionCategory when it's a parent category
   const getCategoryForSpacedRepetition = (): QuestionCategory | null => {
+    // If parent_category param is explicitly set, use that
+    if (parentCategoryParam === "Betriebsdienst" || parentCategoryParam === "Signale") {
+      return parentCategoryParam as QuestionCategory;
+    }
+    
     if (isDueCardsView) {
       return null;
     }

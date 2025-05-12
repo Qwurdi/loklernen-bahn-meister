@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -37,9 +38,14 @@ export default function CardsPage() {
     
     // Construct the URL with query parameters for selected categories
     const queryParams = new URLSearchParams();
+    
+    // Add the selected categories
     selectedCategories.forEach(cat => {
       queryParams.append('categories', cat);
     });
+    
+    // Add the parent category based on the active tab
+    queryParams.append('parent_category', activeTab === 'betriebsdienst' ? 'Betriebsdienst' : 'Signale');
     
     // Always include the global regulation preference
     queryParams.append('regulation', regulationPreference);

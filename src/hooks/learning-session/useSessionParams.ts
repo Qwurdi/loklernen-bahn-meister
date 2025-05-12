@@ -1,3 +1,4 @@
+
 import { useSearchParams } from "react-router-dom";
 import { QuestionCategory } from "@/types/questions";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
@@ -10,6 +11,7 @@ interface SessionParams {
   sessionTitle: string;
   practiceMode: boolean;
   isDueCardsView: boolean; // Flag to identify due cards view
+  parentCategoryParam: QuestionCategory | null; // New parameter to explicitly set parent category
 }
 
 export function useSessionParams(): SessionParams {
@@ -22,17 +24,22 @@ export function useSessionParams(): SessionParams {
   const regulationParam = searchParams.get("regelwerk") || regulationPreference;
   const boxParam = searchParams.get("box") ? parseInt(searchParams.get("box") || "0") : undefined;
   const practiceMode = searchParams.get("practice") === "true";
+  const parentCategoryParamRaw = searchParams.get("parent_category");
 
   // Determine if we're in a due cards view (no specific category/subcategory)
   const isDueCardsView = !categoryParamRaw && !subcategoryParam;
 
   // Cast to QuestionCategory if provided, otherwise null
   const categoryParam = categoryParamRaw as QuestionCategory | null;
+  const parentCategoryParam = (parentCategoryParamRaw === "Signale" || parentCategoryParamRaw === "Betriebsdienst") 
+    ? parentCategoryParamRaw as QuestionCategory 
+    : null;
 
   // Log params for debugging
   console.log("Session Params:", {
     category: categoryParam,
     subcategory: subcategoryParam,
+    parentCategory: parentCategoryParam,
     regulation: regulationParam,
     box: boxParam,
     practice: practiceMode,
@@ -63,6 +70,8 @@ export function useSessionParams(): SessionParams {
     } else if (categoryParam) {
       // Use category name for title display, but still keep any regulation info
       title += `${categoryParam}`;
+    } else if (parentCategoryParam) {
+      title += `${parentCategoryParam}`; 
     } else {
       title += 'Fällige Karten';
     }
@@ -84,6 +93,7 @@ export function useSessionParams(): SessionParams {
     boxParam,
     sessionTitle,
     practiceMode,
-    isDueCardsView
+    isDueCardsView,
+    parentCategoryParam
   };
 }

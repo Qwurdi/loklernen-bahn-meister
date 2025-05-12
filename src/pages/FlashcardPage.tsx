@@ -7,7 +7,7 @@ import { useSpacedRepetition } from "@/hooks/spaced-repetition";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { QuestionCategory } from "@/types/questions";
-import { signalSubCategories } from "@/api/categories/types";
+import { signalSubCategories, betriebsdienstSubCategories } from "@/api/categories/types";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
@@ -25,12 +25,20 @@ function mapUrlToSubcategory(urlSubcategory?: string): string | undefined {
   if (!urlSubcategory) return undefined;
   const normalizedParam = urlSubcategory.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
-  // This is a simplified example; a more robust mapping might be needed
-  const knownSubcategories = [...signalSubCategories]; // Add Betriebsdienst subcategories if needed
+  // Include both Signal and Betriebsdienst subcategories in our search
+  const knownSubcategories = [...signalSubCategories, ...betriebsdienstSubCategories];
   const found = knownSubcategories.find((subcat) => 
     subcat.toLowerCase().replace(/[^a-z0-9]+/g, '-') === normalizedParam
   );
   return found || urlSubcategory; // Fallback to original if not found, assuming it might be correct
+}
+
+// Helper to determine if a subcategory belongs to Betriebsdienst
+function isBetriebsdienstCategory(subcategory?: string): boolean {
+  if (!subcategory) return false;
+  return betriebsdienstSubCategories.some(
+    cat => cat.toLowerCase() === subcategory.toLowerCase()
+  );
 }
 
 export default function FlashcardPage() {
@@ -54,17 +62,26 @@ export default function FlashcardPage() {
   let subCategoryForHook: string | undefined = undefined;
 
   const categoryUrlQueryParam = searchParams.get('category');
+  const parentCategoryParam = searchParams.get('parent_category');
   const categoriesUrlQueryParam = searchParams.getAll('categories');
 
   if (urlSubcategoryParam) {
     const mappedSubcategory = mapUrlToSubcategory(urlSubcategoryParam);
+    
     if (mappedSubcategory) {
-      const pathSegments = window.location.pathname.split('/');
-      if (pathSegments.includes('signale')) {
-        mainCategoryForHook = 'Signale';
-      } else if (pathSegments.includes('betriebsdienst')) {
+      // Check if this is a Betriebsdienst subcategory
+      if (isBetriebsdienstCategory(mappedSubcategory)) {
         mainCategoryForHook = 'Betriebsdienst';
+      } else {
+        // Check path segments as a fallback
+        const pathSegments = window.location.pathname.split('/');
+        if (pathSegments.includes('betriebsdienst')) {
+          mainCategoryForHook = 'Betriebsdienst';
+        } else if (pathSegments.includes('signale')) {
+          mainCategoryForHook = 'Signale';
+        }
       }
+      
       subCategoryForHook = mappedSubcategory;
     }
   } else if (categoryUrlQueryParam) {
@@ -74,20 +91,40 @@ export default function FlashcardPage() {
       mainCategoryForHook = 'Betriebsdienst';
     } else {
       const potentialSubCategory = mapUrlToSubcategory(categoryUrlQueryParam);
-      if (signalSubCategories.map(s => s.toLowerCase()).includes(potentialSubCategory?.toLowerCase() || '')) {
-         mainCategoryForHook = 'Signale';
-         subCategoryForHook = potentialSubCategory;
-      } else {
-         mainCategoryForHook = 'Signale';
+      
+      if (potentialSubCategory) {
+        // Determine if this subcategory belongs to Betriebsdienst
+        if (isBetriebsdienstCategory(potentialSubCategory)) {
+          mainCategoryForHook = 'Betriebsdienst';
+        } else if (signalSubCategories.map(s => s.toLowerCase()).includes(potentialSubCategory.toLowerCase())) {
+          mainCategoryForHook = 'Signale';
+        }
+        
+        subCategoryForHook = potentialSubCategory;
       }
     }
   } else if (categoriesUrlQueryParam.length > 0) {
-    const isBetriebsdienstLikely = categoriesUrlQueryParam.some(
-      cat => cat.toLowerCase().includes('betriebsdienst')
-    );
-    mainCategoryForHook = isBetriebsdienstLikely ? 'Betriebsdienst' : 'Signale';
+    // Check if parent_category parameter is explicitly set
+    if (parentCategoryParam) {
+      if (parentCategoryParam.toLowerCase() === 'betriebsdienst') {
+        mainCategoryForHook = 'Betriebsdienst';
+      } else if (parentCategoryParam.toLowerCase() === 'signale') {
+        mainCategoryForHook = 'Signale';
+      }
+    } else {
+      // Check if any of the categories are Betriebsdienst categories
+      const hasBetriebsdienstCategory = categoriesUrlQueryParam.some(
+        cat => betriebsdienstSubCategories.some(
+          bcat => bcat.toLowerCase() === cat.toLowerCase()
+        )
+      );
+      
+      mainCategoryForHook = hasBetriebsdienstCategory ? 'Betriebsdienst' : 'Signale';
+    }
   }
 
+  console.log(`FlashcardPage: Detected main category: ${mainCategoryForHook}`);
+  
   const isPracticeMode = !user;
 
   const {

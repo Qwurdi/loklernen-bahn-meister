@@ -15,6 +15,7 @@ export function useFlashcardSessionParams() {
   const parentCategoryParam = searchParams.get('parent_category');
   const categoriesUrlQueryParam = searchParams.getAll('categories');
   const regulationParam = searchParams.get("regelwerk") as RegulationFilterType || regulationPreference;
+  const boxParam = searchParams.get("box");
   
   // Determine mainCategory and subCategory for fetching questions
   const mainCategoryForHook: QuestionCategory = determineMainCategory(
@@ -35,6 +36,15 @@ export function useFlashcardSessionParams() {
     }
   }
 
+  // Determine if we're in a due cards view
+  const isDueCardsView = searchParams.has("due") || searchParams.get("view") === "due";
+
+  // Generate a session title based on parameters
+  let sessionTitle = subCategoryForHook || mainCategoryForHook || "Lernkarten";
+  if (isDueCardsView) {
+    sessionTitle = "Fällige Karten";
+  }
+
   const setRegulationFilter = (value: RegulationFilterType) => {
     setSearchParams(params => {
       params.set("regelwerk", value);
@@ -43,6 +53,7 @@ export function useFlashcardSessionParams() {
   };
 
   return {
+    // Original properties
     urlSubcategoryParam,
     categoryUrlQueryParam,
     parentCategoryParam,
@@ -52,9 +63,17 @@ export function useFlashcardSessionParams() {
     setSearchParams,
     mainCategoryForHook,
     subCategoryForHook,
-    setRegulationFilter
+    setRegulationFilter,
+
+    // Additional properties needed by LearningSessionPage
+    categoryParam: categoryUrlQueryParam,
+    subcategoryParam: subCategoryForHook,
+    boxParam,
+    sessionTitle,
+    isDueCardsView
   };
 }
 
-// Export with the name expected by LearningSessionPage
+// Export with both names to maintain compatibility
 export const useSessionParams = useFlashcardSessionParams;
+

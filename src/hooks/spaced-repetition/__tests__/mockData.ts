@@ -15,6 +15,7 @@ export const mockQuestions: Question[] = [
       { text: 'Answer 1', isCorrect: true },
       { text: 'Answer 2', isCorrect: false }
     ],
+    image_url: null, // Added the required property
     created_by: 'test-user',
     created_at: '2023-01-01T00:00:00Z',
     updated_at: '2023-01-01T00:00:00Z',
@@ -31,6 +32,7 @@ export const mockQuestions: Question[] = [
       { text: 'Answer 1', isCorrect: false },
       { text: 'Answer 2', isCorrect: true }
     ],
+    image_url: null, // Added the required property
     created_by: 'test-user',
     created_at: '2023-01-02T00:00:00Z',
     updated_at: '2023-01-02T00:00:00Z',

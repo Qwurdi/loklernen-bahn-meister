@@ -14,6 +14,7 @@ const mockQuestions: Question[] = [
     question_type: 'MC_single',
     difficulty: 1,
     text: 'Test Question 1',
+    image_url: null, // Added the required property
     answers: [{ text: 'Answer 1', isCorrect: true }],
     created_by: 'test',
     revision: 1,
@@ -27,6 +28,7 @@ const mockQuestions: Question[] = [
     question_type: 'MC_single',
     difficulty: 1,
     text: 'Test Question 2',
+    image_url: null, // Added the required property
     answers: [{ text: 'Answer 2', isCorrect: true }],
     created_by: 'test',
     revision: 1,
@@ -64,7 +66,8 @@ function TestComponent() {
       <button onClick={() => setCurrentIndex(currentIndex - 1)} data-testid="prev-btn">Previous</button>
       <button onClick={() => setCurrentIndex(2)} data-testid="set-index-btn">Set to 2</button>
       <button onClick={() => handleAnswer('1', 5)} data-testid="answer-btn">Answer Correctly</button>
-      <button onClick={handleComplete} data-testid="complete-btn">Complete</button>
+      {/* Fixed the event handler by using an arrow function */}
+      <button onClick={() => handleComplete()} data-testid="complete-btn">Complete</button>
     </div>
   );
 }

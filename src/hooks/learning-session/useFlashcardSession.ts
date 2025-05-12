@@ -1,56 +1,36 @@
 
-import { useState } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { QuestionCategory } from "@/types/questions";
-import { useSpacedRepetition } from "@/hooks/spaced-repetition";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useUserPreferences } from "@/contexts/UserPreferencesContext";
-import { RegulationFilterType } from "@/types/regulation";
-import { determineMainCategory, mapUrlToSubcategory } from "@/utils/subcategory-utils";
+import { useSpacedRepetition } from "@/hooks/spaced-repetition";
+import { useFlashcardSessionParams } from "./useSessionParams";
+import { useFlashcardSessionState } from "./useFlashcardSessionState";
 
 export function useFlashcardSession() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const { subcategory: urlSubcategoryParam } = useParams<{ subcategory: string }>();
-
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [correctCount, setCorrectCount] = useState(0);
-  const [sessionFinished, setSessionFinished] = useState(false);
-  const { regulationPreference } = useUserPreferences();
   
-  const regulationParam = searchParams.get("regelwerk") as RegulationFilterType || regulationPreference;
+  const {
+    regulationParam,
+    searchParams,
+    mainCategoryForHook,
+    subCategoryForHook,
+    setRegulationFilter
+  } = useFlashcardSessionParams();
 
-  // Get query parameters
-  const categoryUrlQueryParam = searchParams.get('category');
-  const parentCategoryParam = searchParams.get('parent_category');
-  const categoriesUrlQueryParam = searchParams.getAll('categories');
-
-  // Determine mainCategory and subCategory for fetching questions
-  const mainCategoryForHook: QuestionCategory = determineMainCategory(
-    urlSubcategoryParam,
-    categoryUrlQueryParam,
-    categoriesUrlQueryParam,
-    parentCategoryParam
-  );
+  const {
+    currentIndex,
+    setCurrentIndex,
+    correctCount,
+    sessionFinished,
+    remainingToday,
+    handleAnswer: handleSessionAnswer,
+    handleComplete
+  } = useFlashcardSessionState(user?.id);
   
-  let subCategoryForHook: string | undefined = undefined;
-  
-  if (urlSubcategoryParam) {
-    subCategoryForHook = mapUrlToSubcategory(urlSubcategoryParam);
-  } else if (categoryUrlQueryParam) {
-    const potentialSubCategory = mapUrlToSubcategory(categoryUrlQueryParam);
-    if (potentialSubCategory && potentialSubCategory !== "Signale" && potentialSubCategory !== "Betriebsdienst") {
-      subCategoryForHook = potentialSubCategory;
-    }
-  }
-
-  console.log(`FlashcardPage: Detected main category: ${mainCategoryForHook}`);
-  
+  // Determine if we're in practice mode (no user logged in)
   const isPracticeMode = !user;
 
+  // Get questions using spaced repetition system
   const {
     loading,
     dueQuestions: questions,
@@ -64,48 +44,14 @@ export function useFlashcardSession() {
     }
   );
 
-  console.log(`FlashcardPage: Loading for mainCat: ${mainCategoryForHook}, subCat: ${subCategoryForHook}, practice: ${isPracticeMode}`);
-  console.log("FlashcardPage: Loaded questions count:", questions?.length || 0);
-
-  const { data: dueTodayStats } = useQuery({
-    queryKey: ['dueTodayCount', user?.id, regulationParam],
-    queryFn: async () => {
-      if (!user) return { count: 0 };
-      
-      const { count, error } = await supabase
-        .from('user_progress')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .lte('next_review_at', new Date().toISOString());
-        
-      if (error) throw error;
-      
-      return { count: count || 0 };
-    },
-    enabled: !!user
-  });
-
-  const remainingToday = (dueTodayStats?.count || 0);
-
+  // Wrap the handle answer function to use our spaced repetition submit answer
   const handleAnswer = async (questionId: string, score: number) => {
-    if (user) {
-      await submitAnswer(questionId, score);
-    }
-
-    if (score >= 4) {
-      setCorrectCount(prev => prev + 1);
-    }
+    await handleSessionAnswer(questionId, score, submitAnswer);
   };
 
-  const handleComplete = () => {
-    setSessionFinished(true);
-  };
-
-  const handleRegulationChange = (value: RegulationFilterType) => {
-    setSearchParams(params => {
-      params.set("regelwerk", value);
-      return params;
-    });
+  // Handle regulation change
+  const handleRegulationChange = (value: any) => {
+    setRegulationFilter(value);
   };
 
   return {

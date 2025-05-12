@@ -13,15 +13,17 @@ export const mockQuestions: Question[] = [
       type: 'doc',
       content: [{
         type: 'paragraph',
-        content: [{ type: 'text', text: 'Test question 1' }]
+        content: [{ text: 'Test question 1', type: 'text' }]
       }]
     },
     question_type: 'MC_single',
     answers: [
-      { id: 'a1', text: 'Answer 1', is_correct: true },
-      { id: 'a2', text: 'Answer 2', is_correct: false }
+      { text: 'Answer 1', isCorrect: true },
+      { text: 'Answer 2', isCorrect: false }
     ],
+    created_by: 'test-user',
     created_at: '2023-01-01T00:00:00Z',
+    updated_at: '2023-01-01T00:00:00Z',
     revision: 1
   },
   {
@@ -33,15 +35,17 @@ export const mockQuestions: Question[] = [
       type: 'doc',
       content: [{
         type: 'paragraph',
-        content: [{ type: 'text', text: 'Test question 2' }]
+        content: [{ text: 'Test question 2', type: 'text' }]
       }]
     },
     question_type: 'MC_single',
     answers: [
-      { id: 'a3', text: 'Answer 1', is_correct: false },
-      { id: 'a4', text: 'Answer 2', is_correct: true }
+      { text: 'Answer 1', isCorrect: false },
+      { text: 'Answer 2', isCorrect: true }
     ],
+    created_by: 'test-user',
     created_at: '2023-01-02T00:00:00Z',
+    updated_at: '2023-01-02T00:00:00Z',
     revision: 1
   }
 ];
@@ -59,7 +63,12 @@ export const mockUserProgress: UserProgress[] = [
     ease_factor: 2.5,
     interval_days: 5,
     questions: mockQuestions[0],
-    current_box: 3
+    box_number: 3,
+    last_score: 4,
+    repetition_count: 4,
+    streak: 3,
+    created_at: '2023-01-01T00:00:00Z',
+    updated_at: '2023-01-10T00:00:00Z'
   },
   {
     id: 'up2',
@@ -72,6 +81,11 @@ export const mockUserProgress: UserProgress[] = [
     ease_factor: 2.2,
     interval_days: 3,
     questions: mockQuestions[1],
-    current_box: 2
+    box_number: 2,
+    last_score: 3,
+    repetition_count: 4,
+    streak: 0,
+    created_at: '2023-01-01T00:00:00Z',
+    updated_at: '2023-01-11T00:00:00Z'
   }
 ];

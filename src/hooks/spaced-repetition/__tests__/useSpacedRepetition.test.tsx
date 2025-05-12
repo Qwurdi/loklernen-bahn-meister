@@ -1,23 +1,23 @@
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render } from '@testing-library/react';
 import { act } from 'react-dom/test-utils';
 import { useSpacedRepetition } from '../index';
 import { mockQuestions, mockUserProgress } from './mockData';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 // Mocking the services used by the hook
-jest.mock('../services', () => ({
-  fetchUserProgress: jest.fn().mockResolvedValue(mockUserProgress),
-  fetchNewQuestions: jest.fn().mockResolvedValue(mockQuestions),
-  fetchPracticeQuestions: jest.fn().mockResolvedValue(mockQuestions),
-  fetchQuestionsByBox: jest.fn().mockResolvedValue(mockUserProgress),
-  updateUserProgress: jest.fn().mockResolvedValue({}),
-  updateUserStats: jest.fn().mockResolvedValue({})
+vi.mock('../services', () => ({
+  fetchUserProgress: vi.fn().mockResolvedValue(mockUserProgress),
+  fetchNewQuestions: vi.fn().mockResolvedValue(mockQuestions),
+  fetchPracticeQuestions: vi.fn().mockResolvedValue(mockQuestions),
+  fetchQuestionsByBox: vi.fn().mockResolvedValue(mockUserProgress),
+  updateUserProgress: vi.fn().mockResolvedValue({}),
+  updateUserStats: vi.fn().mockResolvedValue({})
 }));
 
 // Mock AuthContext
-jest.mock('@/contexts/AuthContext', () => ({
+vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
     user: { id: 'test-user-id' }
   })
@@ -57,24 +57,28 @@ function TestComponent() {
 }
 
 describe('useSpacedRepetition', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
   it('initializes with loading state and fetches questions', async () => {
-    render(<TestComponent />);
+    const { getByTestId } = render(<TestComponent />);
     
     // Initially loading
-    expect(screen.getByTestId('loading').textContent).toBe('true');
+    expect(getByTestId('loading').textContent).toBe('true');
     
     // Wait for loading to complete
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 10));
     });
     
-    expect(screen.getByTestId('loading').textContent).toBe('false');
-    expect(screen.getByTestId('questions-count').textContent).not.toBe('0');
-    expect(screen.getByTestId('error').textContent).toBe('no-error');
+    expect(getByTestId('loading').textContent).toBe('false');
+    expect(getByTestId('questions-count').textContent).not.toBe('0');
+    expect(getByTestId('error').textContent).toBe('no-error');
   });
 
   it('submits answers and tracks pending updates', async () => {
-    render(<TestComponent />);
+    const { getByTestId } = render(<TestComponent />);
     
     // Wait for loading to complete
     await act(async () => {
@@ -82,25 +86,25 @@ describe('useSpacedRepetition', () => {
     });
     
     // Submit an answer
-    const submitButton = screen.getByTestId('submit-answer-btn');
+    const submitButton = getByTestId('submit-answer-btn');
     
     await act(async () => {
-      await userEvent.click(submitButton);
+      submitButton.click();
     });
     
     // Check that we have a pending update
-    expect(screen.getByTestId('pending-updates').textContent).toBe('1');
+    expect(getByTestId('pending-updates').textContent).toBe('1');
     
     // Apply updates
-    const applyButton = screen.getByTestId('apply-updates-btn');
+    const applyButton = getByTestId('apply-updates-btn');
     
     await act(async () => {
-      await userEvent.click(applyButton);
+      applyButton.click();
       // Wait for updates to apply
       await new Promise(resolve => setTimeout(resolve, 10));
     });
     
     // Pending updates should be cleared
-    expect(screen.getByTestId('pending-updates').textContent).toBe('0');
+    expect(getByTestId('pending-updates').textContent).toBe('0');
   });
 });

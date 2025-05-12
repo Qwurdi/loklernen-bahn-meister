@@ -1,7 +1,6 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { Question, QuestionCategory } from '@/types/questions';
-import { transformQuestion } from '../utils';
+import { QuestionCategory } from '@/types/questions';
+import { transformQuestion } from '../../utils';
 
 /**
  * Fetches user progress for questions that are due for review
@@ -185,78 +184,4 @@ export async function fetchPracticeQuestions(
   }
 
   return questions?.map(transformQuestion) || [];
-}
-
-/**
- * Fetches questions for a specific box number
- */
-export async function fetchQuestionsByBox(
-  userId: string,
-  boxNumber: number,
-  regulationCategory: string = "all",
-  includeAllSubcategories: boolean = false
-) {
-  console.log(`Fetching questions for user ${userId} in box ${boxNumber} with regulation ${regulationCategory}`);
-  console.log("Include all subcategories:", includeAllSubcategories);
-  
-  // First get the latest progress entries from the stored procedure
-  const { data: progressData, error: progressError } = await supabase
-    .rpc('get_latest_progress_by_box', { 
-      p_user_id: userId, 
-      p_box_number: boxNumber 
-    });
-    
-  if (progressError) {
-    console.error("Error fetching questions by box:", progressError);
-    throw progressError;
-  }
-  
-  // Since the stored procedure doesn't join the questions, we need to fetch them separately
-  if (!progressData || !Array.isArray(progressData) || progressData.length === 0) {
-    return [];
-  }
-  
-  // Extract question IDs from progress data
-  const questionIds = progressData.map(p => p.question_id);
-  
-  // Fetch the corresponding questions
-  const { data: questions, error: questionsError } = await supabase
-    .from('questions')
-    .select('*')
-    .in('id', questionIds);
-    
-  if (questionsError) {
-    console.error("Error fetching questions:", questionsError);
-    throw questionsError;
-  }
-  
-  // Create a map of questions by ID for easy lookup
-  const questionsMap = new Map();
-  if (questions) {
-    questions.forEach(question => {
-      questionsMap.set(question.id, question);
-    });
-  }
-  
-  // Combine progress data with questions
-  const progressWithQuestions = progressData.map(progress => {
-    return {
-      ...progress,
-      questions: questionsMap.get(progress.question_id)
-    };
-  });
-  
-  // Filter by regulation if needed
-  let filteredData = progressWithQuestions;
-  
-  if (regulationCategory !== "all") {
-    filteredData = filteredData.filter(p => 
-      p.questions?.regulation_category === regulationCategory || 
-      p.questions?.regulation_category === "both" || 
-      !p.questions?.regulation_category);
-  }
-  
-  console.log(`Found ${filteredData.length} questions in box ${boxNumber} after filtering`);
-  
-  return filteredData;
 }

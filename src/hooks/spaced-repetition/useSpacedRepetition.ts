@@ -47,7 +47,7 @@ export function useSpacedRepetition(
         setDueQuestions(practiceQuestions);
       } else {
         // Logic for authenticated users
-        console.log(`Loading questions for authenticated user: category=${category}, subcategory=${subcategory}, regulation=${regulationCategory}, practiceMode=${options.practiceMode}, boxNumber=${boxNumber}, batchSize=${batchSize}, includeAllSubcategories=${includeAllSubcategories}`);
+        console.log(`Loading questions for authenticated user: category=${category}, subcategory=${subcategory}, regulation=${options.regulationCategory}, practiceMode=${options.practiceMode}, boxNumber=${options.boxNumber}, batchSize=${options.batchSize}, includeAllSubcategories=${options.includeAllSubcategories}`);
 
         if (options.practiceMode) {
           const practiceQuestions = await fetchPracticeQuestions(
@@ -58,12 +58,12 @@ export function useSpacedRepetition(
             includeAllSubcategories
           );
           setDueQuestions(practiceQuestions);
-        } else if (boxNumber !== undefined) {
+        } else if (options.boxNumber !== undefined) {
           const boxProgress = await fetchQuestionsByBox(
             user.id, 
-            boxNumber, 
-            regulationCategory,
-            includeAllSubcategories
+            options.boxNumber, 
+            options.regulationCategory || 'all',
+            options.includeAllSubcategories || false
           );
           
           // Ensure we don't have duplicate questions
@@ -74,13 +74,14 @@ export function useSpacedRepetition(
             boxProgress.forEach(p => {
               if (p.questions && p.question_id) {
                 // The questions property now contains the full question data as JSON
-                uniqueQuestionsMap.set(p.question_id, transformQuestion(p.questions));
+                const questionData = p.questions as any;
+                uniqueQuestionsMap.set(p.question_id, transformQuestion(questionData));
               }
             });
               
             const questionsFromBox = Array.from(uniqueQuestionsMap.values());
             
-            console.log(`Loaded ${questionsFromBox.length} unique questions from box ${boxNumber}`);
+            console.log(`Loaded ${questionsFromBox.length} unique questions from box ${options.boxNumber}`);
             setDueQuestions(questionsFromBox);
             setProgress(boxProgress);
           } else {
@@ -151,7 +152,7 @@ export function useSpacedRepetition(
     } finally {
       setLoading(false);
     }
-  }, [user, category, subcategory, options.practiceMode, regulationCategory, boxNumber, batchSize, includeAllSubcategories]);
+  }, [user, category, subcategory, options.practiceMode, options.regulationCategory, options.boxNumber, options.batchSize, options.includeAllSubcategories]);
 
   useEffect(() => {
     loadDueQuestions();

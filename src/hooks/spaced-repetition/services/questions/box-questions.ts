@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { Question } from '@/types/questions';
 
 /**
  * Fetches questions for a specific box number
@@ -36,7 +37,7 @@ export async function fetchQuestionsByBox(
   if (regulationCategory !== "all") {
     filteredData = filteredData.filter(p => {
       // The questions column now contains all question data as JSON
-      const questionData = p.questions;
+      const questionData = p.questions as any;
       return questionData?.regulation_category === regulationCategory || 
              questionData?.regulation_category === "both" || 
              !questionData?.regulation_category;

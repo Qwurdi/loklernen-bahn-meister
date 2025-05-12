@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { calculateNextReviewDate } from './utils';
+import { calculateNewBoxNumber, calculateNextReviewDate } from './utils';
 
 /**
  * Updates the user progress for a question

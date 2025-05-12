@@ -73,6 +73,7 @@ export function useSpacedRepetition(
           if (Array.isArray(boxProgress)) {
             boxProgress.forEach(p => {
               if (p.questions && p.question_id) {
+                // The questions property now contains the full question data as JSON
                 uniqueQuestionsMap.set(p.question_id, transformQuestion(p.questions));
               }
             });

@@ -212,6 +212,26 @@ export type Database = {
         Args: { box_num: number }
         Returns: string
       }
+      get_latest_progress_by_box: {
+        Args: { p_user_id: string; p_box_number: number }
+        Returns: {
+          box_number: number
+          correct_count: number
+          created_at: string
+          ease_factor: number
+          id: string
+          incorrect_count: number
+          interval_days: number
+          last_reviewed_at: string
+          last_score: number
+          next_review_at: string
+          question_id: string
+          repetition_count: number
+          streak: number
+          updated_at: string
+          user_id: string
+        }[]
+      }
     }
     Enums: {
       question_category: "Signale" | "Betriebsdienst"

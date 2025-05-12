@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Question, QuestionCategory } from '@/types/questions';
 import { transformQuestion } from '../utils';
@@ -198,7 +199,7 @@ export async function fetchQuestionsByBox(
   console.log(`Fetching questions for user ${userId} in box ${boxNumber} with regulation ${regulationCategory}`);
   console.log("Include all subcategories:", includeAllSubcategories);
   
-  // Use a Common Table Expression (CTE) to select only the most recent entry for each question_id
+  // Use the newly created stored procedure to get latest progress entries per question
   const { data, error } = await supabase
     .rpc('get_latest_progress_by_box', { 
       p_user_id: userId, 
@@ -213,7 +214,7 @@ export async function fetchQuestionsByBox(
   // Filter by regulation if needed
   let filteredData = data || [];
   
-  if (regulationCategory !== "all") {
+  if (regulationCategory !== "all" && Array.isArray(filteredData)) {
     filteredData = filteredData.filter(p => 
       p.questions?.regulation_category === regulationCategory || 
       p.questions?.regulation_category === "both" || 

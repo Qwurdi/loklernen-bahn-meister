@@ -70,19 +70,26 @@ export function useSpacedRepetition(
           // Ensure we don't have duplicate questions
           const uniqueQuestionsMap = new Map<string, Question>();
           
-          boxProgress
-            .filter(p => p.questions) // Ensure questions exist
-            .forEach(p => {
-              if (p.questions && p.question_id) {
-                uniqueQuestionsMap.set(p.question_id, transformQuestion(p.questions));
-              }
-            });
+          // Make sure boxProgress is an array before trying to use array methods
+          if (Array.isArray(boxProgress)) {
+            boxProgress
+              .filter(p => p.questions) // Ensure questions exist
+              .forEach(p => {
+                if (p.questions && p.question_id) {
+                  uniqueQuestionsMap.set(p.question_id, transformQuestion(p.questions));
+                }
+              });
+              
+            const questionsFromBox = Array.from(uniqueQuestionsMap.values());
             
-          const questionsFromBox = Array.from(uniqueQuestionsMap.values());
-          
-          console.log(`Loaded ${questionsFromBox.length} unique questions from box ${boxNumber}`);
-          setDueQuestions(questionsFromBox);
-          setProgress(boxProgress);
+            console.log(`Loaded ${questionsFromBox.length} unique questions from box ${boxNumber}`);
+            setDueQuestions(questionsFromBox);
+            setProgress(boxProgress);
+          } else {
+            console.warn("boxProgress is not an array:", boxProgress);
+            setDueQuestions([]);
+            setProgress([]);
+          }
         } else {
           // Regular spaced repetition mode for authenticated users
           const filteredProgressData = await fetchUserProgress(

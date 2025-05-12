@@ -55,3 +55,6 @@ export function useFlashcardSessionParams() {
     setRegulationFilter
   };
 }
+
+// Export with the name expected by LearningSessionPage
+export const useSessionParams = useFlashcardSessionParams;

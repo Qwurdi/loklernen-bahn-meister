@@ -1,106 +1,127 @@
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { act } from 'react-dom/test-utils';
+import { render, renderHook } from '@testing-library/react';
 import { useSessionState } from '../useSessionState';
+import { Question } from '@/types/questions';
+import { describe, expect, it, vi } from 'vitest';
+
+// Mock data
+const mockQuestions: Question[] = [
+  {
+    id: '1',
+    category: 'Signale',
+    sub_category: 'Test',
+    question_type: 'MC_single',
+    difficulty: 1,
+    text: 'Test Question 1',
+    answers: [{ text: 'Answer 1', isCorrect: true }],
+    created_by: 'test',
+    revision: 1,
+    created_at: '',
+    updated_at: '',
+  },
+  {
+    id: '2',
+    category: 'Signale',
+    sub_category: 'Test',
+    question_type: 'MC_single',
+    difficulty: 1,
+    text: 'Test Question 2',
+    answers: [{ text: 'Answer 2', isCorrect: true }],
+    created_by: 'test',
+    revision: 1,
+    created_at: '',
+    updated_at: '',
+  }
+];
 
 // Mock component that uses the hook
 function TestComponent() {
   const { 
-    state, 
-    goToNextQuestion,
-    goToPreviousQuestion,
-    setCurrentQuestionIndex,
-    markQuestionAsAnswered,
-    finishSession
-  } = useSessionState(5);
+    currentIndex, 
+    setCurrentIndex,
+    correctCount,
+    sessionCards,
+    sessionFinished,
+    handleAnswer,
+    handleComplete,
+    handleRestart
+  } = useSessionState(
+    false, // questionsLoading
+    mockQuestions, // dueQuestions
+    true, // categoryFound
+    false, // categoryRequiresAuth
+    { id: 'test-user' } // user
+  );
   
   return (
     <div>
-      <div data-testid="current-index">{state.currentQuestionIndex}</div>
-      <div data-testid="total-questions">{state.totalQuestions}</div>
-      <div data-testid="answered-count">{state.answeredQuestions.length}</div>
-      <div data-testid="is-finished">{state.isFinished ? 'true' : 'false'}</div>
-      <button onClick={() => goToNextQuestion()} data-testid="next-btn">Next</button>
-      <button onClick={() => goToPreviousQuestion()} data-testid="prev-btn">Previous</button>
-      <button onClick={() => setCurrentQuestionIndex(2)} data-testid="set-index-btn">Set to 2</button>
-      <button onClick={() => markQuestionAsAnswered(state.currentQuestionIndex)} data-testid="mark-answered-btn">Mark Answered</button>
-      <button onClick={() => finishSession()} data-testid="finish-btn">Finish</button>
+      <div data-testid="current-index">{currentIndex}</div>
+      <div data-testid="correct-count">{correctCount}</div>
+      <div data-testid="session-cards">{sessionCards.length}</div>
+      <div data-testid="is-finished">{sessionFinished ? 'true' : 'false'}</div>
+      <button onClick={() => setCurrentIndex(currentIndex + 1)} data-testid="next-btn">Next</button>
+      <button onClick={() => setCurrentIndex(currentIndex - 1)} data-testid="prev-btn">Previous</button>
+      <button onClick={() => setCurrentIndex(2)} data-testid="set-index-btn">Set to 2</button>
+      <button onClick={() => handleAnswer('1', 5)} data-testid="answer-btn">Answer Correctly</button>
+      <button onClick={handleComplete} data-testid="complete-btn">Complete</button>
     </div>
   );
 }
 
 describe('useSessionState', () => {
   it('initializes with the correct state', () => {
-    render(<TestComponent />);
-    expect(screen.getByTestId('current-index').textContent).toBe('0');
-    expect(screen.getByTestId('total-questions').textContent).toBe('5');
-    expect(screen.getByTestId('answered-count').textContent).toBe('0');
-    expect(screen.getByTestId('is-finished').textContent).toBe('false');
+    const { result } = renderHook(() => 
+      useSessionState(false, mockQuestions, true, false, { id: 'test-user' })
+    );
+    
+    expect(result.current.currentIndex).toBe(0);
+    expect(result.current.correctCount).toBe(0);
+    expect(result.current.sessionCards.length).toBe(2);
+    expect(result.current.sessionFinished).toBe(false);
   });
 
-  it('increments the question index when goToNextQuestion is called', async () => {
-    render(<TestComponent />);
-    const nextButton = screen.getByTestId('next-btn');
+  it('increments correct count when answering correctly', async () => {
+    const submitAnswerMock = vi.fn().mockResolvedValue(undefined);
+    const { result } = renderHook(() => 
+      useSessionState(false, mockQuestions, true, false, { id: 'test-user' })
+    );
     
-    await act(async () => {
-      await userEvent.click(nextButton);
-    });
+    // Answer with score 5 (considered correct)
+    await result.current.handleAnswer('1', 5, submitAnswerMock);
     
-    expect(screen.getByTestId('current-index').textContent).toBe('1');
+    expect(result.current.correctCount).toBe(1);
+    expect(submitAnswerMock).toHaveBeenCalledWith('1', 5);
   });
 
-  it('decrements the question index when goToPreviousQuestion is called', async () => {
-    render(<TestComponent />);
+  it('marks session as finished when handleComplete is called', () => {
+    const applyUpdatesMock = vi.fn().mockResolvedValue(undefined);
+    const { result } = renderHook(() => 
+      useSessionState(false, mockQuestions, true, false, { id: 'test-user' })
+    );
     
-    // First go to the next question
-    const nextButton = screen.getByTestId('next-btn');
-    await act(async () => {
-      await userEvent.click(nextButton);
-    });
+    result.current.handleComplete(applyUpdatesMock);
     
-    expect(screen.getByTestId('current-index').textContent).toBe('1');
-    
-    // Then go back
-    const prevButton = screen.getByTestId('prev-btn');
-    await act(async () => {
-      await userEvent.click(prevButton);
-    });
-    
-    expect(screen.getByTestId('current-index').textContent).toBe('0');
+    expect(result.current.sessionFinished).toBe(true);
+    expect(applyUpdatesMock).toHaveBeenCalled();
   });
 
-  it('sets the question index when setCurrentQuestionIndex is called', async () => {
-    render(<TestComponent />);
+  it('resets session when handleRestart is called', async () => {
+    const applyUpdatesMock = vi.fn().mockResolvedValue(undefined);
+    const { result } = renderHook(() => 
+      useSessionState(false, mockQuestions, true, false, { id: 'test-user' })
+    );
     
-    const setIndexButton = screen.getByTestId('set-index-btn');
-    await act(async () => {
-      await userEvent.click(setIndexButton);
-    });
+    // First complete the session
+    result.current.handleComplete(applyUpdatesMock);
+    expect(result.current.sessionFinished).toBe(true);
     
-    expect(screen.getByTestId('current-index').textContent).toBe('2');
-  });
-
-  it('adds question to answered list when markQuestionAsAnswered is called', async () => {
-    render(<TestComponent />);
+    // Then restart it
+    await result.current.handleRestart(applyUpdatesMock, mockQuestions);
     
-    const markAnsweredButton = screen.getByTestId('mark-answered-btn');
-    await act(async () => {
-      await userEvent.click(markAnsweredButton);
-    });
-    
-    expect(screen.getByTestId('answered-count').textContent).toBe('1');
-  });
-
-  it('finishes the session when finishSession is called', async () => {
-    render(<TestComponent />);
-    
-    const finishButton = screen.getByTestId('finish-btn');
-    await act(async () => {
-      await userEvent.click(finishButton);
-    });
-    
-    expect(screen.getByTestId('is-finished').textContent).toBe('true');
+    expect(result.current.sessionFinished).toBe(false);
+    expect(result.current.currentIndex).toBe(0);
+    expect(result.current.correctCount).toBe(0);
+    expect(applyUpdatesMock).toHaveBeenCalled();
   });
 });

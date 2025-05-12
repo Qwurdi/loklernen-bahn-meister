@@ -9,13 +9,7 @@ export const mockQuestions: Question[] = [
     category: 'Signale',
     sub_category: 'Hauptsignale',
     difficulty: 3,
-    text: {
-      type: 'doc',
-      content: [{
-        type: 'paragraph',
-        content: [{ text: 'Test question 1', type: 'text' }]
-      }]
-    },
+    text: 'Test question 1',
     question_type: 'MC_single',
     answers: [
       { text: 'Answer 1', isCorrect: true },
@@ -31,13 +25,7 @@ export const mockQuestions: Question[] = [
     category: 'Signale',
     sub_category: 'Hauptsignale',
     difficulty: 2,
-    text: {
-      type: 'doc',
-      content: [{
-        type: 'paragraph',
-        content: [{ text: 'Test question 2', type: 'text' }]
-      }]
-    },
+    text: 'Test question 2',
     question_type: 'MC_single',
     answers: [
       { text: 'Answer 1', isCorrect: false },

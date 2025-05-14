@@ -1,71 +1,79 @@
 
-import { useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { QuestionCategory } from "@/types/questions";
+import { RegulationFilterType } from "@/types/regulation";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
+import { determineMainCategory, mapUrlToSubcategory } from "@/utils/subcategory-utils";
 
-interface SessionParams {
-  categoryParam: QuestionCategory;
-  subcategoryParam: string | null;
-  regulationParam: string;
-  boxParam?: number;
-  sessionTitle: string;
-  practiceMode: boolean; // Flag für Übungsmodus
-}
-
-export function useSessionParams(): SessionParams {
-  const [searchParams] = useSearchParams();
+export function useFlashcardSessionParams() {
+  const { subcategory: urlSubcategoryParam } = useParams<{ subcategory: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { regulationPreference } = useUserPreferences();
   
-  // Get category, subcategory, regulation preference and box number from URL parameters
-  const categoryParam = searchParams.get("category") as QuestionCategory || "Signale";
-  const subcategoryParam = searchParams.get("subcategory");
-  const regulationParam = searchParams.get("regelwerk") || regulationPreference;
-  const boxParam = searchParams.get("box") ? parseInt(searchParams.get("box") || "0") : undefined;
-  const practiceMode = searchParams.get("practice") === "true";
+  // Get query parameters
+  const categoryUrlQueryParam = searchParams.get('category');
+  const parentCategoryParam = searchParams.get('parent_category');
+  const categoriesUrlQueryParam = searchParams.getAll('categories');
+  const regulationParam = searchParams.get("regelwerk") as RegulationFilterType || regulationPreference;
+  const boxParam = searchParams.get("box");
+  
+  // Determine mainCategory and subCategory for fetching questions
+  const mainCategoryForHook: QuestionCategory = determineMainCategory(
+    urlSubcategoryParam,
+    categoryUrlQueryParam,
+    categoriesUrlQueryParam,
+    parentCategoryParam
+  );
+  
+  let subCategoryForHook: string | undefined = undefined;
+  
+  if (urlSubcategoryParam) {
+    subCategoryForHook = mapUrlToSubcategory(urlSubcategoryParam);
+  } else if (categoryUrlQueryParam) {
+    const potentialSubCategory = mapUrlToSubcategory(categoryUrlQueryParam);
+    if (potentialSubCategory && potentialSubCategory !== "Signale" && potentialSubCategory !== "Betriebsdienst") {
+      subCategoryForHook = potentialSubCategory;
+    }
+  }
 
-  // Log params for debugging
-  console.log("Session Params:", {
-    category: categoryParam,
-    subcategory: subcategoryParam,
-    regulation: regulationParam,
-    box: boxParam,
-    practice: practiceMode
-  });
+  // Determine if we're in a due cards view
+  const isDueCardsView = searchParams.has("due") || searchParams.get("view") === "due";
 
-  // Create a more descriptive title based on parameters
-  const getSessionTitle = () => {
-    let title = '';
-    
-    if (practiceMode) {
-      title += 'Übungsmodus - ';
-    }
-    
-    if (boxParam) {
-      title += `Box ${boxParam} - `;
-    } 
-    
-    if (subcategoryParam) {
-      title += `${subcategoryParam}`;
-    } else {
-      title += 'Fällige Karten';
-    }
-    
-    // Add regulation info if specific
-    if (regulationParam !== "both") {
-      title += ` (${regulationParam})`;
-    }
-    
-    return title;
+  // Generate a session title based on parameters
+  let sessionTitle = subCategoryForHook || mainCategoryForHook || "Lernkarten";
+  if (isDueCardsView) {
+    sessionTitle = "Fällige Karten";
+  }
+
+  const setRegulationFilter = (value: RegulationFilterType) => {
+    setSearchParams(params => {
+      params.set("regelwerk", value);
+      return params;
+    });
   };
 
-  const sessionTitle = getSessionTitle();
-  
   return {
-    categoryParam,
-    subcategoryParam,
+    // Original properties
+    urlSubcategoryParam,
+    categoryUrlQueryParam,
+    parentCategoryParam,
+    categoriesUrlQueryParam,
     regulationParam,
+    searchParams,
+    setSearchParams,
+    mainCategoryForHook,
+    subCategoryForHook,
+    setRegulationFilter,
+
+    // Additional properties needed by LearningSessionPage
+    categoryParam: categoryUrlQueryParam,
+    subcategoryParam: subCategoryForHook,
     boxParam,
     sessionTitle,
-    practiceMode
+    isDueCardsView
   };
 }
+
+// Export with both names to maintain compatibility
+export const useSessionParams = useFlashcardSessionParams;
+

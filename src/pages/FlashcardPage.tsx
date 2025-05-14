@@ -1,177 +1,169 @@
 
-import { useState, useEffect } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect } from "react";
+import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { Button } from "@/components/ui/button";
-import { useSpacedRepetition } from "@/hooks/spaced-repetition";
-import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
-import { QuestionCategory } from "@/types/questions";
-import { signalSubCategories } from "@/api/categories/types";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useUserPreferences } from "@/contexts/UserPreferencesContext";
-import { RegulationFilterType } from "@/types/regulation";
+import BottomNavigation from "@/components/layout/BottomNavigation";
 import FlashcardLoadingState from "@/components/flashcards/FlashcardLoadingState";
 import FlashcardEmptyState from "@/components/flashcards/FlashcardEmptyState";
 import FlashcardHeader from "@/components/flashcards/FlashcardHeader";
-import { useIsMobile } from "@/hooks/use-mobile";
-import BottomNavigation from "@/components/layout/BottomNavigation";
 import CardStack from "@/components/flashcards/stack/CardStack";
-
-// Helper to map URL subcategory param back to original subcategory string (case sensitive)
-function mapUrlToSubcategory(urlSubcategory?: string): string | undefined {
-  if (!urlSubcategory) return undefined;
-  const normalizedParam = urlSubcategory.toLowerCase();
-
-  const found = signalSubCategories.find((subcat) => 
-    subcat.toLowerCase().replace(/[^a-z0-9]+/g, '-') === normalizedParam
-  );
-  return found;
-}
+import EmptySessionState from '@/components/learning-session/EmptySessionState';
+import FlashcardSessionComplete from "@/components/flashcards/FlashcardSessionComplete";
+import { useFlashcardSession } from "@/hooks/learning-session/useFlashcardSession";
+import { useFullscreen } from "@/hooks/useFullscreen";
 
 export default function FlashcardPage() {
   console.log("FlashcardPage: Initializing component");
   
-  const { subcategory: urlSubcategory } = useParams<{ subcategory: string }>();
-  const subcategory = mapUrlToSubcategory(urlSubcategory); // map to original subcategory
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [correctCount, setCorrectCount] = useState(0);
-  const [sessionFinished, setSessionFinished] = useState(false);
-  const [isPracticeMode] = useState(true);
-  const { regulationPreference } = useUserPreferences();
-  const [searchParams, setSearchParams] = useSearchParams();
   const isMobile = useIsMobile();
+  const { isCleanMode } = useFullscreen();
   
-  // Get regulation filter from URL or default to user preference
-  const regulationParam = searchParams.get("regelwerk") as RegulationFilterType || regulationPreference;
-
-  // Pass the regulation preference to the hook
   const {
     loading,
-    dueQuestions: questions,
-    submitAnswer
-  } = useSpacedRepetition(
-    "Signale" as QuestionCategory, 
-    subcategory, 
-    { 
-      practiceMode: isPracticeMode,
-      regulationCategory: regulationParam
-    }
-  );
+    questions,
+    user,
+    currentIndex,
+    setCurrentIndex,
+    correctCount,
+    sessionFinished,
+    subCategoryForHook,
+    mainCategoryForHook,
+    isPracticeMode,
+    handleAnswer,
+    handleComplete,
+    handleRegulationChange,
+    searchParams,
+    navigate
+  } = useFlashcardSession();
 
-  console.log("FlashcardPage: Loaded questions count:", questions?.length || 0);
-
-  // Query to get total due cards count for today
-  const { data: dueTodayStats } = useQuery({
-    queryKey: ['dueTodayCount', user?.id, regulationParam],
-    queryFn: async () => {
-      if (!user) return { count: 0 };
-      
-      const { count, error } = await supabase
-        .from('user_progress')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .lte('next_review_at', new Date().toISOString());
-        
-      if (error) throw error;
-      
-      return { count: count || 0 };
-    },
-    enabled: !!user
-  });
-
-  const remainingToday = (dueTodayStats?.count || 0);
-
-  const handleAnswer = async (questionId: string, score: number) => {
-    if (user) {
-      await submitAnswer(questionId, score);
-    }
-
-    if (score >= 4) {
-      setCorrectCount(prev => prev + 1);
-    }
-  };
-
-  const handleComplete = () => {
-    setSessionFinished(true);
-    toast.success("Gut gemacht! Du hast alle Karten dieser Kategorie bearbeitet!");
-  };
-
-  // Update regulation filter when it changes
-  const handleRegulationChange = (value: RegulationFilterType) => {
-    setSearchParams(params => {
-      params.set("regelwerk", value);
-      return params;
-    });
-  };
-
-  // Apply mobile mode styles
   useEffect(() => {
+    if (sessionFinished) {
+      toast.success("Gut gemacht! Du hast alle Karten dieser Kategorie bearbeitet!");
+    }
+  }, [sessionFinished]);
+
+  // Properly handle mobile viewport
+  useEffect(() => {
+    const handleResize = () => {
+      // When on mobile, update CSS viewport height variable
+      if (isMobile) {
+        // Set a CSS variable for the real viewport height
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+      }
+    };
+    
+    // Apply overflow control for mobile
     if (isMobile) {
       document.body.style.overflow = 'hidden';
-      document.documentElement.classList.add('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
+      document.documentElement.style.overflow = 'hidden';
+      document.documentElement.style.position = 'fixed';
+      document.documentElement.style.height = '100%';
+      document.documentElement.style.width = '100%';
       
-      return () => {
-        document.body.style.overflow = '';
-        document.documentElement.classList.remove('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
-      };
+      // Calculate initial viewport height
+      handleResize();
+      // Add listener for orientation changes
+      window.addEventListener('resize', handleResize);
     }
+    
+    return () => {
+      // Clean up all styles when component unmounts
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.position = '';
+      document.documentElement.style.height = '';
+      document.documentElement.style.width = '';
+      window.removeEventListener('resize', handleResize);
+    };
   }, [isMobile]);
 
+  // Add fullscreen class when in clean mode
+  useEffect(() => {
+    if (isCleanMode) {
+      document.body.classList.add('flashcard-clean-mode');
+    } else {
+      document.body.classList.remove('flashcard-clean-mode');
+    }
+    return () => {
+      document.body.classList.remove('flashcard-clean-mode');
+    };
+  }, [isCleanMode]);
+
+  // Handle loading state
   if (loading) {
     return <FlashcardLoadingState />;
   }
 
-  if (!loading && questions.length === 0) {
-    return <FlashcardEmptyState />;
+  // Handle empty state
+  if (!loading && questions.length === 0 && !sessionFinished) {
+    const boxUrlParam = searchParams.get('box');
+    const questionIdUrlParam = searchParams.get('questionId');
+    const dueUrlParam = searchParams.get('due');
+    const isGuest = !user;
+
+    const isGuestLearningSpecificCategory =
+      isGuest &&
+      (!!searchParams.get('category') || searchParams.getAll('categories').length > 0 || !!searchParams.get('subcategory')) &&
+      !boxUrlParam &&
+      !questionIdUrlParam &&
+      dueUrlParam !== 'true';
+
+    if (isGuestLearningSpecificCategory) {
+      return (
+        <EmptySessionState
+          categoryParam={mainCategoryForHook}
+          isGuestLearningCategory={true}
+        />
+      );
+    } else {
+      if (dueUrlParam === 'true') {
+        return <FlashcardEmptyState />;
+      } else {
+        return <EmptySessionState categoryParam={mainCategoryForHook} />;
+      }
+    }
   }
 
-  // Handle session completion
+  // Handle completed session
   if (sessionFinished) {
-    return (
-      <div className="flex min-h-screen flex-col bg-black text-white">
-        <Navbar />
-        <main className="flex-1 container py-12 flex flex-col items-center justify-center">
-          <div className="p-6 max-w-md text-center bg-gray-900 rounded-xl shadow-lg border border-gray-800">
-            <h2 className="text-2xl font-bold mb-4">Kategorie abgeschlossen!</h2>
-            <p className="text-gray-300 mb-6">
-              Du hast {correctCount} von {questions.length} Karten richtig beantwortet.
-              ({Math.round((correctCount / questions.length) * 100)}%)
-            </p>
-            <div className="flex justify-center">
-              <Button 
-                onClick={() => navigate('/karteikarten')}
-                className="bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90"
-              >
-                Zurück zur Übersicht
-              </Button>
-            </div>
-          </div>
-        </main>
-        {!isMobile && <Footer />}
-        {isMobile && <BottomNavigation />}
-      </div>
-    );
+    return <FlashcardSessionComplete 
+      correctCount={correctCount}
+      totalQuestions={questions.length}
+      isMobile={isMobile}
+    />;
   }
 
+  // Mobile-optimized class for container
+  const containerClasses = isMobile 
+    ? 'h-[calc(100vh-var(--bottom-nav-height,64px))] max-h-[calc(var(--vh,1vh)*100-var(--bottom-nav-height,64px))] overflow-hidden'
+    : 'min-h-screen';
+
+  // Determine if we should show navigation elements
+  const showNavbar = !isCleanMode;
+  const showBottomNav = !isCleanMode && isMobile;
+
+  // Calculate content classes based on clean mode
+  const contentClasses = isCleanMode
+    ? 'h-screen py-0 px-0' // Full screen in clean mode
+    : isMobile ? 'px-0 pt-0 pb-16 h-full' : 'container px-4 py-6'; // Regular display
+
+  // Render the main flashcard view
   return (
-    <div className={`flex flex-col ${isMobile ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-black text-white`}>
-      <Navbar />
+    <div className={`flex flex-col ${containerClasses} bg-black text-white`}>
+      {showNavbar && <Navbar />}
       
-      <main className="flex-1">
-        <div className={`${isMobile ? 'px-0 pt-0 pb-16 h-full' : 'container px-4 py-6'}`}>
+      <main className={`flex-1 relative overflow-hidden ${isCleanMode ? 'pt-1' : ''}`}>
+        <div className={contentClasses}>
           <FlashcardHeader 
-            subcategory={subcategory}
+            subcategory={subCategoryForHook || mainCategoryForHook}
             isPracticeMode={isPracticeMode}
             onRegulationChange={handleRegulationChange}
           />
           
-          {/* Card Stack */}
-          <div className="h-full pt-2">
+          <div className="h-full pt-1">
             <CardStack 
               questions={questions}
               onAnswer={handleAnswer}
@@ -183,8 +175,8 @@ export default function FlashcardPage() {
         </div>
       </main>
       
-      {!isMobile && <Footer />}
-      {isMobile && <BottomNavigation />}
+      {!isMobile && !isCleanMode && <Footer />}
+      {showBottomNav && <BottomNavigation />}
     </div>
   );
 }

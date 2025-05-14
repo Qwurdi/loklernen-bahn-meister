@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,21 +29,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("AuthContext: Auth state changed:", event);
       if (!mounted) return;
 
-      // Show notifications for login/logout events (but not on initial load)
       if (!loading) {
         if (event === 'SIGNED_IN') {
           toast.success('Erfolgreich angemeldet!');
           
-          // Check for new sign up
-          if (!user) {
-            const isSignUp = localStorage.getItem('isNewSignUp') === 'true';
-            if (isSignUp) {
-              setIsNewUser(true);
-              localStorage.removeItem('isNewSignUp');
+          // New user check based on Supabase user attributes
+          if (currentSession?.user) {
+            const createdAt = currentSession.user.created_at;
+            const lastSignInAt = currentSession.user.last_sign_in_at;
+
+            if (createdAt && lastSignInAt) {
+              const createdAtTime = new Date(createdAt).getTime();
+              const lastSignInAtTime = new Date(lastSignInAt).getTime();
+              // Consider as new user if last sign-in is very close to creation time (e.g., within 10 seconds)
+              // This also implicitly handles the very first sign-in.
+              if (Math.abs(lastSignInAtTime - createdAtTime) < 10000) { // 10 seconds threshold
+                setIsNewUser(true);
+              } else {
+                setIsNewUser(false); // Explicitly set to false if not new
+              }
+            } else {
+              // Fallback or if attributes are not available, assume not a new user for safety
+              setIsNewUser(false);
             }
           }
         } else if (event === 'SIGNED_OUT') {
           toast.success('Erfolgreich abgemeldet!');
+          setIsNewUser(false); // Reset on sign out
         }
       }
 

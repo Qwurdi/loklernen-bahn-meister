@@ -20,6 +20,7 @@ export type Database = {
           isPro: boolean
           name: string
           parent_category: string
+          requiresAuth: boolean | null
           updated_at: string | null
         }
         Insert: {
@@ -32,6 +33,7 @@ export type Database = {
           isPro?: boolean
           name: string
           parent_category: string
+          requiresAuth?: boolean | null
           updated_at?: string | null
         }
         Update: {
@@ -44,6 +46,7 @@ export type Database = {
           isPro?: boolean
           name?: string
           parent_category?: string
+          requiresAuth?: boolean | null
           updated_at?: string | null
         }
         Relationships: []
@@ -208,6 +211,27 @@ export type Database = {
       calculate_next_review: {
         Args: { box_num: number }
         Returns: string
+      }
+      get_latest_progress_by_box: {
+        Args: { p_user_id: string; p_box_number: number }
+        Returns: {
+          id: string
+          user_id: string
+          question_id: string
+          last_score: number
+          box_number: number
+          last_reviewed_at: string
+          next_review_at: string
+          ease_factor: number
+          interval_days: number
+          repetition_count: number
+          correct_count: number
+          incorrect_count: number
+          streak: number
+          created_at: string
+          updated_at: string
+          questions: Json
+        }[]
       }
     }
     Enums: {

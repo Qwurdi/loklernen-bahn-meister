@@ -1,8 +1,7 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Category } from "@/api/categories";
+import { Category } from "@/api/categories/index";
 import { useCategories } from "@/hooks/useCategories";
 import { QuestionCategory } from "@/types/questions";
 import CategoryListItem from "./CategoryListItem";
@@ -35,7 +34,8 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, parentCategory 
         name: values.name,
         description: values.description || undefined,
         isPro: values.isPro,
-        isPlanned: values.isPlanned
+        isPlanned: values.isPlanned,
+        requiresAuth: values.requiresAuth // Neues Feld hinzugefügt
       }
     });
     setEditCategory(null);

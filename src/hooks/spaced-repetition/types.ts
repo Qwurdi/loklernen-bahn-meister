@@ -1,55 +1,38 @@
 
-import { Question, QuestionCategory } from '@/types/questions';
-
 export interface UserProgress {
   id: string;
+  user_id: string;
   question_id: string;
+  box_number: number;
+  last_score: number;
   last_reviewed_at: string;
   next_review_at: string;
-  ease_factor: number;
-  interval_days: number;
   repetition_count: number;
+  streak: number;
   correct_count: number;
   incorrect_count: number;
-  last_score: number;
-  box_number: number;
-  streak: number;
+  ease_factor: number;
+  interval_days: number;
+  questions?: any;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface SpacedRepetitionOptions {
   practiceMode?: boolean;
   regulationCategory?: string;
   boxNumber?: number;
-  batchSize?: number; // Option to control batch size
+  batchSize?: number;
+  includeAllSubcategories?: boolean; // New option to load all subcategories for parent categories
 }
 
 export interface SpacedRepetitionResult {
   loading: boolean;
   error: Error | null;
-  dueQuestions: Question[];
+  dueQuestions: any[];
   progress: UserProgress[];
   submitAnswer: (questionId: string, score: number) => Promise<void>;
   pendingUpdatesCount: number;
   applyPendingUpdates: () => Promise<void>;
   reloadQuestions: () => Promise<void>;
-}
-
-export interface BoxStats {
-  boxNumber: number;
-  total: number;
-  due: number;
-  regulationCategory?: string; // Added for regulation-specific stats
-}
-
-export interface LearningBoxOptions {
-  userId: string;
-  regulationCategory?: string;
-  includeCompleted?: boolean;
-}
-
-export interface SessionPreferences {
-  practiceMode: boolean;
-  regulationCategory: string;
-  batchSize: number;
-  selectedCategories?: string[];
 }

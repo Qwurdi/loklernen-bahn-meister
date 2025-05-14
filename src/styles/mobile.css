@@ -1,10 +1,5 @@
 
 /* ===== Mobile App Layout ===== */
-:root {
-  --bottom-nav-height: 64px;
-  --vh: 1vh;
-}
-
 .mobile-app-container {
   position: fixed;
   top: 0;
@@ -14,7 +9,6 @@
   overflow: hidden;
   height: 100%;
   width: 100%;
-  height: calc(var(--vh, 1vh) * 100);
 }
 
 /* ===== Mobile Full-Screen Mode ===== */
@@ -24,41 +18,11 @@
     position: fixed;
     height: 100%;
     width: 100%;
-    height: calc(var(--vh, 1vh) * 100);
   }
 
   .mobile-full-bleed {
     margin-left: -1rem;
     margin-right: -1rem;
     width: calc(100% + 2rem);
-  }
-  
-  /* Prevent elastic scrolling on iOS */
-  html, body {
-    overscroll-behavior-y: none;
-  }
-  
-  /* Fix for iOS height issues */
-  .mobile-full-height {
-    height: calc(var(--vh, 1vh) * 100);
-  }
-  
-  .content-area {
-    height: calc(var(--vh, 1vh) * 100 - var(--bottom-nav-height));
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  /* Fix for cards */
-  .card-container-mobile {
-    max-height: calc(var(--vh, 1vh) * 100 - 180px);
-    overflow: hidden;
-  }
-}
-
-/* iOS specific fixes */
-@supports (-webkit-touch-callout: none) {
-  .ios-height-fix {
-    height: -webkit-fill-available;
   }
 }

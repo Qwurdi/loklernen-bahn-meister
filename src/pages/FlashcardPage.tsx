@@ -12,13 +12,11 @@ import CardStack from "@/components/flashcards/stack/CardStack";
 import EmptySessionState from '@/components/learning-session/EmptySessionState';
 import FlashcardSessionComplete from "@/components/flashcards/FlashcardSessionComplete";
 import { useFlashcardSession } from "@/hooks/learning-session/useFlashcardSession";
-import { useFullscreen } from "@/hooks/useFullscreen";
 
 export default function FlashcardPage() {
   console.log("FlashcardPage: Initializing component");
   
   const isMobile = useIsMobile();
-  const { isCleanMode } = useFullscreen();
   
   const {
     loading,
@@ -44,53 +42,17 @@ export default function FlashcardPage() {
     }
   }, [sessionFinished]);
 
-  // Properly handle mobile viewport
   useEffect(() => {
-    const handleResize = () => {
-      // When on mobile, update CSS viewport height variable
-      if (isMobile) {
-        // Set a CSS variable for the real viewport height
-        const vh = window.innerHeight * 0.01;
-        document.documentElement.style.setProperty('--vh', `${vh}px`);
-      }
-    };
-    
-    // Apply overflow control for mobile
     if (isMobile) {
       document.body.style.overflow = 'hidden';
-      document.documentElement.style.overflow = 'hidden';
-      document.documentElement.style.position = 'fixed';
-      document.documentElement.style.height = '100%';
-      document.documentElement.style.width = '100%';
+      document.documentElement.classList.add('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
       
-      // Calculate initial viewport height
-      handleResize();
-      // Add listener for orientation changes
-      window.addEventListener('resize', handleResize);
+      return () => {
+        document.body.style.overflow = '';
+        document.documentElement.classList.remove('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
+      };
     }
-    
-    return () => {
-      // Clean up all styles when component unmounts
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-      document.documentElement.style.position = '';
-      document.documentElement.style.height = '';
-      document.documentElement.style.width = '';
-      window.removeEventListener('resize', handleResize);
-    };
   }, [isMobile]);
-
-  // Add fullscreen class when in clean mode
-  useEffect(() => {
-    if (isCleanMode) {
-      document.body.classList.add('flashcard-clean-mode');
-    } else {
-      document.body.classList.remove('flashcard-clean-mode');
-    }
-    return () => {
-      document.body.classList.remove('flashcard-clean-mode');
-    };
-  }, [isCleanMode]);
 
   // Handle loading state
   if (loading) {
@@ -136,34 +98,20 @@ export default function FlashcardPage() {
     />;
   }
 
-  // Mobile-optimized class for container
-  const containerClasses = isMobile 
-    ? 'h-[calc(100vh-var(--bottom-nav-height,64px))] max-h-[calc(var(--vh,1vh)*100-var(--bottom-nav-height,64px))] overflow-hidden'
-    : 'min-h-screen';
-
-  // Determine if we should show navigation elements
-  const showNavbar = !isCleanMode;
-  const showBottomNav = !isCleanMode && isMobile;
-
-  // Calculate content classes based on clean mode
-  const contentClasses = isCleanMode
-    ? 'h-screen py-0 px-0' // Full screen in clean mode
-    : isMobile ? 'px-0 pt-0 pb-16 h-full' : 'container px-4 py-6'; // Regular display
-
   // Render the main flashcard view
   return (
-    <div className={`flex flex-col ${containerClasses} bg-black text-white`}>
-      {showNavbar && <Navbar />}
+    <div className={`flex flex-col ${isMobile ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-black text-white`}>
+      <Navbar />
       
-      <main className={`flex-1 relative overflow-hidden ${isCleanMode ? 'pt-1' : ''}`}>
-        <div className={contentClasses}>
+      <main className="flex-1">
+        <div className={`${isMobile ? 'px-0 pt-0 pb-16 h-full' : 'container px-4 py-6'}`}>
           <FlashcardHeader 
             subcategory={subCategoryForHook || mainCategoryForHook}
             isPracticeMode={isPracticeMode}
             onRegulationChange={handleRegulationChange}
           />
           
-          <div className="h-full pt-1">
+          <div className="h-full pt-2">
             <CardStack 
               questions={questions}
               onAnswer={handleAnswer}
@@ -175,8 +123,8 @@ export default function FlashcardPage() {
         </div>
       </main>
       
-      {!isMobile && !isCleanMode && <Footer />}
-      {showBottomNav && <BottomNavigation />}
+      {!isMobile && <Footer />}
+      {isMobile && <BottomNavigation />}
     </div>
   );
 }

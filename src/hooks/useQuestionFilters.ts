@@ -1,7 +1,6 @@
 
 import { useState, useMemo } from 'react';
-import { Question, QuestionCategory, RegulationCategory } from '@/types/questions';
-import { RegulationFilterType } from '@/types/regulation';
+import { Question, QuestionCategory, RegulationCategory, RegulationFilterType } from '@/types/questions';
 import { getTextValue } from '@/types/rich-text';
 
 interface UseQuestionFiltersProps {

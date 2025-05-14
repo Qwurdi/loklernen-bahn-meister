@@ -1,13 +1,11 @@
 
 import { Json } from "@/integrations/supabase/types";
 import { StructuredContent } from "./rich-text";
-import { RegulationFilterType } from "./regulation";
 
 export type QuestionCategory = 'Signale' | 'Betriebsdienst';
 export type QuestionType = 'MC_single' | 'MC_multi' | 'open';
 export type RegulationCategory = 'DS 301' | 'DV 301' | 'both';
-// Use the imported RegulationFilterType from regulation.ts instead of redefining it
-// export type RegulationFilterType = RegulationCategory | 'all';
+export type RegulationFilterType = RegulationCategory | 'all';
 
 export interface Answer {
   text: string | StructuredContent;

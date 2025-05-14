@@ -13,14 +13,12 @@ interface MultipleChoiceQuestionProps {
   question: Question;
   onAnswer: (isCorrect: boolean) => void;
   isMobile: boolean;
-  isCleanMode?: boolean;
 }
 
 export default function MultipleChoiceQuestion({ 
   question, 
   onAnswer,
-  isMobile,
-  isCleanMode = false
+  isMobile 
 }: MultipleChoiceQuestionProps) {
   const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
   const [submitted, setSubmitted] = useState(false);
@@ -74,22 +72,16 @@ export default function MultipleChoiceQuestion({
     setSubmitted(true);
   };
   
-  // Adjust spacing based on clean mode
-  const optionSpacing = isCleanMode ? 'space-y-1.5' : 'space-y-2';
-  const containerSpacing = isCleanMode ? 'space-y-2 mb-3' : 'space-y-3 mb-6';
-  
   return (
     <div className="w-full flex flex-col">
-      {/* Question text - hidden in mobile clean mode as it's already shown on card front */}
-      {!(isMobile && isCleanMode) && (
-        <div className={`${textSizeClass} ${isCleanMode ? 'mb-2' : 'mb-4'} font-medium`}>
-          <SafeRichText content={question.text} />
-        </div>
-      )}
+      {/* Question text */}
+      <div className={`${textSizeClass} mb-4 font-medium`}>
+        <SafeRichText content={question.text} />
+      </div>
       
       {/* Hint button - no longer auto shows, only on request */}
-      {!submitted && !isCleanMode && (
-        <div className="mb-3">
+      {!submitted && (
+        <div className="mb-4">
           <HintButton 
             hint={question.hint}
             question={question.text}
@@ -98,19 +90,19 @@ export default function MultipleChoiceQuestion({
         </div>
       )}
       
-      <div className={`${containerSpacing} ${isMobile ? 'pr-1' : ''}`}>
+      <div className={`space-y-3 mb-6 ${isMobile ? 'pr-1' : ''}`}>
         {/* Single choice radio buttons */}
         {isSingleChoice && (
           <RadioGroup
             value={selectedAnswers[0]?.toString()}
             onValueChange={handleSingleChoiceChange}
             disabled={submitted}
-            className={optionSpacing}
+            className="space-y-2"
           >
             {question.answers.map((answer, index) => (
               <div 
                 key={index} 
-                className={`flex items-start space-x-2 ${isCleanMode ? 'p-2' : 'p-3'} rounded-md border ${
+                className={`flex items-start space-x-2 p-3 rounded-md border ${
                   submitted && answer.isCorrect
                     ? 'mc-option-correct' 
                     : submitted && selectedAnswers.includes(index) && !answer.isCorrect
@@ -148,11 +140,11 @@ export default function MultipleChoiceQuestion({
         
         {/* Multiple choice checkboxes */}
         {!isSingleChoice && (
-          <div className={optionSpacing}>
+          <div className="space-y-2">
             {question.answers.map((answer, index) => (
               <div 
                 key={index} 
-                className={`flex items-start space-x-2 ${isCleanMode ? 'p-2' : 'p-3'} rounded-md border ${
+                className={`flex items-start space-x-2 p-3 rounded-md border ${
                   submitted && answer.isCorrect
                     ? 'mc-option-correct' 
                     : submitted && selectedAnswers.includes(index) && !answer.isCorrect
@@ -198,24 +190,20 @@ export default function MultipleChoiceQuestion({
         <Button 
           onClick={handleSubmit} 
           disabled={selectedAnswers.length === 0}
-          className={`mt-auto bg-loklernen-ultramarine hover:bg-loklernen-sapphire ${
-            isCleanMode ? 'py-3' : ''
-          }`}
+          className="mt-auto bg-loklernen-ultramarine hover:bg-loklernen-sapphire"
         >
           Antwort prüfen
         </Button>
       ) : (
-        <div className={isCleanMode ? "mt-2 flex flex-col" : "mt-4 flex flex-col"}>
-          <div className={`${isCleanMode ? 'mb-2' : 'mb-3'} font-medium ${isCorrect ? 'text-green-600' : 'text-red-600'} mc-feedback`}>
+        <div className="mt-4 flex flex-col">
+          <div className={`mb-3 font-medium ${isCorrect ? 'text-green-600' : 'text-red-600'} mc-feedback`}>
             {isCorrect 
               ? "Korrekt! Gut gemacht!" 
               : "Nicht ganz richtig. Die richtige Antwort ist markiert."}
           </div>
           <Button 
             onClick={() => onAnswer(isCorrect)} 
-            className={`bg-loklernen-ultramarine hover:bg-loklernen-sapphire ${
-              isCleanMode ? 'py-3' : ''
-            }`}
+            className="bg-loklernen-ultramarine hover:bg-loklernen-sapphire"
           >
             Weiter zur nächsten Frage
           </Button>

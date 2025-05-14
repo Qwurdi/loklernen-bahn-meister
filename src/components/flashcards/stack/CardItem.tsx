@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Question } from '@/types/questions';
 import { motion } from 'framer-motion';
 import CardFront from './CardFront';
@@ -24,23 +24,8 @@ export default function CardItem<T extends Question = Question>({
   swipeDisabled = false 
 }: CardItemProps<T>) {
   const [isFlipped, setIsFlipped] = useState(false);
-  const [cardHeight, setCardHeight] = useState('auto');
   const isMobile = useIsMobile();
   const isMultipleChoice = question.question_type === 'MC_single' || question.question_type === 'MC_multi';
-  
-  // Calculate optimal card dimensions based on viewport
-  useEffect(() => {
-    if (isMobile) {
-      // Adjust card height dynamically based on viewport height
-      // Leave space for header/footer
-      const viewportHeight = window.innerHeight;
-      const usableHeight = viewportHeight - 160; // Account for header/navigation
-      const optimalHeight = Math.min(usableHeight, 500);
-      setCardHeight(`${optimalHeight}px`);
-    } else {
-      setCardHeight('auto'); // Default to aspect ratio on desktop
-    }
-  }, [isMobile]);
   
   const {
     cardRef,
@@ -89,12 +74,11 @@ export default function CardItem<T extends Question = Question>({
   return (
     <motion.div
       ref={cardRef}
-      className={`flashcard-item relative w-[90vw] max-w-md rounded-2xl
+      className={`flashcard-item relative w-[90vw] max-w-md aspect-[3/4] rounded-2xl
                   shadow-lg touch-none transform-gpu ${isPreview ? 'pointer-events-none' : ''}`}
       style={{
         backgroundColor: bgColor,
-        WebkitTapHighlightColor: 'transparent',
-        height: cardHeight, // Dynamic height based on viewport
+        WebkitTapHighlightColor: 'transparent'
       }}
       animate={{
         rotate: rotation,

@@ -22,43 +22,21 @@ export default function CardStackSession<T extends Question = Question>({
   onComplete,
   isMobile
 }: CardStackSessionProps<T>) {
-  // Improved handling for mobile view
+  // Prevent scrolling on mobile devices
   useEffect(() => {
     if (!isMobile) return;
     
-    // Save the original styles
-    const originalBodyOverflow = document.body.style.overflow;
-    const originalHtmlOverflow = document.documentElement.style.overflow;
-    const originalHtmlPosition = document.documentElement.style.position;
+    // Save the original style to restore it later
+    const originalStyle = window.getComputedStyle(document.body).overflow;
     
-    // Set CSS variable for actual viewport height
-    const vh = window.innerHeight * 0.01;
-    document.documentElement.style.setProperty('--vh', `${vh}px`);
-    
-    // Prevent scrolling on body and html
+    // Prevent scrolling on the body
     document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-    document.documentElement.style.position = 'fixed';
-    document.documentElement.style.height = '100%';
-    document.documentElement.style.width = '100%';
-    
-    const handleResize = () => {
-      // Update vh variable on resize/orientation change
-      const vh = window.innerHeight * 0.01;
-      document.documentElement.style.setProperty('--vh', `${vh}px`);
-    };
-    
-    window.addEventListener('resize', handleResize);
+    document.documentElement.classList.add('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
     
     // Cleanup function to restore original style
     return () => {
-      document.body.style.overflow = originalBodyOverflow;
-      document.documentElement.style.overflow = originalHtmlOverflow;
-      document.documentElement.style.position = originalHtmlPosition;
-      document.documentElement.style.removeProperty('height');
-      document.documentElement.style.removeProperty('width');
-      document.documentElement.style.removeProperty('--vh');
-      window.removeEventListener('resize', handleResize);
+      document.body.style.overflow = originalStyle;
+      document.documentElement.classList.remove('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
     };
   }, [isMobile]);
   

@@ -43,10 +43,10 @@ export default function FlashcardItemMobile({
   });
 
   return (
-    <div className="mx-auto w-full relative touch-none">
+    <div className="mx-auto w-full relative touch-none flex justify-center items-center">
       <Card 
         ref={cardRef}
-        className={getCardClasses()}
+        className={`${getCardClasses()} max-h-[calc(100vh-180px)] h-[500px] max-w-md w-full`}
         style={getCardStyle()}
         onTouchStart={handlers.handleTouchStart}
         onTouchMove={handlers.handleTouchMove}

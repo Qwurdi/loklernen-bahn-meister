@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import CardItem from './CardItem';
 import EmptyStackMessage from './EmptyStackMessage';
 import StackProgress from './StackProgress';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Update interface to use generics
 interface CardStackProps<T extends Question = Question> {
@@ -26,6 +27,17 @@ export default function CardStack<T extends Question = Question>({
   const [direction, setDirection] = useState<'left' | 'right' | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const stackRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
+
+  // Ensure body doesn't scroll on mobile
+  useEffect(() => {
+    if (isMobile) {
+      document.body.classList.add('overflow-hidden');
+      return () => {
+        document.body.classList.remove('overflow-hidden');
+      };
+    }
+  }, [isMobile]);
 
   // Preload the next few images
   useEffect(() => {

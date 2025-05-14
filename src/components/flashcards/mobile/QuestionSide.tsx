@@ -6,6 +6,7 @@ import { Lightbulb } from "lucide-react";
 import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
 import ZoomableImage from "@/components/common/ZoomableImage";
 import HintButton from "../HintButton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { SafeRichText } from "@/components/ui/rich-text/SafeRichText";
 
 interface QuestionSideProps {
@@ -29,33 +30,35 @@ export default function QuestionSide({ question, onShowAnswer }: QuestionSidePro
         {question.question_type === "open" ? "Signal" : "Multiple Choice"}
       </div>
       
-      {/* Question text moved above image for visibility */}
-      <div className={`${textSizeClass} font-medium mb-4 text-gray-900`}>
-        <SafeRichText content={question.text} />
-      </div>
-      
-      {/* Add the hint button */}
-      <div className="mb-4">
-        <HintButton 
-          hint={question.hint}
-          question={question.text}
-          answers={question.answers}
-        />
-      </div>
-      
-      {/* Image container with ZoomableImage */}
-      <div className="flex-1 flex items-center justify-center mb-4">
-        {question?.image_url && (
-          <ZoomableImage
-            src={question.image_url}
-            alt="Signal"
-            containerClassName="w-full max-w-[200px] mx-auto"
+      <ScrollArea className="flex-1 pr-2">
+        {/* Question text moved above image for visibility */}
+        <div className={`${textSizeClass} font-medium mb-4 text-gray-900`}>
+          <SafeRichText content={question.text} />
+        </div>
+        
+        {/* Add the hint button */}
+        <div className="mb-4">
+          <HintButton 
+            hint={question.hint}
+            question={question.text}
+            answers={question.answers}
           />
-        )}
-      </div>
+        </div>
+        
+        {/* Image container with ZoomableImage */}
+        <div className="flex items-center justify-center mb-4">
+          {question?.image_url && (
+            <ZoomableImage
+              src={question.image_url}
+              alt="Signal"
+              containerClassName="w-full max-w-[200px] mx-auto"
+            />
+          )}
+        </div>
+      </ScrollArea>
       
       <Button 
-        className="w-full py-6 mt-auto bg-loklernen-ultramarine text-white hover:bg-loklernen-sapphire"
+        className="w-full py-6 mt-4 bg-loklernen-ultramarine text-white hover:bg-loklernen-sapphire"
         onClick={onShowAnswer}
       >
         <Lightbulb className="h-5 w-5 mr-2" />

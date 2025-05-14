@@ -42,16 +42,40 @@ export default function FlashcardPage() {
     }
   }, [sessionFinished]);
 
+  // Properly handle mobile viewport
   useEffect(() => {
+    const handleResize = () => {
+      // When on mobile, update CSS viewport height variable
+      if (isMobile) {
+        // Set a CSS variable for the real viewport height
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+      }
+    };
+    
+    // Apply overflow control for mobile
     if (isMobile) {
       document.body.style.overflow = 'hidden';
-      document.documentElement.classList.add('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
+      document.documentElement.style.overflow = 'hidden';
+      document.documentElement.style.position = 'fixed';
+      document.documentElement.style.height = '100%';
+      document.documentElement.style.width = '100%';
       
-      return () => {
-        document.body.style.overflow = '';
-        document.documentElement.classList.remove('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
-      };
+      // Calculate initial viewport height
+      handleResize();
+      // Add listener for orientation changes
+      window.addEventListener('resize', handleResize);
     }
+    
+    return () => {
+      // Clean up all styles when component unmounts
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.position = '';
+      document.documentElement.style.height = '';
+      document.documentElement.style.width = '';
+      window.removeEventListener('resize', handleResize);
+    };
   }, [isMobile]);
 
   // Handle loading state
@@ -98,12 +122,17 @@ export default function FlashcardPage() {
     />;
   }
 
+  // Mobile-optimized class for container
+  const containerClasses = isMobile 
+    ? 'h-[calc(100vh-var(--bottom-nav-height,64px))] max-h-[calc(var(--vh,1vh)*100-var(--bottom-nav-height,64px))] overflow-hidden'
+    : 'min-h-screen';
+
   // Render the main flashcard view
   return (
-    <div className={`flex flex-col ${isMobile ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-black text-white`}>
+    <div className={`flex flex-col ${containerClasses} bg-black text-white`}>
       <Navbar />
       
-      <main className="flex-1">
+      <main className="flex-1 relative overflow-hidden">
         <div className={`${isMobile ? 'px-0 pt-0 pb-16 h-full' : 'container px-4 py-6'}`}>
           <FlashcardHeader 
             subcategory={subCategoryForHook || mainCategoryForHook}

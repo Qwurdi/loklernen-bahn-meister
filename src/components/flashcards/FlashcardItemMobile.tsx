@@ -6,6 +6,7 @@ import { useCardSwipe, SWIPE_THRESHOLD } from "./mobile/useCardSwipe";
 import QuestionSide from "./mobile/QuestionSide";
 import AnswerSide from "./mobile/AnswerSide";
 import SwipeIndicator from "./mobile/SwipeIndicator";
+import { useFullscreen } from "@/hooks/useFullscreen";
 
 interface FlashcardItemMobileProps {
   question: Question;
@@ -24,6 +25,7 @@ export default function FlashcardItemMobile({
   onKnown,
   onNotKnown
 }: FlashcardItemMobileProps) {
+  const { isCleanMode } = useFullscreen();
   const isMultipleChoice = question.question_type === "MC_single" || question.question_type === "MC_multi";
   
   // Use our custom hook for swipe behavior - disable swipe for MC questions
@@ -42,11 +44,16 @@ export default function FlashcardItemMobile({
     disableSwipe: isMultipleChoice && flipped // Disable swipe for MC questions when the card is flipped
   });
 
+  // Calculate dynamic card height based on clean mode
+  const cardHeight = isCleanMode 
+    ? 'h-[calc(100vh-40px)]' // Almost full height in clean mode
+    : 'max-h-[calc(100vh-180px)] h-[500px]';
+
   return (
     <div className="mx-auto w-full relative touch-none flex justify-center items-center">
       <Card 
         ref={cardRef}
-        className={`${getCardClasses()} max-h-[calc(100vh-180px)] h-[500px] max-w-md w-full`}
+        className={`${getCardClasses()} ${cardHeight} w-full`}
         style={getCardStyle()}
         onTouchStart={handlers.handleTouchStart}
         onTouchMove={handlers.handleTouchMove}
@@ -56,13 +63,15 @@ export default function FlashcardItemMobile({
           <QuestionSide 
             question={question} 
             onShowAnswer={onShowAnswer} 
+            isCleanMode={isCleanMode}
           />
         ) : (
           <AnswerSide 
             question={question} 
             answered={answered} 
             onKnown={onKnown} 
-            onNotKnown={onNotKnown} 
+            onNotKnown={onNotKnown}
+            isCleanMode={isCleanMode}
           />
         )}
       </Card>

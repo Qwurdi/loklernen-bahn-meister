@@ -12,11 +12,13 @@ import CardStack from "@/components/flashcards/stack/CardStack";
 import EmptySessionState from '@/components/learning-session/EmptySessionState';
 import FlashcardSessionComplete from "@/components/flashcards/FlashcardSessionComplete";
 import { useFlashcardSession } from "@/hooks/learning-session/useFlashcardSession";
+import { useFullscreen } from "@/hooks/useFullscreen";
 
 export default function FlashcardPage() {
   console.log("FlashcardPage: Initializing component");
   
   const isMobile = useIsMobile();
+  const { isCleanMode } = useFullscreen();
   
   const {
     loading,
@@ -78,6 +80,18 @@ export default function FlashcardPage() {
     };
   }, [isMobile]);
 
+  // Add fullscreen class when in clean mode
+  useEffect(() => {
+    if (isCleanMode) {
+      document.body.classList.add('flashcard-clean-mode');
+    } else {
+      document.body.classList.remove('flashcard-clean-mode');
+    }
+    return () => {
+      document.body.classList.remove('flashcard-clean-mode');
+    };
+  }, [isCleanMode]);
+
   // Handle loading state
   if (loading) {
     return <FlashcardLoadingState />;
@@ -127,20 +141,29 @@ export default function FlashcardPage() {
     ? 'h-[calc(100vh-var(--bottom-nav-height,64px))] max-h-[calc(var(--vh,1vh)*100-var(--bottom-nav-height,64px))] overflow-hidden'
     : 'min-h-screen';
 
+  // Determine if we should show navigation elements
+  const showNavbar = !isCleanMode;
+  const showBottomNav = !isCleanMode && isMobile;
+
+  // Calculate content classes based on clean mode
+  const contentClasses = isCleanMode
+    ? 'h-screen py-0 px-0' // Full screen in clean mode
+    : isMobile ? 'px-0 pt-0 pb-16 h-full' : 'container px-4 py-6'; // Regular display
+
   // Render the main flashcard view
   return (
     <div className={`flex flex-col ${containerClasses} bg-black text-white`}>
-      <Navbar />
+      {showNavbar && <Navbar />}
       
-      <main className="flex-1 relative overflow-hidden">
-        <div className={`${isMobile ? 'px-0 pt-0 pb-16 h-full' : 'container px-4 py-6'}`}>
+      <main className={`flex-1 relative overflow-hidden ${isCleanMode ? 'pt-1' : ''}`}>
+        <div className={contentClasses}>
           <FlashcardHeader 
             subcategory={subCategoryForHook || mainCategoryForHook}
             isPracticeMode={isPracticeMode}
             onRegulationChange={handleRegulationChange}
           />
           
-          <div className="h-full pt-2">
+          <div className="h-full pt-1">
             <CardStack 
               questions={questions}
               onAnswer={handleAnswer}
@@ -152,8 +175,8 @@ export default function FlashcardPage() {
         </div>
       </main>
       
-      {!isMobile && <Footer />}
-      {isMobile && <BottomNavigation />}
+      {!isMobile && !isCleanMode && <Footer />}
+      {showBottomNav && <BottomNavigation />}
     </div>
   );
 }

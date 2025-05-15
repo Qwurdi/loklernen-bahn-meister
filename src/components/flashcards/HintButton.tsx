@@ -8,7 +8,7 @@ import { SafeRichText } from '@/components/ui/rich-text/SafeRichText';
 import { StructuredContent } from '@/types/rich-text';
 
 interface HintButtonProps {
-  hint?: string | null;
+  hint?: string | StructuredContent | null;
   question: string | StructuredContent;
   answers?: Answer[];
 }

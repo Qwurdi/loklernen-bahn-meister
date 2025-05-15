@@ -47,6 +47,26 @@ export function transformAnswers(jsonAnswers: Json): Answer[] {
 }
 
 /**
+ * Process a string that might contain structured content
+ */
+export function processStructuredContentString(text: string | null | undefined): string | StructuredContent {
+  if (!text) return '';
+  
+  if (typeof text === 'string' && text.trim().startsWith('{')) {
+    try {
+      const parsed = JSON.parse(text);
+      if (isStructuredContent(parsed)) {
+        return parsed;
+      }
+    } catch (e) {
+      // If parsing fails, return the original string
+      console.log("Not valid JSON structured content:", e);
+    }
+  }
+  return text;
+}
+
+/**
  * Helper function to transform database questions to application questions
  */
 export function transformQuestion(dbQuestion: any): Question {
@@ -67,9 +87,24 @@ export function transformQuestion(dbQuestion: any): Question {
     }
   }
   
+  // Process hint the same way as text
+  let parsedHint: string | StructuredContent | null = dbQuestion.hint || null;
+  if (typeof parsedHint === 'string' && parsedHint.trim().startsWith('{')) {
+    try {
+      const parsedJson = JSON.parse(parsedHint);
+      if (isStructuredContent(parsedJson)) {
+        parsedHint = parsedJson;
+      }
+    } catch (e) {
+      // If parsing fails, keep the original string
+      console.log("Not valid JSON hint content:", e);
+    }
+  }
+  
   return {
     ...dbQuestion,
     text: parsedText,
+    hint: parsedHint,
     answers: transformAnswers(dbQuestion.answers)
   };
 }

@@ -1,15 +1,15 @@
 
 import React from 'react';
 import EnhancedLoadingSpinner from './EnhancedLoadingSpinner';
-import { useMediaQuery } from '@/hooks/use-mobile';
+import { usePrefersReducedMotion } from '@/hooks/use-mobile';
 
 interface LoadingSpinnerProps {
   message?: string;
 }
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ message }) => {
-  // Use prefers-reduced-motion media query for accessibility
-  const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
+  // Use updated hook for reduced motion preference
+  const prefersReducedMotion = usePrefersReducedMotion();
   
   // Show simple spinner for users who prefer reduced motion
   if (prefersReducedMotion) {

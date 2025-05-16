@@ -1,34 +1,26 @@
 
-import * as React from "react"
+import { useState, useEffect } from 'react';
 
-const MOBILE_BREAKPOINT = 768
+export const useMediaQuery = (query: string): boolean => {
+  const [matches, setMatches] = useState(false);
 
-export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
-
-  React.useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    };
-    
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    
-    // Add event listener for resize events
-    window.addEventListener('resize', checkMobile);
-    
-    // Add event listener for media query changes
-    mql.addEventListener("change", checkMobile);
-    
-    // Set initial value
-    checkMobile();
-    
-    // Cleanup
-    return () => {
-      window.removeEventListener('resize', checkMobile);
-      mql.removeEventListener("change", checkMobile);
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) {
+      setMatches(media.matches);
     }
-  }, [])
+    
+    const listener = () => setMatches(media.matches);
+    media.addEventListener('change', listener);
+    
+    return () => media.removeEventListener('change', listener);
+  }, [matches, query]);
 
-  // Return false during SSR, true when mobile, false when desktop
-  return isMobile === undefined ? false : !!isMobile
-}
+  return matches;
+};
+
+export const useIsMobile = (): boolean => {
+  return useMediaQuery('(max-width: 768px)');
+};
+
+export default useIsMobile;

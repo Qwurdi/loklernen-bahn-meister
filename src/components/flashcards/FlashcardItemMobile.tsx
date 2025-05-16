@@ -2,7 +2,7 @@
 import React from "react";
 import { Question } from "@/types/questions";
 import { Card } from "@/components/ui/card";
-import { useCardSwipe, SWIPE_THRESHOLD } from "./mobile/useCardSwipe";
+import { useCardSwipe, SWIPE_THRESHOLD } from "./mobile/swipe";
 import QuestionSide from "./mobile/QuestionSide";
 import AnswerSide from "./mobile/AnswerSide";
 import SwipeIndicator from "./mobile/SwipeIndicator";

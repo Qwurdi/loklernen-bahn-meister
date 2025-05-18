@@ -1,7 +1,6 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +9,7 @@ import Footer from "@/components/layout/Footer";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import BottomNavigation from "@/components/layout/BottomNavigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -19,42 +19,64 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
+  const { signIn, user, authError, clearAuthError } = useAuth();
   
   // Get the intended destination from location state, or default to "/"
   const from = (location.state as { from?: string })?.from || "/";
 
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (user) {
+      console.log("Login: User already logged in, redirecting to:", from);
+      navigate(from);
+    }
+  }, [user, navigate, from]);
+
+  // Clear any previous auth errors when component mounts or unmounts
+  useEffect(() => {
+    clearAuthError();
+    return () => clearAuthError();
+  }, [clearAuthError]);
+
+  // Update local error state when authError changes
+  useEffect(() => {
+    if (authError) {
+      console.log("Login: Auth error detected:", authError);
+      
+      if (authError.message.includes("Invalid login")) {
+        setError("Ungültige E-Mail-Adresse oder Passwort");
+      } else if (authError.message.includes("Email not confirmed")) {
+        setError("Bitte bestätigen Sie Ihre E-Mail-Adresse");
+      } else {
+        setError(authError.message || "Ein Fehler ist bei der Anmeldung aufgetreten");
+      }
+    }
+  }, [authError]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+    
     setLoading(true);
     setError(null);
 
     try {
       console.log("Login: Attempting login with email:", email);
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { error } = await signIn(email, password);
 
       if (error) {
-        console.error("Login error:", error);
-        throw error;
-      }
-
-      console.log("Login: Success, redirecting to:", from);
-      navigate(from);
-    } catch (error: any) {
-      console.error("Login catch block:", error);
-      
-      // Provide user-friendly error messages
-      if (error.message.includes("Invalid login")) {
-        setError("Ungültige E-Mail-Adresse oder Passwort");
-      } else if (error.message.includes("Email not confirmed")) {
-        setError("Bitte bestätigen Sie Ihre E-Mail-Adresse");
+        console.error("Login: Error during sign in:", error);
+        
+        // Error is already set via useEffect monitoring authError
+        toast.error(error.message || "Ein Fehler ist aufgetreten");
       } else {
-        setError(error.message || "Ein Fehler ist bei der Anmeldung aufgetreten");
+        console.log("Login: Success, redirecting to:", from);
+        // Navigation will happen via useEffect when user state updates
       }
-      
-      toast.error(error.message || "Ein Fehler ist aufgetreten");
+    } catch (unexpectedError: any) {
+      console.error("Login: Unexpected error:", unexpectedError);
+      setError(unexpectedError.message || "Ein unerwarteter Fehler ist aufgetreten");
+      toast.error("Ein unerwarteter Fehler ist aufgetreten");
     } finally {
       setLoading(false);
     }
@@ -90,6 +112,7 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  autoComplete="email"
                 />
               </div>
               
@@ -101,6 +124,7 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  autoComplete="current-password"
                 />
               </div>
               

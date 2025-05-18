@@ -1,7 +1,6 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +10,7 @@ import Footer from "@/components/layout/Footer";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import BottomNavigation from "@/components/layout/BottomNavigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -20,42 +20,64 @@ export default function Register() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { signUp, user, authError, clearAuthError } = useAuth();
+
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (user) {
+      console.log("Register: User already logged in, redirecting");
+      navigate("/");
+    }
+  }, [user, navigate]);
+
+  // Clear any previous auth errors when component mounts or unmounts
+  useEffect(() => {
+    clearAuthError();
+    return () => clearAuthError();
+  }, [clearAuthError]);
+
+  // Update local error state when authError changes
+  useEffect(() => {
+    if (authError) {
+      console.log("Register: Auth error detected:", authError);
+      
+      if (authError.message.includes("already registered")) {
+        setError("Diese E-Mail-Adresse ist bereits registriert");
+      } else if (authError.message.includes("password")) {
+        setError("Das Passwort muss mindestens 6 Zeichen lang sein");
+      } else {
+        setError(authError.message || "Ein Fehler ist bei der Registrierung aufgetreten");
+      }
+    }
+  }, [authError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading || !agreeTerms) return;
+    
     setLoading(true);
     setError(null);
 
     try {
       console.log("Register: Attempting signup with email:", email);
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+      const { error } = await signUp(email, password);
 
       if (error) {
-        console.error("Register error:", error);
-        throw error;
-      }
-
-      // Set a flag to identify new users
-      localStorage.setItem('isNewSignUp', 'true');
-      
-      toast.success('Registrierung erfolgreich! Bitte überprüfe deine E-Mails.');
-      navigate("/regelwerk-auswahl"); // Redirect to regulation selection page
-    } catch (error: any) {
-      console.error("Register catch block:", error);
-      
-      // Provide user-friendly error messages
-      if (error.message.includes("already registered")) {
-        setError("Diese E-Mail-Adresse ist bereits registriert");
-      } else if (error.message.includes("password")) {
-        setError("Das Passwort muss mindestens 6 Zeichen lang sein");
+        console.error("Register: Error during sign up:", error);
+        // Error is already set via useEffect monitoring authError
+        toast.error(error.message || "Ein Fehler ist aufgetreten");
       } else {
-        setError(error.message || "Ein Fehler ist bei der Registrierung aufgetreten");
+        console.log("Register: Success, redirecting");
+        // Set a flag to identify new users
+        localStorage.setItem('isNewSignUp', 'true');
+        
+        toast.success('Registrierung erfolgreich! Bitte überprüfe deine E-Mails.');
+        navigate("/regelwerk-auswahl"); // Redirect to regulation selection page
       }
-      
-      toast.error(error.message || "Ein Fehler ist aufgetreten");
+    } catch (unexpectedError: any) {
+      console.error("Register: Unexpected error:", unexpectedError);
+      setError(unexpectedError.message || "Ein unerwarteter Fehler ist aufgetreten");
+      toast.error("Ein unerwarteter Fehler ist aufgetreten");
     } finally {
       setLoading(false);
     }
@@ -91,6 +113,7 @@ export default function Register() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  autoComplete="email"
                 />
               </div>
               
@@ -102,6 +125,7 @@ export default function Register() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  autoComplete="new-password"
                 />
                 <p className="text-sm text-muted-foreground">
                   Mindestens 8 Zeichen

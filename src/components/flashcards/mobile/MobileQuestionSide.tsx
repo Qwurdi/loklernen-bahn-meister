@@ -18,7 +18,7 @@ export default function MobileQuestionSide({ question, onShowAnswer }: MobileQue
   
   // Use dynamic text sizing based on content length
   const textSizeClass = useDynamicTextSize(
-    typeof question?.text === 'string' ? question.text : 'medium',
+    question.text,
     'question'
   );
   

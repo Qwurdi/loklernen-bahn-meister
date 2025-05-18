@@ -41,7 +41,12 @@ const AdminUserCreatePage = () => <div>Create User</div>;
 const AdminImportPage = () => <div>Import</div>;
 const AdminExportPage = () => <div>Export</div>;
 
-const ProtectedRoute = ({ children, adminOnly = false }) => {
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  adminOnly?: boolean;
+}
+
+const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) => {
   const { user } = useAuth();
   const location = useLocation();
 
@@ -49,11 +54,11 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (adminOnly && !user.isAdmin) {
+  if (adminOnly && !(user as any).isAdmin) {
     return <Navigate to="/" replace />;
   }
 
-  return children;
+  return <>{children}</>;
 };
 
 const FlashcardRoute = () => {

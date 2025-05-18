@@ -9,5 +9,8 @@ declare module "@/contexts/AuthContext" {
     signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
     signOut: () => Promise<void>;
     isAdmin?: boolean;
+    session: any;
+    isNewUser: boolean;
+    setIsNewUser: (value: boolean) => void;
   }
 }

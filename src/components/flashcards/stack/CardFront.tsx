@@ -14,7 +14,7 @@ interface CardFrontProps<T extends Question = Question> {
 export default function CardFront<T extends Question = Question>({ question }: CardFrontProps<T>) {
   // Use dynamic text sizing based on question length
   const textSizeClass = useDynamicTextSize(
-    typeof question?.text === 'string' ? question.text : 'medium', 
+    question.text, 
     'question'
   );
   
@@ -55,7 +55,7 @@ export default function CardFront<T extends Question = Question>({ question }: C
         <div className="flex-1 flex items-center justify-center">
           <img 
             src={question.image_url}
-            alt={`Signal: ${typeof question.text === 'string' ? question.text : 'Signal'}`}
+            alt="Signal"
             className="max-h-[200px] object-contain rounded-lg"
             loading="eager" // Force eager loading for current card
           />

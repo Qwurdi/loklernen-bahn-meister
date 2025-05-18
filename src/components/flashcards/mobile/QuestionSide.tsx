@@ -19,7 +19,7 @@ export default function QuestionSide({ question, onShowAnswer }: QuestionSidePro
   
   // Use dynamic text sizing based on question length
   const textSizeClass = useDynamicTextSize(
-    typeof question?.text === 'string' ? question.text : 'medium',
+    question.text,
     'question'
   );
   

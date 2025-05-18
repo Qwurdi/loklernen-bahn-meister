@@ -25,7 +25,8 @@ export default function MultipleChoiceQuestion({
   const [isCorrect, setIsCorrect] = useState(false);
   
   const textSizeClass = useDynamicTextSize(
-    typeof question.text === 'string' ? question.text : 'medium'
+    question.text,
+    'question'
   );
   const isSingleChoice = question.question_type === 'MC_single';
   

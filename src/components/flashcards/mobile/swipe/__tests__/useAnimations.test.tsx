@@ -1,5 +1,5 @@
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { useAnimations } from '../useAnimations';
 
 describe('useAnimations Hook', () => {
@@ -9,14 +9,17 @@ describe('useAnimations Hook', () => {
     // Reset the mock ref before each test
     mockCardRef = {
       current: {
-        style: {
-          transition: '',
-          transform: '',
-          backgroundColor: '',
-          opacity: ''
-        }
+        style: {} as CSSStyleDeclaration
       }
     };
+    
+    // Set the style properties we'll be testing
+    if (mockCardRef.current && mockCardRef.current.style) {
+      mockCardRef.current.style.transition = '';
+      mockCardRef.current.style.transform = '';
+      mockCardRef.current.style.backgroundColor = '';
+      mockCardRef.current.style.opacity = '';
+    }
     
     // Mock setTimeout
     vi.useFakeTimers();

@@ -3,11 +3,14 @@ import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import useCardSwipe from '../useCardSwipe';
 
-// Don't mock the hooks for integration testing
-vi.mock('../useTouchHandlers', async (importOriginal) => {
-  const actual = await importOriginal();
+// Mock for the useTouchHandlers import
+vi.mock('../useTouchHandlers', () => {
   return {
-    ...actual
+    useTouchHandlers: (options: any) => {
+      // Return the original implementation or a mock as needed
+      const original = vi.importActual('../useTouchHandlers');
+      return (original as any).useTouchHandlers(options);
+    }
   };
 });
 

@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { Question } from "@/types/questions";
 import { Check, X } from "lucide-react";
-import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
+import { useDynamicTextSize, TextContent } from "@/hooks/useDynamicTextSize";
 import { SafeRichText } from "@/components/ui/rich-text/SafeRichText";
 
 interface MobileMultipleChoiceProps {
@@ -23,7 +24,7 @@ export default function MobileMultipleChoice({ question, onAnswer }: MobileMulti
   
   // Text sizing for compact display
   const questionTextClass = useDynamicTextSize(
-    typeof question.text === 'string' ? question.text : 'medium',
+    question.text,
     'question'
   );
   

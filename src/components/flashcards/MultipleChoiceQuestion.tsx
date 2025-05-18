@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
+import { useDynamicTextSize, TextContent } from "@/hooks/useDynamicTextSize";
 import HintButton from "./HintButton";
 import { SafeRichText } from "@/components/ui/rich-text/SafeRichText";
 

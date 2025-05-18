@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Question } from '@/types/questions';
-import { useDynamicTextSize } from '@/hooks/useDynamicTextSize';
+import { useDynamicTextSize, TextContent } from '@/hooks/useDynamicTextSize';
 import HintButton from '../HintButton';
 import { SafeRichText } from '@/components/ui/rich-text/SafeRichText';
 

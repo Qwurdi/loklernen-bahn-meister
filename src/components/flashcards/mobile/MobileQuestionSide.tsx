@@ -2,7 +2,7 @@
 import React from 'react';
 import { Question } from "@/types/questions";
 import { Lightbulb } from "lucide-react";
-import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
+import { useDynamicTextSize, TextContent } from "@/hooks/useDynamicTextSize";
 import ZoomableImage from "@/components/common/ZoomableImage";
 import { SafeRichText } from "@/components/ui/rich-text/SafeRichText";
 import HintButton from "../HintButton";

@@ -1,29 +1,8 @@
 
 import { useEffect, useState } from 'react';
-import { StructuredContent } from "@/types/rich-text";
+import { StructuredContent, getTextLength as getRichTextLength } from "@/types/rich-text";
 
-type TextContent = string | StructuredContent;
-
-const getTextLength = (content: TextContent): number => {
-  if (typeof content === 'string') {
-    return content.length;
-  }
-  
-  // For StructuredContent, we'll use a simple approximation
-  // This could be improved with a more sophisticated parsing
-  if (content && Array.isArray(content)) {
-    return content.reduce((total, item) => {
-      if (typeof item === 'string') {
-        return total + item.length;
-      } else if (item.text) {
-        return total + item.text.length;
-      }
-      return total;
-    }, 0);
-  }
-  
-  return 0;
-};
+export type TextContent = string | StructuredContent;
 
 export function useDynamicTextSize(
   content: TextContent,
@@ -32,7 +11,14 @@ export function useDynamicTextSize(
   const [textSizeClass, setTextSizeClass] = useState('text-base');
   
   useEffect(() => {
-    const length = getTextLength(content);
+    let length: number;
+    
+    if (typeof content === 'string') {
+      length = content.length;
+    } else {
+      // Use the utility function for structured content
+      length = getRichTextLength(content);
+    }
     
     if (type === 'question') {
       if (length > 300) {

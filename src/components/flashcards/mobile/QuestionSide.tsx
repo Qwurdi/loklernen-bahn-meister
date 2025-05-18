@@ -3,7 +3,7 @@ import React from "react";
 import { Question } from "@/types/questions";
 import { Button } from "@/components/ui/button";
 import { Lightbulb } from "lucide-react";
-import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
+import { useDynamicTextSize, TextContent } from "@/hooks/useDynamicTextSize";
 import ZoomableImage from "@/components/common/ZoomableImage";
 import HintButton from "../HintButton";
 import { SafeRichText } from "@/components/ui/rich-text/SafeRichText";

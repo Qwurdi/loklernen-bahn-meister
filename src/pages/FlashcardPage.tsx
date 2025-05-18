@@ -12,11 +12,17 @@ import CardStack from "@/components/flashcards/stack/CardStack";
 import EmptySessionState from '@/components/learning-session/EmptySessionState';
 import FlashcardSessionComplete from "@/components/flashcards/FlashcardSessionComplete";
 import { useFlashcardSession } from "@/hooks/learning-session/useFlashcardSession";
+import MobileFlashcardPage from "@/components/flashcards/mobile/MobileFlashcardPage";
 
 export default function FlashcardPage() {
   console.log("FlashcardPage: Initializing component");
   
   const isMobile = useIsMobile();
+  
+  // If mobile, use the dedicated mobile page component
+  if (isMobile) {
+    return <MobileFlashcardPage />;
+  }
   
   const {
     loading,
@@ -41,18 +47,6 @@ export default function FlashcardPage() {
       toast.success("Gut gemacht! Du hast alle Karten dieser Kategorie bearbeitet!");
     }
   }, [sessionFinished]);
-
-  useEffect(() => {
-    if (isMobile) {
-      document.body.style.overflow = 'hidden';
-      document.documentElement.classList.add('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
-      
-      return () => {
-        document.body.style.overflow = '';
-        document.documentElement.classList.remove('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
-      };
-    }
-  }, [isMobile]);
 
   // Handle loading state
   if (loading) {
@@ -94,17 +88,17 @@ export default function FlashcardPage() {
     return <FlashcardSessionComplete 
       correctCount={correctCount}
       totalQuestions={questions.length}
-      isMobile={isMobile}
+      isMobile={false}
     />;
   }
 
-  // Render the main flashcard view
+  // Render the desktop flashcard view
   return (
-    <div className={`flex flex-col ${isMobile ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-black text-white`}>
+    <div className="flex flex-col min-h-screen bg-black text-white">
       <Navbar />
       
       <main className="flex-1">
-        <div className={`${isMobile ? 'px-0 pt-0 pb-16 h-full' : 'container px-4 py-6'}`}>
+        <div className="container px-4 py-6">
           <FlashcardHeader 
             subcategory={subCategoryForHook || mainCategoryForHook}
             isPracticeMode={isPracticeMode}
@@ -123,8 +117,7 @@ export default function FlashcardPage() {
         </div>
       </main>
       
-      {!isMobile && <Footer />}
-      {isMobile && <BottomNavigation />}
+      <Footer />
     </div>
   );
 }

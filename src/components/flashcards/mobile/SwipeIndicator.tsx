@@ -1,6 +1,6 @@
 
-import React from "react";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import React from 'react';
+import { Check, X } from 'lucide-react';
 
 interface SwipeIndicatorProps {
   dragDelta: number;
@@ -8,37 +8,31 @@ interface SwipeIndicatorProps {
 }
 
 export default function SwipeIndicator({ dragDelta, swipeThreshold }: SwipeIndicatorProps) {
-  // Show the indicator as soon as there is any drag
-  const opacity = Math.min(Math.abs(dragDelta) / swipeThreshold, 1);
-  const showIndicator = dragDelta !== 0; // Show with any movement
+  // Don't show until dragDelta is significant
+  if (Math.abs(dragDelta) < 10) return null;
   
-  if (!showIndicator) return null;
+  // Calculate opacity based on drag distance
+  const opacity = Math.min(Math.abs(dragDelta) / swipeThreshold, 1) * 0.8;
   
-  return (
-    <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+  // Swipe left (not known)
+  if (dragDelta < 0) {
+    return (
       <div 
-        className={`text-sm font-medium flex items-center gap-1 ${
-          opacity < 0.3 ? 'opacity-30' : 'opacity-80'
-        } ${
-          dragDelta > 0 ? 'text-green-600' : 'text-red-500'
-        } bg-white/90 px-4 py-1.5 rounded-full shadow-sm`}
-        style={{ 
-          transform: `scale(${0.8 + (opacity * 0.2)})`,
-          transition: 'transform 0.2s, opacity 0.2s'
-        }}
+        className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-red-500 rounded-full"
+        style={{ opacity }}
       >
-        {dragDelta > 0 ? (
-          <>
-            <span className="text-xs">Gewusst</span>
-            <ArrowRight className="h-4 w-4" />
-          </>
-        ) : (
-          <>
-            <ArrowLeft className="h-4 w-4" />
-            <span className="text-xs">Nicht gewusst</span>
-          </>
-        )}
+        <X className="text-white h-6 w-6" />
       </div>
+    );
+  }
+  
+  // Swipe right (known)
+  return (
+    <div 
+      className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-green-500 rounded-full"
+      style={{ opacity }}
+    >
+      <Check className="text-white h-6 w-6" />
     </div>
   );
 }

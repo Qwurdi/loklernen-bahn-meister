@@ -1,5 +1,6 @@
 
 import { useMemo } from 'react';
+import { StructuredContent, getTextLength } from '@/types/rich-text';
 
 // Configuration values for different text lengths
 const TEXT_SIZE_THRESHOLDS = {
@@ -17,10 +18,11 @@ const TEXT_SIZE_THRESHOLDS = {
 
 type TextType = 'question' | 'answer';
 
-export function useDynamicTextSize(text: string, type: TextType = 'question') {
+export function useDynamicTextSize(text: string | StructuredContent, type: TextType = 'question') {
   return useMemo(() => {
     const thresholds = TEXT_SIZE_THRESHOLDS[type];
-    const textLength = text.length;
+    // Use getTextLength helper to handle both string and StructuredContent
+    const textLength = typeof text === 'string' ? text.length : getTextLength(text);
     
     if (textLength > thresholds.long) {
       return 'text-xs'; // Very small for very long texts

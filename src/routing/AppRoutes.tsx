@@ -1,51 +1,55 @@
+
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import HomePage from "@/pages/HomePage";
-import AboutPage from "@/pages/AboutPage";
-import SignalePage from "@/pages/SignalePage";
-import BetriebsdienstPage from "@/pages/BetriebsdienstPage";
-import CardsPage from "@/pages/CardsPage";
-import PrivacyPage from "@/pages/PrivacyPage";
-import ImprintPage from "@/pages/ImprintPage";
-import NotFoundPage from "@/pages/NotFoundPage";
-import LoginPage from "@/pages/LoginPage";
-import RegisterPage from "@/pages/RegisterPage";
-import VerifyEmailPage from "@/pages/VerifyEmailPage";
-import ResetPasswordPage from "@/pages/ResetPasswordPage";
-import RequestPasswordResetPage from "@/pages/RequestPasswordResetPage";
-import ProfilePage from "@/pages/ProfilePage";
-import SettingsPage from "@/pages/SettingsPage";
-import AdminPage from "@/pages/AdminPage";
-import AdminCategoriesPage from "@/pages/AdminCategoriesPage";
-import AdminQuestionsPage from "@/pages/AdminQuestionsPage";
-import AdminUsersPage from "@/pages/AdminUsersPage";
-import AdminQuestionEditPage from "@/pages/AdminQuestionEditPage";
-import AdminQuestionCreatePage from "@/pages/AdminQuestionCreatePage";
-import AdminCategoryEditPage from "@/pages/AdminCategoryEditPage";
-import AdminCategoryCreatePage from "@/pages/AdminCategoryCreatePage";
-import AdminUserEditPage from "@/pages/AdminUserEditPage";
-import AdminUserCreatePage from "@/pages/AdminUserCreatePage";
-import AdminImportPage from "@/pages/AdminImportPage";
-import AdminExportPage from "@/pages/AdminExportPage";
-import AdminDashboardPage from "@/pages/AdminDashboardPage";
-import FlashcardPage from "@/pages/FlashcardPage";
-import LearningSessionPage from "@/pages/LearningSessionPage";
-import MobileFlashcardPage from "@/components/flashcards/mobile/MobileFlashcardPage";
-import { useIsMobile } from "@/hooks/use-mobile";
-
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
+
+// Import existing pages directly
+import HomePage from "@/pages/Index";
+import NotFound from "@/pages/NotFound";
+import SignalePage from "@/pages/SignalePage";
+import BetriebsdienstPage from "@/pages/BetriebsdienstPage";
+import CardsPage from "@/pages/CardsPage";
+import LoginPage from "@/pages/Login";
+import RegisterPage from "@/pages/Register";
+import FlashcardPage from "@/pages/FlashcardPage";
+import LearningSessionPage from "@/pages/LearningSessionPage";
+import MobileFlashcardPage from "@/components/flashcards/mobile/MobileFlashcardPage";
+
+// Placeholder components for pages that don't exist yet but are referenced
+const AboutPage = () => <div>About Page</div>;
+const PrivacyPage = () => <div>Privacy Policy</div>;
+const ImprintPage = () => <div>Imprint</div>;
+const VerifyEmailPage = () => <div>Verify Email</div>;
+const ResetPasswordPage = () => <div>Reset Password</div>;
+const RequestPasswordResetPage = () => <div>Request Password Reset</div>;
+const ProfilePage = () => <div>Profile</div>;
+const SettingsPage = () => <div>Settings</div>;
+const AdminPage = () => <div>Admin</div>;
+const AdminDashboardPage = () => <div>Admin Dashboard</div>;
+const AdminCategoriesPage = () => <div>Admin Categories</div>;
+const AdminQuestionsPage = () => <div>Admin Questions</div>;
+const AdminUsersPage = () => <div>Admin Users</div>;
+const AdminQuestionEditPage = () => <div>Edit Question</div>;
+const AdminQuestionCreatePage = () => <div>Create Question</div>;
+const AdminCategoryEditPage = () => <div>Edit Category</div>;
+const AdminCategoryCreatePage = () => <div>Create Category</div>;
+const AdminUserEditPage = () => <div>Edit User</div>;
+const AdminUserCreatePage = () => <div>Create User</div>;
+const AdminImportPage = () => <div>Import</div>;
+const AdminExportPage = () => <div>Export</div>;
 
 const ProtectedRoute = ({ children, adminOnly = false }) => {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   const location = useLocation();
 
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (adminOnly && !isAdmin) {
+  if (adminOnly && !user.isAdmin) {
     return <Navigate to="/" replace />;
   }
 
@@ -79,7 +83,7 @@ export default function AppRoutes() {
       <Route path="/karteikarten" element={<CardsPage />} />
       <Route path="/karteikarten/signale" element={<SignalePage />} />
       <Route path="/karteikarten/betriebsdienst" element={<BetriebsdienstPage />} />
-      <Route path="/karteikarten/lernen" element={<FlashcardRoute />} /> {/* Changed to new route component */}
+      <Route path="/karteikarten/lernen" element={<FlashcardRoute />} />
       <Route path="/karteikarten/box/:boxIndex" element={<LearningSessionPage />} />
       <Route
         path="/profile"
@@ -201,7 +205,7 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route path="*" element={<NotFoundPage />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

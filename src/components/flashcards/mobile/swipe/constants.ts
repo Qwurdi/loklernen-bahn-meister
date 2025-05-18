@@ -1,5 +1,6 @@
 
-// Constants for swipe interactions
-export const SWIPE_THRESHOLD = 60; // Lower threshold for easier swiping
-export const VERTICAL_DEADZONE = 40; // Increased deadzone to prevent accidental scroll
-export const MAX_ROTATION = 12; // Maximum rotation in degrees
+// Threshold for swipe detection (in pixels)
+export const SWIPE_THRESHOLD = 100;
+
+// Maximum rotation angle during swipe (in degrees)
+export const MAX_ROTATION = 15;

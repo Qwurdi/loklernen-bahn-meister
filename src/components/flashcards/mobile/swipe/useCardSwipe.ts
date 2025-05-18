@@ -7,7 +7,7 @@ import { useStyleCalculations } from "./useStyleCalculations";
 import { useTouchHandlers } from "./useTouchHandlers";
 
 // Main hook that composes all the swipe functionality
-export default function useCardSwipe({
+export function useCardSwipe({
   onSwipeLeft,
   onSwipeRight,
   onShowAnswer,

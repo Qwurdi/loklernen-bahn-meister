@@ -27,14 +27,20 @@ export default function MobileFlashcardPage() {
     regulationParam
   } = useFlashcardSession();
 
-  // Lock the viewport and prevent scrolling
+  // Lock the viewport and prevent scrolling with flashcard-mode class
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    document.documentElement.classList.add('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
+    // Add flashcard mode to body
+    document.body.classList.add('flashcard-mode');
+    
+    // Lock the document as well
+    document.documentElement.classList.add('overflow-hidden');
+    document.documentElement.style.height = '100%';
     
     return () => {
-      document.body.style.overflow = '';
-      document.documentElement.classList.remove('overflow-hidden', 'fixed', 'inset-0', 'h-full', 'w-full');
+      // Clean up when component unmounts
+      document.body.classList.remove('flashcard-mode');
+      document.documentElement.classList.remove('overflow-hidden');
+      document.documentElement.style.height = '';
     };
   }, []);
 
@@ -57,7 +63,7 @@ export default function MobileFlashcardPage() {
   }
 
   return (
-    <div className="fixed inset-0 bg-black flex flex-col h-full w-full overflow-hidden">
+    <div className="fixed inset-0 bg-black flex flex-col h-full w-full overflow-hidden ios-viewport-fix">
       {/* Ultra-minimal header */}
       <div className="absolute top-2 left-2 z-10">
         <button 

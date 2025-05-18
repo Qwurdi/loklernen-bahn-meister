@@ -45,7 +45,7 @@ export default function MobileAnswerSide({
   
   // Use dynamic text sizing based on answer length
   const textSizeClass = useDynamicTextSize(
-    typeof answerText === 'string' ? answerText : 'medium',
+    answerText,
     'answer'
   );
   
@@ -57,7 +57,7 @@ export default function MobileAnswerSide({
       
       {/* Answer content - optimized for no scrolling */}
       <div className="flex-1 flex flex-col items-center justify-center">
-        <div className="bg-blue-50 p-3 rounded-lg w-full mb-4 max-h-[40%] overflow-hidden">
+        <div className="bg-blue-50 p-3 rounded-lg w-full mb-4 overflow-auto max-h-[40%]">
           <div className={`${textSizeClass} font-bold text-blue-800`}>
             <SafeRichText content={answerText} />
           </div>
@@ -65,7 +65,7 @@ export default function MobileAnswerSide({
         
         {/* Image - dynamically sized */}
         {question?.image_url && (
-          <div className="flex-1 max-h-[40%] w-full flex items-center justify-center">
+          <div className="flex-1 max-h-[40%] w-full flex items-center justify-center overflow-hidden">
             <img
               src={question.image_url}
               alt="Signal"

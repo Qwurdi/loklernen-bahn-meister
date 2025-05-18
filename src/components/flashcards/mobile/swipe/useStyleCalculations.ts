@@ -42,7 +42,7 @@ export function useStyleCalculations(disableSwipe: boolean, isFlipped: boolean) 
 
   // Get appropriate card classes
   const getCardClasses = (swipeDirection: "left" | "right" | null) => {
-    return `relative p-4 min-h-[calc(100vh-230px)] flex flex-col bg-white rounded-xl shadow-md touch-none card-with-inertia ${
+    return `relative p-4 min-h-[100%] flex flex-col bg-white rounded-xl shadow-md touch-none card-with-inertia ${
       swipeDirection === "right" ? "animate-swipe-right" : 
       swipeDirection === "left" ? "animate-swipe-left" : ""
     }`;

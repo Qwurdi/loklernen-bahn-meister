@@ -58,7 +58,7 @@ export default function MobileFlashcardContent({
       />
       
       {/* Flashcard takes full remaining space */}
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center h-full">
         <MobileFlashcard
           question={currentQuestion}
           isFlipped={isFlipped}

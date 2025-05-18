@@ -3,7 +3,7 @@ import React from "react";
 import { Question } from "@/types/questions";
 import { Button } from "@/components/ui/button";
 import { Lightbulb } from "lucide-react";
-import { useDynamicTextSize, TextContent } from "@/hooks/useDynamicTextSize";
+import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
 import ZoomableImage from "@/components/common/ZoomableImage";
 import HintButton from "../HintButton";
 import { SafeRichText } from "@/components/ui/rich-text/SafeRichText";
@@ -30,7 +30,7 @@ export default function QuestionSide({ question, onShowAnswer }: QuestionSidePro
       </div>
       
       {/* Question text moved above image for visibility */}
-      <div className={`${textSizeClass} font-medium mb-4 text-gray-900`}>
+      <div className={`${textSizeClass} font-medium mb-4 text-gray-900 overflow-y-auto max-h-[30vh]`}>
         <SafeRichText content={question.text} />
       </div>
       
@@ -44,7 +44,7 @@ export default function QuestionSide({ question, onShowAnswer }: QuestionSidePro
       </div>
       
       {/* Image container with ZoomableImage */}
-      <div className="flex-1 flex items-center justify-center mb-4">
+      <div className="flex-1 flex items-center justify-center mb-4 overflow-hidden">
         {question?.image_url && (
           <ZoomableImage
             src={question.image_url}

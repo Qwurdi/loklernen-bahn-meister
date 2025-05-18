@@ -2,7 +2,7 @@
 import React from 'react';
 import { Question } from "@/types/questions";
 import { Lightbulb } from "lucide-react";
-import { useDynamicTextSize, TextContent } from "@/hooks/useDynamicTextSize";
+import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
 import ZoomableImage from "@/components/common/ZoomableImage";
 import { SafeRichText } from "@/components/ui/rich-text/SafeRichText";
 import HintButton from "../HintButton";
@@ -30,12 +30,12 @@ export default function MobileQuestionSide({ question, onShowAnswer }: MobileQue
       </div>
       
       {/* Question text - prioritize display */}
-      <div className={`${textSizeClass} font-medium mb-3 text-gray-900 max-h-[30%] overflow-hidden`}>
+      <div className={`${textSizeClass} font-medium mb-3 text-gray-900 max-h-[30%] overflow-auto`}>
         <SafeRichText content={question.text} />
       </div>
       
       {/* Image container - dynamic sizing */}
-      <div className="flex-1 flex items-center justify-center mb-2">
+      <div className="flex-1 flex items-center justify-center mb-2 overflow-hidden">
         {question?.image_url && (
           <ZoomableImage
             src={question.image_url}

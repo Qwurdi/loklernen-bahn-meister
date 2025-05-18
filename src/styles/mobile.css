@@ -13,11 +13,27 @@
 
 /* ===== Mobile Full-Screen Mode ===== */
 @media (max-width: 768px) {
+  html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  
   body.flashcard-mode {
     overflow: hidden !important;
     position: fixed;
     height: 100%;
     width: 100%;
+    touch-action: none;
+  }
+
+  #root, 
+  #root > div {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
   }
 
   .mobile-full-bleed {
@@ -25,4 +41,16 @@
     margin-right: -1rem;
     width: calc(100% + 2rem);
   }
+}
+
+/* Fix for iOS Safari bottom bar */
+@supports (-webkit-touch-callout: none) {
+  .ios-viewport-fix {
+    height: -webkit-fill-available;
+  }
+}
+
+/* Prevent pull-to-refresh on mobile */
+body.flashcard-mode {
+  overscroll-behavior: none;
 }

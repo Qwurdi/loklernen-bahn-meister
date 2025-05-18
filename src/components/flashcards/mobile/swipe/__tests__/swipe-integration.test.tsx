@@ -1,7 +1,7 @@
 
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import useCardSwipe from '../useCardSwipe';
+import { useCardSwipe } from '../useCardSwipe';
 
 // Mock for the useTouchHandlers import
 vi.mock('../useTouchHandlers', () => {

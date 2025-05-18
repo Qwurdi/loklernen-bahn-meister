@@ -1,37 +1,60 @@
 
-import { useMemo } from 'react';
-import { StructuredContent, getTextLength } from '@/types/rich-text';
+import { useEffect, useState } from 'react';
+import { StructuredContent } from "@/types/rich-text";
 
-// Configuration values for different text lengths
-const TEXT_SIZE_THRESHOLDS = {
-  question: {
-    short: 50,   // Characters
-    medium: 100,  // Characters
-    long: 200    // Characters
-  },
-  answer: {
-    short: 60,   // Characters
-    medium: 120,  // Characters
-    long: 250    // Characters
+type TextContent = string | StructuredContent;
+
+const getTextLength = (content: TextContent): number => {
+  if (typeof content === 'string') {
+    return content.length;
   }
+  
+  // For StructuredContent, we'll use a simple approximation
+  // This could be improved with a more sophisticated parsing
+  if (content && Array.isArray(content)) {
+    return content.reduce((total, item) => {
+      if (typeof item === 'string') {
+        return total + item.length;
+      } else if (item.text) {
+        return total + item.text.length;
+      }
+      return total;
+    }, 0);
+  }
+  
+  return 0;
 };
 
-type TextType = 'question' | 'answer';
-
-export function useDynamicTextSize(text: string | StructuredContent, type: TextType = 'question') {
-  return useMemo(() => {
-    const thresholds = TEXT_SIZE_THRESHOLDS[type];
-    // Use getTextLength helper to handle both string and StructuredContent
-    const textLength = typeof text === 'string' ? text.length : getTextLength(text);
+export function useDynamicTextSize(
+  content: TextContent,
+  type: 'question' | 'answer' = 'question'
+): string {
+  const [textSizeClass, setTextSizeClass] = useState('text-base');
+  
+  useEffect(() => {
+    const length = getTextLength(content);
     
-    if (textLength > thresholds.long) {
-      return 'text-xs'; // Very small for very long texts
-    } else if (textLength > thresholds.medium) {
-      return 'text-sm'; // Small for medium-length texts
-    } else if (textLength > thresholds.short) {
-      return 'text-base'; // Normal for short texts
+    if (type === 'question') {
+      if (length > 300) {
+        setTextSizeClass('text-sm');
+      } else if (length > 150) {
+        setTextSizeClass('text-base');
+      } else if (length > 80) {
+        setTextSizeClass('text-lg');
+      } else {
+        setTextSizeClass('text-xl');
+      }
     } else {
-      return 'text-lg'; // Large for very short texts
+      // For answers
+      if (length > 200) {
+        setTextSizeClass('text-sm');
+      } else if (length > 100) {
+        setTextSizeClass('text-base');
+      } else {
+        setTextSizeClass('text-lg');
+      }
     }
-  }, [text, type]);
+  }, [content, type]);
+  
+  return textSizeClass;
 }

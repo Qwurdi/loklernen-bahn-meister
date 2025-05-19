@@ -21,8 +21,8 @@ export default function Login() {
   const isMobile = useIsMobile();
   const { signIn, user, authError, clearAuthError } = useAuth();
   
-  // Get the intended destination from location state, or default to "/"
-  const from = (location.state as { from?: string })?.from || "/";
+  // Get the intended destination from location state, default to "/dashboard"
+  const from = (location.state as { from?: string })?.from || "/dashboard";
 
   // Redirect if user is already logged in
   useEffect(() => {
@@ -70,7 +70,7 @@ export default function Login() {
         // Error is already set via useEffect monitoring authError
         toast.error(error.message || "Ein Fehler ist aufgetreten");
       } else {
-        console.log("Login: Success, redirecting to:", from);
+        console.log("Login: Success, redirecting to dashboard");
         // Navigation will happen via useEffect when user state updates
       }
     } catch (unexpectedError: any) {

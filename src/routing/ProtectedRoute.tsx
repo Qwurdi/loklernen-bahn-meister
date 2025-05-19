@@ -30,7 +30,7 @@ export const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRoutePr
 
   if (adminOnly && !user.isAdmin) {
     toast.error("Zugriff verweigert. Du hast nicht die erforderlichen Rechte.");
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;

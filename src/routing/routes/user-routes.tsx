@@ -2,6 +2,7 @@
 import React from "react";
 import { Route } from "react-router-dom";
 import { ProtectedRoute } from "../ProtectedRoute";
+import Dashboard from "@/pages/Dashboard";
 
 // Placeholder components for user pages
 const ProfilePage = () => <div>Profile</div>;
@@ -10,6 +11,14 @@ const SettingsPage = () => <div>Settings</div>;
 // User-specific routes (require authentication)
 export const userRoutes = (
   <>
+    <Route
+      path="/dashboard"
+      element={
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      }
+    />
     <Route
       path="/profile"
       element={

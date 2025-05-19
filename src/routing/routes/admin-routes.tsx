@@ -1,129 +1,24 @@
-
 import React from "react";
 import { Route } from "react-router-dom";
 import { ProtectedRoute } from "../ProtectedRoute";
-
-// Placeholder components for admin pages
-const AdminPage = () => <div>Admin</div>;
-const AdminDashboardPage = () => <div>Admin Dashboard</div>;
-const AdminCategoriesPage = () => <div>Admin Categories</div>;
-const AdminQuestionsPage = () => <div>Admin Questions</div>;
-const AdminUsersPage = () => <div>Admin Users</div>;
-const AdminQuestionEditPage = () => <div>Edit Question</div>;
-const AdminQuestionCreatePage = () => <div>Create Question</div>;
-const AdminCategoryEditPage = () => <div>Edit Category</div>;
-const AdminCategoryCreatePage = () => <div>Create Category</div>;
-const AdminUserEditPage = () => <div>Edit User</div>;
-const AdminUserCreatePage = () => <div>Create User</div>;
-const AdminImportPage = () => <div>Import</div>;
-const AdminExportPage = () => <div>Export</div>;
+import AdminLayout from "@/components/layout/AdminLayout";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
 
 // Admin routes (require admin privileges)
 export const adminRoutes = (
-  <>
-    <Route
-      path="/admin"
-      element={
-        <ProtectedRoute adminOnly>
-          <AdminPage />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/dashboard"
-      element={
-        <ProtectedRoute adminOnly>
-          <AdminDashboardPage />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/categories"
-      element={
-        <ProtectedRoute adminOnly>
-          <AdminCategoriesPage />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/categories/create"
-      element={
-        <ProtectedRoute adminOnly>
-          <AdminCategoryCreatePage />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/categories/:id"
-      element={
-        <ProtectedRoute adminOnly>
-          <AdminCategoryEditPage />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/questions"
-      element={
-        <ProtectedRoute adminOnly>
-          <AdminQuestionsPage />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/questions/create"
-      element={
-        <ProtectedRoute adminOnly>
-          <AdminQuestionCreatePage />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/questions/:id"
-      element={
-        <ProtectedRoute adminOnly>
-          <AdminQuestionEditPage />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/users"
-      element={
-        <ProtectedRoute adminOnly>
-          <AdminUsersPage />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/users/create"
-      element={
-        <ProtectedRoute adminOnly>
-          <AdminUserCreatePage />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/users/:id"
-      element={
-        <ProtectedRoute adminOnly>
-          <AdminUserEditPage />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/import"
-      element={
-        <ProtectedRoute adminOnly>
-          <AdminImportPage />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/export"
-      element={
-        <ProtectedRoute adminOnly>
-          <AdminExportPage />
-        </ProtectedRoute>
-      }
-    />
-  </>
+  <Route path="/admin" element={<ProtectedRoute adminOnly={true}><AdminLayout /></ProtectedRoute>}>
+    <Route index element={<AdminDashboard />} />
+    <Route path="dashboard" element={<AdminDashboard />} />
+    <Route path="categories" element={<div>Admin Categories</div>} />
+    <Route path="categories/create" element={<div>Create Category</div>} />
+    <Route path="categories/:id" element={<div>Edit Category</div>} />
+    <Route path="questions" element={<div>Admin Questions</div>} />
+    <Route path="questions/create" element={<div>Create Question</div>} />
+    <Route path="questions/:id" element={<div>Edit Question</div>} />
+    <Route path="users" element={<div>Admin Users</div>} />
+    <Route path="users/create" element={<div>Create User</div>} />
+    <Route path="users/:id" element={<div>Edit User</div>} />
+    <Route path="import" element={<div>Import</div>} />
+    <Route path="export" element={<div>Export</div>} />
+  </Route>
 );

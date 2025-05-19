@@ -5,6 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AuthContextType } from "@/contexts/AuthContext";
 
+// List of admin emails - in a real production app, this would come from a database
+// or environment configuration
+const ADMIN_EMAILS = ['admin@example.com', 'busato@me.com'];
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -28,8 +32,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(currentSession);
       
       if (currentSession?.user) {
-        // Check if user is admin (temporary logic until proper roles are implemented)
-        const isUserAdmin = currentSession.user.email === 'admin@example.com';
+        // Check if user is admin based on email
+        const userEmail = currentSession.user.email || '';
+        const isUserAdmin = ADMIN_EMAILS.includes(userEmail);
         
         // Update user with isAdmin property
         setUser({
@@ -95,8 +100,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(data.session);
           
           if (data.session?.user) {
-            // Add isAdmin check for consistency
-            const isUserAdmin = data.session.user.email === 'admin@example.com';
+            // Check if user is admin based on email
+            const userEmail = data.session.user.email || '';
+            const isUserAdmin = ADMIN_EMAILS.includes(userEmail);
+            
             setIsAdmin(isUserAdmin);
             setUser({
               ...data.session.user,

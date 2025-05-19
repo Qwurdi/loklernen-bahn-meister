@@ -27,11 +27,9 @@ const AdminLayout: React.FC = () => {
     return <Navigate to="/login" replace />;
   }
   
-  // For now, simple admin check - we'll replace this with proper role check later
-  const isAdmin = true; // Placeholder for role-based check
-  
-  if (!isAdmin) {
-    return <Navigate to="/" replace />;
+  // Check if user has admin privileges
+  if (!user.isAdmin) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return (

@@ -1,8 +1,7 @@
-
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSpacedRepetition } from "@/hooks/spaced-repetition";
-import { useFlashcardSessionParams } from "./useSessionParams";
+import { useSessionParams } from "./useSessionParams";
 import { useFlashcardSessionState } from "./useFlashcardSessionState";
 
 export function useFlashcardSession() {
@@ -13,9 +12,9 @@ export function useFlashcardSession() {
     regulationParam,
     searchParams,
     mainCategoryForHook,
-    subCategoryForHook,
+    subCategoryParam,
     setRegulationFilter
-  } = useFlashcardSessionParams();
+  } = useSessionParams();
 
   const {
     currentIndex,
@@ -37,7 +36,7 @@ export function useFlashcardSession() {
     submitAnswer
   } = useSpacedRepetition(
     mainCategoryForHook,
-    subCategoryForHook,
+    subCategoryParam,
     { 
       practiceMode: isPracticeMode,
       regulationCategory: regulationParam
@@ -63,7 +62,7 @@ export function useFlashcardSession() {
     correctCount,
     sessionFinished,
     remainingToday,
-    subCategoryForHook,
+    subCategoryParam,
     mainCategoryForHook,
     isPracticeMode,
     regulationParam,

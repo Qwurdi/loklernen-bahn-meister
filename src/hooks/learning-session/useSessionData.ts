@@ -1,4 +1,3 @@
-
 import { useSpacedRepetition } from "@/hooks/spaced-repetition";
 import { useCategories } from "@/hooks/useCategories";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,7 +10,7 @@ export function useSessionData() {
   // Get session parameters from URL
   const {
     categoryParam,
-    subcategoryParam,
+    subCategoryParam,
     regulationParam,
     boxParam,
     sessionTitle,
@@ -20,7 +19,7 @@ export function useSessionData() {
 
   console.log("Learning session parameters:", {
     category: categoryParam,
-    subcategory: subcategoryParam,
+    subcategory: subCategoryParam,
     regulation: regulationParam,
     box: boxParam,
     isDueCardsView
@@ -48,7 +47,7 @@ export function useSessionData() {
     pendingUpdatesCount
   } = useSpacedRepetition(
     getCategoryForSpacedRepetition(),
-    subcategoryParam,
+    subCategoryParam,
     {
       practiceMode: false,
       regulationCategory: regulationParam,
@@ -63,7 +62,7 @@ export function useSessionData() {
   return {
     user,
     categoryParam,
-    subcategoryParam,
+    subCategoryParam,
     regulationParam,
     boxParam,
     sessionTitle,

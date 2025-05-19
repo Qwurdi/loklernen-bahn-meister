@@ -5,13 +5,16 @@ import { RegulationFilterType } from "@/types/regulation";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 import { determineMainCategory, mapUrlToSubcategory } from "@/utils/subcategory-utils";
 
-export function useFlashcardSessionParams() {
+/**
+ * Hook to manage and provide all session parameters for flashcard and learning sessions
+ */
+export function useSessionParams() {
   const { subcategory: urlSubcategoryParam } = useParams<{ subcategory: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const { regulationPreference } = useUserPreferences();
   
   // Get query parameters
-  const categoryUrlQueryParam = searchParams.get('category');
+  const categoryParam = searchParams.get('category');
   const parentCategoryParam = searchParams.get('parent_category');
   const categoriesUrlQueryParam = searchParams.getAll('categories');
   const regulationParam = searchParams.get("regelwerk") as RegulationFilterType || regulationPreference;
@@ -20,19 +23,19 @@ export function useFlashcardSessionParams() {
   // Determine mainCategory and subCategory for fetching questions
   const mainCategoryForHook: QuestionCategory = determineMainCategory(
     urlSubcategoryParam,
-    categoryUrlQueryParam,
+    categoryParam,
     categoriesUrlQueryParam,
     parentCategoryParam
   );
   
-  let subCategoryForHook: string | undefined = undefined;
+  let subCategoryParam: string | undefined = undefined;
   
   if (urlSubcategoryParam) {
-    subCategoryForHook = mapUrlToSubcategory(urlSubcategoryParam);
-  } else if (categoryUrlQueryParam) {
-    const potentialSubCategory = mapUrlToSubcategory(categoryUrlQueryParam);
+    subCategoryParam = mapUrlToSubcategory(urlSubcategoryParam);
+  } else if (categoryParam) {
+    const potentialSubCategory = mapUrlToSubcategory(categoryParam);
     if (potentialSubCategory && potentialSubCategory !== "Signale" && potentialSubCategory !== "Betriebsdienst") {
-      subCategoryForHook = potentialSubCategory;
+      subCategoryParam = potentialSubCategory;
     }
   }
 
@@ -40,10 +43,7 @@ export function useFlashcardSessionParams() {
   const isDueCardsView = searchParams.has("due") || searchParams.get("view") === "due";
 
   // Generate a session title based on parameters
-  let sessionTitle = subCategoryForHook || mainCategoryForHook || "Lernkarten";
-  if (isDueCardsView) {
-    sessionTitle = "Fällige Karten";
-  }
+  const sessionTitle = subCategoryParam || mainCategoryForHook || "Lernkarten";
 
   const setRegulationFilter = (value: RegulationFilterType) => {
     setSearchParams(params => {
@@ -53,27 +53,26 @@ export function useFlashcardSessionParams() {
   };
 
   return {
-    // Original properties
+    // URL and search parameters
     urlSubcategoryParam,
-    categoryUrlQueryParam,
+    categoryParam,
     parentCategoryParam,
     categoriesUrlQueryParam,
     regulationParam,
+    boxParam,
     searchParams,
     setSearchParams,
+    
+    // Derived parameters
     mainCategoryForHook,
-    subCategoryForHook,
-    setRegulationFilter,
-
-    // Additional properties needed by LearningSessionPage
-    categoryParam: categoryUrlQueryParam,
-    subcategoryParam: subCategoryForHook,
-    boxParam,
+    subCategoryParam,
+    isDueCardsView,
     sessionTitle,
-    isDueCardsView
+    
+    // Actions
+    setRegulationFilter
   };
 }
 
-// Export with both names to maintain compatibility
-export const useSessionParams = useFlashcardSessionParams;
-
+// Legacy exports for backward compatibility
+export const useFlashcardSessionParams = useSessionParams;

@@ -2,7 +2,7 @@
 import React from "react";
 import { Question } from "@/types/questions";
 import { Card } from "@/components/ui/card";
-import { useCardSwipe, SWIPE_THRESHOLD } from "./mobile/swipe";
+import { useSwipe } from "./mobile/useSwipe";
 import QuestionSide from "./mobile/QuestionSide";
 import AnswerSide from "./mobile/AnswerSide";
 import SwipeIndicator from "./mobile/SwipeIndicator";
@@ -26,14 +26,14 @@ export default function FlashcardItemMobile({
 }: FlashcardItemMobileProps) {
   const isMultipleChoice = question.question_type === "MC_single" || question.question_type === "MC_multi";
   
-  // Use our custom hook for swipe behavior - disable swipe for MC questions
+  // Use our consolidated swipe hook
   const { 
     cardRef, 
     swipeState, 
     handlers, 
     getCardStyle, 
     getCardClasses 
-  } = useCardSwipe({
+  } = useSwipe({
     onSwipeLeft: onNotKnown,
     onSwipeRight: onKnown,
     onShowAnswer,
@@ -71,7 +71,7 @@ export default function FlashcardItemMobile({
       {(!isMultipleChoice || !flipped) && (
         <SwipeIndicator 
           dragDelta={swipeState.dragDelta} 
-          swipeThreshold={SWIPE_THRESHOLD} 
+          swipeThreshold={100} 
         />
       )}
     </div>

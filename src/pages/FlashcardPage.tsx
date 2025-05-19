@@ -32,7 +32,7 @@ export default function FlashcardPage() {
     setCurrentIndex,
     correctCount,
     sessionFinished,
-    subCategoryForHook,
+    subCategoryParam,
     mainCategoryForHook,
     isPracticeMode,
     handleAnswer,
@@ -100,7 +100,7 @@ export default function FlashcardPage() {
       <main className="flex-1">
         <div className="container px-4 py-6">
           <FlashcardHeader 
-            subcategory={subCategoryForHook || mainCategoryForHook}
+            subcategory={subCategoryParam || mainCategoryForHook}
             isPracticeMode={isPracticeMode}
             onRegulationChange={handleRegulationChange}
           />

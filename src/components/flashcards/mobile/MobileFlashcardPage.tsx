@@ -19,7 +19,7 @@ export default function MobileFlashcardPage() {
     correctCount,
     sessionFinished,
     remainingToday,
-    subCategoryForHook,
+    subCategoryParam,
     mainCategoryForHook,
     handleAnswer,
     handleComplete,
@@ -98,7 +98,7 @@ export default function MobileFlashcardPage() {
               handleComplete();
             }
           }}
-          subCategoryTitle={subCategoryForHook || mainCategoryForHook}
+          subCategoryTitle={subCategoryParam || mainCategoryForHook}
           regulationFilter={regulationParam}
           onRegulationChange={handleRegulationChange}
         />

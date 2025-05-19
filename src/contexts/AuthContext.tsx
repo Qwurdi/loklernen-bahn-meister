@@ -13,7 +13,7 @@ export interface AuthContextType {
   loading: boolean;
   isNewUser: boolean;
   setIsNewUser: (isNew: boolean) => void;
-  isAdmin: boolean | undefined;
+  isAdmin?: boolean; // Keep the same modifier (optional) as in the interface
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<any>;

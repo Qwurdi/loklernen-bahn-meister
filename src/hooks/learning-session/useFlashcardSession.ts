@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSpacedRepetition } from "@/hooks/spaced-repetition";
@@ -62,8 +63,8 @@ export function useFlashcardSession() {
     correctCount,
     sessionFinished,
     remainingToday,
-    subCategoryParam,
-    mainCategoryForHook,
+    subCategoryParam, // Use consistent naming with SessionParams
+    mainCategoryForHook, // Use consistent naming with SessionParams
     isPracticeMode,
     regulationParam,
     searchParams,

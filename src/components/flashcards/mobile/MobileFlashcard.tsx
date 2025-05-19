@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Question } from "@/types/questions";
-import { useSwipe } from "./useSwipe";
+import { useCardSwipe } from "./swipe/useCardSwipe";
 import MobileQuestionSide from "./MobileQuestionSide";
 import MobileAnswerSide from "./MobileAnswerSide";
 import SwipeIndicator from "./SwipeIndicator";
@@ -32,7 +32,7 @@ export default function MobileFlashcard({
     handlers, 
     getCardStyle, 
     getCardClasses 
-  } = useSwipe({
+  } = useCardSwipe({
     onSwipeLeft: onNotKnown,
     onSwipeRight: onKnown,
     onShowAnswer,

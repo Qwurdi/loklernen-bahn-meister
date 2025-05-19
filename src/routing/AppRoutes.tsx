@@ -1,12 +1,22 @@
 
 import React, { useEffect } from "react";
-import { Routes, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
+import { ProtectedRoute } from "./ProtectedRoute";
 
-// Import route definitions
-import { mainRoutes } from "./routes/main-routes";
-import { authRoutes } from "./routes/auth-routes";
-import { userRoutes } from "./routes/user-routes";
-import { adminRoutes } from "./routes/admin-routes";
+// Import pages
+import Index from "@/pages/Index";
+import LoginPage from "@/pages/Login";
+import RegisterPage from "@/pages/Register";
+import Dashboard from "@/pages/Dashboard";
+import FlashcardPage from "@/pages/FlashcardPage";
+import LearningSessionPage from "@/pages/LearningSessionPage";
+import AdminLayout from "@/components/layout/AdminLayout";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+
+// Placeholder components
+const VerifyEmailPage = () => <div>E-Mail verifizieren</div>;
+const ResetPasswordPage = () => <div>Passwort zurücksetzen</div>;
+const RequestPasswordResetPage = () => <div>Passwort-Reset anfordern</div>;
 
 export default function AppRoutes() {
   const location = useLocation();
@@ -18,10 +28,39 @@ export default function AppRoutes() {
 
   return (
     <Routes>
-      {mainRoutes}
-      {authRoutes}
-      {userRoutes}
-      {adminRoutes}
+      {/* Public routes */}
+      <Route path="/" element={<Index />} />
+      
+      {/* Auth routes */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/request-password-reset" element={<RequestPasswordResetPage />} />
+      
+      {/* Protected user routes */}
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/karteikarten" element={<ProtectedRoute><FlashcardPage /></ProtectedRoute>} />
+      <Route path="/lernen/*" element={<ProtectedRoute><LearningSessionPage /></ProtectedRoute>} />
+      <Route path="/fortschritt" element={<ProtectedRoute><div>Fortschritt</div></ProtectedRoute>} />
+      <Route path="/einstellungen" element={<ProtectedRoute><div>Einstellungen</div></ProtectedRoute>} />
+      
+      {/* Admin routes */}
+      <Route path="/admin" element={<ProtectedRoute adminOnly={true}><AdminLayout /></ProtectedRoute>}>
+        <Route index element={<AdminDashboard />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="categories" element={<div>Admin Categories</div>} />
+        <Route path="categories/create" element={<div>Create Category</div>} />
+        <Route path="categories/:id" element={<div>Edit Category</div>} />
+        <Route path="questions" element={<div>Admin Questions</div>} />
+        <Route path="questions/create" element={<div>Create Question</div>} />
+        <Route path="questions/:id" element={<div>Edit Question</div>} />
+        <Route path="users" element={<div>Admin Users</div>} />
+        <Route path="users/create" element={<div>Create User</div>} />
+        <Route path="users/:id" element={<div>Edit User</div>} />
+        <Route path="import" element={<div>Import</div>} />
+        <Route path="export" element={<div>Export</div>} />
+      </Route>
     </Routes>
   );
 }

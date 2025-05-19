@@ -9,11 +9,10 @@ const ADMIN_EMAILS = ['admin@example.com', 'busato@me.com'];
 
 export interface AuthContextType {
   session: Session | null;
-  user: (User & { isAdmin?: boolean }) | null;
+  user: (User & { isAdmin: boolean }) | null; // Modified to make isAdmin non-optional
   loading: boolean;
   isNewUser: boolean;
   setIsNewUser: (isNew: boolean) => void;
-  isAdmin?: boolean; // Keep the same modifier (optional) as in the interface
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<any>;
@@ -25,28 +24,29 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User & { isAdmin?: boolean } | null>(null);
+  const [user, setUser] = useState<(User & { isAdmin: boolean }) | null>(null);
   const [loading, setLoading] = useState(true);
   const [isNewUser, setIsNewUser] = useState(false);
-  const [isAdmin, setIsAdmin] = useState<boolean | undefined>(undefined);
   const [authError, setAuthError] = useState<Error | null>(null);
 
   useEffect(() => {
+    // Set initial loading state
+    setLoading(true);
+
     // Set up auth listener first to ensure we catch all auth events
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, currentSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       console.log("Auth state changed:", event);
-      
       setSession(currentSession);
       
       if (currentSession?.user) {
         const userEmail = currentSession.user.email || '';
         const userIsAdmin = ADMIN_EMAILS.includes(userEmail);
         
+        // Set both user and isAdmin status in one go
         setUser({
           ...currentSession.user,
           isAdmin: userIsAdmin
         });
-        setIsAdmin(userIsAdmin);
         
         // Check if this is a new user based on created_at and last_sign_in_at
         if (currentSession.user.created_at && currentSession.user.last_sign_in_at) {
@@ -60,7 +60,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } else {
         setUser(null);
-        setIsAdmin(undefined);
         setIsNewUser(false);
         
         if (event === 'SIGNED_OUT' && !loading) {
@@ -90,14 +89,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ...data.session.user,
           isAdmin: userIsAdmin
         });
-        setIsAdmin(userIsAdmin);
       }
       
       setLoading(false);
     });
 
     return () => {
-      authListener.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 
@@ -163,7 +161,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     isNewUser,
     setIsNewUser,
-    isAdmin,
     signIn,
     signUp,
     authError,

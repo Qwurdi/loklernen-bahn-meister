@@ -1,5 +1,5 @@
 
-import { useCardSwipe } from './swipe/useCardSwipe';
+import { useCardSwipe } from './swipe';
 
-// Re-export the useCardSwipe hook as useSwipe for backward compatibility
+// Re-export for backward compatibility
 export const useSwipe = useCardSwipe;

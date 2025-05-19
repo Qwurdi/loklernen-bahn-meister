@@ -19,7 +19,7 @@ export default function MobileFlashcardPage() {
     correctCount,
     sessionFinished,
     remainingToday,
-    subCategoryParam,
+    subCategoryParam, // Changed from subCategoryForHook
     mainCategoryForHook,
     handleAnswer,
     handleComplete,

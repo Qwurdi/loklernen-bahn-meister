@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import * as React from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -20,16 +20,16 @@ export interface AuthContextType {
   clearAuthError: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<(User & { isAdmin: boolean }) | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isNewUser, setIsNewUser] = useState(false);
-  const [authError, setAuthError] = useState<Error | null>(null);
+  const [session, setSession] = React.useState<Session | null>(null);
+  const [user, setUser] = React.useState<(User & { isAdmin: boolean }) | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [isNewUser, setIsNewUser] = React.useState(false);
+  const [authError, setAuthError] = React.useState<Error | null>(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     // Set initial loading state
     setLoading(true);
 
@@ -175,7 +175,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
+  const context = React.useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }

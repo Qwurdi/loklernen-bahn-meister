@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import * as React from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { RegulationFilterType } from '@/types/regulation';
@@ -15,7 +15,7 @@ type UserPreferencesContextType = {
   loading: boolean;
 };
 
-const UserPreferencesContext = createContext<UserPreferencesContextType | undefined>(undefined);
+const UserPreferencesContext = React.createContext<UserPreferencesContextType | undefined>(undefined);
 
 // Local storage keys for non-authenticated users
 const REGULATION_PREFERENCE_KEY = 'loklernen-regulation-preference';
@@ -23,12 +23,12 @@ const EDITOR_VIEW_PREFERENCE_KEY = 'loklernen-editor-view-preference';
 
 export function UserPreferencesProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [regulationPreference, setRegulationPreferenceState] = useState<RegulationFilterType>('DS 301');
-  const [editorViewPreference, setEditorViewPreferenceState] = useState<EditorViewType>('tabs');
-  const [loading, setLoading] = useState(true);
+  const [regulationPreference, setRegulationPreferenceState] = React.useState<RegulationFilterType>('DS 301');
+  const [editorViewPreference, setEditorViewPreferenceState] = React.useState<EditorViewType>('tabs');
+  const [loading, setLoading] = React.useState(true);
 
   // Load preferences from storage/database on component mount
-  useEffect(() => {
+  React.useEffect(() => {
     const loadPreferences = async () => {
       try {
         setLoading(true);
@@ -170,7 +170,7 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
 }
 
 export function useUserPreferences() {
-  const context = useContext(UserPreferencesContext);
+  const context = React.useContext(UserPreferencesContext);
   if (context === undefined) {
     throw new Error("useUserPreferences must be used within a UserPreferencesProvider");
   }

@@ -62,10 +62,10 @@ export default function CardFront<T extends Question = Question>({ question }: C
         </div>
       )}
       
-      <div className="mt-auto text-sm text-gray-500 text-center">
+      <div className="mt-auto text-sm text-gray-500 text-center font-medium">
         {isMultipleChoice 
-          ? "Tippe, um Antwortoptionen auszuwählen" 
-          : "Tippe, um die Antwort zu sehen"}
+          ? "Tippe auf die Karte, um Antwortoptionen auszuwählen" 
+          : "Tippe auf die Karte, um die Antwort zu sehen"}
       </div>
     </div>
   );

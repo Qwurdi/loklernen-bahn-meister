@@ -56,9 +56,14 @@ export default function MobileQuestionSide({ question, onShowAnswer }: MobileQue
         />
       </div>
       
+      {/* Tap to flip hint */}
+      <p className="text-center text-sm text-gray-500 mb-2">
+        Tippe auf die Karte oder den Button, um die Antwort zu sehen
+      </p>
+      
       {/* Answer button - stick to bottom */}
       <button 
-        className="w-full py-3 bg-loklernen-ultramarine text-white rounded-lg flex items-center justify-center"
+        className="w-full py-3 bg-gradient-to-r from-loklernen-ultramarine to-blue-600 text-white rounded-lg flex items-center justify-center shadow-md transition-transform active:scale-98"
         onClick={onShowAnswer}
       >
         <Lightbulb className="h-4 w-4 mr-2" />

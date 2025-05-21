@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Check, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react';
 
 interface SwipeIndicatorProps {
   dragDelta: number;
@@ -8,31 +8,33 @@ interface SwipeIndicatorProps {
 }
 
 export default function SwipeIndicator({ dragDelta, swipeThreshold }: SwipeIndicatorProps) {
-  // Don't show until dragDelta is significant
-  if (Math.abs(dragDelta) < 10) return null;
-  
-  // Calculate opacity based on drag distance
-  const opacity = Math.min(Math.abs(dragDelta) / swipeThreshold, 1) * 0.8;
-  
-  // Swipe left (not known)
-  if (dragDelta < 0) {
-    return (
-      <div 
-        className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-red-500 rounded-full"
-        style={{ opacity }}
-      >
-        <X className="text-white h-6 w-6" />
-      </div>
-    );
-  }
-  
-  // Swipe right (known)
+  // Calculate opacity based on how close we are to the threshold
+  const leftOpacity = Math.min(Math.abs(Math.min(dragDelta, 0)) / swipeThreshold, 1);
+  const rightOpacity = Math.min(Math.max(dragDelta, 0) / swipeThreshold, 1);
+
   return (
-    <div 
-      className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-green-500 rounded-full"
-      style={{ opacity }}
-    >
-      <Check className="text-white h-6 w-6" />
+    <div className="absolute inset-x-0 bottom-1/4 z-10 pointer-events-none flex justify-between px-10">
+      {/* Left indicator - not known */}
+      <div className="flex items-center" style={{ opacity: leftOpacity }}>
+        <div className="bg-red-100 text-red-600 rounded-full h-12 w-12 flex items-center justify-center border-2 border-red-300">
+          <X className="h-6 w-6" />
+        </div>
+        <div className="ml-2 bg-red-100 text-red-600 px-2 py-1 rounded">
+          <ArrowLeft className="h-4 w-4 inline mr-1" />
+          Nicht gewusst
+        </div>
+      </div>
+      
+      {/* Right indicator - known */}
+      <div className="flex items-center" style={{ opacity: rightOpacity }}>
+        <div className="mr-2 bg-green-100 text-green-600 px-2 py-1 rounded">
+          Gewusst
+          <ArrowRight className="h-4 w-4 inline ml-1" />
+        </div>
+        <div className="bg-green-100 text-green-600 rounded-full h-12 w-12 flex items-center justify-center border-2 border-green-300">
+          <Check className="h-6 w-6" />
+        </div>
+      </div>
     </div>
   );
 }

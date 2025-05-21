@@ -42,15 +42,23 @@ export default function FlashcardItemMobile({
     disableSwipe: isMultipleChoice && flipped // Disable swipe for MC questions when the card is flipped
   });
 
+  // Handle card click for the question side
+  const handleCardClick = () => {
+    if (!flipped) {
+      onShowAnswer();
+    }
+  };
+
   return (
     <div className="mx-auto w-full relative touch-none">
       <Card 
         ref={cardRef}
         className={getCardClasses()}
         style={getCardStyle()}
-        onTouchStart={handlers.handleTouchStart}
-        onTouchMove={handlers.handleTouchMove}
-        onTouchEnd={handlers.handleTouchEnd}
+        onClick={!flipped ? handleCardClick : undefined}
+        onTouchStart={flipped ? handlers.handleTouchStart : undefined}
+        onTouchMove={flipped ? handlers.handleTouchMove : undefined}
+        onTouchEnd={flipped ? handlers.handleTouchEnd : undefined}
       >
         {!flipped ? (
           <QuestionSide 
@@ -67,8 +75,8 @@ export default function FlashcardItemMobile({
         )}
       </Card>
 
-      {/* Visual swipe indicator overlay - only for non-MC questions or front side */}
-      {(!isMultipleChoice || !flipped) && (
+      {/* Visual swipe indicator overlay - only show on answer side for non-MC questions */}
+      {flipped && !isMultipleChoice && (
         <SwipeIndicator 
           dragDelta={swipeState.dragDelta} 
           swipeThreshold={100} 

@@ -1,12 +1,12 @@
 
 import React from "react";
 import { Question } from "@/types/questions";
-import { Button } from "@/components/ui/button";
-import { Lightbulb } from "lucide-react";
 import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
-import ZoomableImage from "@/components/common/ZoomableImage";
-import HintButton from "../HintButton";
+import { Card, CardContent } from "@/components/ui/card";
+import { Lightbulb } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { SafeRichText } from "@/components/ui/rich-text/SafeRichText";
+import HintButton from "../HintButton";
 
 interface QuestionSideProps {
   question: Question;
@@ -14,53 +14,59 @@ interface QuestionSideProps {
 }
 
 export default function QuestionSide({ question, onShowAnswer }: QuestionSideProps) {
-  // Check if this is a multiple choice question
   const isMultipleChoice = question.question_type === "MC_single" || question.question_type === "MC_multi";
   
-  // Use dynamic text sizing based on question length
-  const textSizeClass = useDynamicTextSize(
-    question.text,
-    'question'
-  );
+  // Dynamic text size based on content length
+  const textClass = useDynamicTextSize(question.text, 'question');
   
   return (
-    <div className="flex flex-col h-full p-4 bg-white">
-      <div className="bg-blue-50 px-3 py-1.5 rounded-full text-xs text-blue-600 self-start mb-3">
-        {question.question_type === "open" ? "Signal" : "Multiple Choice"}
-      </div>
-      
-      {/* Question text moved above image for visibility */}
-      <div className={`${textSizeClass} font-medium mb-4 text-gray-900 overflow-y-auto max-h-[30vh]`}>
-        <SafeRichText content={question.text} />
-      </div>
-      
-      {/* Add the hint button */}
-      <div className="mb-4">
-        <HintButton 
-          hint={question.hint}
-          question={question.text}
-          answers={question.answers}
-        />
-      </div>
-      
-      {/* Image container with ZoomableImage */}
-      <div className="flex-1 flex items-center justify-center mb-4 overflow-hidden">
-        {question?.image_url && (
-          <ZoomableImage
-            src={question.image_url}
-            alt="Signal"
-            containerClassName="w-full max-w-[200px] mx-auto"
-          />
+    <Card className="border-none shadow-none h-full">
+      <CardContent className="p-4 h-full flex flex-col">
+        {/* Signal type label */}
+        <div className="bg-blue-50 px-3 py-1 rounded-full text-xs text-blue-600 self-start mb-2">
+          {question.question_type === "open" ? "Signal" : "Multiple Choice"}
+        </div>
+        
+        {/* Question text */}
+        <div className={`${textClass} font-medium mb-4 text-gray-900`}>
+          <SafeRichText content={question.text} />
+        </div>
+        
+        {/* Question image - if available */}
+        {question.image_url && (
+          <div className="flex-1 flex items-center justify-center mb-4">
+            <img 
+              src={question.image_url} 
+              alt="Question" 
+              className="max-h-full object-contain rounded-md"
+            />
+          </div>
         )}
-      </div>
-      
-      <Button 
-        className="w-full py-6 mt-auto bg-loklernen-ultramarine text-white hover:bg-loklernen-sapphire"
-        onClick={onShowAnswer}
-      >
-        <Lightbulb className="h-5 w-5 mr-2" />
-        {isMultipleChoice ? "Antwortoptionen anzeigen" : "Signal anzeigen"}
-      </Button>
-    </div>
+        
+        {/* Hint button */}
+        <div className="mb-3">
+          <HintButton 
+            hint={question.hint}
+            question={question.text}
+            answers={question.answers}
+            minimal={true}
+          />
+        </div>
+        
+        {/* Tap to flip instruction */}
+        <div className="flip-hint">
+          Tippe auf die Karte oder den Button, um die Antwort zu sehen
+        </div>
+        
+        {/* Show answer button */}
+        <Button 
+          className="w-full bg-gradient-to-r from-loklernen-ultramarine to-blue-600 hover:from-blue-700 hover:to-loklernen-ultramarine text-white"
+          onClick={onShowAnswer}
+        >
+          <Lightbulb className="h-4 w-4 mr-2" />
+          {isMultipleChoice ? "Optionen anzeigen" : "Signal anzeigen"}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }

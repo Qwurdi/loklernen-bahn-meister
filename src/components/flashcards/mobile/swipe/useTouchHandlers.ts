@@ -29,8 +29,8 @@ export function useTouchHandlers({
     // Prevent default to disable scrolling
     e.preventDefault();
     
-    // Skip if disabled
-    if (isFlipped && disableSwipe) return;
+    // Skip if disabled or if we're on the question side (not flipped)
+    if ((isFlipped && disableSwipe) || !isFlipped) return;
     
     const touch = e.touches[0];
     updateSwipeState({
@@ -42,7 +42,7 @@ export function useTouchHandlers({
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!swipeState.dragStartX || !swipeState.isDragging || (isFlipped && disableSwipe)) return;
+    if (!swipeState.dragStartX || !swipeState.isDragging || (isFlipped && disableSwipe) || !isFlipped) return;
     
     // Always prevent default to stop scrolling
     e.preventDefault();
@@ -68,7 +68,7 @@ export function useTouchHandlers({
   };
 
   const handleTouchEnd = () => {
-    if (!swipeState.dragStartX || !swipeState.isDragging || (isFlipped && disableSwipe)) {
+    if (!swipeState.dragStartX || !swipeState.isDragging || (isFlipped && disableSwipe) || !isFlipped) {
       resetSwipeState();
       return;
     }
@@ -97,9 +97,6 @@ export function useTouchHandlers({
             onSwipeLeft();
           }, 300);
         }
-      } else {
-        // If the card is not flipped (question side), show answer on any swipe
-        onShowAnswer();
       }
     } else {
       // Reset position if swipe didn't reach threshold

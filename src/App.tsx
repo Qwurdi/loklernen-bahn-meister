@@ -1,5 +1,5 @@
 
-import React from "react"; // Make sure React is explicitly imported
+import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -26,19 +26,17 @@ const App = () => {
   console.log("App: Rendering main application structure");
   
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <UserPreferencesProvider>
-            <TooltipProvider>
-              <AppRoutes />
-              <Toaster />
-              <Sonner />
-            </TooltipProvider>
-          </UserPreferencesProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <UserPreferencesProvider>
+          <TooltipProvider delayDuration={300}>
+            <AppRoutes />
+            <Toaster />
+            <Sonner />
+          </TooltipProvider>
+        </UserPreferencesProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 };
 

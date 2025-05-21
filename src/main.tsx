@@ -23,11 +23,13 @@ if (!rootElement) {
   
   const root = ReactDOM.createRoot(rootElement);
   root.render(
-    <ErrorBoundary>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </ErrorBoundary>
+    <React.StrictMode>
+      <ErrorBoundary>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </ErrorBoundary>
+    </React.StrictMode>
   );
   
   console.log("Main: Application rendered successfully");

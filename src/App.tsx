@@ -1,4 +1,5 @@
 
+import React from "react"; // Make sure React is explicitly imported
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -6,7 +7,6 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { UserPreferencesProvider } from "@/contexts/UserPreferencesContext";
 import AppRoutes from "@/routing/AppRoutes";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import React from "react"; // Add explicit React import
 
 console.log("App: Initializing application component");
 

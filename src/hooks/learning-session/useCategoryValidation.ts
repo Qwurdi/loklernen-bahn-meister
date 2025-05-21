@@ -53,7 +53,10 @@ export function useCategoryValidation(
       if (parentCategoryParam === "Betriebsdienst" || parentCategoryParam === "Signale") {
         setCategoryFound(true);
         setIsParentCategory(true);
-        setCategoryRequiresAuth(parentCategoryParam === "Betriebsdienst" && !user);
+        
+        // Betriebsdienst requires auth, but we don't redirect here.
+        // We just set the flag for the UI to handle appropriately
+        setCategoryRequiresAuth(parentCategoryParam === "Betriebsdienst");
       }
       return;
     }

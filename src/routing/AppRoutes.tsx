@@ -8,10 +8,10 @@ import Index from "@/pages/Index";
 import LoginPage from "@/pages/Login";
 import RegisterPage from "@/pages/Register";
 import Dashboard from "@/pages/Dashboard";
-import FlashcardPage from "@/pages/FlashcardPage";
 import LearningSessionPage from "@/pages/LearningSessionPage";
 import AdminLayout from "@/components/layout/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
+import { FlashcardRoute } from "./routes/main-routes";
 
 // Placeholder components
 const VerifyEmailPage = () => <div>E-Mail verifizieren</div>;
@@ -40,8 +40,12 @@ export default function AppRoutes() {
       
       {/* Protected user routes */}
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/karteikarten" element={<ProtectedRoute><FlashcardPage /></ProtectedRoute>} />
-      <Route path="/lernen/*" element={<ProtectedRoute><LearningSessionPage /></ProtectedRoute>} />
+      <Route path="/karteikarten" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      
+      {/* Flashcard routes with conditional rendering based on device */}
+      <Route path="/karteikarten/lernen" element={<FlashcardRoute />} />
+      <Route path="/lernen/*" element={<LearningSessionPage />} />
+      
       <Route path="/fortschritt" element={<ProtectedRoute><div>Fortschritt</div></ProtectedRoute>} />
       <Route path="/einstellungen" element={<ProtectedRoute><div>Einstellungen</div></ProtectedRoute>} />
       

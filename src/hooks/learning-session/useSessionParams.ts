@@ -43,7 +43,13 @@ export function useSessionParams() {
   const isDueCardsView = searchParams.has("due") || searchParams.get("view") === "due";
 
   // Generate a session title based on parameters
-  const sessionTitle = subCategoryParam || mainCategoryForHook || "Lernkarten";
+  let sessionTitle = subCategoryParam || mainCategoryForHook || "Lernkarten";
+  
+  // Use parent_category if explicitly set (this prioritizes it)
+  if (parentCategoryParam === "Signale" || parentCategoryParam === "Betriebsdienst") {
+    sessionTitle = parentCategoryParam;
+    console.log("Using parent category for session title:", sessionTitle);
+  }
 
   const setRegulationFilter = (value: RegulationFilterType) => {
     setSearchParams(params => {

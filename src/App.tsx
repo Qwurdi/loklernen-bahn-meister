@@ -6,6 +6,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { UserPreferencesProvider } from "@/contexts/UserPreferencesContext";
 import AppRoutes from "@/routing/AppRoutes";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import React from "react"; // Add explicit React import
 
 console.log("App: Initializing application component");
 

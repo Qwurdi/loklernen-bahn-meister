@@ -2,7 +2,7 @@
 import React from 'react';
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import EnhancedLoadingSpinner from "@/components/common/EnhancedLoadingSpinner";
+import MinimalistLoader from "@/components/common/MinimalistLoader";
 import '@/styles/animations.css';
 import { useMediaQuery } from '@/hooks/use-mobile';
 
@@ -22,12 +22,12 @@ export default function FlashcardLoadingState({ message = "Lade Karteikarten..."
             {prefersReducedMotion ? (
               <div className="text-center">
                 <div 
-                  className="mb-4 h-12 w-12 rounded-full border-4 border-loklernen-ultramarine border-t-transparent mx-auto spinner-rotate"
+                  className="mb-4 h-12 w-12 rounded-full border-2 border-loklernen-ultramarine border-t-transparent mx-auto spinner-rotate"
                 />
                 <p className="text-white">{message}</p>
               </div>
             ) : (
-              <EnhancedLoadingSpinner message={message} size="lg" />
+              <MinimalistLoader message={message} size="lg" />
             )}
           </div>
         </div>

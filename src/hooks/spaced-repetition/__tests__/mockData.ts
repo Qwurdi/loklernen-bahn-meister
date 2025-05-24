@@ -1,6 +1,6 @@
 
 import { Question } from "@/types/questions";
-import { UserProgress } from "../types";
+import { UserProgress, SessionQuestion } from "@/types/spaced-repetition";
 
 // Mock questions for testing
 export const mockQuestions: Question[] = [
@@ -15,7 +15,7 @@ export const mockQuestions: Question[] = [
       { text: 'Answer 1', isCorrect: true },
       { text: 'Answer 2', isCorrect: false }
     ],
-    image_url: null, // Added the required property
+    image_url: null,
     created_by: 'test-user',
     created_at: '2023-01-01T00:00:00Z',
     updated_at: '2023-01-01T00:00:00Z',
@@ -32,7 +32,7 @@ export const mockQuestions: Question[] = [
       { text: 'Answer 1', isCorrect: false },
       { text: 'Answer 2', isCorrect: true }
     ],
-    image_url: null, // Added the required property
+    image_url: null,
     created_by: 'test-user',
     created_at: '2023-01-02T00:00:00Z',
     updated_at: '2023-01-02T00:00:00Z',
@@ -52,7 +52,6 @@ export const mockUserProgress: UserProgress[] = [
     next_review_at: '2023-01-15T00:00:00Z',
     ease_factor: 2.5,
     interval_days: 5,
-    questions: mockQuestions[0],
     box_number: 3,
     last_score: 4,
     repetition_count: 4,
@@ -70,12 +69,23 @@ export const mockUserProgress: UserProgress[] = [
     next_review_at: '2023-01-14T00:00:00Z',
     ease_factor: 2.2,
     interval_days: 3,
-    questions: mockQuestions[1],
     box_number: 2,
     last_score: 3,
     repetition_count: 4,
     streak: 0,
     created_at: '2023-01-01T00:00:00Z',
     updated_at: '2023-01-11T00:00:00Z'
+  }
+];
+
+// Mock session questions combining questions and progress
+export const mockSessionQuestions: SessionQuestion[] = [
+  {
+    question: mockQuestions[0],
+    progress: mockUserProgress[0]
+  },
+  {
+    question: mockQuestions[1],
+    progress: mockUserProgress[1]
   }
 ];

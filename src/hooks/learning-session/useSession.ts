@@ -46,24 +46,50 @@ export function useSession() {
   // Determine if we're in practice mode
   const isPracticeMode = !user;
 
-  // Get questions using spaced repetition system
+  // Get questions using the clean spaced repetition system
   const {
+    questions: sessionQuestions,
     loading: questionsLoading,
-    dueQuestions,
+    error: questionsError,
+    progress,
     submitAnswer,
-    applyPendingUpdates,
-    pendingUpdatesCount
-  } = useSpacedRepetition(
-    getCategoryForSpacedRepetition(),
-    subCategoryParam,
-    { 
-      practiceMode: isPracticeMode,
-      regulationCategory: regulationParam,
-      boxNumber: boxParam ? parseInt(boxParam, 10) : undefined,
-      batchSize: 15,
-      includeAllSubcategories: isParentCategory
+    loadQuestions,
+    reset
+  } = useSpacedRepetition({
+    category: getCategoryForSpacedRepetition() as any,
+    subcategory: subCategoryParam,
+    regulation: regulationParam || 'all',
+    mode: isPracticeMode ? 'practice' : (boxParam ? 'boxes' : 'review'),
+    boxNumber: boxParam ? parseInt(boxParam, 10) : undefined,
+    batchSize: 15,
+    includeAllSubcategories: isParentCategory
+  });
+
+  // Load questions when parameters change
+  useEffect(() => {
+    if (categoryFound !== false && (!categoryRequiresAuth || user)) {
+      loadQuestions({
+        category: getCategoryForSpacedRepetition() as any,
+        subcategory: subCategoryParam,
+        regulation: regulationParam || 'all',
+        mode: isPracticeMode ? 'practice' : (boxParam ? 'boxes' : 'review'),
+        boxNumber: boxParam ? parseInt(boxParam, 10) : undefined,
+        batchSize: 15,
+        includeAllSubcategories: isParentCategory
+      });
     }
-  );
+  }, [
+    categoryFound,
+    categoryRequiresAuth,
+    user,
+    getCategoryForSpacedRepetition,
+    subCategoryParam,
+    regulationParam,
+    isPracticeMode,
+    boxParam,
+    isParentCategory,
+    loadQuestions
+  ]);
 
   // Update session cards when questions change
   useEffect(() => {
@@ -72,13 +98,18 @@ export function useSession() {
       return;
     }
     
-    if (!questionsLoading && dueQuestions.length > 0) {
-      const shuffled = [...dueQuestions].sort(() => Math.random() - 0.5);
+    if (!questionsLoading && sessionQuestions.length > 0) {
+      // Extract questions from SessionQuestion objects
+      const questions = sessionQuestions.map(sq => sq.question);
+      const shuffled = [...questions].sort(() => Math.random() - 0.5);
       setSessionCards(shuffled);
-    } else if (!questionsLoading && dueQuestions.length === 0) {
+    } else if (!questionsLoading && sessionQuestions.length === 0) {
       setSessionCards([]);
     }
-  }, [questionsLoading, dueQuestions, categoryFound, categoryRequiresAuth, user]);
+  }, [questionsLoading, sessionQuestions, categoryFound, categoryRequiresAuth, user]);
+
+  // Extract questions for backward compatibility
+  const dueQuestions = sessionQuestions.map(sq => sq.question);
 
   // Get due today count for progress display
   const remainingToday = dueQuestions.length;
@@ -97,18 +128,10 @@ export function useSession() {
   // Handle session completion
   const handleComplete = () => {
     setSessionFinished(true);
-    
-    if (applyPendingUpdates) {
-      applyPendingUpdates();
-    }
   };
 
   // Handle session restart
   const handleRestart = async () => {
-    if (applyPendingUpdates) {
-      await applyPendingUpdates();
-    }
-
     setCurrentIndex(0);
     setCorrectCount(0);
     setSessionFinished(false);
@@ -166,10 +189,10 @@ export function useSession() {
     handleRegulationChange,
     navigate,
     
-    // Advanced
+    // Advanced (for backward compatibility)
     submitAnswer,
-    applyPendingUpdates,
-    pendingUpdatesCount
+    applyPendingUpdates: () => Promise.resolve(), // No-op in clean architecture
+    pendingUpdatesCount: 0 // Always 0 in clean architecture
   };
 }
 

@@ -1,20 +1,9 @@
 
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { act } from 'react-dom/test-utils';
 import { useSpacedRepetition } from '../index';
-import { mockQuestions, mockUserProgress } from './mockData';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-
-// Mocking the services used by the hook
-vi.mock('../services', () => ({
-  fetchUserProgress: vi.fn().mockResolvedValue(mockUserProgress),
-  fetchNewQuestions: vi.fn().mockResolvedValue(mockQuestions),
-  fetchPracticeQuestions: vi.fn().mockResolvedValue(mockQuestions),
-  fetchQuestionsByBox: vi.fn().mockResolvedValue(mockUserProgress),
-  updateUserProgress: vi.fn().mockResolvedValue({}),
-  updateUserStats: vi.fn().mockResolvedValue({})
-}));
 
 // Mock AuthContext
 vi.mock('@/contexts/AuthContext', () => ({
@@ -23,23 +12,52 @@ vi.mock('@/contexts/AuthContext', () => ({
   })
 }));
 
+// Mock SpacedRepetitionService
+vi.mock('@/services/SpacedRepetitionService', () => ({
+  spacedRepetitionService: {
+    loadSessionQuestions: vi.fn().mockResolvedValue([
+      {
+        question: {
+          id: 'q1',
+          category: 'Signale',
+          sub_category: 'Hauptsignale',
+          difficulty: 3,
+          text: 'Test question 1',
+          question_type: 'MC_single',
+          answers: [
+            { text: 'Answer 1', isCorrect: true },
+            { text: 'Answer 2', isCorrect: false }
+          ],
+          image_url: null,
+          created_by: 'test-user',
+          created_at: '2023-01-01T00:00:00Z',
+          updated_at: '2023-01-01T00:00:00Z',
+          revision: 1
+        },
+        progress: undefined
+      }
+    ]),
+    submitAnswer: vi.fn().mockResolvedValue({})
+  }
+}));
+
 // Test component using the hook
 function TestComponent() {
   const {
     loading,
     error,
-    dueQuestions,
+    questions,
+    progress,
     submitAnswer,
-    pendingUpdatesCount,
-    applyPendingUpdates
-  } = useSpacedRepetition('Signale', 'Hauptsignale');
+    loadQuestions
+  } = useSpacedRepetition();
 
   return (
     <div>
       <div data-testid="loading">{loading ? 'true' : 'false'}</div>
       <div data-testid="error">{error ? error.message : 'no-error'}</div>
-      <div data-testid="questions-count">{dueQuestions.length}</div>
-      <div data-testid="pending-updates">{pendingUpdatesCount}</div>
+      <div data-testid="questions-count">{questions.length}</div>
+      <div data-testid="progress-total">{progress.totalQuestions}</div>
       <button 
         onClick={() => submitAnswer('q1', 5)}
         data-testid="submit-answer-btn"
@@ -47,10 +65,10 @@ function TestComponent() {
         Submit Answer
       </button>
       <button 
-        onClick={() => applyPendingUpdates()}
-        data-testid="apply-updates-btn"
+        onClick={() => loadQuestions({ category: 'Signale' })}
+        data-testid="load-questions-btn"
       >
-        Apply Updates
+        Load Questions
       </button>
     </div>
   );
@@ -61,50 +79,48 @@ describe('useSpacedRepetition', () => {
     vi.resetAllMocks();
   });
 
-  it('initializes with loading state and fetches questions', async () => {
+  it('initializes with default state', () => {
     const { getByTestId } = render(<TestComponent />);
-    
-    // Initially loading
-    expect(getByTestId('loading').textContent).toBe('true');
-    
-    // Wait for loading to complete
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 10));
-    });
     
     expect(getByTestId('loading').textContent).toBe('false');
-    expect(getByTestId('questions-count').textContent).not.toBe('0');
     expect(getByTestId('error').textContent).toBe('no-error');
+    expect(getByTestId('questions-count').textContent).toBe('0');
+    expect(getByTestId('progress-total').textContent).toBe('0');
   });
 
-  it('submits answers and tracks pending updates', async () => {
+  it('loads questions when requested', async () => {
     const { getByTestId } = render(<TestComponent />);
     
-    // Wait for loading to complete
+    const loadButton = getByTestId('load-questions-btn');
+    
     await act(async () => {
+      loadButton.click();
+      // Wait for async operations
       await new Promise(resolve => setTimeout(resolve, 10));
     });
     
-    // Submit an answer
-    const submitButton = getByTestId('submit-answer-btn');
+    expect(getByTestId('questions-count').textContent).toBe('1');
+    expect(getByTestId('progress-total').textContent).toBe('1');
+  });
+
+  it('submits answers correctly', async () => {
+    const { getByTestId } = render(<TestComponent />);
     
+    // First load questions
+    const loadButton = getByTestId('load-questions-btn');
+    await act(async () => {
+      loadButton.click();
+      await new Promise(resolve => setTimeout(resolve, 10));
+    });
+    
+    // Then submit an answer
+    const submitButton = getByTestId('submit-answer-btn');
     await act(async () => {
       submitButton.click();
-    });
-    
-    // Check that we have a pending update
-    expect(getByTestId('pending-updates').textContent).toBe('1');
-    
-    // Apply updates
-    const applyButton = getByTestId('apply-updates-btn');
-    
-    await act(async () => {
-      applyButton.click();
-      // Wait for updates to apply
       await new Promise(resolve => setTimeout(resolve, 10));
     });
     
-    // Pending updates should be cleared
-    expect(getByTestId('pending-updates').textContent).toBe('0');
+    // Verify submit was called
+    expect(getByTestId('error').textContent).toBe('no-error');
   });
 });

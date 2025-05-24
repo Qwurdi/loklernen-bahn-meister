@@ -22,7 +22,7 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => {
+const App: React.FC = () => {
   console.log("App: Rendering main application structure");
   
   return (

@@ -9,6 +9,7 @@ import Index from "@/pages/Index";
 import LoginPage from "@/pages/Login";
 import RegisterPage from "@/pages/Register";
 import Dashboard from "@/pages/Dashboard";
+import CardsPage from "@/pages/CardsPage";
 import LearningSessionPage from "@/pages/LearningSessionPage";
 import AdminLayout from "@/components/layout/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
@@ -41,7 +42,7 @@ export default function AppRoutes() {
       
       {/* Protected user routes */}
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/karteikarten" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/karteikarten" element={<ProtectedRoute><CardsPage /></ProtectedRoute>} />
       
       {/* Unified flashcard routes */}
       <Route path="/karteikarten/lernen" element={<FlashcardPage />} />

@@ -98,7 +98,7 @@ export default function MobileFlashcardDisplay({
                   src={question.image_url}
                   alt="Signal"
                   maxHeight={400}
-                  miniatureThreshold={250}
+                  miniatureThreshold={150}
                   className="max-w-full"
                 />
               </div>
@@ -108,7 +108,7 @@ export default function MobileFlashcardDisplay({
             <div className="mb-3">
               <HintButton 
                 hint={question.hint}
-                question={question.text}
+                question={questionTextValue}
                 answers={question.answers}
                 minimal={true}
               />
@@ -161,7 +161,7 @@ export default function MobileFlashcardDisplay({
                       src={question.image_url}
                       alt="Signal"
                       maxHeight={300}
-                      miniatureThreshold={200}
+                      miniatureThreshold={150}
                       className="max-w-full"
                     />
                   </div>

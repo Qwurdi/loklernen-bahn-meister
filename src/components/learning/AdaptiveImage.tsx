@@ -15,7 +15,7 @@ export default function AdaptiveImage({
   alt, 
   className = '',
   maxHeight = 300,
-  miniatureThreshold = 200
+  miniatureThreshold = 150
 }: AdaptiveImageProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number } | null>(null);
@@ -37,12 +37,24 @@ export default function AdaptiveImage({
   const shouldShowMiniature = imageDimensions && imageDimensions.height > miniatureThreshold;
   const displayMode = shouldShowMiniature && !isExpanded ? 'miniature' : 'full';
 
-  const handleToggleSize = () => {
+  const handleToggleSize = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card flip
     setIsExpanded(!isExpanded);
     
     // Haptic feedback
     if (navigator.vibrate) {
       navigator.vibrate(10);
+    }
+  };
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card flip
+    if (shouldShowMiniature) {
+      setIsExpanded(!isExpanded);
+      
+      if (navigator.vibrate) {
+        navigator.vibrate(10);
+      }
     }
   };
 
@@ -57,47 +69,44 @@ export default function AdaptiveImage({
   return (
     <div className={`relative ${className}`}>
       <div 
-        className={`relative overflow-hidden rounded-lg transition-all duration-300 ${
-          displayMode === 'miniature' ? 'cursor-pointer' : ''
-        }`}
+        className={`relative overflow-hidden rounded-lg transition-all duration-300`}
         style={{ 
           maxHeight: displayMode === 'miniature' ? miniatureThreshold : maxHeight 
         }}
-        onClick={displayMode === 'miniature' ? handleToggleSize : undefined}
+        onDoubleClick={handleDoubleClick}
       >
         <img
           ref={imgRef}
           src={src}
           alt={alt}
-          className={`w-full h-full object-contain transition-all duration-300 ${
-            displayMode === 'miniature' ? 'object-cover' : 'object-contain'
-          }`}
+          className="w-full h-full object-contain transition-all duration-300"
         />
         
-        {/* Miniature overlay */}
-        {displayMode === 'miniature' && (
-          <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
-            <div className="bg-white bg-opacity-90 rounded-full p-2">
-              <ZoomIn className="h-6 w-6 text-gray-700" />
-            </div>
-          </div>
+        {/* Corner expand button - only show in miniature mode */}
+        {shouldShowMiniature && displayMode === 'miniature' && (
+          <button
+            onClick={handleToggleSize}
+            className="absolute top-2 right-2 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center hover:bg-white transition-colors"
+          >
+            <ZoomIn className="h-4 w-4 text-gray-700" />
+          </button>
         )}
       </div>
 
-      {/* Expand/collapse button for full mode */}
+      {/* Collapse button for expanded mode */}
       {shouldShowMiniature && isExpanded && (
         <button
           onClick={handleToggleSize}
-          className="absolute top-2 right-2 bg-white bg-opacity-90 rounded-full p-2 shadow-md transition-opacity"
+          className="absolute top-2 right-2 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center hover:bg-white transition-colors"
         >
-          <ZoomOut className="h-5 w-5 text-gray-700" />
+          <ZoomOut className="h-4 w-4 text-gray-700" />
         </button>
       )}
 
-      {/* Tap hint for miniature */}
-      {displayMode === 'miniature' && (
-        <div className="text-center mt-2">
-          <span className="text-xs text-gray-500">Tippe zum Vergrößern</span>
+      {/* Subtle hint for miniature */}
+      {shouldShowMiniature && displayMode === 'miniature' && (
+        <div className="text-center mt-1">
+          <span className="text-xs text-gray-400">Doppeltipp oder • zum Vergrößern</span>
         </div>
       )}
     </div>

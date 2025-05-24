@@ -6,21 +6,21 @@ import { ChevronLeft } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { RegulationFilterType } from "@/types/regulation";
 import { RegulationFilterToggle } from "@/components/common/RegulationFilterToggle";
-import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 
 interface FlashcardHeaderProps {
   subcategory?: string;
   isPracticeMode: boolean;
   onRegulationChange: (value: RegulationFilterType) => void;
+  regulationFilter: RegulationFilterType;
 }
 
 export default function FlashcardHeader({ 
   subcategory, 
   isPracticeMode,
-  onRegulationChange 
+  onRegulationChange,
+  regulationFilter
 }: FlashcardHeaderProps) {
   const isMobile = useIsMobile();
-  const { regulationPreference } = useUserPreferences();
   
   return (
     <>
@@ -48,7 +48,7 @@ export default function FlashcardHeader({
       {/* Regulation filter */}
       <div className="mb-4">
         <RegulationFilterToggle
-          value={regulationPreference}
+          value={regulationFilter}
           onChange={onRegulationChange}
           variant="outline"
           size="sm"

@@ -6,6 +6,7 @@ import FlashcardItem from "@/components/flashcards/FlashcardItem";
 import FlashcardProgress from "@/components/flashcards/FlashcardProgress";
 import FlashcardHeader from "@/components/flashcards/FlashcardHeader";
 import { ChevronLeft } from "lucide-react";
+import { RegulationFilterType } from "@/types/regulation";
 
 interface FlashcardPageContentProps {
   currentQuestion: Question;
@@ -15,10 +16,10 @@ interface FlashcardPageContentProps {
   remainingToday: number;
   sessionTitle: string;
   isPracticeMode: boolean;
-  regulationFilter: string;
+  regulationFilter: RegulationFilterType;
   onAnswer: (questionId: string, score: number) => Promise<void>;
   onNext: () => void;
-  onRegulationChange: (value: any) => void;
+  onRegulationChange: (value: RegulationFilterType) => void;
   onNavigateBack: () => void;
 }
 

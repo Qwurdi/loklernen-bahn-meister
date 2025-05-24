@@ -1,10 +1,8 @@
 
-import React, { useEffect, useState, useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useLearningSession } from '@/hooks/useLearningSession';
-import { QuestionCategory } from '@/types/questions';
-import { RegulationFilterType } from '@/types/regulation';
+import { useLearningSession } from '@/hooks/learning-session';
 import MobileFlashcardDisplay from '@/components/learning/MobileFlashcardDisplay';
 import SessionComplete from '@/components/learning/SessionComplete';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
@@ -13,47 +11,31 @@ import { toast } from 'sonner';
 
 export default function FullScreenLearningPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const isMobile = useIsMobile();
   const [preloadingComplete, setPreloadingComplete] = useState(false);
   
-  // Parse URL parameters into stable options
-  const sessionOptions = useMemo(() => {
-    const category = searchParams.get('category') as QuestionCategory;
-    const subcategory = searchParams.get('subcategory');
-    const regulation = searchParams.get('regulation') as RegulationFilterType;
-    const practiceMode = searchParams.get('practice') === 'true';
-    const boxNumber = searchParams.get('box') ? parseInt(searchParams.get('box')!) : undefined;
-
-    return {
-      category,
-      subcategory: subcategory || undefined,
-      regulationFilter: regulation || 'all',
-      practiceMode,
-      boxNumber,
-      batchSize: 10
-    };
-  }, [searchParams]);
-
   const {
-    session,
     loading,
     error,
-    sessionComplete,
-    currentQuestion,
+    canAccess,
+    categoryRequiresAuth,
+    questions,
     currentIndex,
+    setCurrentIndex,
+    correctCount,
+    sessionFinished,
     progress,
-    startSession,
-    submitAnswer,
-    nextQuestion,
-    resetSession
-  } = useLearningSession(sessionOptions);
+    sessionTitle,
+    handleAnswer,
+    handleComplete,
+    handleRestart
+  } = useLearningSession();
 
   // Preload all images when session starts
   useEffect(() => {
-    if (session && session.questions.length > 0 && !preloadingComplete) {
+    if (questions && questions.length > 0 && !preloadingComplete) {
       const preloadImages = async () => {
-        const imagePromises = session.questions
+        const imagePromises = questions
           .filter(q => q.image_url)
           .map(q => {
             return new Promise((resolve) => {
@@ -71,12 +53,7 @@ export default function FullScreenLearningPage() {
 
       preloadImages();
     }
-  }, [session, preloadingComplete]);
-
-  // Start session on mount
-  useEffect(() => {
-    startSession();
-  }, [startSession]);
+  }, [questions, preloadingComplete]);
 
   // Lock viewport for mobile
   useEffect(() => {
@@ -93,19 +70,18 @@ export default function FullScreenLearningPage() {
     }
   }, [isMobile]);
 
-  const handleAnswer = async (score: number) => {
-    if (!currentQuestion) return;
+  const handleAnswerAndNext = async (score: number) => {
+    if (!questions[currentIndex]) return;
     
-    await submitAnswer(currentQuestion.id, score);
+    await handleAnswer(questions[currentIndex].id, score);
     
     setTimeout(() => {
-      nextQuestion();
+      if (currentIndex < questions.length - 1) {
+        setCurrentIndex(currentIndex + 1);
+      } else {
+        handleComplete();
+      }
     }, 300);
-  };
-
-  const handleRestart = () => {
-    setPreloadingComplete(false);
-    resetSession();
   };
 
   const handleGoHome = () => {
@@ -113,7 +89,7 @@ export default function FullScreenLearningPage() {
   };
 
   // Loading state
-  if (loading || (session && !preloadingComplete)) {
+  if (loading || (questions && questions.length > 0 && !preloadingComplete)) {
     return (
       <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
         <div className="text-center">
@@ -121,14 +97,34 @@ export default function FullScreenLearningPage() {
           <p className="mt-4 text-gray-600">
             {loading ? 'Lade Lernkarten...' : 'Lade Bilder...'}
           </p>
-          {session && !preloadingComplete && (
+          {questions && !preloadingComplete && (
             <div className="mt-2 text-sm text-gray-500">
-              {session.questions.filter(q => q.image_url).length} Bilder werden geladen
+              {questions.filter(q => q.image_url).length} Bilder werden geladen
             </div>
           )}
         </div>
       </div>
     );
+  }
+
+  // Handle access control
+  if (!canAccess) {
+    if (categoryRequiresAuth) {
+      return (
+        <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Anmeldung erforderlich</h2>
+            <p className="text-gray-600 mb-6">Für diese Kategorie musst du angemeldet sein.</p>
+            <button
+              onClick={() => navigate('/login')}
+              className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium"
+            >
+              Anmelden
+            </button>
+          </div>
+        </div>
+      );
+    }
   }
 
   // Error state
@@ -138,7 +134,7 @@ export default function FullScreenLearningPage() {
         <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
           <div className="text-red-600 mb-4">
             <h2 className="text-xl font-bold">Fehler</h2>
-            <p className="mt-2">{error}</p>
+            <p className="mt-2">{error.message}</p>
           </div>
           <button
             onClick={handleGoHome}
@@ -152,11 +148,11 @@ export default function FullScreenLearningPage() {
   }
 
   // Session complete state
-  if (sessionComplete && progress) {
+  if (sessionFinished && progress) {
     return (
       <SessionComplete
-        correctCount={progress.correctCount}
-        totalQuestions={progress.total}
+        correctCount={correctCount}
+        totalQuestions={questions.length}
         onRestart={handleRestart}
         onHome={handleGoHome}
       />
@@ -164,7 +160,7 @@ export default function FullScreenLearningPage() {
   }
 
   // No questions state
-  if (!session || !currentQuestion) {
+  if (!questions || questions.length === 0) {
     return (
       <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
@@ -185,13 +181,16 @@ export default function FullScreenLearningPage() {
     );
   }
 
+  const currentQuestion = questions[currentIndex];
+  const progressPercentage = ((currentIndex + 1) / questions.length) * 100;
+
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-green-50 flex flex-col">
       {/* Ultra-thin progress bar */}
       <div className="absolute top-0 left-0 right-0 h-0.5 bg-gray-200 z-20">
         <div 
           className="h-full bg-gradient-to-r from-loklernen-ultramarine to-blue-600 transition-all duration-300"
-          style={{ width: `${progress ? progress.percentage : 0}%` }}
+          style={{ width: `${progressPercentage}%` }}
         />
       </div>
 
@@ -204,17 +203,15 @@ export default function FullScreenLearningPage() {
       </button>
 
       {/* Progress info */}
-      {progress && (
-        <div className="absolute top-4 right-4 z-20 bg-white/80 backdrop-blur-sm rounded-full px-3 py-1 text-sm text-gray-700">
-          {progress.current}/{progress.total}
-        </div>
-      )}
+      <div className="absolute top-4 right-4 z-20 bg-white/80 backdrop-blur-sm rounded-full px-3 py-1 text-sm text-gray-700">
+        {currentIndex + 1}/{questions.length}
+      </div>
 
       {/* Main content area */}
       <div className="flex-1 p-4 pt-16">
         <MobileFlashcardDisplay
           question={currentQuestion}
-          onAnswer={handleAnswer}
+          onAnswer={handleAnswerAndNext}
           className="h-full"
         />
       </div>

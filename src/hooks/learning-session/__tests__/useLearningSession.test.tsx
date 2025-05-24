@@ -5,7 +5,6 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useLearningSession } from '../useLearningSession';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { describe, expect, it, beforeEach } from 'vitest';
 
 // Create wrapper for providers
 function createWrapper() {

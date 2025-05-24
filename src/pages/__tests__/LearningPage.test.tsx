@@ -5,7 +5,6 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts/AuthContext';
 import LearningPage from '../LearningPage';
-import { describe, expect, it, beforeEach, vi } from 'vitest';
 
 // Mock the learning session hook
 vi.mock('@/hooks/learning-session', () => ({

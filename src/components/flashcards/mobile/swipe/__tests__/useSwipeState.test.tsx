@@ -1,7 +1,6 @@
 
 import { renderHook, act } from '@testing-library/react';
 import { useSwipeState } from '../useSwipeState';
-import { describe, it, expect } from 'vitest';
 
 describe('useSwipeState Hook', () => {
   it('should initialize with correct default state', () => {

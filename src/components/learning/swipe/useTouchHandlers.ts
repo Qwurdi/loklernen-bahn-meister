@@ -11,6 +11,7 @@ interface TouchHandlersProps {
   onSwipeLeft: () => void;
   onSwipeRight: () => void;
   onShowAnswer: () => void;
+  onTap?: () => void;
   isFlipped: boolean;
   isAnswered: boolean;
   disableSwipe: boolean;
@@ -25,6 +26,7 @@ export function useTouchHandlers({
   onSwipeLeft,
   onSwipeRight,
   onShowAnswer,
+  onTap,
   isFlipped,
   isAnswered,
   disableSwipe
@@ -96,12 +98,16 @@ export function useTouchHandlers({
       
       // If it's a tap and card is not flipped, show answer
       if (!isFlipped && Math.abs(dragDelta) < 10) {
-        onShowAnswer();
+        if (onTap) {
+          onTap();
+        } else {
+          onShowAnswer();
+        }
       }
     }
 
     touchStart.current = null;
-  }, [disableSwipe, isAnswered, swipeState, animateSwipe, onSwipeRight, onSwipeLeft, resetSwipeState, resetCardPosition, isFlipped, onShowAnswer]);
+  }, [disableSwipe, isAnswered, swipeState, animateSwipe, onSwipeRight, onSwipeLeft, resetSwipeState, resetCardPosition, isFlipped, onShowAnswer, onTap]);
 
   return {
     handleTouchStart,

@@ -4,6 +4,7 @@ import { Question } from '@/types/questions';
 import { Lightbulb, Check, X } from 'lucide-react';
 import { useCardSwipe } from '@/components/learning/swipe/useCardSwipe';
 import { useDynamicTextSize } from '@/hooks/useDynamicTextSize';
+import { getTextValue } from '@/types/rich-text';
 import AdaptiveImage from './AdaptiveImage';
 import ExpandableText from './ExpandableText';
 import HintButton from '@/components/flashcards/HintButton';
@@ -26,12 +27,13 @@ export default function MobileFlashcardDisplay({
   
   const isMultipleChoice = question.question_type === "MC_single" || question.question_type === "MC_multi";
   
+  // Convert content to plain text for dynamic sizing
+  const questionTextValue = getTextValue(question.text);
+  const answerTextValue = getTextValue(question?.answers?.[0]?.text || '');
+  
   // Dynamic text sizing
-  const questionTextClass = useDynamicTextSize(question.text, 'question');
-  const answerTextClass = useDynamicTextSize(
-    question?.answers?.[0]?.text || '', 
-    'answer'
-  );
+  const questionTextClass = useDynamicTextSize(questionTextValue, 'question');
+  const answerTextClass = useDynamicTextSize(answerTextValue, 'answer');
 
   // Swipe functionality
   const { 

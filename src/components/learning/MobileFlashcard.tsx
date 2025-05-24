@@ -4,6 +4,7 @@ import { Question } from '@/types/questions';
 import { useCardSwipe } from './swipe/useCardSwipe';
 import { SafeRichText } from '@/components/ui/rich-text/SafeRichText';
 import { useDynamicTextSize } from '@/hooks/useDynamicTextSize';
+import { getTextValue } from '@/types/rich-text';
 import { CheckCircle, XCircle, Lightbulb } from 'lucide-react';
 
 interface MobileFlashcardProps {
@@ -18,13 +19,16 @@ export default function MobileFlashcard({ question, onAnswer, className = '' }: 
   const cardRef = useRef<HTMLDivElement>(null);
   
   const isMultipleChoice = question.question_type === 'MC_single' || question.question_type === 'MC_multi';
-  const textSizeClass = useDynamicTextSize(question.text, 'question');
+  const questionTextValue = getTextValue(question.text);
+  const textSizeClass = useDynamicTextSize(questionTextValue, 'question');
   
   const { handlers } = useCardSwipe({
     onSwipeLeft: () => handleAnswer(2),
     onSwipeRight: () => handleAnswer(5),
-    onTap: () => !isFlipped && setIsFlipped(true),
-    disabled: isAnswered || (isFlipped && isMultipleChoice)
+    onShowAnswer: () => !isFlipped && setIsFlipped(true),
+    isFlipped,
+    isAnswered,
+    disableSwipe: isAnswered || (isFlipped && isMultipleChoice)
   });
 
   const handleAnswer = (score: number) => {

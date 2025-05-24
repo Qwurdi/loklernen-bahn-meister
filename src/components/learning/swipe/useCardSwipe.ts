@@ -8,6 +8,7 @@ import { useTouchHandlers } from './useTouchHandlers';
 
 interface ExtendedSwipeProps extends Omit<SwipeProps, 'onTap'> {
   onShowAnswer: () => void;
+  onTap?: () => void;  // Add onTap as optional
   isFlipped: boolean;
   isAnswered: boolean;
   disableSwipe?: boolean;
@@ -17,6 +18,7 @@ export function useCardSwipe({
   onSwipeLeft,
   onSwipeRight,
   onShowAnswer,
+  onTap,
   isFlipped,
   isAnswered,
   disableSwipe = false
@@ -36,6 +38,7 @@ export function useCardSwipe({
     onSwipeLeft,
     onSwipeRight,
     onShowAnswer,
+    onTap,
     isFlipped,
     isAnswered,
     disableSwipe

@@ -13,9 +13,9 @@ interface FlashcardPageContentProps {
   totalCards: number;
   correctCount: number;
   remainingToday: number;
-  subCategoryParam?: string;
-  mainCategoryForHook: string;
+  sessionTitle: string;
   isPracticeMode: boolean;
+  regulationFilter: string;
   onAnswer: (questionId: string, score: number) => Promise<void>;
   onNext: () => void;
   onRegulationChange: (value: any) => void;
@@ -28,9 +28,9 @@ export default function FlashcardPageContent({
   totalCards,
   correctCount,
   remainingToday,
-  subCategoryParam,
-  mainCategoryForHook,
+  sessionTitle,
   isPracticeMode,
+  regulationFilter,
   onAnswer,
   onNext,
   onRegulationChange,
@@ -87,8 +87,9 @@ export default function FlashcardPageContent({
     <main className="flex-1">
       <div className="container px-4 py-6">
         <FlashcardHeader 
-          subcategory={subCategoryParam || mainCategoryForHook}
+          subcategory={sessionTitle}
           isPracticeMode={isPracticeMode}
+          regulationFilter={regulationFilter}
           onRegulationChange={onRegulationChange}
         />
         

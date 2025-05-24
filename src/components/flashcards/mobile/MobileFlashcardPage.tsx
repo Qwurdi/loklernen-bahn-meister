@@ -2,7 +2,7 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
-import { useSession } from "@/hooks/learning-session/useSession";
+import { useLearningSession } from "@/hooks/learning-session/useLearningSession";
 import { RegulationFilterType } from "@/types/regulation";
 import MobileFlashcardContent from "./MobileFlashcardContent";
 import MobileSessionComplete from "./MobileSessionComplete";
@@ -14,31 +14,29 @@ export default function MobileFlashcardPage() {
   
   const {
     loading,
+    error,
+    canAccess,
+    categoryRequiresAuth,
     questions,
     currentIndex,
     setCurrentIndex,
     correctCount,
     sessionFinished,
-    remainingToday,
-    subCategoryParam,
-    mainCategoryForHook,
+    progress,
+    sessionOptions,
+    sessionTitle,
     handleAnswer,
     handleComplete,
-    handleRegulationChange,
-    regulationParam
-  } = useSession();
+    handleRegulationChange
+  } = useLearningSession();
 
   // Lock the viewport and prevent scrolling with flashcard-mode class
   useEffect(() => {
-    // Add flashcard mode to body
     document.body.classList.add('flashcard-mode');
-    
-    // Lock the document as well
     document.documentElement.classList.add('overflow-hidden');
     document.documentElement.style.height = '100%';
     
     return () => {
-      // Clean up when component unmounts
       document.body.classList.remove('flashcard-mode');
       document.documentElement.classList.remove('overflow-hidden');
       document.documentElement.style.height = '';
@@ -48,6 +46,44 @@ export default function MobileFlashcardPage() {
   // Handle loading state
   if (loading) {
     return <MobileLoadingState />;
+  }
+
+  // Handle access control
+  if (!canAccess) {
+    if (categoryRequiresAuth) {
+      return (
+        <div className="fixed inset-0 bg-black flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 text-center max-w-sm">
+            <h2 className="text-lg font-semibold mb-2">Anmeldung erforderlich</h2>
+            <p className="text-gray-600 mb-4">Für diese Kategorie musst du angemeldet sein.</p>
+            <button
+              onClick={() => navigate('/login')}
+              className="w-full py-2 bg-blue-600 text-white rounded-lg"
+            >
+              Anmelden
+            </button>
+          </div>
+        </div>
+      );
+    }
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <div className="fixed inset-0 bg-black flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl p-6 text-center max-w-sm">
+          <h2 className="text-lg font-semibold mb-2 text-red-600">Fehler</h2>
+          <p className="text-gray-600 mb-4">{error.message}</p>
+          <button
+            onClick={() => navigate('/karteikarten')}
+            className="w-full py-2 bg-gray-600 text-white rounded-lg"
+          >
+            Zurück
+          </button>
+        </div>
+      </div>
+    );
   }
 
   // Handle empty state
@@ -90,7 +126,7 @@ export default function MobileFlashcardPage() {
           currentIndex={currentIndex}
           totalCards={questions.length}
           correctCount={correctCount}
-          remainingToday={remainingToday}
+          remainingToday={progress?.totalQuestions || 0}
           onAnswer={handleAnswer}
           onNext={() => {
             if (currentIndex < questions.length - 1) {
@@ -99,8 +135,8 @@ export default function MobileFlashcardPage() {
               handleComplete();
             }
           }}
-          subCategoryTitle={subCategoryParam || mainCategoryForHook}
-          regulationFilter={regulationParam as RegulationFilterType}
+          subCategoryTitle={sessionTitle}
+          regulationFilter={sessionOptions.regulation as RegulationFilterType}
           onRegulationChange={handleRegulationChange}
         />
       </div>

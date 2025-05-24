@@ -29,3 +29,23 @@ export interface CategoryMetadata {
   isPlanned: boolean;
   requiresAuth?: boolean;
 }
+
+// Signal subcategories array
+export const signalSubCategories = [
+  "Haupt- und Vorsignale",
+  "Zusatz- & Kennzeichen",
+  "Rangiersignale",
+  "Sonstige Signale"
+];
+
+// Betriebsdienst subcategories array
+export const betriebsdienstSubCategories = [
+  "Grundlagen Bahnbetrieb",
+  "UVV & Arbeitsschutz",
+  "Rangieren",
+  "Züge fahren",
+  "PZB & Sicherungsanlagen",
+  "Kommunikation",
+  "Besonderheiten",
+  "Unregelmäßigkeiten"
+];

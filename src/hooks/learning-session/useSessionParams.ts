@@ -18,6 +18,7 @@ interface SessionParams {
   sessionTitle?: string;
   isDueCardsView: boolean;
   boxParam?: string | null;
+  stripRegulationInfo?: (name: string) => string;
 }
 
 export function useSessionParams(): SessionParams {
@@ -49,6 +50,7 @@ export function useSessionParams(): SessionParams {
     categoryParam,
     sessionTitle: subcategoryParam || normalizedCategory || 'Lerneinheit',
     boxParam,
+    stripRegulationInfo,
     
     setRegulationFilter: (value: string) => {
       const newSearchParams = new URLSearchParams(searchParams);
@@ -59,13 +61,12 @@ export function useSessionParams(): SessionParams {
       }
       setSearchParams(newSearchParams);
     }
-  }), [normalizedCategory, subcategoryParam, regulationParam, modeParam, boxParam, categoryParam, searchParams, setSearchParams]);
+  }), [normalizedCategory, subcategoryParam, regulationParam, modeParam, boxParam, categoryParam, searchParams, setSearchParams, stripRegulationInfo]);
 
   const isDueCardsView = !categoryParam && !subcategoryParam;
 
   return {
     ...sessionParams,
-    isDueCardsView,
-    stripRegulationInfo
+    isDueCardsView
   };
 }

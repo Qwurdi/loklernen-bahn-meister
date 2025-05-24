@@ -17,6 +17,7 @@ export interface UserProgress {
   streak: number;
   created_at: string;
   updated_at: string;
+  questions?: Question; // Optional question data from joins
 }
 
 export interface SpacedRepetitionOptions {

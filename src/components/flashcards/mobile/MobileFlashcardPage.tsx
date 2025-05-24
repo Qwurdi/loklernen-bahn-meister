@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import { useSession } from "@/hooks/learning-session/useSession";
+import { RegulationFilterType } from "@/types/regulation";
 import MobileFlashcardContent from "./MobileFlashcardContent";
 import MobileSessionComplete from "./MobileSessionComplete";
 import MobileEmptyState from "./MobileEmptyState";
@@ -99,7 +100,7 @@ export default function MobileFlashcardPage() {
             }
           }}
           subCategoryTitle={subCategoryParam || mainCategoryForHook}
-          regulationFilter={regulationParam}
+          regulationFilter={regulationParam as RegulationFilterType}
           onRegulationChange={handleRegulationChange}
         />
       </div>

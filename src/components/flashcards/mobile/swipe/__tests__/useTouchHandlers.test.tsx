@@ -1,5 +1,4 @@
 
-import { describe, it, expect, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useTouchHandlers } from '../useTouchHandlers';
 import { SwipeState } from '../types';

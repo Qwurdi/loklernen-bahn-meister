@@ -3,7 +3,6 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { act } from 'react-dom/test-utils';
 import { useSpacedRepetition } from '../index';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 // Mock AuthContext
 vi.mock('@/contexts/AuthContext', () => ({

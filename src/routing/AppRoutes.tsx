@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { ProtectedRoute } from "./ProtectedRoute";
@@ -13,6 +12,7 @@ import CardsPage from "@/pages/CardsPage";
 import NewLearningPage from "@/pages/NewLearningPage";
 import AdminLayout from "@/components/layout/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
+import FullScreenLearningPage from "@/pages/FullScreenLearningPage";
 
 // Placeholder components
 const VerifyEmailPage = () => <div>E-Mail verifizieren</div>;
@@ -44,8 +44,8 @@ export default function AppRoutes() {
       <Route path="/karteikarten" element={<ProtectedRoute><CardsPage /></ProtectedRoute>} />
       
       {/* New unified learning routes */}
-      <Route path="/lernen" element={<NewLearningPage />} />
-      <Route path="/karteikarten/lernen" element={<NewLearningPage />} />
+      <Route path="/lernen" element={<FullScreenLearningPage />} />
+      <Route path="/karteikarten/lernen" element={<FullScreenLearningPage />} />
       
       <Route path="/fortschritt" element={<ProtectedRoute><div>Fortschritt</div></ProtectedRoute>} />
       <Route path="/einstellungen" element={<ProtectedRoute><div>Einstellungen</div></ProtectedRoute>} />

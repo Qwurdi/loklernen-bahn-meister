@@ -2,9 +2,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, ChevronUp, Check, X } from 'lucide-react';
 import { SafeRichText } from '@/components/ui/rich-text/SafeRichText';
+import { StructuredContent } from '@/types/rich-text';
 
 interface ExpandableAnswerOptionProps {
-  content: string;
+  content: string | StructuredContent;
   isSelected: boolean;
   isCorrect?: boolean;
   isSubmitted: boolean;

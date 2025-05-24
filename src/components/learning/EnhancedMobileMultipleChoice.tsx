@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { Question } from "@/types/questions";
-import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
 import { SafeRichText } from "@/components/ui/rich-text/SafeRichText";
 import ExpandableAnswerOption from './ExpandableAnswerOption';
 
@@ -21,12 +20,6 @@ export default function EnhancedMobileMultipleChoice({ question, onAnswer }: Enh
   const correctAnswerIndices = question.answers
     .map((answer, index) => answer.isCorrect ? index : -1)
     .filter(index => index !== -1);
-  
-  // Text sizing for compact display
-  const questionTextClass = useDynamicTextSize(
-    question.text,
-    'question'
-  );
   
   const handleSelection = (index: number) => {
     if (submitted) return;
@@ -70,7 +63,7 @@ export default function EnhancedMobileMultipleChoice({ question, onAnswer }: Enh
   return (
     <div className="h-full flex flex-col">
       {/* Question text - compact but readable */}
-      <div className={`${questionTextClass} mb-4 text-gray-900`}>
+      <div className="text-base mb-4 text-gray-900">
         <SafeRichText content={question.text} />
       </div>
       

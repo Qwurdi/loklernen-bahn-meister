@@ -4,8 +4,8 @@ import { QuestionCategory } from '@/types/questions';
 import { transformQuestion } from '../../utils';
 
 /**
- * Optimized single query to fetch both progress and new questions
- * Uses JOINs instead of sequential queries for better performance
+ * Optimized query to fetch both progress and new questions using standard queries
+ * Instead of a custom RPC function, we use efficient standard queries with proper indexes
  */
 export async function fetchOptimizedSessionQuestions(
   userId: string,
@@ -19,28 +19,83 @@ export async function fetchOptimizedSessionQuestions(
     userId, category, subcategory, regulationCategory, batchSize, includeAllSubcategories
   });
 
-  // Build the base query with a CTE for better performance
-  let query = supabase.rpc('get_session_questions_optimized', {
-    p_user_id: userId,
-    p_category: category,
-    p_subcategory: subcategory,
-    p_regulation_category: regulationCategory,
-    p_batch_size: batchSize,
-    p_include_all_subcategories: includeAllSubcategories
-  });
+  try {
+    // First, get due progress questions with efficient query
+    const now = new Date().toISOString();
+    let progressQuery = supabase
+      .from('user_progress')
+      .select(`
+        *,
+        questions!inner(*)
+      `)
+      .eq('user_id', userId)
+      .lte('next_review_at', now);
 
-  const { data, error } = await query;
+    // Apply category filters
+    if (category && !includeAllSubcategories) {
+      progressQuery = progressQuery.eq('questions.category', category);
+    } else if (category && includeAllSubcategories) {
+      progressQuery = progressQuery.eq('questions.category', category);
+    }
+    
+    if (subcategory) {
+      progressQuery = progressQuery.eq('questions.sub_category', subcategory);
+    }
+    
+    if (regulationCategory !== "all") {
+      progressQuery = progressQuery.or(
+        `questions.regulation_category.eq.${regulationCategory},questions.regulation_category.eq.both,questions.regulation_category.is.null`
+      );
+    }
 
-  if (error) {
+    const { data: progressData, error: progressError } = await progressQuery.limit(batchSize);
+    
+    if (progressError) throw progressError;
+
+    const progressQuestions = (progressData || []).map(p => transformQuestion(p.questions as any));
+    
+    // If we need more questions, get new ones
+    let newQuestions: any[] = [];
+    if (progressQuestions.length < batchSize) {
+      const questionIdsWithProgress = (progressData || []).map(p => p.question_id);
+      const neededNewQuestions = batchSize - progressQuestions.length;
+      
+      let newQuery = supabase.from('questions').select('*');
+      
+      if (questionIdsWithProgress.length > 0) {
+        newQuery = newQuery.not('id', 'in', `(${questionIdsWithProgress.join(',')})`);
+      }
+      
+      if (category && !includeAllSubcategories) {
+        newQuery = newQuery.eq('category', category);
+      } else if (category && includeAllSubcategories) {
+        newQuery = newQuery.eq('category', category);
+      }
+      
+      if (subcategory) {
+        newQuery = newQuery.eq('sub_category', subcategory);
+      }
+      
+      if (regulationCategory !== "all") {
+        newQuery = newQuery.or(`regulation_category.eq.${regulationCategory},regulation_category.eq.both,regulation_category.is.null`);
+      }
+
+      const { data: newQuestionsData, error: newError } = await newQuery.limit(neededNewQuestions);
+      
+      if (newError) throw newError;
+      
+      newQuestions = (newQuestionsData || []).map(transformQuestion);
+    }
+
+    return {
+      progressQuestions,
+      newQuestions,
+      totalAvailable: progressQuestions.length + newQuestions.length
+    };
+  } catch (error) {
     console.error("Optimized query error:", error);
-    throw new Error(`Error fetching session questions: ${error.message}`);
+    throw new Error(`Error fetching session questions: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
-
-  return {
-    progressQuestions: (data?.progress_questions || []).map(transformQuestion),
-    newQuestions: (data?.new_questions || []).map(transformQuestion),
-    totalAvailable: data?.total_available || 0
-  };
 }
 
 /**

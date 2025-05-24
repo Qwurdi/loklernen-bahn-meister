@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Question, QuestionCategory } from '@/types/questions';
 import { SpacedRepetitionOptions, UserProgress, SpacedRepetitionResult } from './types';
+import { supabase } from '@/integrations/supabase/client';
 import { transformQuestion } from './utils';
 import {
   fetchUserProgress,

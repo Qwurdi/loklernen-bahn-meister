@@ -2,7 +2,7 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
-import { useFlashcardSession } from "@/hooks/learning-session/useFlashcardSession";
+import { useSession } from "@/hooks/learning-session/useSession";
 import MobileFlashcardContent from "./MobileFlashcardContent";
 import MobileSessionComplete from "./MobileSessionComplete";
 import MobileEmptyState from "./MobileEmptyState";
@@ -19,13 +19,13 @@ export default function MobileFlashcardPage() {
     correctCount,
     sessionFinished,
     remainingToday,
-    subCategoryParam, // Changed from subCategoryForHook
+    subCategoryParam,
     mainCategoryForHook,
     handleAnswer,
     handleComplete,
     handleRegulationChange,
     regulationParam
-  } = useFlashcardSession();
+  } = useSession();
 
   // Lock the viewport and prevent scrolling with flashcard-mode class
   useEffect(() => {

@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useSessionData } from "@/hooks/learning-session/useSessionData";
+import { useSession } from "@/hooks/learning-session/useSession";
 import SessionContainer from "@/components/learning-session/SessionContainer";
 import SessionRenderer from "@/components/learning-session/SessionRenderer";
 import SessionLoadingState from "@/components/learning-session/SessionLoadingState";
@@ -11,7 +11,7 @@ export default function LearningSessionPage() {
   console.log("LearningSessionPage: Initializing component");
   const isMobile = useIsMobile();
   
-  // Use our custom hook to get all session data
+  // Use our consolidated session hook to get all session data
   const {
     user,
     categoryParam,
@@ -27,7 +27,7 @@ export default function LearningSessionPage() {
     applyPendingUpdates,
     pendingUpdatesCount,
     isDueCardsView,
-  } = useSessionData();
+  } = useSession();
 
   // Render loading states
   if (categoriesLoading && categoryParam) {

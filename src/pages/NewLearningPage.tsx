@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLearningSession } from '@/hooks/useLearningSession';
@@ -15,7 +15,26 @@ export default function NewLearningPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isMobile = useIsMobile();
+  const sessionStarted = useRef(false);
   
+  // Parse URL parameters into stable options
+  const sessionOptions = useMemo(() => {
+    const category = searchParams.get('category') as QuestionCategory;
+    const subcategory = searchParams.get('subcategory');
+    const regulation = searchParams.get('regulation') as RegulationFilterType;
+    const practiceMode = searchParams.get('practice') === 'true';
+    const boxNumber = searchParams.get('box') ? parseInt(searchParams.get('box')!) : undefined;
+
+    return {
+      category,
+      subcategory: subcategory || undefined,
+      regulationFilter: regulation || 'all',
+      practiceMode,
+      boxNumber,
+      batchSize: 10
+    };
+  }, [searchParams.toString()]);
+
   const {
     session,
     loading,
@@ -28,25 +47,17 @@ export default function NewLearningPage() {
     submitAnswer,
     nextQuestion,
     resetSession
-  } = useLearningSession();
+  } = useLearningSession(sessionOptions);
 
-  // Parse URL parameters
+  // Start session only once when options change
   useEffect(() => {
-    const category = searchParams.get('category') as QuestionCategory;
-    const subcategory = searchParams.get('subcategory');
-    const regulation = searchParams.get('regulation') as RegulationFilterType;
-    const practiceMode = searchParams.get('practice') === 'true';
-    const boxNumber = searchParams.get('box') ? parseInt(searchParams.get('box')!) : undefined;
-
-    startSession({
-      category,
-      subcategory: subcategory || undefined,
-      regulationFilter: regulation || 'all',
-      practiceMode,
-      boxNumber,
-      batchSize: 10
-    });
-  }, [searchParams, startSession]);
+    const optionsKey = JSON.stringify(sessionOptions);
+    
+    if (!sessionStarted.current || sessionStarted.current !== optionsKey) {
+      sessionStarted.current = optionsKey;
+      startSession();
+    }
+  }, [sessionOptions]);
 
   // Handle mobile viewport lock
   useEffect(() => {
@@ -73,22 +84,9 @@ export default function NewLearningPage() {
   };
 
   const handleRestart = () => {
+    sessionStarted.current = false;
     resetSession();
-    // Restart with same parameters
-    const category = searchParams.get('category') as QuestionCategory;
-    const subcategory = searchParams.get('subcategory');
-    const regulation = searchParams.get('regulation') as RegulationFilterType;
-    const practiceMode = searchParams.get('practice') === 'true';
-    const boxNumber = searchParams.get('box') ? parseInt(searchParams.get('box')!) : undefined;
-
-    startSession({
-      category,
-      subcategory: subcategory || undefined,
-      regulationFilter: regulation || 'all',
-      practiceMode,
-      boxNumber,
-      batchSize: 10
-    });
+    // Session will restart automatically due to useEffect
   };
 
   const handleGoHome = () => {

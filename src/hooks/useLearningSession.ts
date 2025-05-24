@@ -1,12 +1,12 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { LearningService, LearningSession, SessionOptions } from '@/services/LearningService';
 import { Question } from '@/types/questions';
 import { toast } from 'sonner';
 
-export function useLearningSession(options: SessionOptions = {}) {
+export function useLearningSession(baseOptions: SessionOptions = {}) {
   const { user } = useAuth();
   const { regulationPreference } = useUserPreferences();
   
@@ -16,6 +16,12 @@ export function useLearningSession(options: SessionOptions = {}) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sessionComplete, setSessionComplete] = useState(false);
 
+  // Create stable options object
+  const stableOptions = useMemo(() => ({
+    regulationFilter: regulationPreference,
+    ...baseOptions
+  }), [regulationPreference, baseOptions.category, baseOptions.subcategory, baseOptions.regulationFilter, baseOptions.practiceMode, baseOptions.boxNumber, baseOptions.batchSize]);
+
   // Initialize session
   const startSession = useCallback(async (sessionOptions?: SessionOptions) => {
     setLoading(true);
@@ -23,8 +29,7 @@ export function useLearningSession(options: SessionOptions = {}) {
     
     try {
       const finalOptions = {
-        regulationFilter: regulationPreference,
-        ...options,
+        ...stableOptions,
         ...sessionOptions
       };
       
@@ -46,7 +51,7 @@ export function useLearningSession(options: SessionOptions = {}) {
     } finally {
       setLoading(false);
     }
-  }, [user?.id, regulationPreference, options]);
+  }, [user?.id, stableOptions]);
 
   // Submit answer
   const submitAnswer = useCallback(async (questionId: string, score: number) => {

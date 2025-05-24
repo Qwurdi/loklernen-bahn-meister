@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // Define breakpoints for consistency throughout the app
 export const BREAKPOINTS = {

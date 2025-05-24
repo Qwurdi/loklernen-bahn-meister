@@ -1,7 +1,10 @@
 
 export { useSpacedRepetition } from './useSpacedRepetition';
-export { useOptimizedSpacedRepetition } from './useOptimizedSpacedRepetition';
-export { useQuestionLoader } from './useQuestionLoader';
-export { useAnswerSubmission } from './useAnswerSubmission';
-export { useLoadingState } from './useLoadingState';
-export type { UserProgress, SpacedRepetitionOptions, SpacedRepetitionResult } from './types';
+export type { 
+  SessionQuestion, 
+  SessionOptions, 
+  SessionProgress, 
+  SpacedRepetitionState, 
+  SpacedRepetitionActions, 
+  SpacedRepetitionHook 
+} from '@/types/spaced-repetition';

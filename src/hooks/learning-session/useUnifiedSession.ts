@@ -28,43 +28,52 @@ export function useUnifiedSession() {
 
   const params = getCurrentParams();
   
-  // Use spaced repetition hook for the actual question loading and submission
+  // Use the new clean spaced repetition hook
   const {
+    questions: sessionQuestions,
     loading,
     error,
-    dueQuestions,
     progress: srProgress,
     submitAnswer: submitAnswerSR,
-    reloadQuestions
-  } = useSpacedRepetition(
-    params.category as any,
-    params.subcategory,
-    { 
-      practiceMode: params.mode === 'practice',
-      regulationCategory: params.regulation === 'all' ? undefined : params.regulation,
-      boxNumber: params.box
+    loadQuestions,
+    reset: resetSR
+  } = useSpacedRepetition({
+    category: params.category as any,
+    subcategory: params.subcategory,
+    regulation: params.regulation,
+    mode: params.mode,
+    boxNumber: params.box
+  });
+
+  // Load questions when params change
+  useEffect(() => {
+    if (params.category || params.subcategory) {
+      loadQuestions({
+        category: params.category as any,
+        subcategory: params.subcategory,
+        regulation: params.regulation,
+        mode: params.mode,
+        boxNumber: params.box
+      });
     }
-  );
+  }, [params.category, params.subcategory, params.regulation, params.mode, params.box, loadQuestions]);
 
   // Update session state when questions change
   useEffect(() => {
-    if (dueQuestions.length > 0) {
-      // Calculate progress from questions array
-      const totalQuestions = dueQuestions.length;
-      const currentQuestion = sessionState.currentIndex + 1;
-      
+    if (sessionQuestions.length > 0) {
+      const questions = sessionQuestions.map(sq => sq.question);
       setSessionState(prev => ({
         ...prev,
-        questions: dueQuestions,
+        questions,
         progress: {
-          total: totalQuestions,
-          current: currentQuestion,
-          correct: prev.progress?.correct || 0,
-          percentage: (currentQuestion / totalQuestions) * 100
+          total: srProgress.totalQuestions,
+          current: srProgress.currentQuestion,
+          correct: srProgress.correctAnswers,
+          percentage: srProgress.percentage
         }
       }));
     }
-  }, [dueQuestions, sessionState.currentIndex]);
+  }, [sessionQuestions, srProgress]);
 
   const submitAnswer = useCallback(async (questionId: string, score: number) => {
     await submitAnswerSR(questionId, score);
@@ -106,8 +115,8 @@ export function useUnifiedSession() {
       completed: false,
       progress: null
     });
-    reloadQuestions();
-  }, [reloadQuestions]);
+    resetSR();
+  }, [resetSR]);
 
   const getCurrentQuestion = useCallback((): Question | null => {
     if (sessionState.currentIndex >= sessionState.questions.length) {

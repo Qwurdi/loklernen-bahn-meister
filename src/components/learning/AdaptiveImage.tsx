@@ -60,7 +60,7 @@ export default function AdaptiveImage({
 
   if (isLoading) {
     return (
-      <div className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`} style={{ height: maxHeight / 2 }}>
+      <div className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`} style={{ height: 100 }}>
         <div className="animate-pulse w-16 h-16 bg-gray-300 rounded"></div>
       </div>
     );
@@ -69,17 +69,25 @@ export default function AdaptiveImage({
   return (
     <div className={`relative ${className}`}>
       <div 
-        className={`relative overflow-hidden rounded-lg transition-all duration-300`}
-        style={{ 
-          maxHeight: displayMode === 'miniature' ? miniatureThreshold : maxHeight 
-        }}
+        className="relative overflow-hidden rounded-lg transition-all duration-300"
         onDoubleClick={handleDoubleClick}
       >
         <img
           ref={imgRef}
           src={src}
           alt={alt}
-          className="w-full h-full object-contain transition-all duration-300"
+          className={`w-full object-contain transition-all duration-300 ${
+            displayMode === 'miniature' 
+              ? `max-h-[${miniatureThreshold}px]` 
+              : `max-h-[${isExpanded ? 'calc(100vh - 200px)' : maxHeight + 'px'}]`
+          }`}
+          style={{
+            maxHeight: displayMode === 'miniature' 
+              ? miniatureThreshold 
+              : isExpanded 
+                ? 'calc(100vh - 200px)' 
+                : maxHeight
+          }}
         />
         
         {/* Corner expand button - only show in miniature mode */}

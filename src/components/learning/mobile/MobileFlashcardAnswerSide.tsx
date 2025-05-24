@@ -46,7 +46,7 @@ export default function MobileFlashcardAnswerSide({
       ) : (
         <>
           {/* Answer text */}
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-4">
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-4 flex-shrink-0">
             <ExpandableText 
               content={answerTextValue}
               textSizeClass={`${answerTextClass} font-bold text-blue-800`}
@@ -54,22 +54,22 @@ export default function MobileFlashcardAnswerSide({
             />
           </div>
           
-          {/* Answer image */}
+          {/* Answer image - takes available space */}
           {question?.image_url && (
-            <div className="flex-1 flex items-center justify-center mb-6">
+            <div className="flex-1 min-h-0 flex items-center justify-center mb-4">
               <AdaptiveImage
                 src={question.image_url}
                 alt="Signal"
-                maxHeight={300}
-                miniatureThreshold={150}
-                className="max-w-full"
+                maxHeight={400}
+                miniatureThreshold={200}
+                className="max-w-full h-full"
               />
             </div>
           )}
 
-          {/* Action buttons */}
+          {/* Action buttons - fixed at bottom */}
           {!isAnswered && (
-            <div className="flex gap-4 mt-auto">
+            <div className="flex gap-4 flex-shrink-0">
               <button 
                 onClick={() => onAnswer(1)}
                 className="flex-1 py-3 bg-white border-2 border-red-200 text-red-700 rounded-lg font-medium flex items-center justify-center transition-colors active:bg-red-50"

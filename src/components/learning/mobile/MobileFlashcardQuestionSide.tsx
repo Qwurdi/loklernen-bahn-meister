@@ -38,42 +38,43 @@ export default function MobileFlashcardQuestionSide({
         className="mb-4"
       />
       
-      {/* Image - adaptive sizing */}
+      {/* Image - adaptive sizing with more space */}
       {question.image_url && (
-        <div className="flex-1 flex items-center justify-center mb-4">
+        <div className="flex-1 min-h-0 flex items-center justify-center mb-4">
           <AdaptiveImage
             src={question.image_url}
             alt="Signal"
-            maxHeight={400}
-            miniatureThreshold={150}
-            className="max-w-full"
+            maxHeight={500}
+            miniatureThreshold={200}
+            className="max-w-full h-full"
           />
         </div>
       )}
       
-      {/* Hint button */}
-      <div className="mb-3">
+      {/* Bottom section with fixed height */}
+      <div className="flex-shrink-0 space-y-3">
+        {/* Hint button */}
         <HintButton 
           hint={question.hint}
           question={questionTextValue}
           answers={question.answers}
           minimal={true}
         />
+        
+        {/* Tap hint */}
+        <div className="text-center text-sm text-gray-500">
+          Tippe auf die Karte, um die Antwort zu sehen
+        </div>
+        
+        {/* Show answer button */}
+        <button 
+          className="w-full py-3 bg-gradient-to-r from-loklernen-ultramarine to-blue-600 text-white rounded-lg flex items-center justify-center shadow-md transition-transform active:scale-98"
+          onClick={onShowAnswer}
+        >
+          <Lightbulb className="h-4 w-4 mr-2" />
+          {isMultipleChoice ? "Optionen anzeigen" : "Signal anzeigen"}
+        </button>
       </div>
-      
-      {/* Tap hint */}
-      <div className="text-center text-sm text-gray-500 mb-4">
-        Tippe auf die Karte, um die Antwort zu sehen
-      </div>
-      
-      {/* Show answer button */}
-      <button 
-        className="w-full py-3 bg-gradient-to-r from-loklernen-ultramarine to-blue-600 text-white rounded-lg flex items-center justify-center shadow-md transition-transform active:scale-98"
-        onClick={onShowAnswer}
-      >
-        <Lightbulb className="h-4 w-4 mr-2" />
-        {isMultipleChoice ? "Optionen anzeigen" : "Signal anzeigen"}
-      </button>
     </div>
   );
 }

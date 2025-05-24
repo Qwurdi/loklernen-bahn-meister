@@ -10,10 +10,9 @@ import LoginPage from "@/pages/Login";
 import RegisterPage from "@/pages/Register";
 import Dashboard from "@/pages/Dashboard";
 import CardsPage from "@/pages/CardsPage";
-import LearningSessionPage from "@/pages/LearningSessionPage";
+import NewLearningPage from "@/pages/NewLearningPage";
 import AdminLayout from "@/components/layout/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
-import FlashcardPage from "@/pages/FlashcardPage";
 
 // Placeholder components
 const VerifyEmailPage = () => <div>E-Mail verifizieren</div>;
@@ -44,9 +43,9 @@ export default function AppRoutes() {
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/karteikarten" element={<ProtectedRoute><CardsPage /></ProtectedRoute>} />
       
-      {/* Unified flashcard routes */}
-      <Route path="/karteikarten/lernen" element={<FlashcardPage />} />
-      <Route path="/lernen/*" element={<LearningSessionPage />} />
+      {/* New unified learning routes */}
+      <Route path="/lernen" element={<NewLearningPage />} />
+      <Route path="/karteikarten/lernen" element={<NewLearningPage />} />
       
       <Route path="/fortschritt" element={<ProtectedRoute><div>Fortschritt</div></ProtectedRoute>} />
       <Route path="/einstellungen" element={<ProtectedRoute><div>Einstellungen</div></ProtectedRoute>} />

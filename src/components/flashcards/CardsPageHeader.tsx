@@ -1,10 +1,11 @@
+
 import React from "react";
 import { FilterX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/contexts/AuthContext"; // Import useAuth
-import { useNavigate } from "react-router-dom"; // Import useNavigate
-import { toast } from "sonner"; // Import toast für Benachrichtigungen
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface CardsPageHeaderProps {
   selectedCategories: string[];
@@ -17,18 +18,16 @@ export default function CardsPageHeader({
   onClearSelection,
   onStartLearningSelected
 }: CardsPageHeaderProps) {
-  const { user } = useAuth(); // User-Status hier abrufen
-  const navigate = useNavigate(); // Für Navigation
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const handleStartLearningGeneric = () => {
-    // TODO: Logik für intelligenten Lernstart für angemeldete Nutzer
-    // z.B. zu fälligen Karten, dann zu Empfehlungen etc.
-    // navigate('/karteikarten/lernen?due=true'); // Beispiel
-    toast.info("Intelligenter Lernstart wird implementiert.");
+    // Start with Signale category for general learning
+    navigate('/lernen?category=Signale&practice=true');
   };
 
   const handleGuestStartLearning = () => {
-    navigate('/karteikarten/lernen?category=Signale');
+    navigate('/lernen?category=Signale&practice=true');
   };
 
   return (
@@ -64,7 +63,7 @@ export default function CardsPageHeader({
               </div>
               <Button 
                 className="bg-gradient-ultramarine hover:opacity-90 transition-opacity text-white text-sm h-9 rounded-full px-4"
-                onClick={onStartLearningSelected} // Bestehende Funktion für ausgewählte Kategorien
+                onClick={onStartLearningSelected}
               >
                 Ausgewählte Kategorien lernen
               </Button>
@@ -73,7 +72,7 @@ export default function CardsPageHeader({
             // Angemeldet, aber keine Kategorien ausgewählt
             <Button 
               className="bg-gradient-ultramarine hover:opacity-90 transition-opacity text-white text-sm h-9 rounded-full px-4"
-              onClick={handleStartLearningGeneric} // Neuer intelligenter Lernstart
+              onClick={handleStartLearningGeneric}
             >
               Lernen starten
             </Button>

@@ -1,7 +1,8 @@
+
 import React, { useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { ProtectedRoute } from "./ProtectedRoute";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { learningRoutes } from "./routes/learning-routes";
 
 // Import pages
 import Index from "@/pages/Index";
@@ -9,10 +10,8 @@ import LoginPage from "@/pages/Login";
 import RegisterPage from "@/pages/Register";
 import Dashboard from "@/pages/Dashboard";
 import CardsPage from "@/pages/CardsPage";
-import NewLearningPage from "@/pages/NewLearningPage";
 import AdminLayout from "@/components/layout/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
-import FullScreenLearningPage from "@/pages/FullScreenLearningPage";
 
 // Placeholder components
 const VerifyEmailPage = () => <div>E-Mail verifizieren</div>;
@@ -43,9 +42,8 @@ export default function AppRoutes() {
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/karteikarten" element={<ProtectedRoute><CardsPage /></ProtectedRoute>} />
       
-      {/* New unified learning routes */}
-      <Route path="/lernen" element={<FullScreenLearningPage />} />
-      <Route path="/karteikarten/lernen" element={<FullScreenLearningPage />} />
+      {/* Learning routes - include all learning-related routes */}
+      {learningRoutes}
       
       <Route path="/fortschritt" element={<ProtectedRoute><div>Fortschritt</div></ProtectedRoute>} />
       <Route path="/einstellungen" element={<ProtectedRoute><div>Einstellungen</div></ProtectedRoute>} />

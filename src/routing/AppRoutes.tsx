@@ -2,6 +2,7 @@
 import React, { useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { ProtectedRoute } from "./ProtectedRoute";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Import pages
 import Index from "@/pages/Index";
@@ -11,7 +12,7 @@ import Dashboard from "@/pages/Dashboard";
 import LearningSessionPage from "@/pages/LearningSessionPage";
 import AdminLayout from "@/components/layout/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
-import { FlashcardRoute } from "./routes/main-routes";
+import FlashcardPage from "@/pages/FlashcardPage";
 
 // Placeholder components
 const VerifyEmailPage = () => <div>E-Mail verifizieren</div>;
@@ -42,8 +43,8 @@ export default function AppRoutes() {
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/karteikarten" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       
-      {/* Flashcard routes with conditional rendering based on device */}
-      <Route path="/karteikarten/lernen" element={<FlashcardRoute />} />
+      {/* Unified flashcard routes */}
+      <Route path="/karteikarten/lernen" element={<FlashcardPage />} />
       <Route path="/lernen/*" element={<LearningSessionPage />} />
       
       <Route path="/fortschritt" element={<ProtectedRoute><div>Fortschritt</div></ProtectedRoute>} />
@@ -65,6 +66,9 @@ export default function AppRoutes() {
         <Route path="import" element={<div>Import</div>} />
         <Route path="export" element={<div>Export</div>} />
       </Route>
+      
+      {/* 404 fallback */}
+      <Route path="*" element={<div>Seite nicht gefunden</div>} />
     </Routes>
   );
 }

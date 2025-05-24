@@ -26,19 +26,17 @@ const App = () => {
   console.log("App: Rendering main application structure");
   
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <UserPreferencesProvider>
-            <TooltipProvider delayDuration={300}>
-              <AppRoutes />
-              <Toaster />
-              <Sonner />
-            </TooltipProvider>
-          </UserPreferencesProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <UserPreferencesProvider>
+          <TooltipProvider delayDuration={300}>
+            <AppRoutes />
+            <Toaster />
+            <Sonner />
+          </TooltipProvider>
+        </UserPreferencesProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 };
 

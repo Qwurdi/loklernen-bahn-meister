@@ -42,9 +42,10 @@ export async function fetchOptimizedSessionQuestions(
       progressQuery = progressQuery.eq('questions.sub_category', subcategory);
     }
     
+    // Apply regulation filter if not "all" - Fixed to handle spaces properly
     if (regulationCategory !== "all") {
       progressQuery = progressQuery.or(
-        `questions.regulation_category.eq.${regulationCategory},questions.regulation_category.eq.both,questions.regulation_category.is.null`
+        `questions.regulation_category.eq."${regulationCategory}",questions.regulation_category.eq.both,questions.regulation_category.is.null`
       );
     }
 
@@ -76,8 +77,9 @@ export async function fetchOptimizedSessionQuestions(
         newQuery = newQuery.eq('sub_category', subcategory);
       }
       
+      // Apply regulation filter if not "all" - Fixed to handle spaces properly
       if (regulationCategory !== "all") {
-        newQuery = newQuery.or(`regulation_category.eq.${regulationCategory},regulation_category.eq.both,regulation_category.is.null`);
+        newQuery = newQuery.or(`regulation_category.eq."${regulationCategory}",regulation_category.eq.both,regulation_category.is.null`);
       }
 
       const { data: newQuestionsData, error: newError } = await newQuery.limit(neededNewQuestions);
@@ -125,8 +127,9 @@ export async function fetchOptimizedPracticeQuestions(
     query = query.eq('sub_category', subcategory);
   }
   
+  // Apply regulation filter if not "all" - Fixed to handle spaces properly
   if (regulationCategory !== "all") {
-    query = query.or(`regulation_category.eq.${regulationCategory},regulation_category.eq.both,regulation_category.is.null`);
+    query = query.or(`regulation_category.eq."${regulationCategory}",regulation_category.eq.both,regulation_category.is.null`);
   }
 
   // Use the new index for better performance

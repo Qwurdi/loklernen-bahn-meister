@@ -19,9 +19,9 @@ export async function fetchQuestions(category?: QuestionCategory, sub_category?:
     query = query.eq('sub_category', sub_category);
   }
   
+  // Fixed regulation category filtering to handle spaces properly
   if (regulation_category && regulation_category !== "all") {
-    // Include both "both" category and the specific one
-    query = query.or(`regulation_category.eq.${regulation_category},regulation_category.eq.both,regulation_category.is.null`);
+    query = query.or(`regulation_category.eq."${regulation_category}",regulation_category.eq.both,regulation_category.is.null`);
   }
   
   const { data, error } = await query.order('created_at', { ascending: false });

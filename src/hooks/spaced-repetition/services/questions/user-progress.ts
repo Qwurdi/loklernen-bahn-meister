@@ -16,11 +16,13 @@ export async function fetchUserProgress(
   console.log("Include all subcategories:", includeAllSubcategories);
   
   // First get progress data for questions that are due
-  const { data: progressData, error: progressError } = await supabase
+  let progressQuery = supabase
     .from('user_progress')
     .select('*, questions(*)')
     .eq('user_id', userId)
     .lte('next_review_at', new Date().toISOString());
+
+  const { data: progressData, error: progressError } = await progressQuery;
 
   if (progressError) {
     console.error("Error fetching progress data:", progressError);
@@ -52,13 +54,14 @@ export async function fetchUserProgress(
       p.questions?.sub_category === subcategory);
   }
   
-  // Apply regulation filter if not "all"
+  // Apply regulation filter if not "all" - Fixed to handle spaces properly
   if (regulationCategory !== "all") {
-    filteredProgressData = filteredProgressData.filter(p => 
-      // Include if the regulation matches OR is "both" OR is not specified
-      p.questions?.regulation_category === regulationCategory || 
-      p.questions?.regulation_category === "both" || 
-      !p.questions?.regulation_category);
+    filteredProgressData = filteredProgressData.filter(p => {
+      const questionRegulation = p.questions?.regulation_category;
+      return questionRegulation === regulationCategory || 
+             questionRegulation === "both" || 
+             !questionRegulation;
+    });
   }
   
   // Remove duplicate entries - keep only the most recent entry for each question
@@ -109,10 +112,10 @@ export async function fetchNewQuestions(
     newQuestionsQuery = newQuestionsQuery.eq('sub_category', subcategory);
   }
   
-  // Apply regulation filter if not "all"
+  // Apply regulation filter if not "all" - Fixed to handle spaces properly
   if (regulationCategory !== "all") {
     newQuestionsQuery = newQuestionsQuery.or(
-      `regulation_category.eq.${regulationCategory},regulation_category.eq.both,regulation_category.is.null`
+      `regulation_category.eq."${regulationCategory}",regulation_category.eq.both,regulation_category.is.null`
     );
   }
 
@@ -168,9 +171,9 @@ export async function fetchPracticeQuestions(
     query = query.eq('sub_category', subcategory);
   }
   
-  // Apply regulation filter if specified and not "all"
+  // Apply regulation filter if specified and not "all" - Fixed to handle spaces properly
   if (regulationCategory !== "all") {
-    query = query.or(`regulation_category.eq.${regulationCategory},regulation_category.eq.both,regulation_category.is.null`);
+    query = query.or(`regulation_category.eq."${regulationCategory}",regulation_category.eq.both,regulation_category.is.null`);
   }
 
   // Add limit

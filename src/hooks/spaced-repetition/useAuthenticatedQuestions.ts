@@ -98,7 +98,7 @@ async function loadSpacedRepetitionQuestions(
   
   if (regulationCategory !== "all") {
     progressQuery = progressQuery.or(
-      `questions.regulation_category.eq.${regulationCategory},questions.regulation_category.eq.both,questions.regulation_category.is.null`
+      `questions.regulation_category.eq."${regulationCategory}",questions.regulation_category.eq.both,questions.regulation_category.is.null`
     );
   }
 

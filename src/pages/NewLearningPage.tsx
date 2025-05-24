@@ -15,7 +15,7 @@ export default function NewLearningPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isMobile = useIsMobile();
-  const sessionStarted = useRef(false);
+  const sessionStarted = useRef<string>('');
   
   // Parse URL parameters into stable options
   const sessionOptions = useMemo(() => {
@@ -53,11 +53,11 @@ export default function NewLearningPage() {
   useEffect(() => {
     const optionsKey = JSON.stringify(sessionOptions);
     
-    if (!sessionStarted.current || sessionStarted.current !== optionsKey) {
+    if (sessionStarted.current !== optionsKey) {
       sessionStarted.current = optionsKey;
       startSession();
     }
-  }, [sessionOptions]);
+  }, [sessionOptions, startSession]);
 
   // Handle mobile viewport lock
   useEffect(() => {
@@ -84,7 +84,7 @@ export default function NewLearningPage() {
   };
 
   const handleRestart = () => {
-    sessionStarted.current = false;
+    sessionStarted.current = '';
     resetSession();
     // Session will restart automatically due to useEffect
   };

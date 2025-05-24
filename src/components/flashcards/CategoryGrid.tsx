@@ -1,10 +1,11 @@
-
 import React from "react";
 import CategoryCard from "@/components/common/CategoryCard";
 import { RegulationFilterType } from "@/types/regulation";
 import { useCategoryMetadata } from "./useCategoryMetadata";
 import { filterCategoriesByRegulation } from "./CategoryRegulationFilter";
 import EmptyRegulationState from "./EmptyRegulationState";
+import { useAuth } from "@/hooks/useAuth";
+import { useUnifiedNavigation } from "@/hooks/useUnifiedNavigation";
 
 interface CategoryStats {
   correct: number;
@@ -32,14 +33,16 @@ interface CategoryGridProps {
 
 export default function CategoryGrid({
   categories,
-  categoryCardCounts,
   progressStats,
+  categoryCardCounts,
   selectedCategories,
   onSelectCategory,
   isSelectable,
-  regulationFilter,
-  isPro = false,
+  regulationFilter
 }: CategoryGridProps) {
+  const { user } = useAuth();
+  const { navigateToLearning } = useUnifiedNavigation();
+  
   const { categoryMetadata, isLoading } = useCategoryMetadata(categories);
   
   // Filter categories based on regulation preference - Updated parameter order
@@ -49,6 +52,19 @@ export default function CategoryGrid({
     return <EmptyRegulationState />;
   }
   
+  const handleCategoryClick = (categoryName: string) => {
+    if (isSelectable) {
+      onSelectCategory(categoryName);
+      return;
+    }
+
+    // Use new unified navigation
+    navigateToLearning({
+      subcategory: categoryName,
+      regulation: regulationFilter !== 'all' ? regulationFilter : undefined
+    });
+  };
+
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {visibleCategories.map((subcategory) => {
@@ -80,7 +96,7 @@ export default function CategoryGrid({
             progress={progress}
             link={`/karteikarten/${subcategory.toLowerCase().includes('signal') ? 'signale' : 'betriebsdienst'}/${encodeURIComponent(subcategory.toLowerCase().replace(/[^a-z0-9]+/g, '-'))}`}
             isSelected={selectedCategories.includes(subcategory)}
-            onSelect={() => onSelectCategory(subcategory)}
+            onSelect={() => handleCategoryClick(subcategory)}
             selectable={isSelectable}
             isLocked={isPro && isCategoryPro}
             isPro={isCategoryPro}

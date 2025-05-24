@@ -12,6 +12,7 @@ export type Database = {
       categories: {
         Row: {
           color: string | null
+          content_type: string | null
           created_at: string | null
           description: string | null
           icon: string | null
@@ -20,11 +21,13 @@ export type Database = {
           isPro: boolean
           name: string
           parent_category: string
+          path: string | null
           requiresAuth: boolean | null
           updated_at: string | null
         }
         Insert: {
           color?: string | null
+          content_type?: string | null
           created_at?: string | null
           description?: string | null
           icon?: string | null
@@ -33,11 +36,13 @@ export type Database = {
           isPro?: boolean
           name: string
           parent_category: string
+          path?: string | null
           requiresAuth?: boolean | null
           updated_at?: string | null
         }
         Update: {
           color?: string | null
+          content_type?: string | null
           created_at?: string | null
           description?: string | null
           icon?: string | null
@@ -46,6 +51,7 @@ export type Database = {
           isPro?: boolean
           name?: string
           parent_category?: string
+          path?: string | null
           requiresAuth?: boolean | null
           updated_at?: string | null
         }
@@ -55,6 +61,7 @@ export type Database = {
         Row: {
           answers: Json
           category: Database["public"]["Enums"]["question_category"]
+          content_version: string | null
           created_at: string
           created_by: string
           difficulty: number
@@ -64,6 +71,7 @@ export type Database = {
           question_type: Database["public"]["Enums"]["question_type"]
           regulation_category: string | null
           revision: number
+          status: string | null
           sub_category: string
           text: string
           updated_at: string
@@ -71,6 +79,7 @@ export type Database = {
         Insert: {
           answers: Json
           category: Database["public"]["Enums"]["question_category"]
+          content_version?: string | null
           created_at?: string
           created_by: string
           difficulty: number
@@ -80,6 +89,7 @@ export type Database = {
           question_type: Database["public"]["Enums"]["question_type"]
           regulation_category?: string | null
           revision?: number
+          status?: string | null
           sub_category: string
           text: string
           updated_at?: string
@@ -87,6 +97,7 @@ export type Database = {
         Update: {
           answers?: Json
           category?: Database["public"]["Enums"]["question_category"]
+          content_version?: string | null
           created_at?: string
           created_by?: string
           difficulty?: number
@@ -96,6 +107,7 @@ export type Database = {
           question_type?: Database["public"]["Enums"]["question_type"]
           regulation_category?: string | null
           revision?: number
+          status?: string | null
           sub_category?: string
           text?: string
           updated_at?: string

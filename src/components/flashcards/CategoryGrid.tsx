@@ -1,11 +1,12 @@
+
 import React from "react";
 import CategoryCard from "@/components/common/CategoryCard";
 import { RegulationFilterType } from "@/types/regulation";
 import { useCategoryMetadata } from "./useCategoryMetadata";
 import { filterCategoriesByRegulation } from "./CategoryRegulationFilter";
 import EmptyRegulationState from "./EmptyRegulationState";
-import { useAuth } from "@/hooks/useAuth";
-import { useUnifiedNavigation } from "@/hooks/useUnifiedNavigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUnifiedNavigation } from "@/hooks/navigation/useUnifiedNavigation";
 
 interface CategoryStats {
   correct: number;
@@ -38,7 +39,8 @@ export default function CategoryGrid({
   selectedCategories,
   onSelectCategory,
   isSelectable,
-  regulationFilter
+  regulationFilter,
+  isPro
 }: CategoryGridProps) {
   const { user } = useAuth();
   const { navigateToLearning } = useUnifiedNavigation();

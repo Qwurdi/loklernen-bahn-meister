@@ -1,3 +1,4 @@
+
 import { useSearchParams } from "react-router-dom";
 import { useMemo } from "react";
 import { useRegulationFilter } from "@/hooks/useRegulationFilter";
@@ -8,10 +9,19 @@ interface SessionParams {
   regulation?: string | null;
   mode?: string | null;
   box?: number | null;
+  regulationParam?: string | null;
+  searchParams?: URLSearchParams;
+  mainCategoryForHook?: string | null;
+  subCategoryParam?: string | null;
+  setRegulationFilter?: (value: string) => void;
+  categoryParam?: string | null;
+  sessionTitle?: string;
+  isDueCardsView: boolean;
+  boxParam?: string | null;
 }
 
-export function useSessionParams() {
-  const [searchParams] = useSearchParams();
+export function useSessionParams(): SessionParams {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { stripRegulationInfo } = useRegulationFilter();
   
   // Updated to use unified parameter structure
@@ -29,8 +39,27 @@ export function useSessionParams() {
     subcategory: subcategoryParam,
     regulation: regulationParam || 'all',
     mode: modeParam || 'review',
-    box: boxParam ? parseInt(boxParam) : undefined
-  }), [normalizedCategory, subcategoryParam, regulationParam, modeParam, boxParam]);
+    box: boxParam ? parseInt(boxParam) : undefined,
+    
+    // Legacy compatibility fields
+    regulationParam: regulationParam || 'all',
+    searchParams,
+    mainCategoryForHook: normalizedCategory,
+    subCategoryParam: subcategoryParam,
+    categoryParam,
+    sessionTitle: subcategoryParam || normalizedCategory || 'Lerneinheit',
+    boxParam,
+    
+    setRegulationFilter: (value: string) => {
+      const newSearchParams = new URLSearchParams(searchParams);
+      if (value === 'all') {
+        newSearchParams.delete('regulation');
+      } else {
+        newSearchParams.set('regulation', value);
+      }
+      setSearchParams(newSearchParams);
+    }
+  }), [normalizedCategory, subcategoryParam, regulationParam, modeParam, boxParam, categoryParam, searchParams, setSearchParams]);
 
   const isDueCardsView = !categoryParam && !subcategoryParam;
 

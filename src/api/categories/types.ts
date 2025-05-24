@@ -1,52 +1,31 @@
-import { QuestionCategory } from "@/types/questions";
 
-// Type definition for categories
+// Navigation and routing types for unified URL structure
+export interface NavigationPath {
+  path: string;
+  displayName: string;
+  category: 'Signale' | 'Betriebsdienst';
+  requiresAuth: boolean;
+  isPro: boolean;
+}
+
 export interface Category {
   id: string;
   name: string;
   description?: string;
-  icon?: string;
-  color?: string;
-  parent_category: QuestionCategory;
-  created_at?: string;
-  updated_at?: string;
+  parent_category: string;
+  path?: string;
+  requiresAuth?: boolean;
   isPro?: boolean;
   isPlanned?: boolean;
-  requiresAuth?: boolean; // Neues Feld hinzugefügt
+  icon?: string;
+  color?: string;
+  content_type?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-// Signal subcategories array
-export const signalSubCategories = [
-  "Allgemeine Bestimmungen",
-  "Hp-Signale",
-  "Kombinationssignale (Ks)",
-  "Lichthaupt- und Lichtvorsignale (Hl)",
-  "Haupt- und Vorsignalverbindungen (Sv)",
-  "Vr-Signale",
-  "Zusatzsignale (Zs)",
-  "Signale für Schiebelokomotiven und Sperrfahrten (Ts)",
-  "Langsamfahrsignale (Lf)",
-  "Schutzsignale (Sh)",
-  "Signale für den Rangierdienst (Ra)",
-  "Weichensignale (Wn)",
-  "Signale für das Zugpersonal (Zp)",
-  "Fahrleitungssignale (El)",
-  "Signale an Zügen (Zg)",
-  "Signale an einzelnen Fahrzeugen (Fz)",
-  "Nebensignale (Ne)",
-  "Signale für Bahnübergänge (Bü)",
-  "Orientierungszeichen",
-  "Signalkombinationen (Sk)"
-] as const;
-
-// Betriebsdienst subcategories array
-export const betriebsdienstSubCategories = [
-  "Grundlagen Bahnbetrieb",
-  "UVV & Arbeitsschutz",
-  "Rangieren",
-  "Züge fahren",
-  "PZB & Sicherungsanlagen",
-  "Kommunikation",
-  "Besonderheiten",
-  "Unregelmäßigkeiten"
-] as const;
+export interface CategoryMetadata {
+  isPro: boolean;
+  isPlanned: boolean;
+  requiresAuth?: boolean;
+}

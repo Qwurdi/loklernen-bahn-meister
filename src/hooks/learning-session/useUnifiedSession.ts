@@ -39,9 +39,9 @@ export function useUnifiedSession() {
   } = useSpacedRepetition(
     params.category as any,
     params.subcategory,
-    {
-      regulationFilter: params.regulation === 'all' ? undefined : params.regulation,
+    { 
       practiceMode: params.mode === 'practice',
+      regulationCategory: params.regulation === 'all' ? undefined : params.regulation,
       boxNumber: params.box
     }
   );
@@ -49,18 +49,22 @@ export function useUnifiedSession() {
   // Update session state when questions change
   useEffect(() => {
     if (dueQuestions.length > 0) {
+      // Calculate progress from questions array
+      const totalQuestions = dueQuestions.length;
+      const currentQuestion = sessionState.currentIndex + 1;
+      
       setSessionState(prev => ({
         ...prev,
         questions: dueQuestions,
-        progress: srProgress ? {
-          total: srProgress.total,
-          current: srProgress.current,
-          correct: srProgress.correctCount,
-          percentage: (srProgress.current / srProgress.total) * 100
-        } : null
+        progress: {
+          total: totalQuestions,
+          current: currentQuestion,
+          correct: prev.progress?.correct || 0,
+          percentage: (currentQuestion / totalQuestions) * 100
+        }
       }));
     }
-  }, [dueQuestions, srProgress]);
+  }, [dueQuestions, sessionState.currentIndex]);
 
   const submitAnswer = useCallback(async (questionId: string, score: number) => {
     await submitAnswerSR(questionId, score);

@@ -3,7 +3,6 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLearningSession } from '@/hooks/learning-session';
-import { toast } from 'sonner';
 import { ChevronLeft } from 'lucide-react';
 import LearningSessionContent from '@/components/learning/LearningSessionContent';
 import SessionComplete from '@/components/learning/SessionComplete';

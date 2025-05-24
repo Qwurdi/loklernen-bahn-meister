@@ -2,7 +2,6 @@
 import React, { useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { ProtectedRoute } from "./ProtectedRoute";
-import { learningRoutes } from "./routes/learning-routes";
 
 // Import pages
 import Index from "@/pages/Index";
@@ -10,6 +9,7 @@ import LoginPage from "@/pages/Login";
 import RegisterPage from "@/pages/Register";
 import Dashboard from "@/pages/Dashboard";
 import CardsPage from "@/pages/CardsPage";
+import LearningPage from "@/pages/LearningPage";
 import AdminLayout from "@/components/layout/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 
@@ -42,8 +42,14 @@ export default function AppRoutes() {
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/karteikarten" element={<ProtectedRoute><CardsPage /></ProtectedRoute>} />
       
-      {/* Learning routes - include all learning-related routes */}
-      {learningRoutes}
+      {/* Unified Learning Routes - All learning flows use the same LearningPage */}
+      <Route path="/lernen" element={<LearningPage />} />
+      <Route path="/karteikarten/lernen" element={<LearningPage />} />
+      <Route path="/karteikarten/session" element={<LearningPage />} />
+      <Route path="/fullscreen-learning" element={<LearningPage />} />
+      <Route path="/new-learning" element={<LearningPage />} />
+      <Route path="/karteikarten/signale/:subcategory?" element={<LearningPage />} />
+      <Route path="/karteikarten/betriebsdienst/:subcategory?" element={<LearningPage />} />
       
       <Route path="/fortschritt" element={<ProtectedRoute><div>Fortschritt</div></ProtectedRoute>} />
       <Route path="/einstellungen" element={<ProtectedRoute><div>Einstellungen</div></ProtectedRoute>} />

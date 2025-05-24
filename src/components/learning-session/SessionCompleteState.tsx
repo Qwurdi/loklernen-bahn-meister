@@ -1,63 +1,94 @@
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { CheckCircle, RefreshCw } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { Check, ChevronLeft, Loader2, RotateCw } from "lucide-react";
 
-interface SessionCompleteStateProps {
+// Update interface to match expected props in LearningSessionPage
+export interface SessionCompleteStateProps {
   correctCount: number;
   totalCards: number;
   onRestart: () => void;
   pendingUpdates?: boolean;
 }
 
-export default function SessionCompleteState({ 
-  correctCount, 
-  totalCards, 
+const SessionCompleteState: React.FC<SessionCompleteStateProps> = ({
+  correctCount,
+  totalCards,
   onRestart,
   pendingUpdates = false
-}: SessionCompleteStateProps) {
+}) => {
+  const navigate = useNavigate();
   const percentage = Math.round((correctCount / totalCards) * 100);
   
+  const renderCompletionMessage = () => {
+    if (percentage >= 90) {
+      return "Hervorragend! Du hast fast alles richtig beantwortet.";
+    } else if (percentage >= 70) {
+      return "Gut gemacht! Das ist ein solides Ergebnis.";
+    } else if (percentage >= 50) {
+      return "Nicht schlecht! Mit etwas Übung wirst du besser.";
+    } else {
+      return "Diese Themen brauchst du noch etwas Übung. Bleib dran!";
+    }
+  };
+  
   return (
-    <div className="flex flex-col items-center justify-center h-full py-8 px-4 space-y-8 text-center">
-      <div className="rounded-full bg-green-100 p-4">
-        <CheckCircle className="h-12 w-12 text-green-600" />
-      </div>
-      
-      <h1 className="text-2xl font-bold">Lernsession abgeschlossen!</h1>
-      
-      <div className="w-full max-w-md space-y-2">
-        <p className="text-lg font-medium">
-          Du hast <span className="text-green-600 font-bold">{correctCount}</span> von {totalCards} Karten 
-          richtig beantwortet.
-        </p>
-        <Progress value={percentage} className="h-2" />
-        <p className="text-sm text-gray-500">{percentage}% richtig</p>
-      </div>
-      
-      <div className="text-center space-y-4 w-full max-w-md">
-        {pendingUpdates && (
-          <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-md border border-amber-200">
-            Dein Lernfortschritt wird im Hintergrund gespeichert...
+    <div className="flex flex-col items-center justify-center p-8">
+      <div className="bg-white border border-gray-200 rounded-lg p-6 text-center max-w-md w-full shadow-sm">
+        <div className="mb-6">
+          <div className="mx-auto bg-green-100 rounded-full p-3 w-16 h-16 flex items-center justify-center mb-4">
+            <Check className="h-8 w-8 text-green-600" />
           </div>
-        )}
-        
-        <div className="space-y-2">
-          <Button 
-            onClick={onRestart} 
-            className="w-full"
-            disabled={pendingUpdates}
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Neue Runde starten
-          </Button>
           
-          <p className="text-xs text-gray-500">
-            Starte eine neue Lernsession mit denselben Karten oder kehre zurück zur Kartenübersicht.
-          </p>
+          <h3 className="text-xl font-semibold mb-2">Session abgeschlossen!</h3>
+          <p className="text-gray-600">{renderCompletionMessage()}</p>
+        </div>
+        
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-lg p-4 mb-2">
+            <div className="text-center">
+              <div className="text-2xl font-bold">{correctCount}</div>
+              <div className="text-sm text-gray-500">Richtig</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold">{totalCards}</div>
+              <div className="text-sm text-gray-500">Gesamt</div>
+            </div>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/karteikarten")}
+              className="flex-1"
+            >
+              <ChevronLeft className="h-4 w-4 mr-2" />
+              Zurück zur Übersicht
+            </Button>
+            
+            <Button
+              onClick={onRestart}
+              className="flex-1 relative"
+              disabled={pendingUpdates}
+            >
+              {pendingUpdates ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Aktualisiere Fortschritt...
+                </>
+              ) : (
+                <>
+                  <RotateCw className="h-4 w-4 mr-2" />
+                  Erneut lernen
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default SessionCompleteState;

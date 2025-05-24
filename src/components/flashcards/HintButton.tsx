@@ -1,67 +1,58 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { HelpCircle, X } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Answer } from '@/types/questions';
-import { SafeRichText } from '@/components/ui/rich-text/SafeRichText';
-import { StructuredContent } from '@/types/rich-text';
+import { Button } from "@/components/ui/button";
+import { HelpCircle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose
+} from "@/components/ui/dialog";
+import { SafeRichText } from "@/components/ui/rich-text/SafeRichText";
+import { StructuredContent } from "@/types/rich-text";
 
 interface HintButtonProps {
-  hint?: string | null;
+  hint?: string | StructuredContent;
   question: string | StructuredContent;
-  answers?: Answer[];
+  answers: any;
+  minimal?: boolean;
 }
 
-export default function HintButton({ hint, question, answers }: HintButtonProps) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  // If no hint provided, don't show the button
+export default function HintButton({ hint, minimal = false, question, answers }: HintButtonProps) {
+  const [open, setOpen] = useState(false);
+  
+  // Return null if no hint is provided
   if (!hint) return null;
-
+  
   return (
-    <>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="text-muted-foreground flex gap-2 hover:bg-gray-100"
-        onClick={() => setIsOpen(true)}
-      >
-        <HelpCircle className="h-4 w-4" />
-        <span className="text-xs">Hinweis anzeigen</span>
-      </Button>
-
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              <span>Hinweis</span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 rounded-full"
-                onClick={() => setIsOpen(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </DialogTitle>
-          </DialogHeader>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button 
+          variant="outline" 
+          className={`${minimal ? 'py-1 px-2 h-auto text-xs' : 'py-2 px-3'} flex items-center gap-2 hover:bg-amber-50`}
+        >
+          <HelpCircle className={minimal ? "w-4 h-4" : "w-5 h-5"} /> 
+          {minimal ? "Tipp" : "Tipp anzeigen"}
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="text-xl font-semibold mb-2">Hilfestellung</DialogTitle>
+        </DialogHeader>
+        <div className="mt-3 prose">
+          <div className="text-gray-600 mb-4">
+            <SafeRichText content={hint} />
+          </div>
           
-          <div className="mb-3">
-            <p className="text-sm font-medium text-muted-foreground mb-1">Frage:</p>
-            <div className="p-3 bg-gray-50 rounded-md">
-              <SafeRichText content={question} />
-            </div>
-          </div>
-
-          <div>
-            <p className="text-sm font-medium text-blue-600 mb-1">Hinweis:</p>
-            <div className="p-3 bg-blue-50 rounded-md border border-blue-100">
-              <SafeRichText content={hint} />
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+          <DialogClose asChild>
+            <Button className="mt-4 w-full">
+              Verstanden
+            </Button>
+          </DialogClose>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

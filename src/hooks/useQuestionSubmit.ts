@@ -4,7 +4,6 @@ import { CreateQuestionDTO } from "@/types/questions";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadQuestionImage, createQuestion, prepareContentForStorage, prepareAnswerForStorage } from "@/api/questions";
 import { toast } from "sonner";
-import { Json } from "@/integrations/supabase/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { getTextValue } from "@/types/rich-text";
@@ -83,6 +82,9 @@ export const useQuestionSubmit = () => {
         // Convert answers to database format
         const processedAnswers = questionData.answers.map(prepareAnswerForStorage);
         
+        // Convert hint to database format if it exists
+        const processedHint = questionData.hint ? prepareContentForStorage(questionData.hint) : null;
+        
         const { error } = await supabase
           .from('questions')
           .update({
@@ -95,7 +97,7 @@ export const useQuestionSubmit = () => {
             answers: processedAnswers,
             updated_at: new Date().toISOString(),
             regulation_category: questionData.regulation_category,
-            hint: questionData.hint
+            hint: processedHint
           })
           .eq('id', id);
         

@@ -82,6 +82,9 @@ export const useQuestionSubmit = () => {
         // Convert answers to database format
         const processedAnswers = questionData.answers.map(prepareAnswerForStorage);
         
+        // Convert hint to database format if it exists
+        const processedHint = questionData.hint ? prepareContentForStorage(questionData.hint) : null;
+        
         const { error } = await supabase
           .from('questions')
           .update({
@@ -94,7 +97,7 @@ export const useQuestionSubmit = () => {
             answers: processedAnswers,
             updated_at: new Date().toISOString(),
             regulation_category: questionData.regulation_category,
-            hint: questionData.hint
+            hint: processedHint
           })
           .eq('id', id);
         

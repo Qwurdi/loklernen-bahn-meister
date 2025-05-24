@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import FlashcardActionButton from "./FlashcardActionButton";
 import { useDynamicTextSize } from "@/hooks/useDynamicTextSize";
 import ZoomableImage from "@/components/common/ZoomableImage";
-import MultipleChoiceQuestion from "./MultipleChoiceQuestion";
+import MultipleChoiceQuestion from "./MultipleChoice";
 import { SafeRichText } from "@/components/ui/rich-text/SafeRichText";
 
 interface FlashcardItemDesktopProps {

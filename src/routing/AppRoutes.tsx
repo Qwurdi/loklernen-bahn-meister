@@ -1,130 +1,70 @@
 
-import { Suspense, lazy, useEffect } from "react";
-import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import LoadingSpinner from "@/components/common/LoadingSpinner";
+import React, { useEffect } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
+import { ProtectedRoute } from "./ProtectedRoute";
 
-// Eagerly load critical components
-const NotFound = lazy(() => import("@/pages/NotFound"));
+// Import pages
+import Index from "@/pages/Index";
+import LoginPage from "@/pages/Login";
+import RegisterPage from "@/pages/Register";
+import Dashboard from "@/pages/Dashboard";
+import LearningSessionPage from "@/pages/LearningSessionPage";
+import AdminLayout from "@/components/layout/AdminLayout";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import { FlashcardRoute } from "./routes/main-routes";
 
-// Lazily load non-critical pages
-const Index = lazy(() => import("@/pages/Index"));
-const Dashboard = lazy(() => import("@/pages/Dashboard"));
-const CardsPage = lazy(() => import("@/pages/CardsPage"));
-const FlashcardPage = lazy(() => import("@/pages/FlashcardPage"));
-const LearningSessionPage = lazy(() => import("@/pages/LearningSessionPage"));
-const BetriebsdienstPage = lazy(() => import("@/pages/BetriebsdienstPage"));
-const ProgressPage = lazy(() => import("@/pages/ProgressPage"));
-const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
-const RegulationSelectionPage = lazy(() => import("@/pages/RegulationSelectionPage"));
-const Login = lazy(() => import("@/pages/Login"));
-const Register = lazy(() => import("@/pages/Register"));
-const AdminLayout = lazy(() => import("@/components/layout/AdminLayout"));
-const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
-const QuestionsPage = lazy(() => import("@/pages/admin/QuestionsPage"));
-const QuestionEditorPage = lazy(() => import("@/pages/admin/QuestionEditorPage"));
-const DeleteQuestionPage = lazy(() => import("@/pages/admin/DeleteQuestionPage"));
-const CategoriesPage = lazy(() => import("@/pages/admin/CategoriesPage"));
+// Placeholder components
+const VerifyEmailPage = () => <div>E-Mail verifizieren</div>;
+const ResetPasswordPage = () => <div>Passwort zurücksetzen</div>;
+const RequestPasswordResetPage = () => <div>Passwort-Reset anfordern</div>;
 
-console.log("AppRoutes: Initializing routes");
-
-// Route guard component for authenticated routes
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
-  
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-  
-  if (!user) {
-    console.log("ProtectedRoute: No user, redirecting to login");
-    return <Navigate to="/login" replace />;
-  }
-  
-  return <>{children}</>;
-};
-
-// Route guard component that redirects authenticated users to dashboard
-const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
-  
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-  
-  if (user) {
-    console.log("PublicRoute: User detected, redirecting to dashboard");
-    return <Navigate to="/" replace />;
-  }
-  
-  return <>{children}</>;
-};
-
-// Home route component to handle conditional rendering
-const HomeRoute = () => {
-  const { user, loading } = useAuth();
-  
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-  
-  console.log("HomeRoute: Rendering appropriate component based on auth", { isLoggedIn: !!user });
-  return user ? <Dashboard /> : <Index />;
-};
-
-const AppRoutes = () => {
-  console.log("AppRoutes: Rendering routes configuration");
+export default function AppRoutes() {
   const location = useLocation();
-  
-  // Add debug logging for route changes
-  useEffect(() => {
-    console.log("AppRoutes: Route changed to:", location.pathname);
-  }, [location]);
-  
-  return (
-    <Suspense fallback={<LoadingSpinner />}>
-      <Routes>
-        {/* Home route - dashboard for authenticated users, landing page for others */}
-        <Route path="/" element={<HomeRoute />} />
-        <Route path="/welcome" element={<Index />} />
-        
-        {/* Regulation Selection Route */}
-        <Route path="/regelwerk-auswahl" element={<ProtectedRoute><RegulationSelectionPage /></ProtectedRoute>} />
-        <Route path="/einstellungen" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-        
-        {/* Renamed Flashcard Routes */}
-        <Route path="/karteikarten" element={<CardsPage />} />
-        <Route path="/karteikarten/signale/:subcategory" element={<FlashcardPage />} />
-        <Route path="/karteikarten/lernen" element={<ProtectedRoute><LearningSessionPage /></ProtectedRoute>} />
-        <Route path="/karteikarten/betriebsdienst" element={<BetriebsdienstPage />} />
-        <Route path="/karteikarten/betriebsdienst/:subcategory" element={<FlashcardPage />} />
-        
-        {/* Legacy redirect routes */}
-        <Route path="/signale" element={<Navigate to="/karteikarten" replace />} />
-        <Route path="/signale/:subcategory" element={<Navigate to="/karteikarten/signale/:subcategory" replace />} />
-        <Route path="/betriebsdienst" element={<Navigate to="/karteikarten/betriebsdienst" replace />} />
-        
-        {/* Progress Page */}
-        <Route path="/fortschritt" element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
-        
-        {/* Auth Routes */}
-        <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-        <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-        
-        {/* Admin Routes */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="questions" element={<QuestionsPage />} />
-          <Route path="questions/create" element={<QuestionEditorPage />} />
-          <Route path="questions/edit/:id" element={<QuestionEditorPage />} />
-          <Route path="questions/delete/:id" element={<DeleteQuestionPage />} />
-          <Route path="categories" element={<CategoriesPage />} />
-        </Route>
-        
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Suspense>
-  );
-};
 
-export default AppRoutes;
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
+  return (
+    <Routes>
+      {/* Public routes */}
+      <Route path="/" element={<Index />} />
+      
+      {/* Auth routes */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/request-password-reset" element={<RequestPasswordResetPage />} />
+      
+      {/* Protected user routes */}
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/karteikarten" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      
+      {/* Flashcard routes with conditional rendering based on device */}
+      <Route path="/karteikarten/lernen" element={<FlashcardRoute />} />
+      <Route path="/lernen/*" element={<LearningSessionPage />} />
+      
+      <Route path="/fortschritt" element={<ProtectedRoute><div>Fortschritt</div></ProtectedRoute>} />
+      <Route path="/einstellungen" element={<ProtectedRoute><div>Einstellungen</div></ProtectedRoute>} />
+      
+      {/* Admin routes */}
+      <Route path="/admin" element={<ProtectedRoute adminOnly={true}><AdminLayout /></ProtectedRoute>}>
+        <Route index element={<AdminDashboard />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="categories" element={<div>Admin Categories</div>} />
+        <Route path="categories/create" element={<div>Create Category</div>} />
+        <Route path="categories/:id" element={<div>Edit Category</div>} />
+        <Route path="questions" element={<div>Admin Questions</div>} />
+        <Route path="questions/create" element={<div>Create Question</div>} />
+        <Route path="questions/:id" element={<div>Edit Question</div>} />
+        <Route path="users" element={<div>Admin Users</div>} />
+        <Route path="users/create" element={<div>Create User</div>} />
+        <Route path="users/:id" element={<div>Edit User</div>} />
+        <Route path="import" element={<div>Import</div>} />
+        <Route path="export" element={<div>Export</div>} />
+      </Route>
+    </Routes>
+  );
+}

@@ -2,6 +2,8 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useState } from "react";
+import { toast } from "sonner";
 
 type DesktopAuthButtonsProps = {
   isActive: (path: string) => boolean;
@@ -9,6 +11,25 @@ type DesktopAuthButtonsProps = {
 
 const DesktopAuthButtons = ({ isActive }: DesktopAuthButtonsProps) => {
   const { user, signOut } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    
+    setIsLoggingOut(true);
+    try {
+      const { error } = await signOut();
+      if (error) {
+        console.error("Logout error:", error);
+        toast.error("Fehler beim Abmelden: " + error.message);
+      }
+    } catch (error) {
+      console.error("Unexpected logout error:", error);
+      toast.error("Ein unerwarteter Fehler ist aufgetreten");
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <div className="hidden md:flex ml-auto space-x-2">
@@ -17,10 +38,11 @@ const DesktopAuthButtons = ({ isActive }: DesktopAuthButtonsProps) => {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={signOut} 
+            onClick={handleLogout} 
+            disabled={isLoggingOut}
             className="border-gray-600 text-white bg-black hover:text-white hover:bg-gray-800"
           >
-            Abmelden
+            {isLoggingOut ? "Wird abgemeldet..." : "Abmelden"}
           </Button>
           <Link to="/admin">
             <Button 

@@ -2,7 +2,7 @@
 import React from "react";
 import { Question } from "@/types/questions";
 import { Card } from "@/components/ui/card";
-import { useCardSwipe, SWIPE_THRESHOLD } from "./mobile/useCardSwipe";
+import { useCardSwipe } from "./mobile/swipe/useCardSwipe";
 import QuestionSide from "./mobile/QuestionSide";
 import AnswerSide from "./mobile/AnswerSide";
 import SwipeIndicator from "./mobile/SwipeIndicator";
@@ -26,7 +26,7 @@ export default function FlashcardItemMobile({
 }: FlashcardItemMobileProps) {
   const isMultipleChoice = question.question_type === "MC_single" || question.question_type === "MC_multi";
   
-  // Use our custom hook for swipe behavior - disable swipe for MC questions
+  // Use our consolidated swipe hook
   const { 
     cardRef, 
     swipeState, 
@@ -42,15 +42,23 @@ export default function FlashcardItemMobile({
     disableSwipe: isMultipleChoice && flipped // Disable swipe for MC questions when the card is flipped
   });
 
+  // Handle card click for the question side
+  const handleCardClick = () => {
+    if (!flipped) {
+      onShowAnswer();
+    }
+  };
+
   return (
     <div className="mx-auto w-full relative touch-none">
       <Card 
         ref={cardRef}
         className={getCardClasses()}
         style={getCardStyle()}
-        onTouchStart={handlers.handleTouchStart}
-        onTouchMove={handlers.handleTouchMove}
-        onTouchEnd={handlers.handleTouchEnd}
+        onClick={!flipped ? handleCardClick : undefined}
+        onTouchStart={flipped ? handlers.handleTouchStart : undefined}
+        onTouchMove={flipped ? handlers.handleTouchMove : undefined}
+        onTouchEnd={flipped ? handlers.handleTouchEnd : undefined}
       >
         {!flipped ? (
           <QuestionSide 
@@ -67,11 +75,11 @@ export default function FlashcardItemMobile({
         )}
       </Card>
 
-      {/* Visual swipe indicator overlay - only for non-MC questions or front side */}
-      {(!isMultipleChoice || !flipped) && (
+      {/* Visual swipe indicator overlay - only show on answer side for non-MC questions */}
+      {flipped && !isMultipleChoice && (
         <SwipeIndicator 
           dragDelta={swipeState.dragDelta} 
-          swipeThreshold={SWIPE_THRESHOLD} 
+          swipeThreshold={100} 
         />
       )}
     </div>

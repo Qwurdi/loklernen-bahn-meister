@@ -1,102 +1,170 @@
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React from 'react';
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-interface AuthContextType {
+// List of admin emails - in a real production app, this would come from a database
+const ADMIN_EMAILS = ['admin@example.com', 'busato@me.com'];
+
+export interface AuthContextType {
   session: Session | null;
-  user: User | null;
+  user: (User & { isAdmin: boolean }) | null; // Modified to make isAdmin non-optional
   loading: boolean;
-  signOut: () => Promise<void>;
   isNewUser: boolean;
-  setIsNewUser: (value: boolean) => void;
+  setIsNewUser: (isNew: boolean) => void;
+  signIn: (email: string, password: string) => Promise<any>;
+  signUp: (email: string, password: string) => Promise<any>;
+  signOut: () => Promise<any>;
+  authError: Error | null;
+  clearAuthError: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isNewUser, setIsNewUser] = useState(false);
+  const [session, setSession] = React.useState<Session | null>(null);
+  const [user, setUser] = React.useState<(User & { isAdmin: boolean }) | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [isNewUser, setIsNewUser] = React.useState(false);
+  const [authError, setAuthError] = React.useState<Error | null>(null);
 
-  useEffect(() => {
-    let mounted = true;
-    console.log("AuthContext: Initializing auth state");
+  React.useEffect(() => {
+    // Set initial loading state
+    setLoading(true);
 
-    // Setup auth listener first
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, currentSession) => {
-      console.log("AuthContext: Auth state changed:", event);
-      if (!mounted) return;
-
-      // Show notifications for login/logout events (but not on initial load)
-      if (!loading) {
-        if (event === 'SIGNED_IN') {
+    // Set up auth listener first to ensure we catch all auth events
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      console.log("Auth state changed:", event);
+      setSession(currentSession);
+      
+      if (currentSession?.user) {
+        const userEmail = currentSession.user.email || '';
+        const userIsAdmin = ADMIN_EMAILS.includes(userEmail);
+        
+        // Set both user and isAdmin status in one go
+        setUser({
+          ...currentSession.user,
+          isAdmin: userIsAdmin
+        });
+        
+        // Check if this is a new user based on created_at and last_sign_in_at
+        if (currentSession.user.created_at && currentSession.user.last_sign_in_at) {
+          const createdAtTime = new Date(currentSession.user.created_at).getTime();
+          const lastSignInAtTime = new Date(currentSession.user.last_sign_in_at).getTime();
+          setIsNewUser(Math.abs(lastSignInAtTime - createdAtTime) < 10000);
+        }
+        
+        if (event === 'SIGNED_IN' && !loading) {
           toast.success('Erfolgreich angemeldet!');
-          
-          // Check for new sign up
-          if (!user) {
-            const isSignUp = localStorage.getItem('isNewSignUp') === 'true';
-            if (isSignUp) {
-              setIsNewUser(true);
-              localStorage.removeItem('isNewSignUp');
-            }
-          }
-        } else if (event === 'SIGNED_OUT') {
+        }
+      } else {
+        setUser(null);
+        setIsNewUser(false);
+        
+        if (event === 'SIGNED_OUT' && !loading) {
           toast.success('Erfolgreich abgemeldet!');
         }
       }
-
-      // Update state
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
+      
       setLoading(false);
     });
 
     // Get initial session
-    const getInitialSession = async () => {
-      try {
-        console.log("AuthContext: Getting initial session");
-        const { data } = await supabase.auth.getSession();
-        
-        // Only update state if component is still mounted
-        if (mounted) {
-          console.log("AuthContext: Initial session loaded:", !!data.session);
-          setSession(data.session);
-          setUser(data.session?.user ?? null);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error("Error getting initial session:", error);
-        if (mounted) setLoading(false);
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (error) {
+        console.error("Error getting session:", error);
+        setAuthError(error);
+        setLoading(false);
+        return;
       }
-    };
+      
+      setSession(data.session);
+      
+      if (data.session?.user) {
+        const userEmail = data.session.user.email || '';
+        const userIsAdmin = ADMIN_EMAILS.includes(userEmail);
+        
+        setUser({
+          ...data.session.user,
+          isAdmin: userIsAdmin
+        });
+      }
+      
+      setLoading(false);
+    });
 
-    // Call get initial session
-    getInitialSession();
-
-    // Cleanup function - runs when component unmounts
     return () => {
-      console.log("AuthContext: Cleaning up");
-      mounted = false;
-      authListener.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
-  }, []); // Empty dependency array means this runs once on mount
+  }, []);
 
-  // Sign out function
+  // Auth methods
+  const signIn = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) {
+        setAuthError(error);
+        return { error };
+      }
+      
+      setAuthError(null);
+      return { data, error: null };
+    } catch (error) {
+      setAuthError(error as Error);
+      return { error };
+    }
+  };
+  
+  const signUp = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      
+      if (error) {
+        setAuthError(error);
+        return { error };
+      }
+      
+      setIsNewUser(true);
+      setAuthError(null);
+      return { data, error: null };
+    } catch (error) {
+      setAuthError(error as Error);
+      return { error };
+    }
+  };
+  
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        setAuthError(error);
+        return { error };
+      }
+      
+      setAuthError(null);
+      return { error: null };
+    } catch (error) {
+      setAuthError(error as Error);
+      return { error };
+    }
   };
 
-  // Context value - all the values we want to expose
-  const value = {
+  const clearAuthError = () => setAuthError(null);
+
+  const value: AuthContextType = {
     session,
     user,
     loading,
     signOut,
     isNewUser,
-    setIsNewUser
+    setIsNewUser,
+    signIn,
+    signUp,
+    authError,
+    clearAuthError
   };
 
   return (
@@ -107,7 +175,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
+  const context = React.useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }

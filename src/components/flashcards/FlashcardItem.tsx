@@ -75,21 +75,17 @@ export default function FlashcardItem({
     }, 300);
   };
   
-  // Render the appropriate component based on device type
-  if (isMobile) {
-    return (
-      <FlashcardItemMobile 
-        question={question}
-        flipped={flipped}
-        answered={answered}
-        onShowAnswer={handleShowAnswer}
-        onKnown={handleKnown}
-        onNotKnown={handleNotKnown}
-      />
-    );
-  }
-  
-  return (
+  // Use the appropriate component based on device type
+  return isMobile ? (
+    <FlashcardItemMobile 
+      question={question}
+      flipped={flipped}
+      answered={answered}
+      onShowAnswer={handleShowAnswer}
+      onKnown={handleKnown}
+      onNotKnown={handleNotKnown}
+    />
+  ) : (
     <FlashcardItemDesktop
       question={question}
       flipped={flipped}

@@ -11,7 +11,7 @@ interface UseQuestionFormStateProps {
     difficulty: number;
     text: string | StructuredContent;
     regulation_category: RegulationCategory;
-    hint?: string | null;
+    hint?: string | StructuredContent | null;
     answers: { text: string | StructuredContent; isCorrect: boolean }[];
   }>;
   userId: string;
@@ -79,7 +79,7 @@ export const useQuestionFormState = ({ initialData, userId }: UseQuestionFormSta
     setFormData(prev => ({ ...prev, regulation_category }));
   };
 
-  const handleHintChange = (hint: string) => {
+  const handleHintChange = (hint: string | StructuredContent) => {
     setFormData(prev => ({ ...prev, hint }));
   };
 

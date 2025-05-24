@@ -1,9 +1,8 @@
-
 /* ===== Card Styles ===== */
 
 /* Basic card styles */
 .card-white {
-  background: #ffffff;
+  background-color: white;
   border: 1px solid #e0e0e0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease-out;
@@ -123,4 +122,79 @@
 .card-header-on-dark {
   background-color: rgba(20, 20, 25, 0.8);
   border-bottom: 1px solid rgba(80, 128, 255, 0.1);
+}
+
+/* Mobile fullscreen optimizations */
+.mobile-flashcard {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.mobile-card-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  touch-action: none; /* Disable browser's touch behaviors */
+}
+
+.gradient-ultramarine {
+  background: linear-gradient(90deg, #3F00FF 0%, #5080FF 100%);
+}
+
+.gradient-shift {
+  background-size: 200% 100%;
+  animation: gradientShift 2s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Enhanced mobile layout optimizations */
+.mobile-content {
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-content-top {
+  flex-shrink: 0;
+}
+
+.mobile-content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-content-bottom {
+  flex-shrink: 0;
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+/* Card edge-to-edge styles */
+.edge-to-edge {
+  margin-left: -20px;
+  margin-right: -20px;
+  width: calc(100% + 40px);
+}
+
+/* Ultra-compact form elements for mobile */
+.compact-radio {
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Responsive container constraints */
+.card-white {
+  background-color: white;
 }

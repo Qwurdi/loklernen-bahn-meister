@@ -59,4 +59,4 @@ export const ContentTab: React.FC<ContentTabProps> = ({
       </Card>
     </div>
   );
-};
+}

@@ -37,12 +37,18 @@ export default function LearningSessionContent({
 }: LearningSessionContentProps) {
   const isPracticeMode = sessionOptions.mode === 'practice';
 
+  // Handle answer with proper async flow
+  const handleAnswer = async (score: number) => {
+    await onAnswer(score);
+  };
+
   if (isMobile) {
     return (
       <div className="h-full">
         <MobileFlashcardDisplay
+          key={`${currentQuestion.id}-${currentIndex}`} // Ensure clean state on question change
           question={currentQuestion}
-          onAnswer={onAnswer}
+          onAnswer={handleAnswer}
           className="h-full"
         />
       </div>
@@ -91,9 +97,10 @@ export default function LearningSessionContent({
         />
         
         <FlashcardItem 
+          key={`desktop-${currentQuestion.id}-${currentIndex}`} // Ensure clean state
           question={currentQuestion} 
-          onAnswer={(score) => onAnswer(score)}
-          onNext={() => {}}
+          onAnswer={handleAnswer}
+          onNext={() => {}} // Handled by parent
         />
       </div>
     </>

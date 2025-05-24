@@ -9,8 +9,8 @@ import { useCardSwipe } from '@/components/learning/swipe/useCardSwipe';
 import SwipeIndicator from '@/components/flashcards/mobile/SwipeIndicator';
 import AdaptiveImage from './AdaptiveImage';
 import ExpandableText from './ExpandableText';
+import EnhancedMobileMultipleChoice from './EnhancedMobileMultipleChoice';
 import HintButton from '@/components/flashcards/HintButton';
-import MobileMultipleChoice from '@/components/flashcards/mobile/MobileMultipleChoice';
 
 interface UnifiedMobileCardProps {
   question: Question;
@@ -50,6 +50,14 @@ export default function UnifiedMobileCard({ question, onAnswer }: UnifiedMobileC
     handleAnswer(isCorrect ? 5 : 1);
   }
 
+  // Handle background clicks only (not on interactive elements)
+  function handleBackgroundClick(e: React.MouseEvent) {
+    // Only flip card if clicking on background and not already flipped
+    if (!isFlipped && e.target === e.currentTarget) {
+      showAnswer();
+    }
+  }
+
   // Text sizing for dynamic content
   const questionTextValue = getTextValue(question.text);
   const questionTextClass = useDynamicTextSize(questionTextValue, 'question');
@@ -63,7 +71,7 @@ export default function UnifiedMobileCard({ question, onAnswer }: UnifiedMobileC
         ref={cardRef}
         className={`w-full h-full bg-white rounded-xl shadow-lg relative overflow-hidden ${getCardClasses()}`}
         style={getCardStyle()}
-        onClick={!isFlipped ? showAnswer : undefined}
+        onClick={handleBackgroundClick}
         onTouchStart={isFlipped && swipeEnabled ? handlers.handleTouchStart : undefined}
         onTouchMove={isFlipped && swipeEnabled ? handlers.handleTouchMove : undefined}
         onTouchEnd={isFlipped && swipeEnabled ? handlers.handleTouchEnd : undefined}
@@ -87,7 +95,7 @@ export default function UnifiedMobileCard({ question, onAnswer }: UnifiedMobileC
                 <AdaptiveImage
                   src={question.image_url}
                   alt="Signal"
-                  maxHeight={500}
+                  maxHeight={400}
                   miniatureThreshold={200}
                   className="max-w-full h-full"
                 />
@@ -108,7 +116,10 @@ export default function UnifiedMobileCard({ question, onAnswer }: UnifiedMobileC
               
               <button 
                 className="w-full py-3 bg-gradient-to-r from-loklernen-ultramarine to-blue-600 text-white rounded-lg flex items-center justify-center shadow-md transition-transform active:scale-98"
-                onClick={showAnswer}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  showAnswer();
+                }}
               >
                 <Lightbulb className="h-4 w-4 mr-2" />
                 {isMultipleChoice ? "Optionen anzeigen" : "Signal anzeigen"}
@@ -124,7 +135,7 @@ export default function UnifiedMobileCard({ question, onAnswer }: UnifiedMobileC
             
             {isMultipleChoice ? (
               <div className="flex-1 overflow-hidden">
-                <MobileMultipleChoice
+                <EnhancedMobileMultipleChoice
                   question={question}
                   onAnswer={handleMCAnswer}
                 />
@@ -144,9 +155,10 @@ export default function UnifiedMobileCard({ question, onAnswer }: UnifiedMobileC
                     <AdaptiveImage
                       src={question.image_url}
                       alt="Signal"
-                      maxHeight={400}
-                      miniatureThreshold={200}
+                      maxHeight={300}
+                      miniatureThreshold={150}
                       className="max-w-full h-full"
+                      showOnAnswerSide={true}
                     />
                   </div>
                 )}
@@ -154,14 +166,20 @@ export default function UnifiedMobileCard({ question, onAnswer }: UnifiedMobileC
                 {!isAnswered && (
                   <div className="flex gap-4 flex-shrink-0">
                     <button 
-                      onClick={() => handleAnswer(1)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAnswer(1);
+                      }}
                       className="flex-1 py-3 bg-white border-2 border-red-200 text-red-700 rounded-lg font-medium flex items-center justify-center transition-colors active:bg-red-50"
                     >
                       <X className="h-5 w-5 mr-2" />
                       Nicht gewusst
                     </button>
                     <button 
-                      onClick={() => handleAnswer(5)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAnswer(5);
+                      }}
                       className="flex-1 py-3 bg-green-600 text-white rounded-lg font-medium flex items-center justify-center transition-colors active:bg-green-700"
                     >
                       <Check className="h-5 w-5 mr-2" />

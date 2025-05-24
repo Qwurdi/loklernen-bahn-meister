@@ -28,7 +28,11 @@ export default function ExpandableText({
     }
   }, [content, maxLines]);
 
-  const handleToggle = () => {
+  const handleToggle = (e: React.MouseEvent) => {
+    // Prevent event propagation to stop card flip
+    e.preventDefault();
+    e.stopPropagation();
+    
     setIsExpanded(!isExpanded);
     
     // Haptic feedback
@@ -57,7 +61,7 @@ export default function ExpandableText({
       {shouldTruncate && (
         <button
           onClick={handleToggle}
-          className="mt-2 flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 transition-colors"
+          className="mt-2 flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 transition-colors bg-white/80 backdrop-blur-sm px-2 py-1 rounded-md shadow-sm border border-blue-200"
         >
           {isExpanded ? (
             <>

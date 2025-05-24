@@ -55,12 +55,12 @@ export function useTouchHandlers({
     const deltaX = touch.clientX - touchStart.current.x;
     const deltaY = touch.clientY - touchStart.current.y;
     
-    // Only horizontal swipes
+    // Only horizontal swipes with higher threshold
     if (Math.abs(deltaX) > Math.abs(deltaY) * 2) {
       const direction = deltaX > 0 ? 'right' : 'left';
       updateSwipeState({ 
         dragDelta: deltaX,
-        swipeDirection: Math.abs(deltaX) > 50 ? direction : null
+        swipeDirection: Math.abs(deltaX) > 80 ? direction : null // Increased threshold
       });
     }
   }, [disableSwipe, isAnswered, updateSwipeState]);
@@ -69,7 +69,7 @@ export function useTouchHandlers({
     if (disableSwipe || isAnswered || !touchStart.current) return;
 
     const { dragDelta } = swipeState;
-    const swipeThreshold = 100;
+    const swipeThreshold = 120; // Increased threshold for more deliberate swipes
 
     if (Math.abs(dragDelta) > swipeThreshold) {
       // Trigger swipe action

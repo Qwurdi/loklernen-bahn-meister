@@ -19,10 +19,11 @@ export default function MobileFlashcardDisplay({
 }: MobileFlashcardDisplayProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [isAnswered, setIsAnswered] = useState(false);
+  const [swipeEnabled, setSwipeEnabled] = useState(false);
   
   const isMultipleChoice = question.question_type === "MC_single" || question.question_type === "MC_multi";
 
-  // Swipe functionality
+  // Swipe functionality - only enabled after user has seen the answer
   const { 
     cardRef, 
     swipeState, 
@@ -35,15 +36,25 @@ export default function MobileFlashcardDisplay({
     onShowAnswer: handleShowAnswer,
     isFlipped,
     isAnswered,
-    disableSwipe: isMultipleChoice && isFlipped
+    disableSwipe: isMultipleChoice || !swipeEnabled
   });
 
   function handleShowAnswer() {
     setIsFlipped(true);
+    
+    // Enable swipe after a short delay to prevent accidental swipes
+    if (!isMultipleChoice) {
+      setTimeout(() => {
+        setSwipeEnabled(true);
+      }, 1000); // 1 second delay before swipe is enabled
+    }
   }
 
   function handleAnswer(score: number) {
+    if (isAnswered) return; // Prevent double answers
+    
     setIsAnswered(true);
+    setSwipeEnabled(false); // Disable further swipes
     onAnswer(score);
   }
 
@@ -54,9 +65,9 @@ export default function MobileFlashcardDisplay({
         className={`w-full h-full bg-white rounded-xl shadow-lg relative overflow-hidden ${getCardClasses()}`}
         style={getCardStyle()}
         onClick={!isFlipped ? handleShowAnswer : undefined}
-        onTouchStart={isFlipped ? handlers.handleTouchStart : undefined}
-        onTouchMove={isFlipped ? handlers.handleTouchMove : undefined}
-        onTouchEnd={isFlipped ? handlers.handleTouchEnd : undefined}
+        onTouchStart={isFlipped && swipeEnabled ? handlers.handleTouchStart : undefined}
+        onTouchMove={isFlipped && swipeEnabled ? handlers.handleTouchMove : undefined}
+        onTouchEnd={isFlipped && swipeEnabled ? handlers.handleTouchEnd : undefined}
       >
         {!isFlipped ? (
           <MobileFlashcardQuestionSide 
@@ -72,12 +83,19 @@ export default function MobileFlashcardDisplay({
         )}
       </div>
 
-      {/* Swipe indicator for non-MC questions */}
-      {isFlipped && !isMultipleChoice && (
+      {/* Swipe indicator for non-MC questions - only show when swipe is enabled */}
+      {isFlipped && !isMultipleChoice && swipeEnabled && (
         <SwipeIndicator 
           dragDelta={swipeState.dragDelta} 
           swipeThreshold={100} 
         />
+      )}
+      
+      {/* Subtle hint when answer is first shown */}
+      {isFlipped && !isMultipleChoice && !swipeEnabled && !isAnswered && (
+        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-3 py-2 rounded-lg text-sm">
+          Wische in 1 Sekunde verfügbar
+        </div>
       )}
     </div>
   );

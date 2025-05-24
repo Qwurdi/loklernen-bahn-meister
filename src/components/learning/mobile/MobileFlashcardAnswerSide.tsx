@@ -29,6 +29,11 @@ export default function MobileFlashcardAnswerSide({
     onAnswer(isCorrect ? 5 : 1);
   }
 
+  function handleButtonAnswer(score: number) {
+    if (isAnswered) return; // Prevent double answers
+    onAnswer(score);
+  }
+
   return (
     <div className="flex flex-col h-full p-4">
       {/* Category badge */}
@@ -67,19 +72,21 @@ export default function MobileFlashcardAnswerSide({
             </div>
           )}
 
-          {/* Action buttons - fixed at bottom */}
+          {/* Action buttons - always show for open questions unless answered */}
           {!isAnswered && (
             <div className="flex gap-4 flex-shrink-0">
               <button 
-                onClick={() => onAnswer(1)}
-                className="flex-1 py-3 bg-white border-2 border-red-200 text-red-700 rounded-lg font-medium flex items-center justify-center transition-colors active:bg-red-50"
+                onClick={() => handleButtonAnswer(1)}
+                className="flex-1 py-3 bg-white border-2 border-red-200 text-red-700 rounded-lg font-medium flex items-center justify-center transition-colors active:bg-red-50 disabled:opacity-50"
+                disabled={isAnswered}
               >
                 <X className="h-5 w-5 mr-2" />
                 Nicht gewusst
               </button>
               <button 
-                onClick={() => onAnswer(5)}
-                className="flex-1 py-3 bg-green-600 text-white rounded-lg font-medium flex items-center justify-center transition-colors active:bg-green-700"
+                onClick={() => handleButtonAnswer(5)}
+                className="flex-1 py-3 bg-green-600 text-white rounded-lg font-medium flex items-center justify-center transition-colors active:bg-green-700 disabled:opacity-50"
+                disabled={isAnswered}
               >
                 <Check className="h-5 w-5 mr-2" />
                 Gewusst

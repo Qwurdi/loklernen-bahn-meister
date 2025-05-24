@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { memo } from "react";
 import { Progress } from "@/components/ui/progress";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -10,7 +10,7 @@ interface FlashcardProgressProps {
   remainingToday: number;
 }
 
-export default function FlashcardProgress({
+const FlashcardProgress = memo(function FlashcardProgress({
   currentIndex,
   totalCards,
   correctCount,
@@ -88,4 +88,6 @@ export default function FlashcardProgress({
       </div>
     </div>
   );
-}
+});
+
+export default FlashcardProgress;

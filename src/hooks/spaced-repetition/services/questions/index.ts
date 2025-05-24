@@ -9,3 +9,8 @@ export {
 export {
   fetchQuestionsByBox
 } from './box-questions';
+
+export {
+  fetchOptimizedSessionQuestions,
+  fetchOptimizedPracticeQuestions
+} from './optimized-queries';

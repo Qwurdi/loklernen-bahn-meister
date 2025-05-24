@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Question, QuestionCategory } from '@/types/questions';
@@ -31,14 +32,14 @@ export function useSpacedRepetition(
   
   const loadDueQuestions = useCallback(async () => {
     setLoading(true);
-    setError(null); // Reset error at the beginning
+    setError(null);
 
     try {
       if (!user) {
         // For non-authenticated users, load questions in practice mode
         console.log(`Loading practice questions for guest user with category=${category}, subcategory=${subcategory}, regulation=${regulationCategory}, batchSize=${batchSize}, includeAllSubcategories=${includeAllSubcategories}`);
         const practiceQuestions = await fetchPracticeQuestions(
-          category as QuestionCategory, // Cast to QuestionCategory since it could be null
+          category as QuestionCategory,
           subcategory || undefined,
           regulationCategory,
           batchSize,
@@ -51,7 +52,7 @@ export function useSpacedRepetition(
 
         if (options.practiceMode) {
           const practiceQuestions = await fetchPracticeQuestions(
-            category as QuestionCategory, // Cast to QuestionCategory since it could be null
+            category as QuestionCategory,
             subcategory || undefined, 
             regulationCategory, 
             batchSize,
@@ -66,14 +67,11 @@ export function useSpacedRepetition(
             options.includeAllSubcategories || false
           );
           
-          // Ensure we don't have duplicate questions
-          const uniqueQuestionsMap = new Map<string, Question>();
-          
-          // Make sure boxProgress is an array before trying to use array methods
           if (Array.isArray(boxProgress)) {
+            const uniqueQuestionsMap = new Map<string, Question>();
+            
             boxProgress.forEach(p => {
               if (p.questions && p.question_id) {
-                // The questions property now contains the full question data as JSON
                 const questionData = p.questions as any;
                 uniqueQuestionsMap.set(p.question_id, transformQuestion(questionData));
               }
@@ -90,65 +88,74 @@ export function useSpacedRepetition(
             setProgress([]);
           }
         } else {
-          // Regular spaced repetition mode for authenticated users
-          const filteredProgressData = await fetchUserProgress(
-            user.id, 
-            category as QuestionCategory, // Cast to QuestionCategory since it could be null
-            subcategory || undefined, 
-            regulationCategory,
-            includeAllSubcategories
-          );
+          // Optimized regular spaced repetition mode
+          const now = new Date().toISOString();
           
-          // Ensure we don't have duplicate questions
-          const uniqueQuestionsMap = new Map<string, Question>();
-          
-          filteredProgressData
-            .filter(p => p.questions) // Ensure questions exist
-            .forEach(p => {
-              if (p.questions && p.question_id) {
-                uniqueQuestionsMap.set(p.question_id, transformQuestion(p.questions));
-              }
-            });
-            
-          const questionsWithProgress = Array.from(uniqueQuestionsMap.values());
-            
-          console.log("Unique questions with progress:", questionsWithProgress.length);
+          // Use a more efficient query that gets both progress and new questions
+          let progressQuery = supabase
+            .from('user_progress')
+            .select(`
+              *,
+              questions!inner(*)
+            `)
+            .eq('user_id', user.id)
+            .lte('next_review_at', now);
 
+          // Apply category filters
+          if (category && !includeAllSubcategories) {
+            progressQuery = progressQuery.eq('questions.category', category);
+          } else if (category && includeAllSubcategories) {
+            progressQuery = progressQuery.eq('questions.category', category);
+          }
+          
+          if (subcategory) {
+            progressQuery = progressQuery.eq('questions.sub_category', subcategory);
+          }
+          
+          if (regulationCategory !== "all") {
+            progressQuery = progressQuery.or(
+              `questions.regulation_category.eq.${regulationCategory},questions.regulation_category.eq.both,questions.regulation_category.is.null`
+            );
+          }
+
+          const { data: progressData, error: progressError } = await progressQuery.limit(batchSize);
+          
+          if (progressError) throw progressError;
+
+          const questionsWithProgress = progressData || [];
+          const progressQuestions = questionsWithProgress.map(p => transformQuestion(p.questions));
+          
           if (questionsWithProgress.length >= batchSize) {
-            setDueQuestions(questionsWithProgress.slice(0, batchSize));
-            setProgress(filteredProgressData);
+            setDueQuestions(progressQuestions);
+            setProgress(questionsWithProgress);
           } else {
-            // Fetch new questions if not enough questions with progress
-            const questionIdsWithProgress = filteredProgressData
-              .filter(p => p.questions?.id)
-              .map(p => p.question_id);
-            console.log("Question IDs with progress:", questionIdsWithProgress.length);
-
+            // Get new questions to fill the batch
+            const questionIdsWithProgress = questionsWithProgress.map(p => p.question_id);
             const neededNewQuestions = batchSize - questionsWithProgress.length;
+            
             const newQuestions = await fetchNewQuestions(
-              category as QuestionCategory, // Cast to QuestionCategory since it could be null
+              category as QuestionCategory,
               subcategory || undefined, 
               regulationCategory, 
               questionIdsWithProgress, 
-              neededNewQuestions, // Fetch only the remaining number of questions needed
+              neededNewQuestions,
               includeAllSubcategories
             );
 
             const allQuestions = [
-              ...questionsWithProgress,
+              ...progressQuestions,
               ...newQuestions.map(transformQuestion)
-            ].slice(0, batchSize); // Ensure total does not exceed batchSize
+            ].slice(0, batchSize);
             
-            console.log("Final questions count for session:", allQuestions.length);
             setDueQuestions(allQuestions);
-            setProgress(filteredProgressData);
+            setProgress(questionsWithProgress);
           }
         }
       }
     } catch (err) {
       console.error('Error loading questions:', err);
       setError(err instanceof Error ? err : new Error('Unknown error loading questions'));
-      setDueQuestions([]); // Ensure dueQuestions is empty on error
+      setDueQuestions([]);
     } finally {
       setLoading(false);
     }
@@ -163,16 +170,13 @@ export function useSpacedRepetition(
     if (!user) return;
 
     try {
-      // Add to pending updates
       setPendingUpdates(prev => [...prev, {questionId, score}]);
       
       const currentProgress = progress.find(p => p.question_id === questionId);
       
-      // Update progress in the background, don't await the result
       updateUserProgress(user.id, questionId, score, currentProgress)
         .catch(err => console.error('Background update error:', err));
       
-      // Update stats in the background, don't await the result
       updateUserStats(user.id, score)
         .catch(err => console.error('Background stats update error:', err));
         
@@ -182,22 +186,17 @@ export function useSpacedRepetition(
     }
   };
 
-  // Function to apply all pending updates and reload questions
   const applyPendingUpdates = async () => {
     if (!user || pendingUpdates.length === 0) return;
     
     setLoading(true);
     try {
-      // Ensure all updates are complete
       for (const {questionId, score} of pendingUpdates) {
         const currentProgress = progress.find(p => p.question_id === questionId);
         await updateUserProgress(user.id, questionId, score, currentProgress);
       }
       
-      // Clear pending updates
       setPendingUpdates([]);
-      
-      // Reload questions
       await loadDueQuestions();
     } catch (error) {
       console.error('Error applying updates:', error);

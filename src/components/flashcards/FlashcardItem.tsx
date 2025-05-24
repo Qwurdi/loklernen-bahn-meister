@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import { Question } from "@/types/questions";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card } from "@/components/ui/card";
@@ -20,7 +19,7 @@ interface FlashcardItemProps {
   showAnswer?: boolean;
 }
 
-export default function FlashcardItem({ 
+const FlashcardItem = memo(function FlashcardItem({ 
   question, 
   onAnswer, 
   onNext,
@@ -282,4 +281,6 @@ export default function FlashcardItem({
       )}
     </div>
   );
-}
+});
+
+export default FlashcardItem;

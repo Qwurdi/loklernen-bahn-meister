@@ -61,12 +61,25 @@ describe('LearningPage', () => {
 
   it('renders without crashing', () => {
     render(<LearningPage />, { wrapper });
-    expect(screen.getByText('Keine Karten verfügbar')).toBeInTheDocument();
+    
+    const emptyStateHeading = screen.getByText('Keine Karten verfügbar');
+    expect(emptyStateHeading).toBeInTheDocument();
   });
 
   it('shows no cards available message when questions array is empty', () => {
     render(<LearningPage />, { wrapper });
-    expect(screen.getByText('Keine Karten verfügbar')).toBeInTheDocument();
-    expect(screen.getByText('Es sind keine Lernkarten für die ausgewählten Kriterien verfügbar.')).toBeInTheDocument();
+    
+    const emptyStateHeading = screen.getByText('Keine Karten verfügbar');
+    const emptyStateMessage = screen.getByText('Es sind keine Lernkarten für die ausgewählten Kriterien verfügbar.');
+    
+    expect(emptyStateHeading).toBeInTheDocument();
+    expect(emptyStateMessage).toBeInTheDocument();
+  });
+
+  it('displays back button in empty state', () => {
+    render(<LearningPage />, { wrapper });
+    
+    const backButton = screen.getByRole('button', { name: /zurück zur übersicht/i });
+    expect(backButton).toBeInTheDocument();
   });
 });

@@ -60,4 +60,19 @@ describe('useLearningSession', () => {
     expect(result.current.navigate).toBeDefined();
     expect(typeof result.current.sessionTitle).toBe('string');
   });
+
+  it('handles loading states correctly', () => {
+    const { result } = renderHook(() => useLearningSession(), { wrapper });
+    
+    expect(typeof result.current.loading).toBe('boolean');
+    expect(typeof result.current.canAccess).toBe('boolean');
+    expect(typeof result.current.categoryRequiresAuth).toBe('boolean');
+  });
+
+  it('provides error handling', () => {
+    const { result } = renderHook(() => useLearningSession(), { wrapper });
+    
+    // Error should be null or an Error object
+    expect(result.current.error === null || result.current.error instanceof Error).toBe(true);
+  });
 });

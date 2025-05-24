@@ -31,7 +31,7 @@ export default function MobileFlashcardDisplay({
   const questionTextValue = getTextValue(question.text);
   const answerTextValue = getTextValue(question?.answers?.[0]?.text || '');
   
-  // Dynamic text sizing
+  // Dynamic text sizing - now using plain strings
   const questionTextClass = useDynamicTextSize(questionTextValue, 'question');
   const answerTextClass = useDynamicTextSize(answerTextValue, 'answer');
 

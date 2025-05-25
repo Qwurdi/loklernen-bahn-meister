@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Download, FileText, Eye } from 'lucide-react';
 import { QuestionCategory, RegulationCategory } from '@/types/questions';
 import { useQuestions } from '@/hooks/useQuestions';
-import { generateFlashcardPDF } from '../utils/pdf-generator';
+import { generateFlashcardPDF } from '../utils/pdf';
 import { toast } from 'sonner';
 
 export const ExportPage: React.FC = () => {

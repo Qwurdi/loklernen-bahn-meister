@@ -29,7 +29,9 @@ const MARGINS = {
 // Content area margins from card edge
 const CONTENT_MARGINS = {
   x: (CARD_SIZE.width - CARD_SIZE.contentWidth) / 2 + MARGINS.x,
-  y: (CARD_SIZE.height - CARD_SIZE.contentHeight) / 2 + MARGINS.y
+  y: (CARD_SIZE.height - CARD_SIZE.contentHeight) / 2 + MARGINS.y,
+  width: CARD_SIZE.contentWidth,
+  height: CARD_SIZE.contentHeight
 };
 
 export async function generateFlashcardPDF(questions: Question[], options: ExportOptions) {

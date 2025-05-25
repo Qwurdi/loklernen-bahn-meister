@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { useAdminStore } from '../store/admin-store';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search, Filter, FileText } from 'lucide-react';
 
 export const QuestionsPage2: React.FC = () => {
   const { 

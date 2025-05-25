@@ -33,7 +33,7 @@ export interface Question extends AdminEntity {
 
 export interface Category extends AdminEntity {
   name: string;
-  parent_category?: QuestionCategory;
+  parent_category: string;
   description?: string;
   icon?: string;
   color?: string;

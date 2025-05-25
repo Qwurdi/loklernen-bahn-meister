@@ -1,16 +1,15 @@
 
 import { AdminCommand, AdminState, AdminActions } from '../types';
 import { AdminService } from '../services/admin-service';
-import { useNotification } from '@/hooks/useNotification';
+import { toast } from 'sonner';
 
 export class CommandDispatcher {
   private get: () => AdminState & AdminActions;
-  private set: (state: Partial<AdminState>) => void;
-  private notifications = useNotification();
+  private set: (partial: Partial<AdminState> | ((state: AdminState & AdminActions) => Partial<AdminState>)) => void;
 
   constructor(
     get: () => AdminState & AdminActions,
-    set: (state: Partial<AdminState>) => void
+    set: (partial: Partial<AdminState> | ((state: AdminState & AdminActions) => Partial<AdminState>)) => void
   ) {
     this.get = get;
     this.set = set;
@@ -24,7 +23,7 @@ export class CommandDispatcher {
     
     try {
       // Add to command history
-      this.set(state => ({
+      this.set((state) => ({
         commandHistory: [...state.commandHistory, command],
         redoStack: [] // Clear redo stack when new command is executed
       }));
@@ -64,14 +63,14 @@ export class CommandDispatcher {
 
       // Add to undo stack if command is undoable
       if (this.isUndoableCommand(type)) {
-        this.set(state => ({
+        this.set((state) => ({
           undoStack: [...state.undoStack, command]
         }));
       }
 
       // Show success notification if not silent
       if (!meta?.silent) {
-        this.notifications.success(this.getSuccessMessage(type));
+        toast.success(this.getSuccessMessage(type));
       }
 
       // Execute success callback
@@ -82,13 +81,13 @@ export class CommandDispatcher {
       
       // Show error notification
       const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
-      this.notifications.error(`Fehler: ${errorMessage}`);
+      toast.error(`Fehler: ${errorMessage}`);
       
       // Execute error callback
       meta?.onError?.(error as Error);
       
       // Remove failed command from history
-      this.set(state => ({
+      this.set((state) => ({
         commandHistory: state.commandHistory.slice(0, -1)
       }));
       
@@ -106,21 +105,21 @@ export class CommandDispatcher {
 
   private async handleQuestionCreate(payload: any) {
     const question = await AdminService.questions.create(payload);
-    this.set(state => ({
+    this.set((state) => ({
       questions: { ...state.questions, [question.id]: question }
     }));
   }
 
   private async handleQuestionUpdate(payload: { id: string; data: any }) {
     const question = await AdminService.questions.update(payload.id, payload.data);
-    this.set(state => ({
+    this.set((state) => ({
       questions: { ...state.questions, [question.id]: question }
     }));
   }
 
   private async handleQuestionDelete(payload: { id: string }) {
     await AdminService.questions.delete(payload.id);
-    this.set(state => {
+    this.set((state) => {
       const { [payload.id]: deleted, ...rest } = state.questions;
       return { questions: rest };
     });
@@ -128,14 +127,14 @@ export class CommandDispatcher {
 
   private async handleQuestionDuplicate(payload: { id: string }) {
     const question = await AdminService.questions.duplicate(payload.id);
-    this.set(state => ({
+    this.set((state) => ({
       questions: { ...state.questions, [question.id]: question }
     }));
   }
 
   private async handleQuestionsBulkDelete(payload: { ids: string[] }) {
     await AdminService.questions.bulkDelete(payload.ids);
-    this.set(state => {
+    this.set((state) => {
       const newQuestions = { ...state.questions };
       payload.ids.forEach(id => delete newQuestions[id]);
       return { questions: newQuestions };
@@ -144,21 +143,21 @@ export class CommandDispatcher {
 
   private async handleCategoryCreate(payload: any) {
     const category = await AdminService.categories.create(payload);
-    this.set(state => ({
+    this.set((state) => ({
       categories: { ...state.categories, [category.id]: category }
     }));
   }
 
   private async handleCategoryUpdate(payload: { id: string; data: any }) {
     const category = await AdminService.categories.update(payload.id, payload.data);
-    this.set(state => ({
+    this.set((state) => ({
       categories: { ...state.categories, [category.id]: category }
     }));
   }
 
   private async handleCategoryDelete(payload: { id: string }) {
     await AdminService.categories.delete(payload.id);
-    this.set(state => {
+    this.set((state) => {
       const { [payload.id]: deleted, ...rest } = state.categories;
       return { categories: rest };
     });

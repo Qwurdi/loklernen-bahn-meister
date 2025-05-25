@@ -2,6 +2,7 @@
 import { jsPDF } from 'jspdf';
 import { Question, RegulationCategory } from '@/types/questions';
 import { getTextValue } from '@/types/rich-text';
+import { CONTENT_MARGINS } from './constants';
 import { drawCardOutline, drawCutMarks } from './card-layout';
 import { 
   drawLogo, 

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useAdminStore } from '../../store/admin-store';
 import { CommandDialog, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
 import { Search, Plus, FileText, Settings, Home, Database } from 'lucide-react';
+import { getDisplayText } from '../../utils/content-renderer';
 
 export const AdminCommandPalette: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -35,9 +36,9 @@ export const AdminCommandPalette: React.FC = () => {
   const questionsList = Object.values(questions);
   const categoriesList = Object.values(categories);
 
-  // Filter questions and categories based on search
+  // Filter questions and categories based on search - using getDisplayText for type safety
   const filteredQuestions = questionsList.filter(q => 
-    q.text.toLowerCase().includes(query.toLowerCase()) ||
+    getDisplayText(q.text).toLowerCase().includes(query.toLowerCase()) ||
     q.category.toLowerCase().includes(query.toLowerCase()) ||
     q.sub_category.toLowerCase().includes(query.toLowerCase())
   ).slice(0, 5);
@@ -109,7 +110,7 @@ export const AdminCommandPalette: React.FC = () => {
                 <FileText className="mr-2 h-4 w-4" />
                 <div className="flex flex-col">
                   <span className="font-medium truncate max-w-[300px]">
-                    {typeof question.text === 'string' ? question.text.slice(0, 60) : 'Frage'}
+                    {getDisplayText(question.text).slice(0, 60)}
                   </span>
                   <span className="text-xs text-gray-500">
                     {question.category} / {question.sub_category}

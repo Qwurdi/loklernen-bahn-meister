@@ -3,7 +3,7 @@ import { ImageDimensions, LoadedImage } from './types';
 import { CONTENT_MARGINS } from './constants';
 
 /**
- * Lädt ein Bild von einer URL und konvertiert es zu Base64
+ * Lädt ein Bild von einer URL und konvertiert es zu Base64 mit verbesserter Qualität
  */
 export async function loadImageFromUrl(url: string): Promise<LoadedImage> {
   try {
@@ -27,9 +27,14 @@ export async function loadImageFromUrl(url: string): Promise<LoadedImage> {
         
         canvas.width = img.naturalWidth;
         canvas.height = img.naturalHeight;
+        
+        // Improved image quality settings
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0);
         
-        const base64Data = canvas.toDataURL('image/jpeg', 0.8);
+        // Higher quality JPEG for better print results
+        const base64Data = canvas.toDataURL('image/jpeg', 0.92);
         
         resolve({
           data: base64Data,
@@ -77,7 +82,7 @@ export function calculateImageDimensions(
 }
 
 /**
- * Berechnet verfügbaren Platz für Bilder basierend auf Textinhalt
+ * Berechnet verfügbaren Platz für Bilder basierend auf Textinhalt (Frageseite)
  */
 export function calculateAvailableImageSpace(hasText: boolean): {
   width: number;
@@ -90,15 +95,32 @@ export function calculateAvailableImageSpace(hasText: boolean): {
     // Wenn Text vorhanden ist, reserviere Platz dafür
     return {
       width: maxWidth,
-      height: 30, // 30mm für Bild, Rest für Text
-      startY: CONTENT_MARGINS.y + 15
+      height: 32, // Etwas mehr Platz für bessere Bildqualität
+      startY: CONTENT_MARGINS.y + 12
     };
   } else {
     // Ohne Text kann das Bild mehr Platz nutzen
     return {
       width: maxWidth,
-      height: 50, // 50mm für Bild
-      startY: CONTENT_MARGINS.y + 15
+      height: 55, // Größerer Bildbereich ohne Text
+      startY: CONTENT_MARGINS.y + 12
     };
   }
+}
+
+/**
+ * Berechnet verfügbaren Platz für Bilder auf der Antwortseite
+ */
+export function calculateAnswerImageSpace(): {
+  width: number;
+  height: number;
+  maxHeight: number;
+} {
+  const maxWidth = CONTENT_MARGINS.width - 6; // Etwas weniger Breite für bessere Proportionen
+  
+  return {
+    width: maxWidth,
+    height: 25, // Kompakte Höhe für Antwortseite
+    maxHeight: 25
+  };
 }

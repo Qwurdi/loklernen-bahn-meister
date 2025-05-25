@@ -9,7 +9,8 @@ import {
   drawQuestionText, 
   drawSubcategory, 
   drawAnswers, 
-  drawHint 
+  drawHint,
+  drawQuestionImage
 } from './card-content';
 
 export async function generateCardFront(pdf: jsPDF, question: Question, regulation: RegulationCategory) {
@@ -25,9 +26,25 @@ export async function generateCardFront(pdf: jsPDF, question: Question, regulati
   // Add regulation badge
   drawRegulationBadge(pdf, question.regulation_category || regulation);
   
-  // Add question text
   const questionText = getTextValue(question.text);
-  drawQuestionText(pdf, questionText);
+  
+  // Handle image if present
+  if (question.image_url) {
+    try {
+      // Draw image first and get the Y position after it
+      const nextY = await drawQuestionImage(pdf, question.image_url);
+      
+      // Draw question text after the image
+      await drawQuestionText(pdf, questionText, nextY);
+    } catch (error) {
+      console.error('Error loading image for question:', question.id, error);
+      // Fallback: draw text normally if image fails
+      await drawQuestionText(pdf, questionText);
+    }
+  } else {
+    // No image, draw text normally
+    await drawQuestionText(pdf, questionText);
+  }
   
   // Add subcategory
   drawSubcategory(pdf, question.sub_category);

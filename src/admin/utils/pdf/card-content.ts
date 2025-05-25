@@ -3,6 +3,8 @@ import { jsPDF } from 'jspdf';
 import { Question, RegulationCategory } from '@/types/questions';
 import { getTextValue } from '@/types/rich-text';
 import { CONTENT_MARGINS } from './constants';
+import { loadImageFromUrl, calculateImageDimensions, calculateAvailableImageSpace } from './image-utils';
+import { LoadedImage } from './types';
 
 export function drawLogo(pdf: jsPDF, side: 'front' | 'back') {
   pdf.setFontSize(8);
@@ -41,19 +43,66 @@ export function drawRegulationBadge(pdf: jsPDF, regulation?: RegulationCategory)
   pdf.text(regulation, badgeX + 2, badgeY + 4);
 }
 
-export function drawQuestionText(pdf: jsPDF, text: string) {
+export async function drawQuestionImage(pdf: jsPDF, imageUrl: string): Promise<number> {
+  try {
+    const loadedImage = await loadImageFromUrl(imageUrl);
+    const imageSpace = calculateAvailableImageSpace(true);
+    
+    const imageDimensions = calculateImageDimensions(
+      loadedImage.originalWidth,
+      loadedImage.originalHeight,
+      imageSpace.width,
+      imageSpace.height,
+      CONTENT_MARGINS.x + 2,
+      imageSpace.startY
+    );
+    
+    pdf.addImage(
+      loadedImage.data,
+      'JPEG',
+      imageDimensions.x,
+      imageDimensions.y,
+      imageDimensions.width,
+      imageDimensions.height
+    );
+    
+    // Gib die Höhe zurück, die das Bild belegt hat (für Layout-Anpassungen)
+    return imageDimensions.y + imageDimensions.height + 5; // +5mm Abstand
+  } catch (error) {
+    console.error('Error drawing image:', error);
+    // Zeichne einen Platzhalter bei Bildfehlern
+    pdf.setDrawColor(200, 200, 200);
+    pdf.setFillColor(245, 245, 245);
+    const imageSpace = calculateAvailableImageSpace(true);
+    pdf.roundedRect(
+      CONTENT_MARGINS.x + 2,
+      imageSpace.startY,
+      imageSpace.width,
+      20,
+      2, 2, 'FD'
+    );
+    
+    pdf.setFontSize(8);
+    pdf.setTextColor(150, 150, 150);
+    pdf.text('Bild konnte nicht geladen werden', CONTENT_MARGINS.x + 4, imageSpace.startY + 12);
+    
+    return imageSpace.startY + 25; // Platzhalter-Höhe + Abstand
+  }
+}
+
+export async function drawQuestionText(pdf: jsPDF, text: string, startY?: number) {
   pdf.setFontSize(10);
   pdf.setFont('helvetica', 'normal');
   pdf.setTextColor(0, 0, 0);
   
   const maxWidth = CONTENT_MARGINS.width - 4;
-  const startY = CONTENT_MARGINS.y + 15;
+  const textStartY = startY || CONTENT_MARGINS.y + 15;
   
   // Split text into lines that fit
   const lines = pdf.splitTextToSize(text, maxWidth);
   
   // Draw text with proper line spacing
-  pdf.text(lines, CONTENT_MARGINS.x + 2, startY);
+  pdf.text(lines, CONTENT_MARGINS.x + 2, textStartY);
 }
 
 export function drawSubcategory(pdf: jsPDF, subcategory: string) {

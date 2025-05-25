@@ -26,3 +26,16 @@ export interface ContentMargins extends Margins {
   width: number;
   height: number;
 }
+
+export interface ImageDimensions {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface LoadedImage {
+  data: string;
+  originalWidth: number;
+  originalHeight: number;
+}

@@ -23,14 +23,19 @@ export async function generateFlashcardPDF(questions: Question[], options: Expor
       pdf.addPage();
     }
 
-    // Generate front side (question)
-    await generateCardFront(pdf, question, options.regulation);
-    
-    // Add new page for back side
-    pdf.addPage();
-    
-    // Generate back side (answer)
-    await generateCardBack(pdf, question, options.regulation);
+    try {
+      // Generate front side (question) - now async for image support
+      await generateCardFront(pdf, question, options.regulation);
+      
+      // Add new page for back side
+      pdf.addPage();
+      
+      // Generate back side (answer)
+      await generateCardBack(pdf, question, options.regulation);
+    } catch (error) {
+      console.error(`Error generating card ${i + 1}:`, error);
+      // Continue with next card even if one fails
+    }
   }
 
   // Download the PDF

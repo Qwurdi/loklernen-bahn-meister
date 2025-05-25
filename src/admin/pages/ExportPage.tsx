@@ -29,6 +29,12 @@ export const ExportPage: React.FC = () => {
 
     setIsGenerating(true);
     try {
+      // Check if any questions have images
+      const questionsWithImages = filteredQuestions.filter(q => q.image_url);
+      if (questionsWithImages.length > 0) {
+        toast.info(`Exportiere ${filteredQuestions.length} Karten mit ${questionsWithImages.length} Bildern...`);
+      }
+
       await generateFlashcardPDF(filteredQuestions, {
         category,
         regulation: regulation as RegulationCategory,

@@ -39,6 +39,47 @@ export async function createQuestion(question: CreateQuestionDTO) {
 }
 
 /**
+ * Updates an existing question
+ */
+export async function updateQuestion(id: string, updates: Partial<Question>) {
+  const processedUpdates: any = { ...updates };
+  
+  if (updates.text) {
+    processedUpdates.text = prepareContentForStorage(updates.text);
+  }
+  
+  if (updates.hint) {
+    processedUpdates.hint = prepareContentForStorage(updates.hint);
+  }
+  
+  if (updates.answers) {
+    processedUpdates.answers = updates.answers.map(prepareAnswerForStorage);
+  }
+
+  const { data, error } = await supabase
+    .from('questions')
+    .update(processedUpdates)
+    .eq('id', id)
+    .select()
+    .single();
+    
+  if (error) throw error;
+  return transformQuestion(data);
+}
+
+/**
+ * Deletes a question
+ */
+export async function deleteQuestion(id: string) {
+  const { error } = await supabase
+    .from('questions')
+    .delete()
+    .eq('id', id);
+    
+  if (error) throw error;
+}
+
+/**
  * Duplicates a question
  */
 export async function duplicateQuestion(originalQuestion: Question): Promise<Question> {

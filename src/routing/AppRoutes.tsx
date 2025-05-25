@@ -1,3 +1,4 @@
+
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "@/pages/Index";
@@ -14,8 +15,7 @@ import SettingsPage from "@/pages/SettingsPage";
 import NotFound from "@/pages/NotFound";
 import RegulationSelectionPage from "@/pages/RegulationSelectionPage";
 import { ProtectedRoute } from "./ProtectedRoute";
-import { adminRoutes } from "./routes/admin-routes";
-import { adminRoutes2 } from "../admin-2.0/routes/admin-routes-2.0";
+import { newAdminRoutes } from "../admin/routes/admin-routes";
 import { authRoutes } from "./routes/auth-routes";
 
 const AppRoutes: React.FC = () => {
@@ -43,11 +43,8 @@ const AppRoutes: React.FC = () => {
         <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
         <Route path="/regulation-selection" element={<ProtectedRoute><RegulationSelectionPage /></ProtectedRoute>} />
         
-        {/* Legacy Admin routes */}
-        {adminRoutes}
-        
-        {/* Admin 2.0 routes */}
-        {adminRoutes2}
+        {/* Clean Admin routes */}
+        {newAdminRoutes}
         
         {/* Catch all */}
         <Route path="*" element={<NotFound />} />

@@ -1,8 +1,7 @@
 
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { UserPreferencesProvider } from "@/contexts/UserPreferencesContext";
 import AppRoutes from "@/routing/AppRoutes";
@@ -32,7 +31,6 @@ const App: React.FC = () => {
           <TooltipProvider delayDuration={300}>
             <AppRoutes />
             <Toaster />
-            <Sonner />
           </TooltipProvider>
         </UserPreferencesProvider>
       </AuthProvider>

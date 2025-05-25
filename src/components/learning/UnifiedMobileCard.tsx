@@ -5,12 +5,13 @@ import { Lightbulb, Check, X } from 'lucide-react';
 import { useDynamicTextSize } from '@/hooks/useDynamicTextSize';
 import { getTextValue } from '@/types/rich-text';
 import { useCardState } from '@/hooks/learning/useCardState';
-import { useCardSwipe } from '@/components/learning/swipe/useCardSwipe';
+import { useEnhancedCardSwipe } from '@/components/flashcards/mobile/swipe/useEnhancedCardSwipe';
 import SwipeIndicator from '@/components/flashcards/mobile/SwipeIndicator';
 import AdaptiveImage from './AdaptiveImage';
 import ExpandableText from './ExpandableText';
 import EnhancedMobileMultipleChoice from './EnhancedMobileMultipleChoice';
 import HintButton from '@/components/flashcards/HintButton';
+import { EnhancedButton } from '@/components/ui/enhanced-button';
 
 interface UnifiedMobileCardProps {
   question: Question;
@@ -25,14 +26,15 @@ export default function UnifiedMobileCard({ question, onAnswer }: UnifiedMobileC
     onAnswerSubmitted: () => {} // No automatic next here
   });
 
-  // Swipe functionality for non-MC questions
+  // Enhanced swipe functionality
   const { 
     cardRef, 
     swipeState, 
     handlers, 
     getCardStyle, 
-    getCardClasses 
-  } = useCardSwipe({
+    getCardClasses,
+    handleCardTap
+  } = useEnhancedCardSwipe({
     onSwipeLeft: () => handleAnswer(1),
     onSwipeRight: () => handleAnswer(5),
     onShowAnswer: showAnswer,
@@ -50,14 +52,6 @@ export default function UnifiedMobileCard({ question, onAnswer }: UnifiedMobileC
     handleAnswer(isCorrect ? 5 : 1);
   }
 
-  // Handle background clicks only (not on interactive elements)
-  function handleBackgroundClick(e: React.MouseEvent) {
-    // Only flip card if clicking on background and not already flipped
-    if (!isFlipped && e.target === e.currentTarget) {
-      showAnswer();
-    }
-  }
-
   // Text sizing for dynamic content
   const questionTextValue = getTextValue(question.text);
   const questionTextClass = useDynamicTextSize(questionTextValue, 'question');
@@ -69,17 +63,20 @@ export default function UnifiedMobileCard({ question, onAnswer }: UnifiedMobileC
     <div className="h-full w-full touch-none">
       <div 
         ref={cardRef}
-        className={`w-full h-full bg-white rounded-xl shadow-lg relative overflow-hidden ${getCardClasses()}`}
+        className={`w-full h-full bg-white rounded-xl shadow-lg relative overflow-hidden transition-all duration-200 ${getCardClasses()}`}
         style={getCardStyle()}
-        onClick={handleBackgroundClick}
+        onClick={!isFlipped ? handleCardTap : undefined}
         onTouchStart={isFlipped && swipeEnabled ? handlers.handleTouchStart : undefined}
         onTouchMove={isFlipped && swipeEnabled ? handlers.handleTouchMove : undefined}
         onTouchEnd={isFlipped && swipeEnabled ? handlers.handleTouchEnd : undefined}
       >
+        {/* Feedback overlay */}
+        <div className="feedback-overlay absolute inset-0 opacity-0 transition-opacity duration-200 pointer-events-none rounded-xl" />
+        
         {!isFlipped ? (
           // Question Side
           <div className="flex flex-col h-full p-4">
-            <div className="bg-blue-50 px-3 py-1 rounded-full text-xs text-blue-600 self-start mb-3">
+            <div className="bg-blue-50 px-3 py-1 rounded-full text-xs text-blue-600 self-start mb-3 transition-all duration-200">
               {isMultipleChoice ? "Multiple Choice" : "Signal"}
             </div>
             
@@ -97,7 +94,7 @@ export default function UnifiedMobileCard({ question, onAnswer }: UnifiedMobileC
                   alt="Signal"
                   maxHeight={400}
                   miniatureThreshold={200}
-                  className="max-w-full h-full"
+                  className="max-w-full h-full transition-transform duration-300"
                 />
               </div>
             )}
@@ -110,12 +107,15 @@ export default function UnifiedMobileCard({ question, onAnswer }: UnifiedMobileC
                 minimal={true}
               />
               
-              <div className="text-center text-sm text-gray-500">
+              <div className="text-center text-sm text-gray-500 animate-pulse">
                 Tippe auf die Karte, um die Antwort zu sehen
               </div>
               
-              <button 
-                className="w-full py-3 bg-gradient-to-r from-loklernen-ultramarine to-blue-600 text-white rounded-lg flex items-center justify-center shadow-md transition-transform active:scale-98"
+              <EnhancedButton 
+                className="w-full py-3 bg-gradient-to-r from-loklernen-ultramarine to-blue-600 text-white rounded-lg flex items-center justify-center shadow-md"
+                hapticType="medium"
+                visualFeedback={true}
+                springAnimation={true}
                 onClick={(e) => {
                   e.stopPropagation();
                   showAnswer();
@@ -123,13 +123,13 @@ export default function UnifiedMobileCard({ question, onAnswer }: UnifiedMobileC
               >
                 <Lightbulb className="h-4 w-4 mr-2" />
                 {isMultipleChoice ? "Optionen anzeigen" : "Signal anzeigen"}
-              </button>
+              </EnhancedButton>
             </div>
           </div>
         ) : (
           // Answer Side
           <div className="flex flex-col h-full p-4">
-            <div className="bg-blue-50 px-3 py-1 rounded-full text-xs text-blue-600 self-start mb-3">
+            <div className="bg-blue-50 px-3 py-1 rounded-full text-xs text-blue-600 self-start mb-3 transition-all duration-200">
               {isMultipleChoice ? "Wähle die richtige Antwort" : "Antwort"}
             </div>
             
@@ -142,7 +142,7 @@ export default function UnifiedMobileCard({ question, onAnswer }: UnifiedMobileC
               </div>
             ) : (
               <>
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-4 flex-shrink-0">
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-4 flex-shrink-0 transition-all duration-300">
                   <ExpandableText 
                     content={answerTextValue}
                     textSizeClass={`${answerTextClass} font-bold text-blue-800`}
@@ -157,7 +157,7 @@ export default function UnifiedMobileCard({ question, onAnswer }: UnifiedMobileC
                       alt="Signal"
                       maxHeight={300}
                       miniatureThreshold={150}
-                      className="max-w-full h-full"
+                      className="max-w-full h-full transition-transform duration-300"
                       showOnAnswerSide={true}
                     />
                   </div>
@@ -165,31 +165,33 @@ export default function UnifiedMobileCard({ question, onAnswer }: UnifiedMobileC
 
                 {!isAnswered && (
                   <div className="flex gap-4 flex-shrink-0">
-                    <button 
+                    <EnhancedButton 
                       onClick={(e) => {
                         e.stopPropagation();
                         handleAnswer(1);
                       }}
-                      className="flex-1 py-3 bg-white border-2 border-red-200 text-red-700 rounded-lg font-medium flex items-center justify-center transition-colors active:bg-red-50"
+                      hapticType="error"
+                      className="flex-1 py-3 bg-white border-2 border-red-200 text-red-700 rounded-lg font-medium flex items-center justify-center"
                     >
                       <X className="h-5 w-5 mr-2" />
                       Nicht gewusst
-                    </button>
-                    <button 
+                    </EnhancedButton>
+                    <EnhancedButton 
                       onClick={(e) => {
                         e.stopPropagation();
                         handleAnswer(5);
                       }}
-                      className="flex-1 py-3 bg-green-600 text-white rounded-lg font-medium flex items-center justify-center transition-colors active:bg-green-700"
+                      hapticType="success"
+                      className="flex-1 py-3 bg-green-600 text-white rounded-lg font-medium flex items-center justify-center"
                     >
                       <Check className="h-5 w-5 mr-2" />
                       Gewusst
-                    </button>
+                    </EnhancedButton>
                   </div>
                 )}
 
                 {!isAnswered && !isMultipleChoice && swipeEnabled && (
-                  <div className="text-center text-xs text-gray-500 mt-2">
+                  <div className="text-center text-xs text-gray-500 mt-2 animate-pulse">
                     Oder wische links/rechts
                   </div>
                 )}
@@ -199,7 +201,7 @@ export default function UnifiedMobileCard({ question, onAnswer }: UnifiedMobileC
         )}
       </div>
 
-      {/* Swipe indicator for non-MC questions */}
+      {/* Enhanced swipe indicator */}
       {isFlipped && !isMultipleChoice && swipeEnabled && (
         <SwipeIndicator 
           dragDelta={swipeState.dragDelta} 
@@ -207,9 +209,9 @@ export default function UnifiedMobileCard({ question, onAnswer }: UnifiedMobileC
         />
       )}
       
-      {/* Swipe availability hint */}
+      {/* Swipe availability hint with animation */}
       {isFlipped && !isMultipleChoice && !swipeEnabled && !isAnswered && (
-        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-3 py-2 rounded-lg text-sm">
+        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-3 py-2 rounded-lg text-sm animate-pulse">
           Wische in 1 Sekunde verfügbar
         </div>
       )}

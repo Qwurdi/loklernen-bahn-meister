@@ -1,105 +1,88 @@
 
-// Admin Panel 2.0 - Core Types
+// Core types for Admin Panel 2.0
 
-// Import base types from existing questions module
-import { QuestionCategory, QuestionType, RegulationCategory } from '@/types/questions';
-import { StructuredContent } from '@/types/rich-text';
+export interface Question {
+  id: string;
+  text: string | StructuredContent;
+  category: string;
+  sub_category: string;
+  question_type: 'open' | 'MC_single' | 'MC_multi';
+  difficulty: number;
+  answers: Array<{
+    text: string;
+    is_correct: boolean;
+    explanation?: string;
+  }>;
+  image_url?: string;
+  hint?: string;
+  created_by: string;
+  revision: number;
+  created_at?: string;
+  updated_at?: string;
+  regulation_category?: string;
+  status?: string;
+  content_version?: string;
+}
 
-export interface AdminCommand<T = any> {
+export interface Category {
+  id: string;
+  name: string;
+  description?: string;
+  parent_category: string;
+  icon?: string;
+  color?: string;
+  isPro: boolean;
+  isPlanned: boolean;
+  requiresAuth?: boolean;
+  content_type?: string;
+  path?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface StructuredContent {
+  type: 'structured';
+  content: Array<{
+    type: 'text' | 'image' | 'list';
+    value: string;
+    attributes?: Record<string, any>;
+  }>;
+}
+
+// Command System Types
+export interface AdminCommand {
   type: string;
-  payload?: T;
+  payload: any;
   meta?: {
-    optimistic?: boolean;
-    silent?: boolean;
-    onSuccess?: () => void;
+    onSuccess?: (result?: any) => void;
     onError?: (error: Error) => void;
+    optimistic?: boolean;
   };
 }
 
-export interface AdminEntity {
-  id: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Answer {
-  text: string | StructuredContent;
-  isCorrect: boolean;
-}
-
-export interface Question extends AdminEntity {
-  category: QuestionCategory;
-  sub_category: string;
-  question_type: QuestionType;
-  difficulty: number;
-  text: string | StructuredContent;
-  hint?: string | StructuredContent;
-  image_url?: string;
-  answers: Answer[];
-  regulation_category?: RegulationCategory;
-  created_by: string;
-  revision: number;
-}
-
-// Category type aligned with database schema
-export interface Category extends AdminEntity {
-  name: string;
-  parent_category: string;
-  description?: string;
-  icon?: string;
-  color?: string;
-  // Database fields mapped to our interface
-  sort_order: number;
-  is_active: boolean;
-  requires_auth: boolean;
-  // Additional database fields
-  isPro?: boolean;
-  isPlanned?: boolean;
-  content_type?: string;
-  path?: string;
-}
-
 export interface AdminState {
-  // Entity stores
   questions: Record<string, Question>;
   categories: Record<string, Category>;
-  
-  // UI state
   selectedEntity: string | null;
   selectedEntityType: 'question' | 'category' | null;
+  searchQuery: string;
   isLoading: boolean;
   commandInProgress: boolean;
-  
-  // Search & filters
-  searchQuery: string;
-  activeFilters: Record<string, any>;
-  
-  // Command history
-  commandHistory: AdminCommand[];
-  undoStack: AdminCommand[];
-  redoStack: AdminCommand[];
+  lastError: string | null;
 }
 
-export interface AdminActions {
-  // Command system
-  execute: (command: AdminCommand) => Promise<void>;
-  undo: () => void;
-  redo: () => void;
-  
-  // Entity operations
-  selectEntity: (id: string, type: 'question' | 'category') => void;
-  clearSelection: () => void;
-  
-  // Search & filters
-  setSearch: (query: string) => void;
-  setFilter: (key: string, value: any) => void;
-  clearFilters: () => void;
-  
-  // Data operations
-  loadQuestions: () => Promise<void>;
-  loadCategories: () => Promise<void>;
-  invalidateCache: () => void;
+// UI Component Types
+export interface TableAction {
+  label: string;
+  icon: React.ComponentType<{ size?: number }>;
+  onClick: (id: string) => void;
+  variant?: 'default' | 'destructive';
 }
 
-// Re-export types for convenience
-export type { QuestionCategory, QuestionType, RegulationCategory, StructuredContent };
+export interface QuestionTableProps {
+  questions: Question[];
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+  onDuplicate: (id: string) => void;
+  loading?: boolean;
+}

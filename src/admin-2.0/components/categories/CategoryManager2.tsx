@@ -1,270 +1,167 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useAdminStore } from '../../store/admin-store';
-import { Category } from '../../types';
-import { Card } from '@/components/ui/card';
+import { useToastSystem } from '../../hooks/useToastSystem';
+import { ToastContainer } from '../ui/VisualFeedback';
+import { Plus, FolderTree, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Plus, Edit, Trash2, Save, X, FolderTree } from 'lucide-react';
 
 export const CategoryManager2: React.FC = () => {
-  const { categories, loadCategories, execute } = useAdminStore();
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    parent_category: '',
-    description: '',
-    icon: '',
-    color: ''
-  });
-
+  const { 
+    categories, 
+    loadCategories, 
+    isLoading,
+    execute
+  } = useAdminStore();
+  
+  const { toasts, toast } = useToastSystem();
+  
   useEffect(() => {
     loadCategories();
   }, [loadCategories]);
-
+  
   const categoriesList = Object.values(categories);
-
-  const handleCreate = async () => {
-    await execute({
-      type: 'CATEGORY_CREATE',
-      payload: {
-        ...formData,
-        sort_order: categoriesList.length,
-        is_active: true,
-        requires_auth: false
-      }
-    });
-    
-    setShowCreateForm(false);
-    setFormData({ name: '', parent_category: '', description: '', icon: '', color: '' });
-  };
-
-  const handleUpdate = async (id: string) => {
-    await execute({
-      type: 'CATEGORY_UPDATE',
-      payload: { id, data: formData }
-    });
-    
-    setEditingId(null);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (confirm('Sind Sie sicher, dass Sie diese Kategorie löschen möchten?')) {
+  
+  const handleCreateCategory = async () => {
+    try {
       await execute({
-        type: 'CATEGORY_DELETE',
-        payload: { id }
+        type: 'CATEGORY_CREATE',
+        payload: {
+          name: 'Neue Kategorie',
+          description: 'Beschreibung der neuen Kategorie',
+          parent_category: 'Signale',
+          isPro: false,
+          isPlanned: false
+        },
+        meta: {
+          onSuccess: () => {
+            toast.success('Kategorie erstellt', 'Die neue Kategorie wurde erfolgreich erstellt');
+          },
+          onError: (error) => {
+            toast.error('Fehler beim Erstellen', error.message);
+          }
+        }
       });
+    } catch (error) {
+      toast.error('Fehler', 'Unerwarteter Fehler beim Erstellen der Kategorie');
     }
   };
-
-  const startEdit = (category: Category) => {
-    setEditingId(category.id);
-    setFormData({
-      name: category.name,
-      parent_category: category.parent_category,
-      description: category.description || '',
-      icon: category.icon || '',
-      color: category.color || ''
-    });
-  };
-
+  
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Kategorien verwalten</h1>
-          <p className="text-gray-600">Organisieren Sie Ihre Fragenkategorien</p>
+          <h1 className="text-3xl font-bold text-gray-900">Kategorien verwalten</h1>
+          <p className="text-gray-600 mt-1">
+            Organisieren Sie die Struktur Ihrer Lernkategorien
+          </p>
         </div>
         
         <Button
-          onClick={() => setShowCreateForm(true)}
-          className="flex items-center gap-2 bg-gradient-to-r from-[#3F00FF] to-[#0F52BA]"
+          onClick={handleCreateCategory}
+          className="flex items-center gap-2 bg-gradient-to-r from-[#3F00FF] to-[#0F52BA] text-white hover:shadow-lg transition-all"
+          disabled={isLoading}
         >
           <Plus size={16} />
           Neue Kategorie
         </Button>
       </div>
 
-      {/* Create Form */}
-      {showCreateForm && (
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium">Neue Kategorie erstellen</h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowCreateForm(false)}
-            >
-              <X size={16} />
-            </Button>
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
+          <div className="text-2xl font-bold text-gray-900">{categoriesList.length}</div>
+          <div className="text-sm text-gray-600">Gesamt Kategorien</div>
+        </div>
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
+          <div className="text-2xl font-bold text-blue-600">
+            {categoriesList.filter(c => c.parent_category === 'Signale').length}
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              placeholder="Name"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-            />
-            
-            <Input
-              placeholder="Übergeordnete Kategorie"
-              value={formData.parent_category}
-              onChange={(e) => setFormData(prev => ({ ...prev, parent_category: e.target.value }))}
-            />
-            
-            <Input
-              placeholder="Icon (z.B. signal)"
-              value={formData.icon}
-              onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
-            />
-            
-            <Input
-              placeholder="Farbe (z.B. #3F00FF)"
-              value={formData.color}
-              onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
-            />
-            
-            <div className="md:col-span-2">
-              <Textarea
-                placeholder="Beschreibung"
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                rows={3}
-              />
-            </div>
+          <div className="text-sm text-gray-600">Signal-Kategorien</div>
+        </div>
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
+          <div className="text-2xl font-bold text-green-600">
+            {categoriesList.filter(c => c.parent_category === 'Betriebsdienst').length}
           </div>
-          
-          <div className="flex justify-end gap-2 mt-4">
-            <Button
-              variant="outline"
-              onClick={() => setShowCreateForm(false)}
-            >
-              Abbrechen
-            </Button>
-            <Button onClick={handleCreate}>
-              <Save size={16} className="mr-2" />
-              Erstellen
-            </Button>
-          </div>
-        </Card>
-      )}
-
+          <div className="text-sm text-gray-600">Betriebsdienst-Kategorien</div>
+        </div>
+      </div>
+      
       {/* Categories List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {categoriesList.map((category) => (
-          <Card key={category.id} className="p-6">
-            {editingId === category.id ? (
-              // Edit Mode
-              <div className="space-y-4">
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Name"
-                />
-                
-                <Input
-                  value={formData.parent_category}
-                  onChange={(e) => setFormData(prev => ({ ...prev, parent_category: e.target.value }))}
-                  placeholder="Übergeordnete Kategorie"
-                />
-                
-                <Textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Beschreibung"
-                  rows={2}
-                />
-                
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setEditingId(null)}
-                  >
-                    <X size={14} />
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => handleUpdate(category.id)}
-                  >
-                    <Save size={14} />
-                  </Button>
+      <div className="bg-white rounded-lg border border-gray-200">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <FolderTree size={20} />
+            Kategorien Übersicht
+          </h2>
+        </div>
+        
+        <div className="p-6">
+          {isLoading ? (
+            <div className="space-y-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-16 bg-gray-200 rounded-lg"></div>
                 </div>
+              ))}
+            </div>
+          ) : categoriesList.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-gray-400 mb-4">
+                <FolderTree size={48} className="mx-auto" />
               </div>
-            ) : (
-              // View Mode
-              <div>
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    {category.icon ? (
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#3F00FF] to-[#0F52BA] flex items-center justify-center text-white text-sm">
-                        {category.icon.slice(0, 2).toUpperCase()}
-                      </div>
-                    ) : (
-                      <FolderTree size={20} className="text-gray-400" />
-                    )}
-                    <div>
-                      <h3 className="font-medium text-gray-900">{category.name}</h3>
-                      <p className="text-sm text-gray-500">{category.parent_category}</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Keine Kategorien gefunden</h3>
+              <p className="text-gray-500 mb-6">Erstellen Sie Ihre erste Kategorie</p>
+              <Button
+                onClick={handleCreateCategory}
+                className="bg-gradient-to-r from-[#3F00FF] to-[#0F52BA] text-white"
+              >
+                Erste Kategorie erstellen
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {categoriesList.map((category) => (
+                <div
+                  key={category.id}
+                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex-1">
+                    <h3 className="font-medium text-gray-900">{category.name}</h3>
+                    <p className="text-sm text-gray-500 mt-1">{category.description}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className={`
+                        px-2 py-1 rounded-full text-xs font-medium
+                        ${category.parent_category === 'Signale' 
+                          ? 'bg-blue-100 text-blue-800' 
+                          : 'bg-green-100 text-green-800'
+                        }
+                      `}>
+                        {category.parent_category}
+                      </span>
+                      {category.isPro && (
+                        <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
+                          Pro
+                        </span>
+                      )}
                     </div>
                   </div>
                   
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => startEdit(category)}
-                    >
-                      <Edit size={14} />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(category.id)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 size={14} />
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm">
+                      <Settings size={16} />
                     </Button>
                   </div>
                 </div>
-                
-                {category.description && (
-                  <p className="text-sm text-gray-600 mb-3">{category.description}</p>
-                )}
-                
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span className={`px-2 py-1 rounded ${category.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                    {category.is_active ? 'Aktiv' : 'Inaktiv'}
-                  </span>
-                  {category.requires_auth && (
-                    <span className="px-2 py-1 rounded bg-blue-100 text-blue-800">
-                      Login erforderlich
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-          </Card>
-        ))}
-      </div>
-
-      {/* Empty State */}
-      {categoriesList.length === 0 && (
-        <div className="text-center py-12">
-          <FolderTree size={48} className="mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Keine Kategorien vorhanden</h3>
-          <p className="text-gray-500 mb-6">Erstellen Sie Ihre erste Kategorie</p>
-          <Button
-            onClick={() => setShowCreateForm(true)}
-            className="bg-gradient-to-r from-[#3F00FF] to-[#0F52BA]"
-          >
-            Neue Kategorie erstellen
-          </Button>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
+      
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toasts} />
     </div>
   );
 };

@@ -1,6 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { useAdminStore } from '../store/admin-store';
+import { truncateContent } from '../utils/content-renderer';
 import { Plus, Search, Filter, FileText } from 'lucide-react';
 
 export const QuestionsPage2: React.FC = () => {
@@ -20,7 +21,7 @@ export const QuestionsPage2: React.FC = () => {
   
   const questionsList = Object.values(questions);
   const filteredQuestions = questionsList.filter(q => 
-    q.text.toString().toLowerCase().includes(searchQuery.toLowerCase()) ||
+    truncateContent(q.text).toLowerCase().includes(searchQuery.toLowerCase()) ||
     q.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
     q.sub_category.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -98,7 +99,7 @@ export const QuestionsPage2: React.FC = () => {
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1 min-w-0">
                 <h3 className="font-medium text-gray-900 truncate">
-                  {question.text.toString().slice(0, 60)}...
+                  {truncateContent(question.text, 60)}
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">
                   {question.category} / {question.sub_category}
@@ -131,7 +132,7 @@ export const QuestionsPage2: React.FC = () => {
               )}
               
               <p className="text-sm text-gray-600 line-clamp-2">
-                {question.text.toString()}
+                {truncateContent(question.text, 120)}
               </p>
             </div>
             

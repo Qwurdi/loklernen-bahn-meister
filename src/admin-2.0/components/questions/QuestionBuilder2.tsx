@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Question, QuestionType, QuestionCategory } from '../../types';
 import { useAdminStore } from '../../store/admin-store';
+import { renderContent, truncateContent } from '../../utils/content-renderer';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -113,7 +114,7 @@ export const QuestionBuilder2: React.FC<QuestionBuilder2Props> = ({ questionId, 
               <span>Schwierigkeit: {formData.difficulty}/5</span>
             </div>
             
-            <div className="text-lg font-medium">{formData.text}</div>
+            <div className="text-lg font-medium">{renderContent(formData.text)}</div>
             
             {formData.image_url && (
               <img 
@@ -133,7 +134,7 @@ export const QuestionBuilder2: React.FC<QuestionBuilder2Props> = ({ questionId, 
                       answer.isCorrect ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
                     }`}
                   >
-                    {answer.text} {answer.isCorrect && '✓'}
+                    {renderContent(answer.text)} {answer.isCorrect && '✓'}
                   </div>
                 ))}
               </div>
@@ -141,13 +142,13 @@ export const QuestionBuilder2: React.FC<QuestionBuilder2Props> = ({ questionId, 
             
             {formData.hint && (
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <strong>Hinweis:</strong> {formData.hint}
+                <strong>Hinweis:</strong> {renderContent(formData.hint)}
               </div>
             )}
           </div>
         </Card>
       ) : (
-        // Edit Mode
+        // Edit Mode - Basic Information and Content
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Basic Information */}
           <Card className="p-6">
@@ -215,7 +216,7 @@ export const QuestionBuilder2: React.FC<QuestionBuilder2Props> = ({ questionId, 
               <div>
                 <label className="block text-sm font-medium mb-2">Fragetext</label>
                 <Textarea
-                  value={formData.text.toString()}
+                  value={typeof formData.text === 'string' ? formData.text : JSON.stringify(formData.text)}
                   onChange={(e) => setFormData(prev => ({ ...prev, text: e.target.value }))}
                   placeholder="Geben Sie hier die Frage ein..."
                   rows={4}
@@ -234,7 +235,7 @@ export const QuestionBuilder2: React.FC<QuestionBuilder2Props> = ({ questionId, 
               <div>
                 <label className="block text-sm font-medium mb-2">Hinweis (optional)</label>
                 <Textarea
-                  value={formData.hint?.toString() || ''}
+                  value={typeof formData.hint === 'string' ? formData.hint : (formData.hint ? JSON.stringify(formData.hint) : '')}
                   onChange={(e) => setFormData(prev => ({ ...prev, hint: e.target.value }))}
                   placeholder="Zusätzlicher Hinweis zur Frage..."
                   rows={2}
@@ -261,7 +262,7 @@ export const QuestionBuilder2: React.FC<QuestionBuilder2Props> = ({ questionId, 
               {formData.answers.map((answer, index) => (
                 <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
                   <Input
-                    value={answer.text.toString()}
+                    value={typeof answer.text === 'string' ? answer.text : JSON.stringify(answer.text)}
                     onChange={(e) => updateAnswer(index, 'text', e.target.value)}
                     placeholder="Antworttext..."
                     className="flex-1"

@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Question, Category, Answer } from '../types';
+import { Json } from '@/integrations/supabase/types';
 
 // Transform database question to our Question type
 const transformQuestion = (dbQuestion: any): Question => {
@@ -14,6 +15,39 @@ const transformQuestion = (dbQuestion: any): Question => {
   };
 };
 
+// Transform our Question type to database format
+const transformQuestionForDb = (question: Omit<Question, 'id' | 'created_at' | 'updated_at'>): any => {
+  return {
+    ...question,
+    answers: question.answers as Json,
+    text: typeof question.text === 'string' ? question.text : JSON.stringify(question.text),
+    hint: question.hint 
+      ? (typeof question.hint === 'string' ? question.hint : JSON.stringify(question.hint))
+      : null
+  };
+};
+
+// Transform partial Question updates for database
+const transformQuestionUpdateForDb = (updates: Partial<Question>): any => {
+  const dbUpdates: any = { ...updates };
+  
+  if (updates.answers) {
+    dbUpdates.answers = updates.answers as Json;
+  }
+  
+  if (updates.text) {
+    dbUpdates.text = typeof updates.text === 'string' ? updates.text : JSON.stringify(updates.text);
+  }
+  
+  if (updates.hint !== undefined) {
+    dbUpdates.hint = updates.hint 
+      ? (typeof updates.hint === 'string' ? updates.hint : JSON.stringify(updates.hint))
+      : null;
+  }
+  
+  return dbUpdates;
+};
+
 // Transform database category to our Category type
 const transformCategory = (dbCategory: any): Category => {
   return {
@@ -25,11 +59,9 @@ const transformCategory = (dbCategory: any): Category => {
     description: dbCategory.description,
     icon: dbCategory.icon,
     color: dbCategory.color,
-    // Map database fields to our interface
-    sort_order: 0, // Default value since DB doesn't have this field
-    is_active: true, // Default value
+    sort_order: 0,
+    is_active: true,
     requires_auth: dbCategory.requiresAuth || false,
-    // Additional database fields
     isPro: dbCategory.isPro,
     isPlanned: dbCategory.isPlanned,
     content_type: dbCategory.content_type,
@@ -63,9 +95,11 @@ class AdminQuestionService {
   }
 
   async create(question: Omit<Question, 'id' | 'created_at' | 'updated_at'>): Promise<Question> {
+    const dbQuestion = transformQuestionForDb(question);
+    
     const { data, error } = await supabase
       .from('questions')
-      .insert(question)
+      .insert(dbQuestion)
       .select()
       .single();
     
@@ -74,9 +108,11 @@ class AdminQuestionService {
   }
 
   async update(id: string, updates: Partial<Question>): Promise<Question> {
+    const dbUpdates = transformQuestionUpdateForDb(updates);
+    
     const { data, error } = await supabase
       .from('questions')
-      .update(updates)
+      .update(dbUpdates)
       .eq('id', id)
       .select()
       .single();
@@ -155,7 +191,6 @@ class AdminCategoryService {
   }
 
   async create(category: Omit<Category, 'id' | 'created_at' | 'updated_at'>): Promise<Category> {
-    // Map our interface back to database schema
     const dbCategory = {
       name: category.name,
       parent_category: category.parent_category,
@@ -180,7 +215,6 @@ class AdminCategoryService {
   }
 
   async update(id: string, updates: Partial<Category>): Promise<Category> {
-    // Map our interface back to database schema
     const dbUpdates: any = {};
     if (updates.name !== undefined) dbUpdates.name = updates.name;
     if (updates.parent_category !== undefined) dbUpdates.parent_category = updates.parent_category;
@@ -214,8 +248,6 @@ class AdminCategoryService {
   }
 
   async reorder(categoryIds: string[]): Promise<void> {
-    // Since the database doesn't have sort_order, we'll skip this for now
-    // This would need a database migration to add sort_order field
     console.log('Reorder not implemented - requires sort_order field in database');
   }
 }

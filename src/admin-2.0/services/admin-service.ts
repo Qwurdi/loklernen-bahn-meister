@@ -59,11 +59,9 @@ const transformCategory = (dbCategory: any): Category => {
     description: dbCategory.description,
     icon: dbCategory.icon,
     color: dbCategory.color,
-    sort_order: 0,
-    is_active: true,
-    requires_auth: dbCategory.requiresAuth || false,
-    isPro: dbCategory.isPro,
-    isPlanned: dbCategory.isPlanned,
+    requiresAuth: dbCategory.requiresAuth || false,
+    isPro: dbCategory.isPro || false,
+    isPlanned: dbCategory.isPlanned || false,
     content_type: dbCategory.content_type,
     path: dbCategory.path
   };
@@ -197,7 +195,7 @@ class AdminCategoryService {
       description: category.description,
       icon: category.icon,
       color: category.color,
-      requiresAuth: category.requires_auth,
+      requiresAuth: category.requiresAuth || false,
       isPro: category.isPro || false,
       isPlanned: category.isPlanned || false,
       content_type: category.content_type || 'plain',
@@ -221,7 +219,7 @@ class AdminCategoryService {
     if (updates.description !== undefined) dbUpdates.description = updates.description;
     if (updates.icon !== undefined) dbUpdates.icon = updates.icon;
     if (updates.color !== undefined) dbUpdates.color = updates.color;
-    if (updates.requires_auth !== undefined) dbUpdates.requiresAuth = updates.requires_auth;
+    if (updates.requiresAuth !== undefined) dbUpdates.requiresAuth = updates.requiresAuth;
     if (updates.isPro !== undefined) dbUpdates.isPro = updates.isPro;
     if (updates.isPlanned !== undefined) dbUpdates.isPlanned = updates.isPlanned;
     if (updates.content_type !== undefined) dbUpdates.content_type = updates.content_type;

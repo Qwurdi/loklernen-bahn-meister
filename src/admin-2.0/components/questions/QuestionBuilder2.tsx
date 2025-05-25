@@ -29,7 +29,7 @@ export const QuestionBuilder2: React.FC<QuestionBuilder2Props> = ({ questionId, 
     text: existingQuestion?.text || '',
     hint: existingQuestion?.hint || '',
     image_url: existingQuestion?.image_url || '',
-    answers: existingQuestion?.answers || [],
+    answers: existingQuestion?.answers || [{ text: '', is_correct: true }],
     regulation_category: existingQuestion?.regulation_category || 'DS 301'
   });
 
@@ -54,7 +54,7 @@ export const QuestionBuilder2: React.FC<QuestionBuilder2Props> = ({ questionId, 
   const addAnswer = () => {
     setFormData(prev => ({
       ...prev,
-      answers: [...prev.answers, { text: '', isCorrect: false }]
+      answers: [...prev.answers, { text: '', is_correct: false }]
     }));
   };
 
@@ -65,7 +65,7 @@ export const QuestionBuilder2: React.FC<QuestionBuilder2Props> = ({ questionId, 
     }));
   };
 
-  const updateAnswer = (index: number, field: 'text' | 'isCorrect', value: string | boolean) => {
+  const updateAnswer = (index: number, field: 'text' | 'is_correct', value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       answers: prev.answers.map((answer, i) => 
@@ -131,10 +131,10 @@ export const QuestionBuilder2: React.FC<QuestionBuilder2Props> = ({ questionId, 
                   <div 
                     key={index}
                     className={`p-3 rounded-lg border ${
-                      answer.isCorrect ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
+                      answer.is_correct ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
                     }`}
                   >
-                    {renderContent(answer.text)} {answer.isCorrect && '✓'}
+                    {renderContent(answer.text)} {answer.is_correct && '✓'}
                   </div>
                 ))}
               </div>
@@ -271,8 +271,8 @@ export const QuestionBuilder2: React.FC<QuestionBuilder2Props> = ({ questionId, 
                   <label className="flex items-center gap-2 text-sm">
                     <input
                       type="checkbox"
-                      checked={answer.isCorrect}
-                      onChange={(e) => updateAnswer(index, 'isCorrect', e.target.checked)}
+                      checked={answer.is_correct}
+                      onChange={(e) => updateAnswer(index, 'is_correct', e.target.checked)}
                       className="rounded"
                     />
                     Korrekt

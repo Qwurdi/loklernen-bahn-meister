@@ -28,6 +28,11 @@ export const getDisplayText = (text: string | StructuredContent): string => {
   return 'Frage';
 };
 
+// Helper function to render content safely (alias for getDisplayText for backward compatibility)
+export const renderContent = (text: string | StructuredContent): string => {
+  return getDisplayText(text);
+};
+
 // Helper function to truncate content safely
 export const truncateContent = (text: string | StructuredContent, maxLength: number = 100): string => {
   const displayText = getDisplayText(text);

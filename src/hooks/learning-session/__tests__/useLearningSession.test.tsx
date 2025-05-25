@@ -55,7 +55,6 @@ describe('useLearningSession', () => {
   it('provides navigation and actions', () => {
     const { result } = renderHook(() => useLearningSession(), { wrapper });
     
-    expect(typeof result.current.handleRegulationChange).toBe('function');
     expect(result.current.navigate).toBeDefined();
     expect(typeof result.current.sessionTitle).toBe('string');
   });

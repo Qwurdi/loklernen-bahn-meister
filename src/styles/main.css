@@ -4,6 +4,7 @@
 @import './animations.css';
 @import './mobile.css';
 @import './flashcards.css';
+@import './material-design.css';
 
 /* Main CSS entry point - additional global styles can be added here */
 html {
@@ -14,4 +15,21 @@ html {
   html {
     scroll-behavior: auto;
   }
+}
+
+/* Enhanced body styles for Material Design */
+body {
+  font-feature-settings: 'rlig' 1, 'calt' 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Flashcard mode enhancements */
+body.flashcard-mode {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
 }

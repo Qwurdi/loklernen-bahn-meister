@@ -2,15 +2,17 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { useSpacedRepetition } from '@/hooks/spaced-repetition';
 import { useCategories } from '@/hooks/useCategories';
-import { validateRegulation, validateCategory, validateMode, validateBoxNumber } from './guards';
+import { validateCategory, validateMode, validateBoxNumber } from './guards';
 import { SessionOptions } from '@/types/spaced-repetition';
 
 export function useLearningSession() {
   const { user } = useAuth();
+  const { regulationPreference } = useUserPreferences();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   
   // Session state
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -20,30 +22,28 @@ export function useLearningSession() {
   // Load categories for validation
   const { categories, isLoading: categoriesLoading, error: categoriesError } = useCategories();
 
-  // Parse and validate URL parameters
+  // Parse and validate URL parameters - removed regulation handling
   const sessionOptions: SessionOptions = useMemo(() => {
     const categoryParam = searchParams.get('category') || searchParams.get('parent_category');
     const subcategoryParam = searchParams.get('subcategory');
-    const regulationParam = searchParams.get('regelwerk') || searchParams.get('regulation');
     const modeParam = searchParams.get('mode');
     const boxParam = searchParams.get('box');
     const practiceParam = searchParams.get('practice');
 
     const category = validateCategory(categoryParam);
-    const regulation = validateRegulation(regulationParam);
     const mode = practiceParam === 'true' ? 'practice' : validateMode(modeParam);
     const boxNumber = validateBoxNumber(boxParam);
 
     return {
       category: category || undefined,
       subcategory: subcategoryParam || undefined,
-      regulation,
+      regulation: regulationPreference, // Use global preference
       mode: boxNumber ? 'boxes' : mode,
       boxNumber,
       batchSize: 15,
       includeAllSubcategories: !subcategoryParam && !!category
     };
-  }, [searchParams]);
+  }, [searchParams, regulationPreference]); // Added regulationPreference dependency
 
   // Check if category requires authentication
   const categoryRequiresAuth = useMemo(() => {
@@ -121,12 +121,6 @@ export function useLearningSession() {
     }
   };
 
-  const handleRegulationChange = (value: string) => {
-    const newParams = new URLSearchParams(searchParams);
-    newParams.set('regelwerk', value);
-    setSearchParams(newParams);
-  };
-
   return {
     // Loading states
     loading: categoriesLoading || questionsLoading,
@@ -160,7 +154,6 @@ export function useLearningSession() {
     handleAnswer,
     handleComplete,
     handleRestart,
-    handleRegulationChange,
     navigate,
     
     // Advanced

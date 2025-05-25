@@ -44,34 +44,18 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
           if (error) {
             console.error('Error loading user preferences:', error);
             
-            // If there was an error, use local storage as fallback
-            // Load regulation preference from local storage
+            // Use local storage as fallback
             const storedRegPreference = localStorage.getItem(REGULATION_PREFERENCE_KEY) as RegulationFilterType | null;
             setRegulationPreferenceState(storedRegPreference || 'DS 301');
             
-            // Load editor view preference from local storage
             const storedViewPreference = localStorage.getItem(EDITOR_VIEW_PREFERENCE_KEY) as EditorViewType | null;
             setEditorViewPreferenceState(storedViewPreference || 'tabs');
-          } 
-          // Only try to access data properties if we don't have an error
-          else if (data) {
-            // Handle regulation preference
-            if ('regulation_preference' in data && data.regulation_preference) {
-              setRegulationPreferenceState(data.regulation_preference as RegulationFilterType);
-            } else {
-              // Fallback to localStorage if property doesn't exist in data
-              const storedRegPreference = localStorage.getItem(REGULATION_PREFERENCE_KEY) as RegulationFilterType | null;
-              setRegulationPreferenceState(storedRegPreference || 'DS 301');
-            }
+          } else if (data) {
+            // Set regulation preference
+            setRegulationPreferenceState((data.regulation_preference as RegulationFilterType) || 'DS 301');
             
-            // Handle editor view preference
-            if ('editor_view_preference' in data && data.editor_view_preference) {
-              setEditorViewPreferenceState(data.editor_view_preference as EditorViewType);
-            } else {
-              // Fallback to localStorage if property doesn't exist in data
-              const storedViewPreference = localStorage.getItem(EDITOR_VIEW_PREFERENCE_KEY) as EditorViewType | null;
-              setEditorViewPreferenceState(storedViewPreference || 'tabs');
-            }
+            // Set editor view preference
+            setEditorViewPreferenceState((data.editor_view_preference as EditorViewType) || 'tabs');
           }
         } else {
           // For non-authenticated users, use local storage
@@ -83,6 +67,9 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
         }
       } catch (error) {
         console.error('Error loading preferences:', error);
+        // Use defaults on any error
+        setRegulationPreferenceState('DS 301');
+        setEditorViewPreferenceState('tabs');
       } finally {
         setLoading(false);
       }
@@ -142,17 +129,16 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
           });
           
         if (error) {
-          // If there's an error related to the column not existing, this is expected
-          // until we run the SQL migration to add the column
-          if (error.message?.includes('editor_view_preference')) {
-            console.log('editor_view_preference column not yet added to database, skipping DB save');
-          } else {
-            console.error('Error saving editor view preference:', error);
-          }
+          console.error('Error saving editor view preference:', error);
+          toast.error('Fehler beim Speichern der Editor-Ansicht');
+          return;
         }
       }
+      
+      toast.success(`Editor-Ansicht auf ${preference === 'tabs' ? 'Tabs' : 'Einzelansicht'} umgestellt`);
     } catch (error) {
       console.error('Error saving editor view preference:', error);
+      toast.error('Fehler beim Speichern der Editor-Ansicht');
     }
   };
   

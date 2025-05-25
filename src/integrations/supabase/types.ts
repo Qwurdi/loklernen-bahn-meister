@@ -179,6 +179,7 @@ export type Database = {
       user_stats: {
         Row: {
           created_at: string
+          editor_view_preference: string | null
           last_activity_date: string
           regulation_preference: string | null
           signals_mastered: number
@@ -191,6 +192,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          editor_view_preference?: string | null
           last_activity_date?: string
           regulation_preference?: string | null
           signals_mastered?: number
@@ -203,6 +205,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          editor_view_preference?: string | null
           last_activity_date?: string
           regulation_preference?: string | null
           signals_mastered?: number

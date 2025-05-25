@@ -1,15 +1,6 @@
 
 import React from 'react';
-
-// Type for structured content (matching the database schema)
-export type StructuredContent = {
-  type: 'structured';
-  content: Array<{
-    type: 'text' | 'image' | 'list';
-    value: string;
-    attributes?: Record<string, any>;
-  }>;
-};
+import { StructuredContent } from '@/types/rich-text';
 
 // Helper function to safely extract display text from question text
 export const getDisplayText = (text: string | StructuredContent): string => {
@@ -17,12 +8,21 @@ export const getDisplayText = (text: string | StructuredContent): string => {
     return text;
   }
   
-  if (text && typeof text === 'object' && text.type === 'structured' && text.content) {
+  if (text && typeof text === 'object' && text.nodes) {
     // Extract text from structured content
-    return text.content
-      .filter(item => item.type === 'text')
-      .map(item => item.value)
-      .join(' ');
+    return text.nodes
+      .map(node => {
+        if (typeof node.content === 'string') {
+          return node.content;
+        } else if (Array.isArray(node.content)) {
+          return node.content
+            .filter(child => typeof child.content === 'string')
+            .map(child => child.content)
+            .join(' ');
+        }
+        return '';
+      })
+      .join('\n');
   }
   
   return 'Frage';

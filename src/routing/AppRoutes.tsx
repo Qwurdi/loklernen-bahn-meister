@@ -35,12 +35,20 @@ const AppRoutes: React.FC = () => {
       {/* Auth routes */}
       {authRoutes}
       
+      {/* Cards and Learning routes - Updated to German structure */}
+      <Route path="/karteikarten" element={<CardsPage />} />
+      <Route path="/karteikarten/lernen" element={<LearningPage />} />
+      
       {/* Protected routes */}
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/cards" element={<ProtectedRoute><CardsPage /></ProtectedRoute>} />
-      <Route path="/learning" element={<ProtectedRoute><LearningPage /></ProtectedRoute>} />
-      <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+      <Route path="/fortschritt" element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
+      <Route path="/einstellungen" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="/regulation-selection" element={<ProtectedRoute><RegulationSelectionPage /></ProtectedRoute>} />
+      
+      {/* Legacy route redirects for backwards compatibility */}
+      <Route path="/cards" element={<CardsPage />} />
+      <Route path="/learning" element={<LearningPage />} />
+      <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       
       {/* Admin routes - Clean modern system */}
       {adminRoutes}

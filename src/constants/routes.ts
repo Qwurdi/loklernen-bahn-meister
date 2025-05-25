@@ -6,16 +6,16 @@ export const ROUTES = {
   LOGIN: '/login',
   REGISTER: '/register',
   
-  // Learning routes
+  // Learning routes - Updated to German structure
   CARDS: '/karteikarten',
   LEARNING: '/karteikarten/lernen',
   
-  // User routes (require auth)
+  // User routes (require auth) - German structure
   DASHBOARD: '/dashboard',
   PROGRESS: '/fortschritt',
   SETTINGS: '/einstellungen',
   
-  // Legal pages
+  // Legal pages - German structure
   PRIVACY: '/datenschutz',
   IMPRINT: '/impressum',
   TERMS: '/agb',

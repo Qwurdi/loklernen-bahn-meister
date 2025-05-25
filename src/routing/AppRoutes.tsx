@@ -1,90 +1,59 @@
-
-import React, { useEffect } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
-import { ProtectedRoute } from "./ProtectedRoute";
-import { ROUTES } from "@/constants/routes";
-
-// Import pages
+import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "@/pages/Index";
-import LoginPage from "@/pages/Login";
-import RegisterPage from "@/pages/Register";
+import SignalePage from "@/pages/SignalePage";
+import BetriebsdienstPage from "@/pages/BetriebsdienstPage";
+import ProgressPage from "@/pages/ProgressPage";
+import PrivacyPage from "@/pages/legal/PrivacyPage";
+import TermsPage from "@/pages/legal/TermsPage";
+import ImprintPage from "@/pages/legal/ImprintPage";
 import Dashboard from "@/pages/Dashboard";
 import CardsPage from "@/pages/CardsPage";
 import LearningPage from "@/pages/LearningPage";
-import AdminLayout from "@/components/layout/AdminLayout";
-import AdminDashboard from "@/pages/admin/AdminDashboard";
+import SettingsPage from "@/pages/SettingsPage";
 import NotFound from "@/pages/NotFound";
+import RegulationSelectionPage from "@/pages/RegulationSelectionPage";
+import { ProtectedRoute } from "./ProtectedRoute";
+import { adminRoutes } from "./routes/admin-routes";
+import { adminRoutes2 } from "../admin-2.0/routes/admin-routes-2.0";
+import { authRoutes } from "./routes/auth-routes";
 
-// Import legal pages
-import PrivacyPage from "@/pages/legal/PrivacyPage";
-import ImprintPage from "@/pages/legal/ImprintPage";
-import TermsPage from "@/pages/legal/TermsPage";
-
-// Placeholder components
-const VerifyEmailPage = () => <div>E-Mail verifizieren</div>;
-const ResetPasswordPage = () => <div>Passwort zurücksetzen</div>;
-const RequestPasswordResetPage = () => <div>Passwort-Reset anfordern</div>;
-
-export default function AppRoutes() {
-  const location = useLocation();
-
-  // Scroll to top on route change
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [location.pathname]);
-
+const AppRoutes: React.FC = () => {
   return (
-    <Routes>
-      {/* Public routes */}
-      <Route path={ROUTES.HOME} element={<Index />} />
-      
-      {/* Auth routes */}
-      <Route path={ROUTES.LOGIN} element={<LoginPage />} />
-      <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
-      <Route path={ROUTES.VERIFY_EMAIL} element={<VerifyEmailPage />} />
-      <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage />} />
-      <Route path={ROUTES.REQUEST_PASSWORD_RESET} element={<RequestPasswordResetPage />} />
-      
-      {/* Legal pages - publicly accessible */}
-      <Route path={ROUTES.PRIVACY} element={<PrivacyPage />} />
-      <Route path={ROUTES.IMPRINT} element={<ImprintPage />} />
-      <Route path={ROUTES.TERMS} element={<TermsPage />} />
-      
-      {/* Protected user routes */}
-      <Route path={ROUTES.DASHBOARD} element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path={ROUTES.CARDS} element={<ProtectedRoute><CardsPage /></ProtectedRoute>} />
-      
-      {/* Unified Learning Routes - All learning flows use the same LearningPage */}
-      <Route path="/lernen" element={<LearningPage />} />
-      <Route path={ROUTES.LEARNING} element={<LearningPage />} />
-      <Route path="/karteikarten/session" element={<LearningPage />} />
-      <Route path="/fullscreen-learning" element={<LearningPage />} />
-      <Route path="/new-learning" element={<LearningPage />} />
-      <Route path="/karteikarten/signale/:subcategory?" element={<LearningPage />} />
-      <Route path="/karteikarten/betriebsdienst/:subcategory?" element={<LearningPage />} />
-      
-      <Route path={ROUTES.PROGRESS} element={<ProtectedRoute><div>Fortschritt</div></ProtectedRoute>} />
-      <Route path={ROUTES.SETTINGS} element={<ProtectedRoute><div>Einstellungen</div></ProtectedRoute>} />
-      
-      {/* Admin routes */}
-      <Route path={ROUTES.ADMIN} element={<ProtectedRoute adminOnly={true}><AdminLayout /></ProtectedRoute>}>
-        <Route index element={<AdminDashboard />} />
-        <Route path="dashboard" element={<AdminDashboard />} />
-        <Route path="categories" element={<div>Admin Categories</div>} />
-        <Route path="categories/create" element={<div>Create Category</div>} />
-        <Route path="categories/:id" element={<div>Edit Category</div>} />
-        <Route path="questions" element={<div>Admin Questions</div>} />
-        <Route path="questions/create" element={<div>Create Question</div>} />
-        <Route path="questions/:id" element={<div>Edit Question</div>} />
-        <Route path="users" element={<div>Admin Users</div>} />
-        <Route path="users/create" element={<div>Create User</div>} />
-        <Route path="users/:id" element={<div>Edit User</div>} />
-        <Route path="import" element={<div>Import</div>} />
-        <Route path="export" element={<div>Export</div>} />
-      </Route>
-      
-      {/* 404 fallback */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <BrowserRouter>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<Index />} />
+        <Route path="/signale" element={<SignalePage />} />
+        <Route path="/betriebsdienst" element={<BetriebsdienstPage />} />
+        <Route path="/progress" element={<ProgressPage />} />
+        
+        {/* Legal routes */}
+        <Route path="/legal/privacy" element={<PrivacyPage />} />
+        <Route path="/legal/terms" element={<TermsPage />} />
+        <Route path="/legal/imprint" element={<ImprintPage />} />
+        
+        {/* Auth routes */}
+        {authRoutes}
+        
+        {/* Protected routes */}
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/cards" element={<ProtectedRoute><CardsPage /></ProtectedRoute>} />
+        <Route path="/learning" element={<ProtectedRoute><LearningPage /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+        <Route path="/regulation-selection" element={<ProtectedRoute><RegulationSelectionPage /></ProtectedRoute>} />
+        
+        {/* Legacy Admin routes */}
+        {adminRoutes}
+        
+        {/* Admin 2.0 routes */}
+        {adminRoutes2}
+        
+        {/* Catch all */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
   );
-}
+};
+
+export default AppRoutes;

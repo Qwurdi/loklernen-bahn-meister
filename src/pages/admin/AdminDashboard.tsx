@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, BarChart2, Users, BookOpen, FileText } from "lucide-react";
@@ -130,6 +129,19 @@ const AdminDashboard: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      
+      <div className="rounded-lg border p-6 bg-gradient-to-r from-blue-50 to-purple-50">
+        <h2 className="mb-4 text-xl font-semibold text-blue-900">🚀 Admin Panel 2.0 verfügbar!</h2>
+        <p className="text-blue-700 mb-4">
+          Erleben Sie die neue, moderne Verwaltungsoberfläche mit verbesserter Performance und cleaner Architektur.
+        </p>
+        <Link 
+          to="/admin-2.0" 
+          className="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-[#3F00FF] to-[#0F52BA] px-4 py-2 text-sm font-medium text-white hover:shadow-lg transition-all"
+        >
+          Admin Panel 2.0 öffnen →
+        </Link>
+      </div>
       
       {isLoading && (
         <div className="my-8 text-center">

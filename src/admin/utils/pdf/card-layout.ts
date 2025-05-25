@@ -3,8 +3,8 @@ import { jsPDF } from 'jspdf';
 import { CARD_SIZE, MARGINS, COLORS } from './constants';
 
 export function drawCardOutline(pdf: jsPDF) {
-  // Professional card border
-  pdf.setDrawColor(...COLORS.borders.card);
+  // Professional card border with proper color typing
+  pdf.setDrawColor(COLORS.borders.card[0], COLORS.borders.card[1], COLORS.borders.card[2]);
   pdf.setLineWidth(0.08);
   
   // Draw professional rounded rectangle
@@ -19,7 +19,7 @@ export function drawCardOutline(pdf: jsPDF) {
 }
 
 export function drawCutMarks(pdf: jsPDF) {
-  pdf.setDrawColor(...COLORS.primary.black);
+  pdf.setDrawColor(COLORS.primary.black[0], COLORS.primary.black[1], COLORS.primary.black[2]);
   pdf.setLineWidth(0.08);
   
   const markLength = 1.5;

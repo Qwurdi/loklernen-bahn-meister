@@ -1,6 +1,9 @@
 
 import { create } from 'zustand';
 import { AdminState, AdminCommand, Question, Category } from '../types';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { fetchQuestions, createQuestion, AdminService } from '@/api/questions';
+import { fetchCategories } from '@/api/categories';
 
 interface AdminStore extends AdminState {
   // Actions
@@ -27,37 +30,8 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
   loadQuestions: async () => {
     set({ isLoading: true });
     try {
-      // Mock data for now - in real app this would fetch from Supabase
-      const mockQuestions: Question[] = [
-        {
-          id: '1',
-          text: 'Was bedeutet das Hauptsignal Hp 1?',
-          category: 'Signale',
-          sub_category: 'Haupt- und Vorsignale',
-          question_type: 'open',
-          difficulty: 2,
-          answers: [{ text: 'Fahrt', is_correct: true }],
-          created_by: 'admin',
-          revision: 1
-        },
-        {
-          id: '2',
-          text: 'Welche Geschwindigkeit gilt bei Langsamfahrstellen?',
-          category: 'Betriebsdienst',
-          sub_category: 'Grundlagen Bahnbetrieb',
-          question_type: 'MC_single',
-          difficulty: 3,
-          answers: [
-            { text: '40 km/h', is_correct: false },
-            { text: '50 km/h', is_correct: true },
-            { text: '60 km/h', is_correct: false }
-          ],
-          created_by: 'admin',
-          revision: 1
-        }
-      ];
-
-      const questionsMap = mockQuestions.reduce((acc, q) => ({ ...acc, [q.id]: q }), {});
+      const questions = await fetchQuestions();
+      const questionsMap = questions.reduce((acc, q) => ({ ...acc, [q.id]: q }), {});
       set({ questions: questionsMap, isLoading: false });
     } catch (error) {
       console.error('Error loading questions:', error);
@@ -68,27 +42,8 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
   loadCategories: async () => {
     set({ isLoading: true });
     try {
-      // Mock data for now
-      const mockCategories: Category[] = [
-        {
-          id: '1',
-          name: 'Haupt- und Vorsignale',
-          description: 'Grundlegende Signale für den Zugverkehr',
-          parent_category: 'Signale',
-          isPro: false,
-          isPlanned: false
-        },
-        {
-          id: '2',
-          name: 'Grundlagen Bahnbetrieb',
-          description: 'Fundamentale Regeln des Bahnbetriebs',
-          parent_category: 'Betriebsdienst',
-          isPro: false,
-          isPlanned: false
-        }
-      ];
-
-      const categoriesMap = mockCategories.reduce((acc, c) => ({ ...acc, [c.id]: c }), {});
+      const categories = await fetchCategories();
+      const categoriesMap = categories.reduce((acc, c) => ({ ...acc, [c.id]: c }), {});
       set({ categories: categoriesMap, isLoading: false });
     } catch (error) {
       console.error('Error loading categories:', error);
@@ -102,11 +57,7 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
     try {
       switch (command.type) {
         case 'QUESTION_CREATE':
-          // Mock question creation
-          const newQuestion: Question = {
-            id: Date.now().toString(),
-            ...command.payload
-          };
+          const newQuestion = await createQuestion(command.payload);
           set(state => ({
             questions: { ...state.questions, [newQuestion.id]: newQuestion },
             commandInProgress: false
@@ -114,13 +65,32 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
           command.meta?.onSuccess?.(newQuestion);
           break;
 
+        case 'QUESTION_UPDATE':
+          // Use existing API service for updates
+          const updatedQuestion = await AdminService.questions.update(command.payload.id, command.payload.data);
+          set(state => ({
+            questions: { ...state.questions, [updatedQuestion.id]: updatedQuestion },
+            commandInProgress: false
+          }));
+          command.meta?.onSuccess?.(updatedQuestion);
+          break;
+
         case 'QUESTION_DELETE':
-          const { id } = command.payload;
+          await AdminService.questions.delete(command.payload.id);
           set(state => {
-            const { [id]: deleted, ...rest } = state.questions;
+            const { [command.payload.id]: deleted, ...rest } = state.questions;
             return { questions: rest, commandInProgress: false };
           });
           command.meta?.onSuccess?.();
+          break;
+
+        case 'QUESTION_DUPLICATE':
+          const duplicated = await AdminService.questions.duplicate(command.payload.id);
+          set(state => ({
+            questions: { ...state.questions, [duplicated.id]: duplicated },
+            commandInProgress: false
+          }));
+          command.meta?.onSuccess?.(duplicated);
           break;
 
         default:
@@ -145,3 +115,30 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
     set({ lastError: null });
   }
 }));
+
+// Custom hooks for React Query integration
+export const useAdminQuestions = () => {
+  const { data: questions = [], isLoading, error } = useQuery({
+    queryKey: ['admin-questions'],
+    queryFn: fetchQuestions,
+  });
+
+  return {
+    questions: questions.reduce((acc, q) => ({ ...acc, [q.id]: q }), {}),
+    isLoading,
+    error
+  };
+};
+
+export const useAdminCategories = () => {
+  const { data: categories = [], isLoading, error } = useQuery({
+    queryKey: ['admin-categories'],
+    queryFn: fetchCategories,
+  });
+
+  return {
+    categories: categories.reduce((acc, c) => ({ ...acc, [c.id]: c }), {}),
+    isLoading,
+    error
+  };
+};

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Question, QuestionType, QuestionCategory } from '../../types';
-import { useAdminStore } from '../../store/admin-store';
+import { useAdminStore, useAdminQuestions } from '../../store/admin-store';
 import { renderContent, truncateContent } from '../../utils/content-renderer';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2, Save, Eye } from 'lucide-react';
+import { getTextValue } from '@/types/rich-text';
 
 interface QuestionBuilder2Props {
   questionId?: string;
@@ -16,7 +17,8 @@ interface QuestionBuilder2Props {
 }
 
 export const QuestionBuilder2: React.FC<QuestionBuilder2Props> = ({ questionId, onSave }) => {
-  const { questions, execute } = useAdminStore();
+  const { execute } = useAdminStore();
+  const { questions } = useAdminQuestions();
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   
   const existingQuestion = questionId ? questions[questionId] : null;
@@ -29,7 +31,7 @@ export const QuestionBuilder2: React.FC<QuestionBuilder2Props> = ({ questionId, 
     text: existingQuestion?.text || '',
     hint: existingQuestion?.hint || '',
     image_url: existingQuestion?.image_url || '',
-    answers: existingQuestion?.answers || [{ text: '', is_correct: true }],
+    answers: existingQuestion?.answers || [{ text: '', isCorrect: true }],
     regulation_category: existingQuestion?.regulation_category || 'DS 301'
   });
 
@@ -54,7 +56,7 @@ export const QuestionBuilder2: React.FC<QuestionBuilder2Props> = ({ questionId, 
   const addAnswer = () => {
     setFormData(prev => ({
       ...prev,
-      answers: [...prev.answers, { text: '', is_correct: false }]
+      answers: [...prev.answers, { text: '', isCorrect: false }]
     }));
   };
 
@@ -65,7 +67,7 @@ export const QuestionBuilder2: React.FC<QuestionBuilder2Props> = ({ questionId, 
     }));
   };
 
-  const updateAnswer = (index: number, field: 'text' | 'is_correct', value: string | boolean) => {
+  const updateAnswer = (index: number, field: 'text' | 'isCorrect', value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       answers: prev.answers.map((answer, i) => 
@@ -131,10 +133,10 @@ export const QuestionBuilder2: React.FC<QuestionBuilder2Props> = ({ questionId, 
                   <div 
                     key={index}
                     className={`p-3 rounded-lg border ${
-                      answer.is_correct ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
+                      answer.isCorrect ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
                     }`}
                   >
-                    {renderContent(answer.text)} {answer.is_correct && '✓'}
+                    {getTextValue(answer.text)} {answer.isCorrect && '✓'}
                   </div>
                 ))}
               </div>
@@ -216,7 +218,7 @@ export const QuestionBuilder2: React.FC<QuestionBuilder2Props> = ({ questionId, 
               <div>
                 <label className="block text-sm font-medium mb-2">Fragetext</label>
                 <Textarea
-                  value={typeof formData.text === 'string' ? formData.text : JSON.stringify(formData.text)}
+                  value={getTextValue(formData.text)}
                   onChange={(e) => setFormData(prev => ({ ...prev, text: e.target.value }))}
                   placeholder="Geben Sie hier die Frage ein..."
                   rows={4}
@@ -235,7 +237,7 @@ export const QuestionBuilder2: React.FC<QuestionBuilder2Props> = ({ questionId, 
               <div>
                 <label className="block text-sm font-medium mb-2">Hinweis (optional)</label>
                 <Textarea
-                  value={typeof formData.hint === 'string' ? formData.hint : (formData.hint ? JSON.stringify(formData.hint) : '')}
+                  value={getTextValue(formData.hint || '')}
                   onChange={(e) => setFormData(prev => ({ ...prev, hint: e.target.value }))}
                   placeholder="Zusätzlicher Hinweis zur Frage..."
                   rows={2}
@@ -262,7 +264,7 @@ export const QuestionBuilder2: React.FC<QuestionBuilder2Props> = ({ questionId, 
               {formData.answers.map((answer, index) => (
                 <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
                   <Input
-                    value={typeof answer.text === 'string' ? answer.text : JSON.stringify(answer.text)}
+                    value={getTextValue(answer.text)}
                     onChange={(e) => updateAnswer(index, 'text', e.target.value)}
                     placeholder="Antworttext..."
                     className="flex-1"
@@ -271,8 +273,8 @@ export const QuestionBuilder2: React.FC<QuestionBuilder2Props> = ({ questionId, 
                   <label className="flex items-center gap-2 text-sm">
                     <input
                       type="checkbox"
-                      checked={answer.is_correct}
-                      onChange={(e) => updateAnswer(index, 'is_correct', e.target.checked)}
+                      checked={answer.isCorrect}
+                      onChange={(e) => updateAnswer(index, 'isCorrect', e.target.checked)}
                       className="rounded"
                     />
                     Korrekt

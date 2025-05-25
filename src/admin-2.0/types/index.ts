@@ -1,51 +1,12 @@
 
-// Core types for Admin Panel 2.0
+// Core types for Admin Panel 2.0 - Now using unified types from main app
 
 import { StructuredContent } from '@/types/rich-text';
+import { Question, QuestionType, QuestionCategory, Answer } from '@/types/questions';
+import { Category } from '@/api/categories/types';
 
-export type QuestionType = 'open' | 'MC_single' | 'MC_multi';
-export type QuestionCategory = 'Signale' | 'Betriebsdienst';
-
-export interface Answer {
-  text: string | StructuredContent;
-  is_correct: boolean;
-  explanation?: string;
-}
-
-export interface Question {
-  id: string;
-  text: string | StructuredContent;
-  category: QuestionCategory;
-  sub_category: string;
-  question_type: QuestionType;
-  difficulty: number;
-  answers: Answer[];
-  image_url?: string;
-  hint?: string | StructuredContent | null;
-  created_by: string;
-  revision: number;
-  created_at?: string;
-  updated_at?: string;
-  regulation_category?: string;
-  status?: string;
-  content_version?: string;
-}
-
-export interface Category {
-  id: string;
-  name: string;
-  description?: string;
-  parent_category: string;
-  icon?: string;
-  color?: string;
-  isPro: boolean;
-  isPlanned: boolean;
-  requiresAuth?: boolean;
-  content_type?: string;
-  path?: string;
-  created_at?: string;
-  updated_at?: string;
-}
+// Re-export main app types for consistency
+export type { QuestionType, QuestionCategory, Question, Answer, Category, StructuredContent };
 
 // Command System Types
 export interface AdminCommand {

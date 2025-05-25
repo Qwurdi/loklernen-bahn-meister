@@ -15,8 +15,8 @@ import SettingsPage from "@/pages/SettingsPage";
 import NotFound from "@/pages/NotFound";
 import RegulationSelectionPage from "@/pages/RegulationSelectionPage";
 import { ProtectedRoute } from "./ProtectedRoute";
-import { newAdminRoutes } from "../admin/routes/admin-routes";
 import { authRoutes } from "./routes/auth-routes";
+import { adminRoutes } from "../admin/routes/admin-routes";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -43,8 +43,8 @@ const AppRoutes: React.FC = () => {
         <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
         <Route path="/regulation-selection" element={<ProtectedRoute><RegulationSelectionPage /></ProtectedRoute>} />
         
-        {/* Clean Admin routes */}
-        {newAdminRoutes}
+        {/* Admin routes - Clean modern system */}
+        {adminRoutes}
         
         {/* Catch all */}
         <Route path="*" element={<NotFound />} />

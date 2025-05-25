@@ -6,11 +6,14 @@ import { AdminLayout } from '../components/layout/AdminLayout';
 import { AdminDashboard } from '../pages/AdminDashboard';
 import { QuestionsPage } from '../pages/QuestionsPage';
 
-// Placeholder components for missing pages
+// Clean placeholder components for upcoming features
 const CategoriesPage = () => (
   <div className="bg-white rounded-lg p-8 border border-gray-200">
     <h1 className="text-2xl font-bold text-gray-900 mb-4">Kategorien</h1>
     <p className="text-gray-600">Kategorie-Verwaltung wird bald verfügbar sein.</p>
+    <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+      <p className="text-blue-700 text-sm">🏗️ Diese Funktionalität wird in der nächsten Version implementiert.</p>
+    </div>
   </div>
 );
 
@@ -18,27 +21,9 @@ const UsersPage = () => (
   <div className="bg-white rounded-lg p-8 border border-gray-200">
     <h1 className="text-2xl font-bold text-gray-900 mb-4">Benutzer</h1>
     <p className="text-gray-600">Benutzer-Verwaltung wird bald verfügbar sein.</p>
-  </div>
-);
-
-const ImportPage = () => (
-  <div className="bg-white rounded-lg p-8 border border-gray-200">
-    <h1 className="text-2xl font-bold text-gray-900 mb-4">Import</h1>
-    <p className="text-gray-600">Import-Funktionalität wird bald verfügbar sein.</p>
-  </div>
-);
-
-const ExportPage = () => (
-  <div className="bg-white rounded-lg p-8 border border-gray-200">
-    <h1 className="text-2xl font-bold text-gray-900 mb-4">Export</h1>
-    <p className="text-gray-600">Export-Funktionalität wird bald verfügbar sein.</p>
-  </div>
-);
-
-const DatabasePage = () => (
-  <div className="bg-white rounded-lg p-8 border border-gray-200">
-    <h1 className="text-2xl font-bold text-gray-900 mb-4">Datenbank</h1>
-    <p className="text-gray-600">Datenbank-Verwaltung wird bald verfügbar sein.</p>
+    <div className="mt-4 p-4 bg-green-50 rounded-lg">
+      <p className="text-green-700 text-sm">👥 Benutzer-Management kommt in der nächsten Version.</p>
+    </div>
   </div>
 );
 
@@ -46,19 +31,18 @@ const SettingsPage = () => (
   <div className="bg-white rounded-lg p-8 border border-gray-200">
     <h1 className="text-2xl font-bold text-gray-900 mb-4">Einstellungen</h1>
     <p className="text-gray-600">Admin-Einstellungen werden bald verfügbar sein.</p>
+    <div className="mt-4 p-4 bg-purple-50 rounded-lg">
+      <p className="text-purple-700 text-sm">⚙️ Erweiterte Einstellungen kommen in der nächsten Version.</p>
+    </div>
   </div>
 );
 
-// New clean admin routes
-export const newAdminRoutes = (
+export const adminRoutes = (
   <Route path="/admin" element={<ProtectedRoute adminOnly={true}><AdminLayout /></ProtectedRoute>}>
     <Route index element={<AdminDashboard />} />
     <Route path="questions" element={<QuestionsPage />} />
     <Route path="categories" element={<CategoriesPage />} />
     <Route path="users" element={<UsersPage />} />
-    <Route path="import" element={<ImportPage />} />
-    <Route path="export" element={<ExportPage />} />
-    <Route path="database" element={<DatabasePage />} />
     <Route path="settings" element={<SettingsPage />} />
   </Route>
 );

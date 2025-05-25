@@ -2,6 +2,7 @@
 import React, { useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { ProtectedRoute } from "./ProtectedRoute";
+import { ROUTES } from "@/constants/routes";
 
 // Import pages
 import Index from "@/pages/Index";
@@ -12,6 +13,12 @@ import CardsPage from "@/pages/CardsPage";
 import LearningPage from "@/pages/LearningPage";
 import AdminLayout from "@/components/layout/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
+import NotFound from "@/pages/NotFound";
+
+// Import legal pages
+import PrivacyPage from "@/pages/legal/PrivacyPage";
+import ImprintPage from "@/pages/legal/ImprintPage";
+import TermsPage from "@/pages/legal/TermsPage";
 
 // Placeholder components
 const VerifyEmailPage = () => <div>E-Mail verifizieren</div>;
@@ -29,33 +36,38 @@ export default function AppRoutes() {
   return (
     <Routes>
       {/* Public routes */}
-      <Route path="/" element={<Index />} />
+      <Route path={ROUTES.HOME} element={<Index />} />
       
       {/* Auth routes */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/verify-email" element={<VerifyEmailPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="/request-password-reset" element={<RequestPasswordResetPage />} />
+      <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+      <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
+      <Route path={ROUTES.VERIFY_EMAIL} element={<VerifyEmailPage />} />
+      <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage />} />
+      <Route path={ROUTES.REQUEST_PASSWORD_RESET} element={<RequestPasswordResetPage />} />
+      
+      {/* Legal pages - publicly accessible */}
+      <Route path={ROUTES.PRIVACY} element={<PrivacyPage />} />
+      <Route path={ROUTES.IMPRINT} element={<ImprintPage />} />
+      <Route path={ROUTES.TERMS} element={<TermsPage />} />
       
       {/* Protected user routes */}
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/karteikarten" element={<ProtectedRoute><CardsPage /></ProtectedRoute>} />
+      <Route path={ROUTES.DASHBOARD} element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path={ROUTES.CARDS} element={<ProtectedRoute><CardsPage /></ProtectedRoute>} />
       
       {/* Unified Learning Routes - All learning flows use the same LearningPage */}
       <Route path="/lernen" element={<LearningPage />} />
-      <Route path="/karteikarten/lernen" element={<LearningPage />} />
+      <Route path={ROUTES.LEARNING} element={<LearningPage />} />
       <Route path="/karteikarten/session" element={<LearningPage />} />
       <Route path="/fullscreen-learning" element={<LearningPage />} />
       <Route path="/new-learning" element={<LearningPage />} />
       <Route path="/karteikarten/signale/:subcategory?" element={<LearningPage />} />
       <Route path="/karteikarten/betriebsdienst/:subcategory?" element={<LearningPage />} />
       
-      <Route path="/fortschritt" element={<ProtectedRoute><div>Fortschritt</div></ProtectedRoute>} />
-      <Route path="/einstellungen" element={<ProtectedRoute><div>Einstellungen</div></ProtectedRoute>} />
+      <Route path={ROUTES.PROGRESS} element={<ProtectedRoute><div>Fortschritt</div></ProtectedRoute>} />
+      <Route path={ROUTES.SETTINGS} element={<ProtectedRoute><div>Einstellungen</div></ProtectedRoute>} />
       
       {/* Admin routes */}
-      <Route path="/admin" element={<ProtectedRoute adminOnly={true}><AdminLayout /></ProtectedRoute>}>
+      <Route path={ROUTES.ADMIN} element={<ProtectedRoute adminOnly={true}><AdminLayout /></ProtectedRoute>}>
         <Route index element={<AdminDashboard />} />
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="categories" element={<div>Admin Categories</div>} />
@@ -72,7 +84,7 @@ export default function AppRoutes() {
       </Route>
       
       {/* 404 fallback */}
-      <Route path="*" element={<div>Seite nicht gefunden</div>} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

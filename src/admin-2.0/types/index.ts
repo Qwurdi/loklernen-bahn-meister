@@ -1,5 +1,10 @@
 
 // Admin Panel 2.0 - Core Types
+
+// Import base types from existing questions module
+import { QuestionCategory, QuestionType, RegulationCategory } from '@/types/questions';
+import { StructuredContent } from '@/types/rich-text';
+
 export interface AdminCommand<T = any> {
   type: string;
   payload?: T;
@@ -17,6 +22,11 @@ export interface AdminEntity {
   updated_at: string;
 }
 
+export interface Answer {
+  text: string | StructuredContent;
+  isCorrect: boolean;
+}
+
 export interface Question extends AdminEntity {
   category: QuestionCategory;
   sub_category: string;
@@ -31,15 +41,22 @@ export interface Question extends AdminEntity {
   revision: number;
 }
 
+// Category type aligned with database schema
 export interface Category extends AdminEntity {
   name: string;
   parent_category: string;
   description?: string;
   icon?: string;
   color?: string;
+  // Database fields mapped to our interface
   sort_order: number;
   is_active: boolean;
   requires_auth: boolean;
+  // Additional database fields
+  isPro?: boolean;
+  isPlanned?: boolean;
+  content_type?: string;
+  path?: string;
 }
 
 export interface AdminState {
@@ -84,5 +101,5 @@ export interface AdminActions {
   invalidateCache: () => void;
 }
 
-// Re-export existing types
-export type { QuestionCategory, QuestionType, RegulationCategory, Answer, StructuredContent } from '@/types/questions';
+// Re-export types for convenience
+export type { QuestionCategory, QuestionType, RegulationCategory, StructuredContent };

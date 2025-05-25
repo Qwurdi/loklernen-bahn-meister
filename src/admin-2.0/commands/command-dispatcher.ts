@@ -9,7 +9,7 @@ export class CommandDispatcher {
   ) {}
 
   async execute(command: AdminCommand): Promise<void> {
-    this.setState(state => ({ commandInProgress: true }));
+    this.setState(state => ({ ...state, commandInProgress: true }));
     
     try {
       switch (command.type) {
@@ -37,6 +37,7 @@ export class CommandDispatcher {
       
       // Add to command history
       this.setState(state => ({
+        ...state,
         commandHistory: [...state.commandHistory, command],
         undoStack: [...state.undoStack, command],
         redoStack: []
@@ -47,7 +48,7 @@ export class CommandDispatcher {
       console.error('Command execution failed:', error);
       command.meta?.onError?.(error as Error);
     } finally {
-      this.setState(state => ({ commandInProgress: false }));
+      this.setState(state => ({ ...state, commandInProgress: false }));
     }
   }
 
@@ -59,6 +60,7 @@ export class CommandDispatcher {
   private async createQuestion(payload: any): Promise<void> {
     const question = await AdminService.questions.create(payload);
     this.setState(state => ({
+      ...state,
       questions: { ...state.questions, [question.id]: question }
     }));
   }
@@ -66,6 +68,7 @@ export class CommandDispatcher {
   private async updateQuestion(payload: { id: string; data: Partial<Question> }): Promise<void> {
     const question = await AdminService.questions.update(payload.id, payload.data);
     this.setState(state => ({
+      ...state,
       questions: { ...state.questions, [question.id]: question }
     }));
   }
@@ -74,13 +77,14 @@ export class CommandDispatcher {
     await AdminService.questions.delete(payload.id);
     this.setState(state => {
       const { [payload.id]: deleted, ...rest } = state.questions;
-      return { questions: rest };
+      return { ...state, questions: rest };
     });
   }
 
   private async createCategory(payload: any): Promise<void> {
     const category = await AdminService.categories.create(payload);
     this.setState(state => ({
+      ...state,
       categories: { ...state.categories, [category.id]: category }
     }));
   }
@@ -88,6 +92,7 @@ export class CommandDispatcher {
   private async updateCategory(payload: { id: string; data: Partial<Category> }): Promise<void> {
     const category = await AdminService.categories.update(payload.id, payload.data);
     this.setState(state => ({
+      ...state,
       categories: { ...state.categories, [category.id]: category }
     }));
   }
@@ -96,7 +101,7 @@ export class CommandDispatcher {
     await AdminService.categories.delete(payload.id);
     this.setState(state => {
       const { [payload.id]: deleted, ...rest } = state.categories;
-      return { categories: rest };
+      return { ...state, categories: rest };
     });
   }
 }

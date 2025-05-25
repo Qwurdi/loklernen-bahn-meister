@@ -19,7 +19,7 @@ const transformQuestion = (dbQuestion: any): Question => {
 const transformQuestionForDb = (question: Omit<Question, 'id' | 'created_at' | 'updated_at'>): any => {
   return {
     ...question,
-    answers: question.answers as Json,
+    answers: question.answers as unknown as Json,
     text: typeof question.text === 'string' ? question.text : JSON.stringify(question.text),
     hint: question.hint 
       ? (typeof question.hint === 'string' ? question.hint : JSON.stringify(question.hint))
@@ -32,7 +32,7 @@ const transformQuestionUpdateForDb = (updates: Partial<Question>): any => {
   const dbUpdates: any = { ...updates };
   
   if (updates.answers) {
-    dbUpdates.answers = updates.answers as Json;
+    dbUpdates.answers = updates.answers as unknown as Json;
   }
   
   if (updates.text) {

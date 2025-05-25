@@ -2,129 +2,117 @@
 import { jsPDF } from 'jspdf';
 import { Question, RegulationCategory } from '@/types/questions';
 import { getTextValue } from '@/types/rich-text';
-import { CONTENT_MARGINS } from './constants';
-import { loadImageFromUrl, calculateImageDimensions, calculateAvailableImageSpace } from './image-utils';
-import { LoadedImage } from './types';
+import { CONTENT_MARGINS, TYPOGRAPHY, COLORS, LAYOUT_ZONES } from './constants';
+import { loadImageFromUrl, calculateImageDimensions, drawImagePlaceholder } from './image-utils';
+import { calculateQuestionLayout, calculateAnswerLayout } from './layout-engine';
 
 export function drawLogo(pdf: jsPDF, side: 'front' | 'back') {
-  pdf.setFontSize(9);
-  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(TYPOGRAPHY.logo.size);
+  pdf.setFont('helvetica', TYPOGRAPHY.logo.weight);
   
-  const logoY = side === 'front' ? CONTENT_MARGINS.y + 2 : CONTENT_MARGINS.y + CONTENT_MARGINS.height - 6;
+  const logoY = side === 'front' 
+    ? CONTENT_MARGINS.y + 3 
+    : CONTENT_MARGINS.y + CONTENT_MARGINS.height - 4;
   
-  // "Lok" in black, "Lernen" in ultramarine
-  pdf.setTextColor(0, 0, 0);
+  // Professional logo placement
+  pdf.setTextColor(...COLORS.primary.black);
   pdf.text('Lok', CONTENT_MARGINS.x + 2, logoY);
   
-  pdf.setTextColor(63, 0, 255);
+  pdf.setTextColor(...COLORS.primary.ultramarine);
   const lokWidth = pdf.getTextWidth('Lok');
   pdf.text('Lernen', CONTENT_MARGINS.x + 2 + lokWidth, logoY);
 }
 
 export function drawRegulationBadge(pdf: jsPDF, regulation?: RegulationCategory) {
+  // Only draw badge for specific regulations, not for "both"
   if (!regulation || regulation === 'both') {
-    regulation = 'DS 301'; // Default for display
+    return; // No badge for "both" regulation cards
   }
   
-  pdf.setFontSize(7);
-  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(TYPOGRAPHY.badge.size);
+  pdf.setFont('helvetica', TYPOGRAPHY.badge.weight);
   
-  // Badge background with improved colors
-  const badgeColor = regulation === 'DS 301' ? [63, 0, 255] : [15, 82, 186];
-  pdf.setFillColor(badgeColor[0], badgeColor[1], badgeColor[2]);
+  // Professional badge design
+  const badgeColor = regulation === 'DS 301' 
+    ? COLORS.primary.ultramarine 
+    : COLORS.primary.sapphire;
   
-  const badgeX = CONTENT_MARGINS.x + CONTENT_MARGINS.width - 20;
-  const badgeY = CONTENT_MARGINS.y + 1;
-  pdf.roundedRect(badgeX, badgeY, 18, 7, 2, 2, 'F');
+  pdf.setFillColor(...badgeColor);
   
-  // Badge text - centered
-  pdf.setTextColor(255, 255, 255);
-  const textWidth = pdf.getTextWidth(regulation);
-  pdf.text(regulation, badgeX + (18 - textWidth) / 2, badgeY + 5);
+  const badgeText = regulation;
+  const textWidth = pdf.getTextWidth(badgeText);
+  const badgeWidth = textWidth + 4;
+  const badgeHeight = 6;
+  const badgeX = CONTENT_MARGINS.x + CONTENT_MARGINS.width - badgeWidth - 1;
+  const badgeY = CONTENT_MARGINS.y + 2;
+  
+  // Draw professional badge with rounded corners
+  pdf.roundedRect(badgeX, badgeY, badgeWidth, badgeHeight, 1.5, 1.5, 'F');
+  
+  // Badge text - perfectly centered
+  pdf.setTextColor(...COLORS.backgrounds.white);
+  pdf.text(badgeText, badgeX + 2, badgeY + 4.2);
 }
 
-export async function drawQuestionImage(pdf: jsPDF, imageUrl: string): Promise<number> {
+export async function drawQuestionImage(pdf: jsPDF, imageUrl: string, imageArea: any): Promise<void> {
   try {
     const loadedImage = await loadImageFromUrl(imageUrl);
-    const imageSpace = calculateAvailableImageSpace(true);
     
     const imageDimensions = calculateImageDimensions(
       loadedImage.originalWidth,
       loadedImage.originalHeight,
-      imageSpace.width,
-      imageSpace.height,
-      CONTENT_MARGINS.x + 2,
-      imageSpace.startY
+      imageArea.width,
+      imageArea.height,
+      imageArea.x,
+      imageArea.y
     );
     
-    // Add subtle border around image
-    pdf.setDrawColor(220, 220, 220);
-    pdf.setLineWidth(0.2);
-    pdf.roundedRect(
-      imageDimensions.x - 1,
-      imageDimensions.y - 1,
-      imageDimensions.width + 2,
-      imageDimensions.height + 2,
-      1, 1, 'S'
-    );
-    
-    pdf.addImage(
-      loadedImage.data,
-      'JPEG',
-      imageDimensions.x,
-      imageDimensions.y,
-      imageDimensions.width,
-      imageDimensions.height
-    );
-    
-    return imageDimensions.y + imageDimensions.height + 4;
-  } catch (error) {
-    console.error('Error drawing image:', error);
-    // Improved placeholder with better styling
-    pdf.setDrawColor(200, 200, 200);
-    pdf.setFillColor(248, 248, 248);
-    const imageSpace = calculateAvailableImageSpace(true);
-    pdf.roundedRect(
-      CONTENT_MARGINS.x + 2,
-      imageSpace.startY,
-      imageSpace.width,
-      18,
-      3, 3, 'FD'
-    );
-    
-    pdf.setFontSize(7);
-    pdf.setTextColor(160, 160, 160);
-    pdf.text('Bild nicht verfügbar', CONTENT_MARGINS.x + 4, imageSpace.startY + 10);
-    
-    return imageSpace.startY + 22;
-  }
-}
-
-export async function drawAnswerImage(pdf: jsPDF, imageUrl: string, startY: number): Promise<number> {
-  try {
-    const loadedImage = await loadImageFromUrl(imageUrl);
-    
-    // Smaller image for answer side
-    const maxWidth = CONTENT_MARGINS.width - 6;
-    const maxHeight = 25; // Smaller than question side
-    
-    const imageDimensions = calculateImageDimensions(
-      loadedImage.originalWidth,
-      loadedImage.originalHeight,
-      maxWidth,
-      maxHeight,
-      CONTENT_MARGINS.x + 3,
-      startY + 2
-    );
-    
-    // Subtle border
-    pdf.setDrawColor(210, 210, 210);
-    pdf.setLineWidth(0.1);
+    // Professional image border
+    pdf.setDrawColor(...COLORS.borders.light);
+    pdf.setLineWidth(0.15);
     pdf.roundedRect(
       imageDimensions.x - 0.5,
       imageDimensions.y - 0.5,
       imageDimensions.width + 1,
       imageDimensions.height + 1,
+      1.5, 1.5, 'S'
+    );
+    
+    pdf.addImage(
+      loadedImage.data,
+      'JPEG',
+      imageDimensions.x,
+      imageDimensions.y,
+      imageDimensions.width,
+      imageDimensions.height
+    );
+  } catch (error) {
+    console.error('Error drawing question image:', error);
+    drawImagePlaceholder(pdf, imageArea.x, imageArea.y, imageArea.width, imageArea.height);
+  }
+}
+
+export async function drawAnswerImage(pdf: jsPDF, imageUrl: string, x: number, y: number, width: number, height: number): Promise<void> {
+  try {
+    const loadedImage = await loadImageFromUrl(imageUrl);
+    
+    const imageDimensions = calculateImageDimensions(
+      loadedImage.originalWidth,
+      loadedImage.originalHeight,
+      width,
+      height,
+      x,
+      y
+    );
+    
+    // Subtle border for answer images
+    pdf.setDrawColor(...COLORS.borders.medium);
+    pdf.setLineWidth(0.1);
+    pdf.roundedRect(
+      imageDimensions.x - 0.3,
+      imageDimensions.y - 0.3,
+      imageDimensions.width + 0.6,
+      imageDimensions.height + 0.6,
       1, 1, 'S'
     );
     
@@ -136,85 +124,78 @@ export async function drawAnswerImage(pdf: jsPDF, imageUrl: string, startY: numb
       imageDimensions.width,
       imageDimensions.height
     );
-    
-    return imageDimensions.y + imageDimensions.height + 3;
   } catch (error) {
     console.error('Error drawing answer image:', error);
-    return startY;
+    drawImagePlaceholder(pdf, x, y, width, height);
   }
 }
 
-export async function drawQuestionText(pdf: jsPDF, text: string, startY?: number) {
-  pdf.setFontSize(11);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(40, 40, 40); // Softer black for better readability
+export function drawQuestionText(pdf: jsPDF, text: string, textArea: any, fontSize: number) {
+  pdf.setFontSize(fontSize);
+  pdf.setFont('helvetica', TYPOGRAPHY.question.weight);
+  pdf.setTextColor(...COLORS.semantic.text.primary);
   
-  const maxWidth = CONTENT_MARGINS.width - 4;
-  const textStartY = startY || CONTENT_MARGINS.y + 12;
-  
-  // Split text into lines that fit
-  const lines = pdf.splitTextToSize(text, maxWidth);
-  
-  // Draw text with improved line spacing
-  pdf.text(lines, CONTENT_MARGINS.x + 2, textStartY, { lineHeightFactor: 1.3 });
+  // Professional text rendering with optimal line spacing
+  const lines = pdf.splitTextToSize(text, textArea.width);
+  pdf.text(lines, textArea.x, textArea.y, { 
+    lineHeightFactor: TYPOGRAPHY.question.lineHeight 
+  });
 }
 
-export function drawSubcategory(pdf: jsPDF, subcategory: string) {
-  pdf.setFontSize(7);
-  pdf.setFont('helvetica', 'italic');
-  pdf.setTextColor(120, 120, 120);
+export function drawSubcategory(pdf: jsPDF, subcategory: string, y: number) {
+  pdf.setFontSize(TYPOGRAPHY.subcategory.size);
+  pdf.setFont('helvetica', TYPOGRAPHY.subcategory.weight);
+  pdf.setTextColor(...COLORS.semantic.text.light);
   
-  const categoryY = CONTENT_MARGINS.y + CONTENT_MARGINS.height - 10;
-  pdf.text(subcategory, CONTENT_MARGINS.x + 2, categoryY);
+  pdf.text(subcategory, CONTENT_MARGINS.x + 2, y);
 }
 
-export async function drawAnswers(pdf: jsPDF, question: Question): Promise<number> {
-  pdf.setFontSize(10);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(40, 40, 40);
-  
-  let currentY = CONTENT_MARGINS.y + 8;
-  const maxWidth = CONTENT_MARGINS.width - 4;
-  
-  // Add "Antwort" header with improved styling
-  pdf.setFontSize(8);
+export async function drawAnswers(pdf: jsPDF, question: Question, startY: number): Promise<number> {
+  // Professional answer header
+  pdf.setFontSize(TYPOGRAPHY.answer.header);
   pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(63, 0, 255);
-  pdf.text('ANTWORT', CONTENT_MARGINS.x + 2, currentY);
-  currentY += 6;
+  pdf.setTextColor(...COLORS.primary.ultramarine);
+  pdf.text('ANTWORT', CONTENT_MARGINS.x + 2, startY);
   
-  pdf.setFontSize(10);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(40, 40, 40);
+  let currentY = startY + 6;
+  const maxWidth = CONTENT_MARGINS.width - 6;
+  
+  pdf.setFontSize(TYPOGRAPHY.answer.text);
+  pdf.setFont('helvetica', TYPOGRAPHY.answer.weight);
+  pdf.setTextColor(...COLORS.semantic.text.primary);
   
   if (question.question_type === 'open') {
-    // For open questions, show all correct answers
+    // Open questions - show all correct answers
     question.answers.forEach((answer, index) => {
       const answerText = getTextValue(answer.text);
       const lines = pdf.splitTextToSize(answerText, maxWidth);
       
       if (index > 0) currentY += 2;
-      pdf.text(lines, CONTENT_MARGINS.x + 2, currentY, { lineHeightFactor: 1.2 });
-      currentY += lines.length * 3.5;
+      pdf.text(lines, CONTENT_MARGINS.x + 2, currentY, { 
+        lineHeightFactor: TYPOGRAPHY.answer.lineHeight 
+      });
+      currentY += lines.length * TYPOGRAPHY.answer.text * TYPOGRAPHY.answer.lineHeight * 0.35;
     });
   } else {
-    // For multiple choice, show correct answers with checkmark
+    // Multiple choice - show correct answers with professional checkmarks
     const correctAnswers = question.answers.filter(a => a.isCorrect);
     correctAnswers.forEach((answer, index) => {
       const answerText = getTextValue(answer.text);
       
-      // Draw checkmark
-      pdf.setFontSize(9);
-      pdf.setTextColor(34, 197, 94); // Green color
+      // Professional checkmark
+      pdf.setFontSize(8);
+      pdf.setTextColor(...COLORS.semantic.success);
       pdf.text('✓', CONTENT_MARGINS.x + 2, currentY);
       
-      // Draw answer text
-      pdf.setFontSize(10);
-      pdf.setTextColor(40, 40, 40);
+      // Answer text
+      pdf.setFontSize(TYPOGRAPHY.answer.text);
+      pdf.setTextColor(...COLORS.semantic.text.primary);
       const lines = pdf.splitTextToSize(answerText, maxWidth - 4);
-      pdf.text(lines, CONTENT_MARGINS.x + 6, currentY, { lineHeightFactor: 1.2 });
+      pdf.text(lines, CONTENT_MARGINS.x + 6, currentY, { 
+        lineHeightFactor: TYPOGRAPHY.answer.lineHeight 
+      });
       
-      currentY += lines.length * 3.5;
+      currentY += lines.length * TYPOGRAPHY.answer.text * TYPOGRAPHY.answer.lineHeight * 0.35;
       if (index < correctAnswers.length - 1) currentY += 2;
     });
   }
@@ -222,15 +203,17 @@ export async function drawAnswers(pdf: jsPDF, question: Question): Promise<numbe
   return currentY + 3;
 }
 
-export function drawHint(pdf: jsPDF, hint: string, startY: number) {
-  pdf.setFontSize(7);
-  pdf.setFont('helvetica', 'italic');
-  pdf.setTextColor(99, 102, 241); // Indigo color for hints
+export function drawHint(pdf: jsPDF, hint: string, y: number) {
+  pdf.setFontSize(TYPOGRAPHY.hint.size);
+  pdf.setFont('helvetica', TYPOGRAPHY.hint.weight);
+  pdf.setTextColor(...COLORS.semantic.info);
   
-  const maxWidth = CONTENT_MARGINS.width - 4;
+  const maxWidth = CONTENT_MARGINS.width - 6;
   
-  // Add hint icon and text
-  pdf.text('💡', CONTENT_MARGINS.x + 2, startY);
+  // Professional hint with icon
+  pdf.text('💡', CONTENT_MARGINS.x + 2, y);
   const lines = pdf.splitTextToSize(hint, maxWidth - 4);
-  pdf.text(lines, CONTENT_MARGINS.x + 6, startY, { lineHeightFactor: 1.1 });
+  pdf.text(lines, CONTENT_MARGINS.x + 6, y, { 
+    lineHeightFactor: 1.2 
+  });
 }

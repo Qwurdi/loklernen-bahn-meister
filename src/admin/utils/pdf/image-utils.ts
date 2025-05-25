@@ -1,9 +1,8 @@
 
 import { ImageDimensions, LoadedImage } from './types';
-import { CONTENT_MARGINS } from './constants';
 
 /**
- * Lädt ein Bild von einer URL und konvertiert es zu Base64 mit verbesserter Qualität
+ * Professional image loading with enhanced quality for print
  */
 export async function loadImageFromUrl(url: string): Promise<LoadedImage> {
   try {
@@ -25,16 +24,19 @@ export async function loadImageFromUrl(url: string): Promise<LoadedImage> {
           return;
         }
         
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
+        // High resolution for print quality
+        const scale = Math.min(2, Math.max(1, 1200 / Math.max(img.naturalWidth, img.naturalHeight)));
+        canvas.width = img.naturalWidth * scale;
+        canvas.height = img.naturalHeight * scale;
         
-        // Improved image quality settings
+        // Premium image quality settings
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
+        ctx.scale(scale, scale);
         ctx.drawImage(img, 0, 0);
         
-        // Higher quality JPEG for better print results
-        const base64Data = canvas.toDataURL('image/jpeg', 0.92);
+        // High quality JPEG for print (95% quality)
+        const base64Data = canvas.toDataURL('image/jpeg', 0.95);
         
         resolve({
           data: base64Data,
@@ -53,7 +55,7 @@ export async function loadImageFromUrl(url: string): Promise<LoadedImage> {
 }
 
 /**
- * Berechnet optimale Bildabmessungen für die Karte
+ * Professional image dimension calculation with optimal fitting
  */
 export function calculateImageDimensions(
   originalWidth: number,
@@ -65,62 +67,44 @@ export function calculateImageDimensions(
 ): ImageDimensions {
   const aspectRatio = originalWidth / originalHeight;
   
+  // Calculate optimal size maintaining aspect ratio
   let width = availableWidth;
   let height = width / aspectRatio;
   
-  // Wenn das Bild zu hoch wird, limitiere die Höhe
+  // If height exceeds available space, constrain by height
   if (height > availableHeight) {
     height = availableHeight;
     width = height * aspectRatio;
   }
   
-  // Zentriere das Bild horizontal
+  // Center the image in available space
   const x = startX + (availableWidth - width) / 2;
-  const y = startY;
+  const y = startY + (availableHeight - height) / 2;
   
   return { x, y, width, height };
 }
 
 /**
- * Berechnet verfügbaren Platz für Bilder basierend auf Textinhalt (Frageseite)
+ * Professional placeholder for missing images
  */
-export function calculateAvailableImageSpace(hasText: boolean): {
-  width: number;
-  height: number;
-  startY: number;
-} {
-  const maxWidth = CONTENT_MARGINS.width - 4;
+export function drawImagePlaceholder(
+  pdf: any,
+  x: number,
+  y: number,
+  width: number,
+  height: number
+): void {
+  // Professional placeholder with subtle styling
+  pdf.setDrawColor(200, 200, 200);
+  pdf.setFillColor(248, 248, 248);
+  pdf.setLineWidth(0.1);
+  pdf.roundedRect(x, y, width, height, 2, 2, 'FD');
   
-  if (hasText) {
-    // Wenn Text vorhanden ist, reserviere Platz dafür
-    return {
-      width: maxWidth,
-      height: 32, // Etwas mehr Platz für bessere Bildqualität
-      startY: CONTENT_MARGINS.y + 12
-    };
-  } else {
-    // Ohne Text kann das Bild mehr Platz nutzen
-    return {
-      width: maxWidth,
-      height: 55, // Größerer Bildbereich ohne Text
-      startY: CONTENT_MARGINS.y + 12
-    };
-  }
-}
-
-/**
- * Berechnet verfügbaren Platz für Bilder auf der Antwortseite
- */
-export function calculateAnswerImageSpace(): {
-  width: number;
-  height: number;
-  maxHeight: number;
-} {
-  const maxWidth = CONTENT_MARGINS.width - 6; // Etwas weniger Breite für bessere Proportionen
-  
-  return {
-    width: maxWidth,
-    height: 25, // Kompakte Höhe für Antwortseite
-    maxHeight: 25
-  };
+  // Subtle "Image not available" text
+  pdf.setFontSize(6);
+  pdf.setTextColor(160, 160, 160);
+  pdf.setFont('helvetica', 'italic');
+  const text = 'Bild nicht verfügbar';
+  const textWidth = pdf.getTextWidth(text);
+  pdf.text(text, x + (width - textWidth) / 2, y + height / 2 + 1);
 }

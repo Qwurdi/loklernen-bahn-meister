@@ -1,13 +1,13 @@
 
 import { jsPDF } from 'jspdf';
-import { CARD_SIZE, MARGINS } from './constants';
+import { CARD_SIZE, MARGINS, COLORS } from './constants';
 
 export function drawCardOutline(pdf: jsPDF) {
-  // Set card border
-  pdf.setDrawColor(200, 200, 200);
-  pdf.setLineWidth(0.1);
+  // Professional card border
+  pdf.setDrawColor(...COLORS.borders.card);
+  pdf.setLineWidth(0.08);
   
-  // Draw rounded rectangle for card
+  // Draw professional rounded rectangle
   pdf.roundedRect(
     MARGINS.x, 
     MARGINS.y, 
@@ -19,12 +19,12 @@ export function drawCardOutline(pdf: jsPDF) {
 }
 
 export function drawCutMarks(pdf: jsPDF) {
-  pdf.setDrawColor(0, 0, 0);
-  pdf.setLineWidth(0.1);
+  pdf.setDrawColor(...COLORS.primary.black);
+  pdf.setLineWidth(0.08);
   
-  const markLength = 2;
+  const markLength = 1.5;
   
-  // Corner cut marks
+  // Professional corner cut marks
   const corners = [
     { x: 0, y: 0 }, // top-left
     { x: CARD_SIZE.docWidth, y: 0 }, // top-right

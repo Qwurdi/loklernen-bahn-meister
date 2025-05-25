@@ -9,7 +9,7 @@ const ADMIN_EMAILS = ['admin@example.com', 'busato@me.com'];
 
 export interface AuthContextType {
   session: Session | null;
-  user: (User & { isAdmin: boolean }) | null; // Modified to make isAdmin non-optional
+  user: (User & { isAdmin: boolean }) | null;
   loading: boolean;
   isNewUser: boolean;
   setIsNewUser: (isNew: boolean) => void;
@@ -30,11 +30,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [authError, setAuthError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // Set initial loading state
-    setLoading(true);
-
+    let mounted = true;
+    
+    console.log("AuthProvider: Setting up auth state listener");
+    
     // Set up auth listener first to ensure we catch all auth events
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      if (!mounted) return;
+      
       console.log("Auth state changed:", event);
       setSession(currentSession);
       
@@ -42,13 +45,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const userEmail = currentSession.user.email || '';
         const userIsAdmin = ADMIN_EMAILS.includes(userEmail);
         
-        // Set both user and isAdmin status in one go
         setUser({
           ...currentSession.user,
           isAdmin: userIsAdmin
         });
         
-        // Check if this is a new user based on created_at and last_sign_in_at
+        // Check if this is a new user
         if (currentSession.user.created_at && currentSession.user.last_sign_in_at) {
           const createdAtTime = new Date(currentSession.user.created_at).getTime();
           const lastSignInAtTime = new Date(currentSession.user.last_sign_in_at).getTime();
@@ -72,6 +74,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Get initial session
     supabase.auth.getSession().then(({ data, error }) => {
+      if (!mounted) return;
+      
       if (error) {
         console.error("Error getting session:", error);
         setAuthError(error);
@@ -95,9 +99,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [loading]);
 
   // Auth methods
   const signIn = async (email: string, password: string) => {

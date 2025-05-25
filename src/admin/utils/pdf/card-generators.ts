@@ -24,10 +24,13 @@ export async function generateCardFront(pdf: jsPDF, question: Question, regulati
   // Professional logo placement
   drawLogo(pdf, 'front');
   
-  // Smart regulation badge (only for specific regulations)
-  drawRegulationBadge(pdf, question.regulation_category || regulation);
+  // Fix badge logic - only show badge for specific regulations, not for "all" or "both"
+  const questionRegulation = question.regulation_category;
+  if (questionRegulation && questionRegulation !== 'both') {
+    drawRegulationBadge(pdf, questionRegulation);
+  }
   
-  // Calculate optimal layout using professional layout engine
+  // Calculate optimal layout using enhanced layout engine
   const layout = calculateQuestionLayout(pdf, question);
   
   // Draw image first if present and space allows
@@ -58,20 +61,20 @@ export async function generateCardBack(pdf: jsPDF, question: Question, regulatio
   // Professional logo at bottom
   drawLogo(pdf, 'back');
   
-  // Calculate optimal answer layout
+  // Calculate optimal answer layout with enhanced spacing
   const layout = calculateAnswerLayout(pdf, question);
   
   // Draw answers with professional formatting
   const afterAnswersY = await drawAnswers(pdf, question, layout.answersY);
   
-  // Draw image if available and space calculated
-  if (question.image_url && layout.imageY && layout.availableImageHeight >= 15) {
+  // Draw image if available and space calculated with proper constraints
+  if (question.image_url && layout.imageY && layout.availableImageHeight >= 20) {
     try {
-      const maxWidth = CONTENT_MARGINS.width - 6;
+      const maxWidth = CONTENT_MARGINS.width - 8; // Increased padding
       await drawAnswerImage(
         pdf, 
         question.image_url, 
-        CONTENT_MARGINS.x + 3,
+        CONTENT_MARGINS.x + 4, // Increased margin
         layout.imageY,
         maxWidth,
         layout.availableImageHeight
@@ -82,7 +85,7 @@ export async function generateCardBack(pdf: jsPDF, question: Question, regulatio
     }
   }
   
-  // Professional hint placement if available
+  // Professional hint placement if available with better spacing
   if (question.hint && layout.hintY) {
     const hintText = getTextValue(question.hint);
     drawHint(pdf, hintText, layout.hintY);

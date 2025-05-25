@@ -26,40 +26,40 @@ export const CONTENT_MARGINS: ContentMargins = {
   height: CARD_SIZE.contentHeight
 };
 
-// Professional typography system
+// Enhanced professional typography system with more dramatic differences
 export const TYPOGRAPHY = {
   logo: {
-    size: 8,
+    size: 9, // Increased from 8
     weight: 'bold'
   },
   badge: {
-    size: 6.5,
+    size: 7, // Increased from 6.5
     weight: 'bold'
   },
   question: {
-    large: 11,
-    medium: 10,
-    small: 9,
+    large: 12, // Increased from 11
+    medium: 10, // Same
+    small: 8, // Decreased from 9 for more contrast
     weight: 'normal',
-    lineHeight: 1.4
+    lineHeight: 1.5 // Increased from 1.4
   },
   answer: {
-    header: 7.5,
-    text: 9.5,
+    header: 8, // Increased from 7.5
+    text: 10, // Increased from 9.5
     weight: 'normal',
-    lineHeight: 1.3
+    lineHeight: 1.4 // Increased from 1.3
   },
   subcategory: {
-    size: 6.5,
+    size: 6, // Decreased from 6.5 for more subtlety
     weight: 'italic'
   },
   hint: {
-    size: 6.5,
+    size: 7, // Increased from 6.5
     weight: 'normal'
   }
 };
 
-// Professional color system
+// Enhanced professional color system with better contrast
 export const COLORS = {
   primary: {
     ultramarine: [63, 0, 255],
@@ -70,35 +70,36 @@ export const COLORS = {
     success: [34, 197, 94],
     info: [59, 130, 246],
     text: {
-      primary: [30, 30, 30],
-      secondary: [100, 100, 100],
-      light: [140, 140, 140]
+      primary: [20, 20, 20], // Darker for better contrast
+      secondary: [80, 80, 80], // Darker
+      light: [120, 120, 120] // Darker
     }
   },
   borders: {
-    light: [230, 230, 230],
-    medium: [200, 200, 200],
-    card: [180, 180, 180]
+    light: [220, 220, 220], // Slightly darker
+    medium: [180, 180, 180], // Darker
+    card: [160, 160, 160] // Darker for more definition
   },
   backgrounds: {
-    light: [248, 248, 248],
-    white: [255, 255, 255]
+    light: [246, 246, 246], // Slightly darker
+    white: [255, 255, 255],
+    subtle: [252, 252, 252] // New subtle background
   }
 };
 
-// Layout zones for intelligent content placement
+// Enhanced layout zones with better spacing
 export const LAYOUT_ZONES = {
   header: {
-    height: 10,
-    margin: 2
+    height: 12, // Increased from 10
+    margin: 3 // Increased from 2
   },
   content: {
-    minTextHeight: 15,
-    maxImageHeight: 35,
-    spacing: 3
+    minTextHeight: 20, // Increased from 15
+    maxImageHeight: 30, // Decreased from 35 for better balance
+    spacing: 5 // Increased from 3 for better separation
   },
   footer: {
-    height: 8,
-    margin: 2
+    height: 10, // Increased from 8
+    margin: 3 // Increased from 2
   }
 };

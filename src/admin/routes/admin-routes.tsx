@@ -5,6 +5,7 @@ import { ProtectedRoute } from '@/routing/ProtectedRoute';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { AdminDashboard } from '../pages/AdminDashboard';
 import { QuestionsPage } from '../pages/QuestionsPage';
+import { ExportPage } from '../pages/ExportPage';
 
 // Clean placeholder components for upcoming features
 const CategoriesPage = () => (
@@ -43,6 +44,7 @@ export const adminRoutes = (
     <Route path="questions" element={<QuestionsPage />} />
     <Route path="categories" element={<CategoriesPage />} />
     <Route path="users" element={<UsersPage />} />
+    <Route path="export" element={<ExportPage />} />
     <Route path="settings" element={<SettingsPage />} />
   </Route>
 );

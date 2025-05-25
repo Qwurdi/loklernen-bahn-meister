@@ -17,8 +17,8 @@ const navigationItems = [
   { icon: FileText, label: 'Fragen', path: '/admin/questions' },
   { icon: Folder, label: 'Kategorien', path: '/admin/categories' },
   { icon: Users, label: 'Benutzer', path: '/admin/users' },
-  { icon: Upload, label: 'Import', path: '/admin/import' },
   { icon: Download, label: 'Export', path: '/admin/export' },
+  { icon: Upload, label: 'Import', path: '/admin/import' },
   { icon: Database, label: 'Datenbank', path: '/admin/database' },
   { icon: Settings, label: 'Einstellungen', path: '/admin/settings' },
 ];

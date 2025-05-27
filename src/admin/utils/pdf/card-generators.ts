@@ -14,10 +14,11 @@ import {
   drawAnswerImage
 } from './card-content';
 import { calculateQuestionLayout, calculateAnswerLayout } from './layout-engine';
+import { CONTENT_MARGINS } from './constants';
 
 export async function generateCardFront(pdf: jsPDF, question: Question, regulation: RegulationCategory) {
-  // Draw professional card foundation
-  drawCardOutline(pdf);
+  // Draw professional card foundation with category-specific border
+  drawCardOutline(pdf, question.category, question.sub_category);
   drawCutMarks(pdf);
   
   // Professional logo placement
@@ -50,8 +51,8 @@ export async function generateCardFront(pdf: jsPDF, question: Question, regulati
 }
 
 export async function generateCardBack(pdf: jsPDF, question: Question, regulation: RegulationCategory) {
-  // Draw professional card foundation
-  drawCardOutline(pdf);
+  // Draw professional card foundation with category-specific border
+  drawCardOutline(pdf, question.category, question.sub_category);
   drawCutMarks(pdf);
   
   // Professional logo at bottom

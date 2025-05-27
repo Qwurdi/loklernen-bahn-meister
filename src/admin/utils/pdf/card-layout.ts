@@ -1,11 +1,18 @@
 
 import { jsPDF } from 'jspdf';
 import { CARD_SIZE, MARGINS, COLORS } from './constants';
+import { getCategoryBorderColor } from './category-colors';
+import { QuestionCategory } from '@/types/questions';
 
-export function drawCardOutline(pdf: jsPDF) {
-  // Professional card border
-  pdf.setDrawColor(...COLORS.borders.card);
-  pdf.setLineWidth(0.08);
+export function drawCardOutline(pdf: jsPDF, category?: QuestionCategory, subCategory?: string) {
+  // Get category-specific border color or default
+  const borderColor = category && subCategory 
+    ? getCategoryBorderColor(category, subCategory)
+    : COLORS.borders.card;
+  
+  // Professional card border with category color
+  pdf.setDrawColor(...borderColor);
+  pdf.setLineWidth(0.12); // Slightly thicker for better visibility
   
   // Draw professional rounded rectangle
   pdf.roundedRect(

@@ -59,7 +59,7 @@ export const TYPOGRAPHY = {
   }
 };
 
-// Professional color system
+// Professional color system with category-specific colors
 export const COLORS = {
   primary: {
     ultramarine: [63, 0, 255],
@@ -83,6 +83,49 @@ export const COLORS = {
   backgrounds: {
     light: [248, 248, 248],
     white: [255, 255, 255]
+  },
+  // Category-specific colors for signal types
+  signalCategories: {
+    // Hauptsignale - Red (traditional railway signal color)
+    Hp: [220, 38, 27],
+    // Vorsignale - Yellow/Orange (warning colors)
+    Vr: [255, 152, 0],
+    // Kombinationssignale - Purple (combination of red and blue)
+    Ks: [147, 51, 234],
+    // Fahrleitungssignale - Blue (electrical systems)
+    El: [59, 130, 246],
+    // Zusatzsignale - Green (auxiliary/secondary)
+    Zs: [34, 197, 94],
+    // Langsamfahrsignale - Amber (speed restriction)
+    Lf: [245, 158, 11],
+    // Rangiersignale - Teal (operational signals)
+    Sh: [20, 184, 166],
+    Ra: [20, 184, 166],
+    // Weichensignale - Indigo (track equipment)
+    Wn: [99, 102, 241],
+    // Sonstige Signale - Gray (miscellaneous)
+    So: [107, 114, 128],
+    Ne: [107, 114, 128],
+    // Bahnübergangssignale - Red-Orange (safety critical)
+    Bü: [239, 68, 68],
+    // Blocksignale - Dark Blue (block system)
+    Bl: [30, 64, 175],
+    // Zugsignale - Emerald (train operations)
+    Zg: [16, 185, 129],
+    // Default colors for other categories
+    default: [107, 114, 128]
+  },
+  // Betriebsdienst category colors
+  betriebsdienstCategories: {
+    grundlagen: [63, 0, 255], // Ultramarine - foundational knowledge
+    uvv: [220, 38, 27], // Red - safety critical
+    rangieren: [20, 184, 166], // Teal - operational
+    fahren: [34, 197, 94], // Green - active operations
+    pzb: [147, 51, 234], // Purple - technical systems
+    kommunikation: [59, 130, 246], // Blue - communication
+    besonderheiten: [245, 158, 11], // Amber - special cases
+    unregelmäßigkeiten: [239, 68, 68], // Red-Orange - irregularities
+    default: [107, 114, 128] // Gray - default
   }
 };
 

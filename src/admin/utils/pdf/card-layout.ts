@@ -11,7 +11,8 @@ export function drawCardOutline(pdf: jsPDF, category?: QuestionCategory, subCate
     : COLORS.borders.card;
   
   // Professional card border with category color
-  pdf.setDrawColor(...borderColor);
+  const [borderR, borderG, borderB] = borderColor;
+  pdf.setDrawColor(borderR, borderG, borderB);
   pdf.setLineWidth(0.12); // Slightly thicker for better visibility
   
   // Draw professional rounded rectangle
@@ -26,7 +27,8 @@ export function drawCardOutline(pdf: jsPDF, category?: QuestionCategory, subCate
 }
 
 export function drawCutMarks(pdf: jsPDF) {
-  pdf.setDrawColor(...COLORS.primary.black);
+  const [blackR, blackG, blackB] = COLORS.primary.black;
+  pdf.setDrawColor(blackR, blackG, blackB);
   pdf.setLineWidth(0.08);
   
   const markLength = 1.5;

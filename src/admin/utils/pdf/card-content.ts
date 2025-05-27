@@ -15,10 +15,12 @@ export function drawLogo(pdf: jsPDF, side: 'front' | 'back') {
     : CONTENT_MARGINS.y + CONTENT_MARGINS.height - 4;
   
   // Professional logo placement
-  pdf.setTextColor(...COLORS.primary.black);
+  const [blackR, blackG, blackB] = COLORS.primary.black;
+  pdf.setTextColor(blackR, blackG, blackB);
   pdf.text('Lok', CONTENT_MARGINS.x + 2, logoY);
   
-  pdf.setTextColor(...COLORS.primary.ultramarine);
+  const [ultramarineR, ultramarineG, ultramarineB] = COLORS.primary.ultramarine;
+  pdf.setTextColor(ultramarineR, ultramarineG, ultramarineB);
   const lokWidth = pdf.getTextWidth('Lok');
   pdf.text('Lernen', CONTENT_MARGINS.x + 2 + lokWidth, logoY);
 }
@@ -37,7 +39,8 @@ export function drawRegulationBadge(pdf: jsPDF, regulation?: RegulationCategory)
     ? COLORS.primary.ultramarine 
     : COLORS.primary.sapphire;
   
-  pdf.setFillColor(...badgeColor);
+  const [badgeR, badgeG, badgeB] = badgeColor;
+  pdf.setFillColor(badgeR, badgeG, badgeB);
   
   const badgeText = regulation;
   const textWidth = pdf.getTextWidth(badgeText);
@@ -50,7 +53,8 @@ export function drawRegulationBadge(pdf: jsPDF, regulation?: RegulationCategory)
   pdf.roundedRect(badgeX, badgeY, badgeWidth, badgeHeight, 1.5, 1.5, 'F');
   
   // Badge text - perfectly centered
-  pdf.setTextColor(...COLORS.backgrounds.white);
+  const [whiteR, whiteG, whiteB] = COLORS.backgrounds.white;
+  pdf.setTextColor(whiteR, whiteG, whiteB);
   pdf.text(badgeText, badgeX + 2, badgeY + 4.2);
 }
 
@@ -68,7 +72,8 @@ export async function drawQuestionImage(pdf: jsPDF, imageUrl: string, imageArea:
     );
     
     // Professional image border
-    pdf.setDrawColor(...COLORS.borders.light);
+    const [lightR, lightG, lightB] = COLORS.borders.light;
+    pdf.setDrawColor(lightR, lightG, lightB);
     pdf.setLineWidth(0.15);
     pdf.roundedRect(
       imageDimensions.x - 0.5,
@@ -106,7 +111,8 @@ export async function drawAnswerImage(pdf: jsPDF, imageUrl: string, x: number, y
     );
     
     // Subtle border for answer images
-    pdf.setDrawColor(...COLORS.borders.medium);
+    const [mediumR, mediumG, mediumB] = COLORS.borders.medium;
+    pdf.setDrawColor(mediumR, mediumG, mediumB);
     pdf.setLineWidth(0.1);
     pdf.roundedRect(
       imageDimensions.x - 0.3,
@@ -133,7 +139,8 @@ export async function drawAnswerImage(pdf: jsPDF, imageUrl: string, x: number, y
 export function drawQuestionText(pdf: jsPDF, text: string, textArea: any, fontSize: number) {
   pdf.setFontSize(fontSize);
   pdf.setFont('helvetica', TYPOGRAPHY.question.weight);
-  pdf.setTextColor(...COLORS.semantic.text.primary);
+  const [primaryR, primaryG, primaryB] = COLORS.semantic.text.primary;
+  pdf.setTextColor(primaryR, primaryG, primaryB);
   
   // Professional text rendering with optimal line spacing
   const lines = pdf.splitTextToSize(text, textArea.width);
@@ -145,7 +152,8 @@ export function drawQuestionText(pdf: jsPDF, text: string, textArea: any, fontSi
 export function drawSubcategory(pdf: jsPDF, subcategory: string, y: number) {
   pdf.setFontSize(TYPOGRAPHY.subcategory.size);
   pdf.setFont('helvetica', TYPOGRAPHY.subcategory.weight);
-  pdf.setTextColor(...COLORS.semantic.text.light);
+  const [lightR, lightG, lightB] = COLORS.semantic.text.light;
+  pdf.setTextColor(lightR, lightG, lightB);
   
   pdf.text(subcategory, CONTENT_MARGINS.x + 2, y);
 }
@@ -154,7 +162,8 @@ export async function drawAnswers(pdf: jsPDF, question: Question, startY: number
   // Professional answer header
   pdf.setFontSize(TYPOGRAPHY.answer.header);
   pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(...COLORS.primary.ultramarine);
+  const [ultramarineR, ultramarineG, ultramarineB] = COLORS.primary.ultramarine;
+  pdf.setTextColor(ultramarineR, ultramarineG, ultramarineB);
   pdf.text('ANTWORT', CONTENT_MARGINS.x + 2, startY);
   
   let currentY = startY + 6;
@@ -162,7 +171,8 @@ export async function drawAnswers(pdf: jsPDF, question: Question, startY: number
   
   pdf.setFontSize(TYPOGRAPHY.answer.text);
   pdf.setFont('helvetica', TYPOGRAPHY.answer.weight);
-  pdf.setTextColor(...COLORS.semantic.text.primary);
+  const [primaryR, primaryG, primaryB] = COLORS.semantic.text.primary;
+  pdf.setTextColor(primaryR, primaryG, primaryB);
   
   if (question.question_type === 'open') {
     // Open questions - show all correct answers
@@ -184,12 +194,13 @@ export async function drawAnswers(pdf: jsPDF, question: Question, startY: number
       
       // Professional checkmark
       pdf.setFontSize(8);
-      pdf.setTextColor(...COLORS.semantic.success);
+      const [successR, successG, successB] = COLORS.semantic.success;
+      pdf.setTextColor(successR, successG, successB);
       pdf.text('✓', CONTENT_MARGINS.x + 2, currentY);
       
       // Answer text
       pdf.setFontSize(TYPOGRAPHY.answer.text);
-      pdf.setTextColor(...COLORS.semantic.text.primary);
+      pdf.setTextColor(primaryR, primaryG, primaryB);
       const lines = pdf.splitTextToSize(answerText, maxWidth - 4);
       pdf.text(lines, CONTENT_MARGINS.x + 6, currentY, { 
         lineHeightFactor: TYPOGRAPHY.answer.lineHeight 
@@ -206,7 +217,8 @@ export async function drawAnswers(pdf: jsPDF, question: Question, startY: number
 export function drawHint(pdf: jsPDF, hint: string, y: number) {
   pdf.setFontSize(TYPOGRAPHY.hint.size);
   pdf.setFont('helvetica', TYPOGRAPHY.hint.weight);
-  pdf.setTextColor(...COLORS.semantic.info);
+  const [infoR, infoG, infoB] = COLORS.semantic.info;
+  pdf.setTextColor(infoR, infoG, infoB);
   
   const maxWidth = CONTENT_MARGINS.width - 6;
   

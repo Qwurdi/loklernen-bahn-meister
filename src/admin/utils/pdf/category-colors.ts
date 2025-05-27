@@ -54,11 +54,13 @@ export function extractBetriebsdienstCategory(subCategory: string): string {
 export function getCategoryBorderColor(category: QuestionCategory, subCategory: string): [number, number, number] {
   if (category === 'Signale') {
     const signalCategory = extractSignalCategory(subCategory);
-    return COLORS.signalCategories[signalCategory as keyof typeof COLORS.signalCategories] || COLORS.signalCategories.default;
+    const color = COLORS.signalCategories[signalCategory as keyof typeof COLORS.signalCategories];
+    return color ? color as [number, number, number] : COLORS.signalCategories.default as [number, number, number];
   } else if (category === 'Betriebsdienst') {
     const betriebsCategory = extractBetriebsdienstCategory(subCategory);
-    return COLORS.betriebsdienstCategories[betriebsCategory as keyof typeof COLORS.betriebsdienstCategories] || COLORS.betriebsdienstCategories.default;
+    const color = COLORS.betriebsdienstCategories[betriebsCategory as keyof typeof COLORS.betriebsdienstCategories];
+    return color ? color as [number, number, number] : COLORS.betriebsdienstCategories.default as [number, number, number];
   }
   
-  return COLORS.borders.card;
+  return COLORS.borders.card as [number, number, number];
 }

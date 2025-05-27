@@ -4,6 +4,11 @@ import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Ensure React is available
+if (!React) {
+  throw new Error('React is not available');
+}
+
 // List of admin emails - in a real production app, this would come from a database
 const ADMIN_EMAILS = ['admin@example.com', 'busato@me.com'];
 
@@ -23,6 +28,12 @@ export interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  // Add safety check for React hooks
+  if (!React || !React.useState) {
+    console.error('React hooks are not available');
+    return <div>Loading...</div>;
+  }
+
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<(User & { isAdmin: boolean }) | null>(null);
   const [loading, setLoading] = useState(true);

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,15 +29,10 @@ export const ExportPage: React.FC = () => {
 
     setIsGenerating(true);
     try {
-      // Enhanced toast with more detailed information
+      // Check if any questions have images
       const questionsWithImages = filteredQuestions.filter(q => q.image_url);
       if (questionsWithImages.length > 0) {
-        toast.info(
-          `Exportiere ${filteredQuestions.length} Karten mit ${questionsWithImages.length} Bildern in professioneller Qualität...`,
-          { duration: 5000 }
-        );
-      } else {
-        toast.info(`Exportiere ${filteredQuestions.length} Karten in professioneller Qualität...`, { duration: 5000 });
+        toast.info(`Exportiere ${filteredQuestions.length} Karten mit ${questionsWithImages.length} Bildern...`);
       }
 
       await generateFlashcardPDF(filteredQuestions, {
@@ -44,15 +40,10 @@ export const ExportPage: React.FC = () => {
         regulation: regulation as RegulationCategory,
         filename: `LokLernen_${category}_${regulation}_Karten.pdf`
       });
-      
-      // Enhanced success toast with more details
-      toast.success(
-        `${filteredQuestions.length} Karteikarten erfolgreich exportiert. Die PDF-Datei ist bereit zum Drucken.`,
-        { duration: 5000 }
-      );
+      toast.success(`${filteredQuestions.length} Karteikarten erfolgreich exportiert`);
     } catch (error) {
       console.error('Export error:', error);
-      toast.error('Fehler beim Erstellen der PDF. Bitte versuchen Sie es erneut.');
+      toast.error('Fehler beim Erstellen der PDF');
     } finally {
       setIsGenerating(false);
     }

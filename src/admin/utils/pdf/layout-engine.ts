@@ -23,39 +23,39 @@ export interface LayoutCalculation {
 }
 
 /**
- * Enhanced professional layout engine with better spacing and constraints
+ * Professional layout engine that calculates optimal space distribution
  */
 export function calculateQuestionLayout(pdf: jsPDF, question: Question): LayoutCalculation {
   const questionText = getTextValue(question.text);
   const hasImage = !!question.image_url;
   
-  // Calculate available content area with enhanced spacing
+  // Calculate available content area
   const contentStartY = CONTENT_MARGINS.y + LAYOUT_ZONES.header.height + LAYOUT_ZONES.header.margin;
   const contentEndY = CONTENT_MARGINS.y + CONTENT_MARGINS.height - LAYOUT_ZONES.footer.height - LAYOUT_ZONES.footer.margin;
   const availableHeight = contentEndY - contentStartY;
-  const availableWidth = CONTENT_MARGINS.width - 6; // Increased margin
+  const availableWidth = CONTENT_MARGINS.width - 4; // 2mm margin on each side
   
-  // Determine optimal font size with more dramatic differences
+  // Determine optimal font size based on text length
   const fontSize = calculateOptimalFontSize(questionText);
   pdf.setFontSize(fontSize);
   
-  // Calculate text dimensions with enhanced line spacing
+  // Calculate text dimensions
   const lines = pdf.splitTextToSize(questionText, availableWidth);
-  const textHeight = lines.length * fontSize * TYPOGRAPHY.question.lineHeight * 0.35;
+  const textHeight = lines.length * fontSize * TYPOGRAPHY.question.lineHeight * 0.35; // Convert to mm
   
   let imageArea: LayoutCalculation['imageArea'] = null;
   let textY = contentStartY;
   
   if (hasImage) {
-    // More conservative image sizing to prevent overlap
-    const remainingHeight = availableHeight - textHeight - (LAYOUT_ZONES.content.spacing * 2);
+    // Calculate optimal image size based on remaining space
+    const remainingHeight = availableHeight - textHeight - LAYOUT_ZONES.content.spacing;
     const maxImageHeight = Math.min(LAYOUT_ZONES.content.maxImageHeight, remainingHeight);
     
-    if (maxImageHeight > 15) { // Higher minimum for better image quality
+    if (maxImageHeight > 10) { // Minimum viable image size
       imageArea = {
-        x: CONTENT_MARGINS.x + 3, // Increased margin
+        x: CONTENT_MARGINS.x + 2,
         y: contentStartY,
-        width: availableWidth - 2, // Reduced width for better padding
+        width: availableWidth,
         height: maxImageHeight
       };
       textY = contentStartY + maxImageHeight + LAYOUT_ZONES.content.spacing;
@@ -63,13 +63,13 @@ export function calculateQuestionLayout(pdf: jsPDF, question: Question): LayoutC
   }
   
   const textArea = {
-    x: CONTENT_MARGINS.x + 3, // Increased margin
+    x: CONTENT_MARGINS.x + 2,
     y: textY,
-    width: availableWidth - 2, // Consistent with image width
+    width: availableWidth,
     height: Math.max(textHeight, LAYOUT_ZONES.content.minTextHeight)
   };
   
-  const subcategoryY = CONTENT_MARGINS.y + CONTENT_MARGINS.height - LAYOUT_ZONES.footer.height + 1;
+  const subcategoryY = CONTENT_MARGINS.y + CONTENT_MARGINS.height - LAYOUT_ZONES.footer.height;
   
   return {
     textArea,
@@ -81,18 +81,18 @@ export function calculateQuestionLayout(pdf: jsPDF, question: Question): LayoutC
 }
 
 /**
- * Enhanced optimal font size calculation with more dramatic differences
+ * Calculate optimal font size based on text length for readability
  */
 function calculateOptimalFontSize(text: string): number {
   const length = text.length;
   
-  if (length < 90) return TYPOGRAPHY.question.large;
-  if (length < 180) return TYPOGRAPHY.question.medium;
+  if (length < 100) return TYPOGRAPHY.question.large;
+  if (length < 200) return TYPOGRAPHY.question.medium;
   return TYPOGRAPHY.question.small;
 }
 
 /**
- * Enhanced answer layout with better spacing and constraints
+ * Calculate layout for answer side with proper spacing
  */
 export function calculateAnswerLayout(pdf: jsPDF, question: Question): {
   headerY: number;
@@ -106,36 +106,35 @@ export function calculateAnswerLayout(pdf: jsPDF, question: Question): {
   
   let currentY = contentStartY;
   
-  // Header with better spacing
+  // Header
   const headerY = currentY;
-  currentY += 10; // Increased from 8
+  currentY += 8; // Header height
   
-  // Answers with better spacing
+  // Answers
   const answersY = currentY;
   
-  // More accurate answer height estimation
+  // Estimate answer height
   const answerHeight = estimateAnswerHeight(pdf, question);
   currentY += answerHeight + LAYOUT_ZONES.content.spacing;
   
-  // Image area with more conservative sizing
+  // Image area (if present)
   let imageY: number | null = null;
   let availableImageHeight = 0;
   
   if (question.image_url) {
-    const remainingHeight = contentEndY - currentY - (question.hint ? 15 : 6);
-    // More conservative image height to prevent overlap
-    availableImageHeight = Math.min(30, Math.max(20, remainingHeight));
+    const remainingHeight = contentEndY - currentY - (question.hint ? 12 : 4);
+    availableImageHeight = Math.min(25, Math.max(15, remainingHeight));
     
-    if (availableImageHeight >= 20) { // Higher minimum for better image quality
+    if (availableImageHeight >= 15) {
       imageY = currentY;
       currentY += availableImageHeight + LAYOUT_ZONES.content.spacing;
     }
   }
   
-  // Hint area with better spacing
+  // Hint area
   let hintY: number | null = null;
   if (question.hint) {
-    hintY = Math.max(currentY, contentEndY - 13); // Increased from 10
+    hintY = Math.max(currentY, contentEndY - 10);
   }
   
   return {
@@ -148,11 +147,11 @@ export function calculateAnswerLayout(pdf: jsPDF, question: Question): {
 }
 
 /**
- * Enhanced answer height estimation with better spacing
+ * Estimate the height needed for answers
  */
 function estimateAnswerHeight(pdf: jsPDF, question: Question): number {
   pdf.setFontSize(TYPOGRAPHY.answer.text);
-  const maxWidth = CONTENT_MARGINS.width - 10; // Increased margin
+  const maxWidth = CONTENT_MARGINS.width - 8;
   
   if (question.question_type === 'open') {
     let totalHeight = 0;
@@ -160,7 +159,7 @@ function estimateAnswerHeight(pdf: jsPDF, question: Question): number {
       const answerText = getTextValue(answer.text);
       const lines = pdf.splitTextToSize(answerText, maxWidth);
       totalHeight += lines.length * TYPOGRAPHY.answer.text * TYPOGRAPHY.answer.lineHeight * 0.35;
-      if (index < question.answers.length - 1) totalHeight += 3; // Increased spacing between answers
+      if (index < question.answers.length - 1) totalHeight += 2;
     });
     return totalHeight;
   } else {
@@ -168,9 +167,9 @@ function estimateAnswerHeight(pdf: jsPDF, question: Question): number {
     let totalHeight = 0;
     correctAnswers.forEach((answer, index) => {
       const answerText = getTextValue(answer.text);
-      const lines = pdf.splitTextToSize(answerText, maxWidth - 5); // Account for checkmark
+      const lines = pdf.splitTextToSize(answerText, maxWidth - 4);
       totalHeight += lines.length * TYPOGRAPHY.answer.text * TYPOGRAPHY.answer.lineHeight * 0.35;
-      if (index < correctAnswers.length - 1) totalHeight += 3; // Increased spacing
+      if (index < correctAnswers.length - 1) totalHeight += 2;
     });
     return totalHeight;
   }

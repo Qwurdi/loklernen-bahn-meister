@@ -19,7 +19,9 @@ vi.mock('@/hooks/learning-session', () => ({
     sessionOptions: {},
     handleAnswer: vi.fn(),
     handleComplete: vi.fn(),
-    handleRestart: vi.fn()
+    handleRestart: vi.fn(),
+    canAccess: true,
+    categoryRequiresAuth: false
   })
 }));
 

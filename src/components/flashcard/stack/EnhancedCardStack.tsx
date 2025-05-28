@@ -31,7 +31,7 @@ export default function EnhancedCardStack({
   className = ''
 }: EnhancedCardStackProps) {
   const { regulationPreference } = useUserPreferences();
-  const { triggerHaptic } = useHapticFeedback();
+  const { medium: triggerMediumHaptic, light: triggerLightHaptic } = useHapticFeedback();
   const { showFeedback } = useVisualFeedback();
   
   const [swipeDirection, setSwipeDirection] = useState<SwipeDirection>({ direction: null, confidence: 0 });
@@ -62,12 +62,12 @@ export default function EnhancedCardStack({
       
       // Haptic feedback for direction indication
       if (confidence > 0.5) {
-        triggerHaptic('light');
+        triggerLightHaptic();
       }
     } else {
       setSwipeDirection({ direction: null, confidence: 0 });
     }
-  }, [triggerHaptic]);
+  }, [triggerLightHaptic]);
 
   const handleDragEnd = useCallback(async (event: any, info: PanInfo) => {
     const threshold = 100;
@@ -83,7 +83,7 @@ export default function EnhancedCardStack({
       const score = direction === 'right' ? 5 : 1;
       
       // Strong haptic feedback for action
-      triggerHaptic('medium');
+      triggerMediumHaptic();
       
       // Visual feedback
       showFeedback(direction === 'right' ? 'success' : 'error');
@@ -105,7 +105,7 @@ export default function EnhancedCardStack({
       // Reset position
       setSwipeDirection({ direction: null, confidence: 0 });
     }
-  }, [currentIndex, questions, onAnswer, setCurrentIndex, onComplete, triggerHaptic, showFeedback]);
+  }, [currentIndex, questions, onAnswer, setCurrentIndex, onComplete, triggerMediumHaptic, showFeedback]);
 
   if (questions.length === 0 || currentIndex >= questions.length) {
     return (
@@ -136,7 +136,7 @@ export default function EnhancedCardStack({
     onFlip: () => {},
     onAnswer: async (score: number) => {
       setIsAnimating(true);
-      triggerHaptic('medium');
+      triggerMediumHaptic();
       showFeedback(score >= 4 ? 'success' : 'error');
       
       await onAnswer(currentCard.id, score);

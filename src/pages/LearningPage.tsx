@@ -5,7 +5,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useLearningSession } from '@/hooks/learning-session';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { ChevronLeft } from 'lucide-react';
-import UnifiedLearningSession from '@/components/learning/UnifiedLearningSession';
+import EnhancedLearningSession from '@/components/learning/EnhancedLearningSession';
 import SessionComplete from '@/components/learning/SessionComplete';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
@@ -150,53 +150,11 @@ export default function LearningPage() {
     );
   }
 
-  if (isMobile) {
-    const progressPercentage = ((currentIndex + 1) / questions.length) * 100;
-    
-    return (
-      <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col">
-        {/* Ultra-thin progress bar with modern gradient */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gray-200/50 z-20">
-          <div 
-            className="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 transition-all duration-500 ease-out shadow-sm"
-            style={{ width: `${progressPercentage}%` }}
-          />
-        </div>
-
-        {/* Floating back button with modern design */}
-        <button
-          onClick={handleGoHome}
-          className="absolute top-4 left-4 z-20 w-12 h-12 rounded-2xl bg-white/90 backdrop-blur-lg flex items-center justify-center text-gray-700 shadow-lg border border-white/20 transition-all duration-300 hover:scale-105"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-
-        {/* Progress info with modern styling */}
-        <div className="absolute top-4 right-4 z-20 bg-white/90 backdrop-blur-lg rounded-2xl px-4 py-2 text-sm text-gray-700 shadow-lg border border-white/20">
-          {currentIndex + 1}/{questions.length}
-        </div>
-
-        {/* Main content area */}
-        <div className="flex-1 p-4 pt-20">
-          <UnifiedLearningSession
-            currentQuestion={questions[currentIndex]}
-            currentIndex={currentIndex}
-            totalCards={questions.length}
-            correctCount={correctCount}
-            sessionTitle={sessionTitle}
-            sessionOptions={sessionOptions}
-            regulationPreference={regulationPreference}
-            onAnswer={handleAnswerAndNext}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // Desktop layout
+  // Main learning session
   return (
-    <UnifiedLearningSession
+    <EnhancedLearningSession
       currentQuestion={questions[currentIndex]}
+      questions={questions}
       currentIndex={currentIndex}
       totalCards={questions.length}
       correctCount={correctCount}
@@ -204,6 +162,15 @@ export default function LearningPage() {
       sessionOptions={sessionOptions}
       regulationPreference={regulationPreference}
       onAnswer={handleAnswerAndNext}
+      onNext={() => {
+        if (currentIndex < questions.length - 1) {
+          setCurrentIndex(currentIndex + 1);
+        } else {
+          handleComplete();
+        }
+      }}
+      onGoHome={handleGoHome}
+      setCurrentIndex={setCurrentIndex}
     />
   );
 }

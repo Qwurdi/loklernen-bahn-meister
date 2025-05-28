@@ -11,11 +11,15 @@ vi.mock('@/hooks/learning-session', () => ({
     loading: false,
     error: null,
     questions: [],
-    currentQuestionIndex: 0,
-    progress: { current: 0, total: 0 },
-    submitAnswer: vi.fn(),
-    loadQuestions: vi.fn(),
-    sessionComplete: false
+    currentIndex: 0,
+    setCurrentIndex: vi.fn(),
+    correctCount: 0,
+    sessionFinished: false,
+    sessionTitle: 'Test Session',
+    sessionOptions: {},
+    handleAnswer: vi.fn(),
+    handleComplete: vi.fn(),
+    handleRestart: vi.fn()
   })
 }));
 

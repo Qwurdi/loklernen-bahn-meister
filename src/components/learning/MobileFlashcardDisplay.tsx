@@ -2,7 +2,8 @@
 import React from 'react';
 import { Question } from '@/types/questions';
 import { RegulationFilterType } from '@/types/regulation';
-import UnifiedMobileCard from './UnifiedMobileCard';
+import UnifiedCard from '@/components/flashcard/unified/UnifiedCard';
+import { CardConfig, CardEventHandlers } from '@/types/flashcard';
 
 interface MobileFlashcardDisplayProps {
   question: Question;
@@ -17,13 +18,30 @@ export default function MobileFlashcardDisplay({
   regulationPreference,
   className = '' 
 }: MobileFlashcardDisplayProps) {
+  const cardConfig: CardConfig = {
+    question,
+    regulationPreference,
+    displayMode: 'single',
+    interactionMode: 'swipe',
+    enableSwipe: true,
+    enableKeyboard: false,
+    showHints: true,
+    autoFlip: false
+  };
+
+  const cardHandlers: CardEventHandlers = {
+    onFlip: () => {},
+    onAnswer,
+    onNext: () => {}
+  };
+
   return (
     <div className={`h-full w-full ${className}`}>
-      <UnifiedMobileCard
-        key={question.id} // Force re-render on question change
-        question={question}
-        onAnswer={onAnswer}
-        regulationPreference={regulationPreference}
+      <UnifiedCard
+        key={question.id}
+        config={cardConfig}
+        handlers={cardHandlers}
+        className="h-full w-full"
       />
     </div>
   );

@@ -1,10 +1,9 @@
 
 import React from 'react';
 import { Question } from "@/types/questions";
-import { useCardSwipe } from "./swipe/useCardSwipe";
-import MobileQuestionSide from "./MobileQuestionSide";
-import MobileAnswerSide from "./MobileAnswerSide";
-import SwipeIndicator from "./SwipeIndicator";
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
+import UnifiedCard from '@/components/flashcard/unified/UnifiedCard';
+import { CardConfig, CardEventHandlers } from '@/types/flashcard';
 
 interface MobileFlashcardProps {
   question: Question;
@@ -23,64 +22,34 @@ export default function MobileFlashcard({
   onKnown,
   onNotKnown
 }: MobileFlashcardProps) {
-  const isMultipleChoice = question.question_type === "MC_single" || question.question_type === "MC_multi";
-  
-  // Use our consolidated swipe hook
-  const { 
-    cardRef, 
-    swipeState, 
-    handlers, 
-    getCardStyle, 
-    getCardClasses 
-  } = useCardSwipe({
-    onSwipeLeft: onNotKnown,
-    onSwipeRight: onKnown,
-    onShowAnswer,
-    isFlipped,
-    isAnswered,
-    disableSwipe: isMultipleChoice && isFlipped // Disable swipe for MC questions when flipped
-  });
+  const { regulationPreference } = useUserPreferences();
 
-  // Handle card click on question side to flip the card
-  const handleCardClick = () => {
-    if (!isFlipped) {
-      onShowAnswer();
-    }
+  const cardConfig: CardConfig = {
+    question,
+    regulationPreference,
+    displayMode: 'single',
+    interactionMode: 'swipe',
+    enableSwipe: true,
+    enableKeyboard: false,
+    showHints: true,
+    autoFlip: false
+  };
+
+  const cardHandlers: CardEventHandlers = {
+    onFlip: onShowAnswer,
+    onAnswer: (score: number) => {
+      score >= 4 ? onKnown() : onNotKnown();
+    },
+    onNext: () => {}
   };
 
   return (
     <div className="w-full h-full px-3 touch-none">
-      <div 
-        ref={cardRef}
-        className={`w-full h-full bg-white rounded-xl shadow-lg relative overflow-hidden ${getCardClasses()}`}
-        style={getCardStyle()}
-        onClick={!isFlipped ? handleCardClick : undefined}
-        onTouchStart={isFlipped ? handlers.handleTouchStart : undefined}
-        onTouchMove={isFlipped ? handlers.handleTouchMove : undefined}
-        onTouchEnd={isFlipped ? handlers.handleTouchEnd : undefined}
-      >
-        {!isFlipped ? (
-          <MobileQuestionSide 
-            question={question} 
-            onShowAnswer={onShowAnswer} 
-          />
-        ) : (
-          <MobileAnswerSide 
-            question={question} 
-            answered={isAnswered} 
-            onKnown={onKnown} 
-            onNotKnown={onNotKnown} 
-          />
-        )}
-      </div>
-
-      {/* Visual swipe indicator overlay - only show on answer side for non-MC questions */}
-      {isFlipped && (!isMultipleChoice || !isFlipped) && (
-        <SwipeIndicator 
-          dragDelta={swipeState.dragDelta} 
-          swipeThreshold={100} 
-        />
-      )}
+      <UnifiedCard
+        config={cardConfig}
+        handlers={cardHandlers}
+        className="w-full h-full min-h-[500px]"
+      />
     </div>
   );
 }

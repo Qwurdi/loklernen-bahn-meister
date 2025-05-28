@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { render } from '@testing-library/react';
-import { beforeEach, describe, it, vi } from 'vitest';
+import { describe, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import LearningPage from '../LearningPage';
 
@@ -25,10 +25,9 @@ vi.mock('@/contexts/AuthContext', () => ({
   })
 }));
 
-vi.mock('@/hooks/useRegulationFilter', () => ({
-  useRegulationFilter: () => ({
-    regulation: 'DS 301',
-    setRegulation: vi.fn()
+vi.mock('@/contexts/UserPreferencesContext', () => ({
+  useUserPreferences: () => ({
+    regulationPreference: 'DS 301'
   })
 }));
 

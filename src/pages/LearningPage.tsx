@@ -5,7 +5,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useLearningSession } from '@/hooks/learning-session';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { ChevronLeft } from 'lucide-react';
-import ModernLearningSession from '@/components/learning/ModernLearningSession';
+import UnifiedLearningSession from '@/components/learning/UnifiedLearningSession';
 import SessionComplete from '@/components/learning/SessionComplete';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
@@ -178,15 +178,15 @@ export default function LearningPage() {
 
         {/* Main content area */}
         <div className="flex-1 p-4 pt-20">
-          <ModernLearningSession
+          <UnifiedLearningSession
             currentQuestion={questions[currentIndex]}
             currentIndex={currentIndex}
             totalCards={questions.length}
             correctCount={correctCount}
             sessionTitle={sessionTitle}
             sessionOptions={sessionOptions}
+            regulationPreference={regulationPreference}
             onAnswer={handleAnswerAndNext}
-            isMobile={true}
           />
         </div>
       </div>
@@ -195,15 +195,15 @@ export default function LearningPage() {
 
   // Desktop layout
   return (
-    <ModernLearningSession
+    <UnifiedLearningSession
       currentQuestion={questions[currentIndex]}
       currentIndex={currentIndex}
       totalCards={questions.length}
       correctCount={correctCount}
       sessionTitle={sessionTitle}
       sessionOptions={sessionOptions}
+      regulationPreference={regulationPreference}
       onAnswer={handleAnswerAndNext}
-      isMobile={false}
     />
   );
 }

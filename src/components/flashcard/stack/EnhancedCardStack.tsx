@@ -37,6 +37,7 @@ export default function EnhancedCardStack({
   const [swipeDirection, setSwipeDirection] = useState<SwipeDirection>({ direction: null, confidence: 0 });
   const [isAnimating, setIsAnimating] = useState(false);
   const constraintsRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   // Preload next few images for smooth experience
   useEffect(() => {
@@ -85,8 +86,14 @@ export default function EnhancedCardStack({
       // Strong haptic feedback for action
       triggerMediumHaptic();
       
-      // Visual feedback
-      showFeedback(direction === 'right' ? 'success' : 'error');
+      // Visual feedback on card element
+      if (cardRef.current) {
+        showFeedback(cardRef.current, {
+          type: direction === 'right' ? 'success' : 'error',
+          intensity: 'medium',
+          duration: 300
+        });
+      }
       
       // Submit answer
       await onAnswer(questions[currentIndex].id, score);
@@ -137,7 +144,15 @@ export default function EnhancedCardStack({
     onAnswer: async (score: number) => {
       setIsAnimating(true);
       triggerMediumHaptic();
-      showFeedback(score >= 4 ? 'success' : 'error');
+      
+      // Visual feedback on card element
+      if (cardRef.current) {
+        showFeedback(cardRef.current, {
+          type: score >= 4 ? 'success' : 'error',
+          intensity: 'medium',
+          duration: 300
+        });
+      }
       
       await onAnswer(currentCard.id, score);
       
@@ -212,6 +227,7 @@ export default function EnhancedCardStack({
 
           {/* Current card (foreground) */}
           <motion.div
+            ref={cardRef}
             key={`current-${currentCard.id}`}
             drag={!isAnimating}
             dragConstraints={constraintsRef}

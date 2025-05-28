@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Question } from '@/types/questions';
 import { RegulationFilterType } from '@/types/regulation';
 import { SessionOptions } from '@/types/spaced-repetition';
@@ -8,7 +8,10 @@ import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import UnifiedCard from '@/components/flashcard/unified/UnifiedCard';
 import EnhancedCardStack from '@/components/flashcard/stack/EnhancedCardStack';
+import SmartProgressIndicator from './SmartProgressIndicator';
+import AdvancedFeedbackOverlay from './AdvancedFeedbackOverlay';
 import { CardConfig, CardEventHandlers } from '@/types/flashcard';
+import { useLearningAnalytics } from '@/hooks/analytics/useLearningAnalytics';
 
 interface EnhancedLearningSessionProps {
   currentQuestion: Question;
@@ -40,14 +43,58 @@ export default function EnhancedLearningSession({
   setCurrentIndex
 }: EnhancedLearningSessionProps) {
   const isMobile = useIsMobile();
+  const { recordAnswer, getSessionStats, getLearningMetrics } = useLearningAnalytics();
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackData, setFeedbackData] = useState<any>(null);
+  const [questionStartTime, setQuestionStartTime] = useState(Date.now());
 
-  const handleStackAnswer = async (questionId: string, score: number) => {
+  const sessionStats = getSessionStats();
+  const learningMetrics = getLearningMetrics();
+
+  const handleAnswerWithAnalytics = async (score: number) => {
+    const responseTime = Date.now() - questionStartTime;
+    
+    // Record the answer for analytics
+    recordAnswer(currentQuestion, score);
+    
+    // Prepare feedback data
+    const feedback = {
+      score,
+      responseTime,
+      streak: sessionStats.currentStreak,
+      confidence: learningMetrics.averageScore / 5 * 100,
+      trend: learningMetrics.difficultyTrend,
+      category: currentQuestion.category
+    };
+    
+    setFeedbackData(feedback);
+    setShowFeedback(true);
+    
+    // Call the original answer handler
     await onAnswer(score);
   };
 
+  const handleStackAnswer = async (questionId: string, score: number) => {
+    await handleAnswerWithAnalytics(score);
+  };
+
   const handleStackComplete = () => {
-    // Session completed, could trigger completion flow
     onNext?.();
+  };
+
+  const handleFeedbackComplete = () => {
+    setShowFeedback(false);
+    setQuestionStartTime(Date.now());
+  };
+
+  const progressMetrics = {
+    currentIndex,
+    totalQuestions: totalCards,
+    correctCount,
+    currentStreak: sessionStats.currentStreak,
+    averageResponseTime: learningMetrics.averageResponseTime,
+    confidenceLevel: learningMetrics.averageScore / 5 * 100,
+    trend: learningMetrics.difficultyTrend
   };
 
   // Mobile stack-based experience
@@ -75,6 +122,11 @@ export default function EnhancedLearningSession({
           </div>
         </div>
 
+        {/* Smart Progress Indicator */}
+        <div className="absolute top-20 left-4 right-4 z-30">
+          <SmartProgressIndicator metrics={progressMetrics} />
+        </div>
+
         {/* Enhanced card stack */}
         <EnhancedCardStack
           questions={questions}
@@ -82,7 +134,14 @@ export default function EnhancedLearningSession({
           onComplete={handleStackComplete}
           currentIndex={currentIndex}
           setCurrentIndex={setCurrentIndex}
-          className="h-full"
+          className="h-full pt-32"
+        />
+
+        {/* Advanced Feedback Overlay */}
+        <AdvancedFeedbackOverlay
+          show={showFeedback}
+          feedback={feedbackData || {}}
+          onComplete={handleFeedbackComplete}
         />
       </div>
     );
@@ -103,7 +162,7 @@ export default function EnhancedLearningSession({
   const cardHandlers: CardEventHandlers = {
     onFlip: () => {},
     onAnswer: async (score: number) => {
-      await onAnswer(score);
+      await handleAnswerWithAnalytics(score);
       setTimeout(() => {
         onNext?.();
       }, 300);
@@ -113,23 +172,14 @@ export default function EnhancedLearningSession({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl">
-        {/* Progress section */}
-        <div className="mb-8 text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">{sessionTitle}</h2>
-          <div className="flex items-center justify-center gap-4 text-sm text-gray-600 mb-4">
-            <span>Karte {currentIndex + 1} von {totalCards}</span>
-            <span>•</span>
-            <span>{correctCount} richtig</span>
+      <div className="w-full max-w-4xl">
+        {/* Progress section with analytics */}
+        <div className="mb-8">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">{sessionTitle}</h2>
           </div>
           
-          {/* Progress bar */}
-          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-            <div 
-              className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 h-3 rounded-full transition-all duration-500 ease-out shadow-inner"
-              style={{ width: `${((currentIndex + 1) / totalCards) * 100}%` }}
-            />
-          </div>
+          <SmartProgressIndicator metrics={progressMetrics} className="max-w-2xl mx-auto" />
         </div>
 
         {/* Card */}
@@ -147,6 +197,13 @@ export default function EnhancedLearningSession({
             <span><kbd className="px-2 py-1 bg-gray-200 rounded text-xs">→</kbd> Ja</span>
           </div>
         </div>
+
+        {/* Advanced Feedback Overlay */}
+        <AdvancedFeedbackOverlay
+          show={showFeedback}
+          feedback={feedbackData || {}}
+          onComplete={handleFeedbackComplete}
+        />
       </div>
     </div>
   );

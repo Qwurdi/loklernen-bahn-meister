@@ -85,8 +85,26 @@ export function useVisualFeedback() {
     }, 300);
   }, []);
 
+  // Simplified feedback for mobile swipe cards
+  const showSwipeFeedback = useCallback((type: 'success' | 'error') => {
+    // Create a temporary feedback indicator
+    const indicator = document.createElement('div');
+    indicator.className = `fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 
+      w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold
+      ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} 
+      animate-scale-in pointer-events-none`;
+    indicator.textContent = type === 'success' ? '✓' : '✗';
+    
+    document.body.appendChild(indicator);
+    
+    setTimeout(() => {
+      indicator.remove();
+    }, 800);
+  }, []);
+
   return {
     showFeedback,
-    pulseHighlight
+    pulseHighlight,
+    showSwipeFeedback
   };
 }

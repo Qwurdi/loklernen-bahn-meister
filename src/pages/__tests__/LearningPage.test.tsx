@@ -1,40 +1,46 @@
 
 import React from 'react';
 import { render } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import LearningPage from '../LearningPage';
 
 // Mock the hooks
+const mockUseLearningSession = {
+  loading: false,
+  error: null,
+  questions: [],
+  currentIndex: 0,
+  setCurrentIndex: () => {},
+  correctCount: 0,
+  sessionFinished: false,
+  sessionTitle: 'Test Session',
+  sessionOptions: {},
+  handleAnswer: () => {},
+  handleComplete: () => {},
+  handleRestart: () => {},
+  canAccess: true,
+  categoryRequiresAuth: false
+};
+
+const mockUseAuth = {
+  user: { id: 'test-user' }
+};
+
+const mockUseUserPreferences = {
+  regulationPreference: 'DS 301'
+};
+
+// Create mock modules
 vi.mock('@/hooks/learning-session', () => ({
-  useLearningSession: () => ({
-    loading: false,
-    error: null,
-    questions: [],
-    currentIndex: 0,
-    setCurrentIndex: vi.fn(),
-    correctCount: 0,
-    sessionFinished: false,
-    sessionTitle: 'Test Session',
-    sessionOptions: {},
-    handleAnswer: vi.fn(),
-    handleComplete: vi.fn(),
-    handleRestart: vi.fn(),
-    canAccess: true,
-    categoryRequiresAuth: false
-  })
+  useLearningSession: () => mockUseLearningSession
 }));
 
 vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({
-    user: { id: 'test-user' }
-  })
+  useAuth: () => mockUseAuth
 }));
 
 vi.mock('@/contexts/UserPreferencesContext', () => ({
-  useUserPreferences: () => ({
-    regulationPreference: 'DS 301'
-  })
+  useUserPreferences: () => mockUseUserPreferences
 }));
 
 describe('LearningPage', () => {

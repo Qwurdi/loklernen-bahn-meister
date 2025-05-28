@@ -1,54 +1,32 @@
 
-// setup file for vitest
-import { cleanup } from '@testing-library/react';
-import * as matchers from '@testing-library/jest-dom/matchers';
+import '@testing-library/jest-dom';
+import { vi } from 'vitest';
 
-// Extend Vitest's expect method with methods from react-testing-library
-expect.extend(matchers);
-
-// Run cleanup automatically after each test
-afterEach(() => {
-  cleanup();
-});
-
-// Global test configuration
+// Mock global objects that might be undefined in test environment
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: (query: string) => ({
+  value: vi.fn().mockImplementation(query => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: () => {},
-    removeListener: () => {},
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    dispatchEvent: () => {},
-  }),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
 });
 
 // Mock IntersectionObserver
-class MockIntersectionObserver implements IntersectionObserver {
-  readonly root: Element | null = null;
-  readonly rootMargin: string = '';
-  readonly thresholds: ReadonlyArray<number> = [];
+global.IntersectionObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
 
-  constructor() {}
-  
-  observe() {
-    return null;
-  }
-  
-  disconnect() {
-    return null;
-  }
-  
-  unobserve() {
-    return null;
-  }
-  
-  takeRecords(): IntersectionObserverEntry[] {
-    return [];
-  }
-}
-
-global.IntersectionObserver = MockIntersectionObserver;
+// Mock ResizeObserver
+global.ResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));

@@ -1,8 +1,8 @@
 
-import { useRef, useCallback } from 'react';
+import { useCallback } from 'react';
 import { SwipeState, TouchPosition } from './types';
 
-interface TouchHandlersProps {
+interface UseTouchHandlersProps {
   swipeState: SwipeState;
   updateSwipeState: (updates: Partial<SwipeState>) => void;
   resetSwipeState: () => void;
@@ -14,7 +14,7 @@ interface TouchHandlersProps {
   onTap?: () => void;
   isFlipped: boolean;
   isAnswered: boolean;
-  disableSwipe: boolean;
+  disableSwipe?: boolean;
 }
 
 export function useTouchHandlers({
@@ -29,89 +29,96 @@ export function useTouchHandlers({
   onTap,
   isFlipped,
   isAnswered,
-  disableSwipe
-}: TouchHandlersProps) {
-  const touchStart = useRef<TouchPosition | null>(null);
+  disableSwipe = false
+}: UseTouchHandlersProps) {
+  const SWIPE_THRESHOLD = 100;
+  const VELOCITY_THRESHOLD = 0.5;
+
+  let startTouch: TouchPosition | null = null;
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (disableSwipe || isAnswered) return;
+    if (disableSwipe) return;
     
-    e.preventDefault();
     const touch = e.touches[0];
-    touchStart.current = {
+    startTouch = {
       x: touch.clientX,
       y: touch.clientY,
       time: Date.now()
     };
     
     updateSwipeState({ isDragging: true });
-  }, [disableSwipe, isAnswered, updateSwipeState]);
+  }, [disableSwipe, updateSwipeState]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (disableSwipe || isAnswered || !touchStart.current) return;
+    if (!startTouch || disableSwipe || !swipeState.isDragging) return;
     
-    e.preventDefault();
     const touch = e.touches[0];
-    const deltaX = touch.clientX - touchStart.current.x;
-    const deltaY = touch.clientY - touchStart.current.y;
+    const deltaX = touch.clientX - startTouch.x;
+    const deltaY = touch.clientY - startTouch.y;
     
-    // Only horizontal swipes with higher threshold
-    if (Math.abs(deltaX) > Math.abs(deltaY) * 2) {
-      const direction = deltaX > 0 ? 'right' : 'left';
-      updateSwipeState({ 
-        dragDelta: deltaX,
-        swipeDirection: Math.abs(deltaX) > 80 ? direction : null // Increased threshold
-      });
+    // Prevent vertical scrolling if horizontal swipe is detected
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      e.preventDefault();
     }
-  }, [disableSwipe, isAnswered, updateSwipeState]);
+    
+    const direction = deltaX > 0 ? 'right' : 'left';
+    
+    updateSwipeState({
+      dragDelta: deltaX,
+      swipeDirection: Math.abs(deltaX) > 20 ? direction : null
+    });
+  }, [startTouch, disableSwipe, swipeState.isDragging, updateSwipeState]);
 
-  const handleTouchEnd = useCallback(() => {
-    if (disableSwipe || isAnswered || !touchStart.current) return;
-
-    const { dragDelta } = swipeState;
-    const swipeThreshold = 120; // Increased threshold for more deliberate swipes
-
-    if (Math.abs(dragDelta) > swipeThreshold) {
-      // Trigger swipe action
-      if (dragDelta > 0) {
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (!startTouch || disableSwipe) return;
+    
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - startTouch.x;
+    const deltaY = touch.clientY - startTouch.y;
+    const deltaTime = Date.now() - startTouch.time;
+    const velocity = Math.abs(deltaX) / deltaTime;
+    
+    const isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY);
+    const exceedsThreshold = Math.abs(deltaX) > SWIPE_THRESHOLD;
+    const isFastSwipe = velocity > VELOCITY_THRESHOLD;
+    
+    if (isHorizontalSwipe && (exceedsThreshold || isFastSwipe)) {
+      if (deltaX > 0) {
         animateSwipe('right');
         setTimeout(() => {
           onSwipeRight();
           resetSwipeState();
+          resetCardPosition();
         }, 300);
       } else {
         animateSwipe('left');
         setTimeout(() => {
           onSwipeLeft();
           resetSwipeState();
+          resetCardPosition();
         }, 300);
       }
-      
-      // Haptic feedback
-      if (navigator.vibrate) {
-        navigator.vibrate([10, 50, 10]);
-      }
     } else {
-      // Reset position
-      resetCardPosition();
+      // Reset position if swipe wasn't strong enough
       resetSwipeState();
-      
-      // If it's a tap and card is not flipped, show answer
-      if (!isFlipped && Math.abs(dragDelta) < 10) {
-        if (onTap) {
-          onTap();
-        } else {
-          onShowAnswer();
-        }
-      }
+      resetCardPosition();
     }
+    
+    startTouch = null;
+  }, [startTouch, disableSwipe, animateSwipe, onSwipeLeft, onSwipeRight, resetSwipeState, resetCardPosition]);
 
-    touchStart.current = null;
-  }, [disableSwipe, isAnswered, swipeState, animateSwipe, onSwipeRight, onSwipeLeft, resetSwipeState, resetCardPosition, isFlipped, onShowAnswer, onTap]);
+  const handleCardTap = useCallback(() => {
+    if (!isFlipped && !disableSwipe) {
+      onShowAnswer();
+    } else if (onTap) {
+      onTap();
+    }
+  }, [isFlipped, disableSwipe, onShowAnswer, onTap]);
 
   return {
     handleTouchStart,
     handleTouchMove,
-    handleTouchEnd
+    handleTouchEnd,
+    handleCardTap
   };
 }

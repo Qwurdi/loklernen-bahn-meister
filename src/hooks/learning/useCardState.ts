@@ -1,61 +1,32 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Question } from '@/types/questions';
 
-interface CardStateProps {
+interface UseCardStateProps {
   question: Question;
-  onAnswerSubmitted?: () => void;
+  onAnswerSubmitted: (score: number) => void;
 }
 
-interface CardState {
-  isFlipped: boolean;
-  isAnswered: boolean;
-  swipeEnabled: boolean;
-}
-
-export function useCardState({ question, onAnswerSubmitted }: CardStateProps) {
-  const [cardState, setCardState] = useState<CardState>({
-    isFlipped: false,
-    isAnswered: false,
-    swipeEnabled: false
-  });
-
-  // Reset state when question changes
-  useEffect(() => {
-    setCardState({
-      isFlipped: false,
-      isAnswered: false,
-      swipeEnabled: false
-    });
-  }, [question.id]);
+export function useCardState({ question, onAnswerSubmitted }: UseCardStateProps) {
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [isAnswered, setIsAnswered] = useState(false);
 
   const showAnswer = useCallback(() => {
-    setCardState(prev => ({ ...prev, isFlipped: true }));
-    
-    // Enable swipe after delay for non-MC questions
-    const isMultipleChoice = question.question_type === "MC_single" || question.question_type === "MC_multi";
-    if (!isMultipleChoice) {
-      setTimeout(() => {
-        setCardState(prev => ({ ...prev, swipeEnabled: true }));
-      }, 1000);
-    }
-  }, [question.question_type]);
+    setIsFlipped(true);
+  }, []);
 
   const submitAnswer = useCallback((score: number) => {
-    if (cardState.isAnswered) return; // Prevent double submission
-    
-    setCardState(prev => ({ ...prev, isAnswered: true, swipeEnabled: false }));
-    onAnswerSubmitted?.();
-  }, [cardState.isAnswered, onAnswerSubmitted]);
+    setIsAnswered(true);
+    onAnswerSubmitted(score);
+  }, [onAnswerSubmitted]);
+
+  const swipeEnabled = isFlipped && !isAnswered && question.question_type === 'open';
 
   return {
-    ...cardState,
+    isFlipped,
+    isAnswered,
+    swipeEnabled,
     showAnswer,
-    submitAnswer,
-    resetState: () => setCardState({
-      isFlipped: false,
-      isAnswered: false,
-      swipeEnabled: false
-    })
+    submitAnswer
   };
 }

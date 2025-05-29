@@ -1,77 +1,49 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useState } from 'react';
 import { SafeRichText } from '@/components/ui/rich-text/SafeRichText';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface ExpandableTextProps {
   content: string;
-  maxLines?: number;
+  textSizeClass: string;
+  maxLines: number;
   className?: string;
-  textSizeClass?: string;
 }
 
-export default function ExpandableText({ 
-  content, 
-  maxLines = 3,
-  className = '',
-  textSizeClass = 'text-base'
+export default function ExpandableText({
+  content,
+  textSizeClass,
+  maxLines,
+  className = ''
 }: ExpandableTextProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [shouldTruncate, setShouldTruncate] = useState(false);
-  const textRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (textRef.current) {
-      const lineHeight = parseInt(getComputedStyle(textRef.current).lineHeight);
-      const maxHeight = lineHeight * maxLines;
-      setShouldTruncate(textRef.current.scrollHeight > maxHeight);
-    }
-  }, [content, maxLines]);
-
-  const handleToggle = (e: React.MouseEvent) => {
-    // Prevent event propagation to stop card flip
-    e.preventDefault();
-    e.stopPropagation();
-    
-    setIsExpanded(!isExpanded);
-    
-    // Haptic feedback
-    if (navigator.vibrate) {
-      navigator.vibrate(10);
-    }
-  };
+  const shouldShowExpand = content.length > 150; // Simple heuristic
 
   return (
     <div className={className}>
-      <div
-        ref={textRef}
-        className={`${textSizeClass} text-gray-900 transition-all duration-300 ${
-          !isExpanded && shouldTruncate ? 'line-clamp-3' : ''
+      <div 
+        className={`${textSizeClass} font-medium text-gray-900 ${
+          !isExpanded && shouldShowExpand ? `line-clamp-${maxLines}` : ''
         }`}
-        style={{
-          WebkitLineClamp: !isExpanded && shouldTruncate ? maxLines : 'unset',
-          display: !isExpanded && shouldTruncate ? '-webkit-box' : 'block',
-          WebkitBoxOrient: 'vertical',
-          overflow: !isExpanded && shouldTruncate ? 'hidden' : 'visible'
-        }}
       >
         <SafeRichText content={content} />
       </div>
       
-      {shouldTruncate && (
+      {shouldShowExpand && (
         <button
-          onClick={handleToggle}
-          className="mt-2 flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 transition-colors bg-white/80 backdrop-blur-sm px-2 py-1 rounded-md shadow-sm border border-blue-200"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="mt-2 text-sm text-blue-600 flex items-center gap-1"
         >
           {isExpanded ? (
             <>
-              <span>Weniger anzeigen</span>
               <ChevronUp className="h-4 w-4" />
+              Weniger anzeigen
             </>
           ) : (
             <>
-              <span>Mehr anzeigen</span>
               <ChevronDown className="h-4 w-4" />
+              Mehr anzeigen
             </>
           )}
         </button>

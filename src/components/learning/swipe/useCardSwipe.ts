@@ -8,7 +8,7 @@ import { useTouchHandlers } from './useTouchHandlers';
 
 interface ExtendedSwipeProps extends Omit<SwipeProps, 'onTap'> {
   onShowAnswer: () => void;
-  onTap?: () => void;  // Add onTap as optional
+  onTap?: () => void;
   isFlipped: boolean;
   isAnswered: boolean;
   disableSwipe?: boolean;

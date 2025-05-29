@@ -1,4 +1,5 @@
 
+import { describe, it, expect } from 'vitest';
 import { calculateNextReviewDate, transformQuestion } from '../utils';
 
 describe('spaced repetition utils', () => {

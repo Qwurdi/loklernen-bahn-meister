@@ -1,5 +1,6 @@
 
 import { renderHook, act } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
 import { useSwipeState } from '../useSwipeState';
 
 describe('useSwipeState Hook', () => {

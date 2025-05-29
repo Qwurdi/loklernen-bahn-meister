@@ -1,5 +1,6 @@
 
 import { renderHook } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
 import { useCardSwipe } from '../useCardSwipe';
 
 // Mock the imported hooks

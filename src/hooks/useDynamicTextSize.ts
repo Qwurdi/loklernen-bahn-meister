@@ -1,35 +1,46 @@
 
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
+import { StructuredContent, getTextLength as getRichTextLength } from "@/types/rich-text";
 
-// Configuration values for different text lengths
-const TEXT_SIZE_THRESHOLDS = {
-  question: {
-    short: 50,   // Characters
-    medium: 100,  // Characters
-    long: 200    // Characters
-  },
-  answer: {
-    short: 60,   // Characters
-    medium: 120,  // Characters
-    long: 250    // Characters
-  }
-};
+export type TextContent = string | StructuredContent;
 
-type TextType = 'question' | 'answer';
-
-export function useDynamicTextSize(text: string, type: TextType = 'question') {
-  return useMemo(() => {
-    const thresholds = TEXT_SIZE_THRESHOLDS[type];
-    const textLength = text.length;
+export function useDynamicTextSize(
+  content: TextContent,
+  type: 'question' | 'answer' = 'question'
+): string {
+  const [textSizeClass, setTextSizeClass] = useState('text-base');
+  
+  useEffect(() => {
+    let length: number;
     
-    if (textLength > thresholds.long) {
-      return 'text-xs'; // Very small for very long texts
-    } else if (textLength > thresholds.medium) {
-      return 'text-sm'; // Small for medium-length texts
-    } else if (textLength > thresholds.short) {
-      return 'text-base'; // Normal for short texts
+    if (typeof content === 'string') {
+      length = content.length;
     } else {
-      return 'text-lg'; // Large for very short texts
+      // Use the utility function for structured content
+      length = getRichTextLength(content);
     }
-  }, [text, type]);
+    
+    if (type === 'question') {
+      if (length > 300) {
+        setTextSizeClass('text-sm');
+      } else if (length > 150) {
+        setTextSizeClass('text-base');
+      } else if (length > 80) {
+        setTextSizeClass('text-lg');
+      } else {
+        setTextSizeClass('text-xl');
+      }
+    } else {
+      // For answers
+      if (length > 200) {
+        setTextSizeClass('text-sm');
+      } else if (length > 100) {
+        setTextSizeClass('text-base');
+      } else {
+        setTextSizeClass('text-lg');
+      }
+    }
+  }, [content, type]);
+  
+  return textSizeClass;
 }

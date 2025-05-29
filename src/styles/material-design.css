@@ -1,0 +1,119 @@
+
+/* Material Design Expressive CSS */
+
+/* 3D Transform utilities */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+/* Material Design Expressive Gradients */
+.bg-gradient-ultramarine {
+  background: linear-gradient(135deg, #3F00FF 0%, #5080FF 100%);
+}
+
+.bg-gradient-sapphire {
+  background: linear-gradient(135deg, #0F52BA 0%, #3F00FF 100%);
+}
+
+.bg-gradient-expressive {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Enhanced shadows with Material Design depth */
+.shadow-material {
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.shadow-material-lg {
+  box-shadow: 
+    0 10px 20px rgba(0, 0, 0, 0.19),
+    0 6px 6px rgba(0, 0, 0, 0.23);
+}
+
+.shadow-material-xl {
+  box-shadow: 
+    0 14px 28px rgba(0, 0, 0, 0.25),
+    0 10px 10px rgba(0, 0, 0, 0.22);
+}
+
+/* Material ripple effect */
+.ripple-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-effect::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.ripple-effect:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* Expressive motion curves */
+.ease-expressive {
+  transition-timing-function: cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.ease-expressive-in {
+  transition-timing-function: cubic-bezier(0.0, 0.0, 0.2, 1);
+}
+
+.ease-expressive-out {
+  transition-timing-function: cubic-bezier(0.4, 0.0, 1, 1);
+}
+
+/* Material surfaces */
+.surface-elevated {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.surface-tonal {
+  background: rgba(103, 80, 164, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(103, 80, 164, 0.1);
+}
+
+/* Adaptive corner radius */
+.corner-adaptive {
+  border-radius: clamp(8px, 2vw, 24px);
+}
+
+/* Enhanced typography */
+.text-expressive {
+  font-variation-settings: 'wght' 400, 'slnt' 0;
+  letter-spacing: -0.01em;
+  line-height: 1.5;
+}
+
+.text-expressive-display {
+  font-variation-settings: 'wght' 600, 'slnt' 0;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}

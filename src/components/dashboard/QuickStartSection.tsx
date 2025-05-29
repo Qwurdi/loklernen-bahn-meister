@@ -32,7 +32,7 @@ export default function QuickStartSection({
             </p>
           </div>
         </div>
-        <Link to={`/karteikarten/lernen?regelwerk=${regulationPreference}&category=Signale`}>
+        <Link to={`/karteikarten/lernen?regelwerk=${regulationPreference}&parent_category=Signale`}>
           <Button className="w-full bg-loklernen-ultramarine hover:bg-loklernen-ultramarine/90">
             <BookOpen className="mr-2 h-4 w-4" /> Signale lernen
           </Button>
@@ -52,7 +52,7 @@ export default function QuickStartSection({
             </p>
           </div>
         </div>
-        <Link to={`/karteikarten/lernen?regelwerk=${regulationPreference}&category=Betriebsdienst`}>
+        <Link to={`/karteikarten/lernen?regelwerk=${regulationPreference}&parent_category=Betriebsdienst`}>
           <Button className="w-full bg-loklernen-black hover:bg-loklernen-black/90">
             <BookOpen className="mr-2 h-4 w-4" /> Betriebsdienst lernen
           </Button>

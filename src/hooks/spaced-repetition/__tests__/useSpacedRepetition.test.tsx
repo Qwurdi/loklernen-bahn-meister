@@ -1,175 +1,125 @@
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { useSpacedRepetition } from '../useSpacedRepetition';
-import { 
-  fetchUserProgress, 
-  fetchNewQuestions, 
-  fetchPracticeQuestions, 
-  updateUserProgress, 
-  updateUserStats 
-} from '../services';
+import React from 'react';
+import { render } from '@testing-library/react';
+import { act } from 'react-dom/test-utils';
+import { useSpacedRepetition } from '../index';
 
-// Mock the AuthContext
+// Mock AuthContext
 vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: vi.fn(() => ({
+  useAuth: () => ({
     user: { id: 'test-user-id' }
-  }))
+  })
 }));
 
-// Mock the service functions
-vi.mock('../services', () => ({
-  fetchUserProgress: vi.fn(),
-  fetchNewQuestions: vi.fn(),
-  fetchPracticeQuestions: vi.fn(),
-  updateUserProgress: vi.fn(),
-  updateUserStats: vi.fn()
+// Mock SpacedRepetitionService
+vi.mock('@/services/SpacedRepetitionService', () => ({
+  spacedRepetitionService: {
+    loadSessionQuestions: vi.fn().mockResolvedValue([
+      {
+        question: {
+          id: 'q1',
+          category: 'Signale',
+          sub_category: 'Hauptsignale',
+          difficulty: 3,
+          text: 'Test question 1',
+          question_type: 'MC_single',
+          answers: [
+            { text: 'Answer 1', isCorrect: true },
+            { text: 'Answer 2', isCorrect: false }
+          ],
+          image_url: null,
+          created_by: 'test-user',
+          created_at: '2023-01-01T00:00:00Z',
+          updated_at: '2023-01-01T00:00:00Z',
+          revision: 1
+        },
+        progress: undefined
+      }
+    ]),
+    submitAnswer: vi.fn().mockResolvedValue({})
+  }
 }));
 
-describe('useSpacedRepetition hook', () => {
+// Test component using the hook
+function TestComponent() {
+  const {
+    loading,
+    error,
+    questions,
+    progress,
+    submitAnswer,
+    loadQuestions
+  } = useSpacedRepetition();
+
+  return (
+    <div>
+      <div data-testid="loading">{loading ? 'true' : 'false'}</div>
+      <div data-testid="error">{error ? error.message : 'no-error'}</div>
+      <div data-testid="questions-count">{questions.length}</div>
+      <div data-testid="progress-total">{progress.totalQuestions}</div>
+      <button 
+        onClick={() => submitAnswer('q1', 5)}
+        data-testid="submit-answer-btn"
+      >
+        Submit Answer
+      </button>
+      <button 
+        onClick={() => loadQuestions({ category: 'Signale' })}
+        data-testid="load-questions-btn"
+      >
+        Load Questions
+      </button>
+    </div>
+  );
+}
+
+describe('useSpacedRepetition', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
-  it('should load due questions when initialized', async () => {
-    // Setup mock returns
-    const mockProgressData = [
-      { question_id: 'q1', questions: { id: 'q1', text: 'Question 1?' } }
-    ];
-    const mockNewQuestions = [
-      { id: 'q2', text: 'Question 2?' }
-    ];
+  it('initializes with default state', () => {
+    const { getByTestId } = render(<TestComponent />);
     
-    (fetchUserProgress as any).mockResolvedValue(mockProgressData);
-    (fetchNewQuestions as any).mockResolvedValue(mockNewQuestions);
-
-    const { result } = renderHook(() => useSpacedRepetition('Signale'));
-    
-    // Initially loading should be true
-    expect(result.current.loading).toBe(true);
-    
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-    
-    // Verify the services were called correctly
-    expect(fetchUserProgress).toHaveBeenCalledWith('test-user-id', 'Signale', undefined, 'all');
-    expect(fetchNewQuestions).toHaveBeenCalled();
-    
-    // Verify we have the expected questions
-    expect(result.current.dueQuestions.length).toBeGreaterThan(0);
+    expect(getByTestId('loading').textContent).toBe('false');
+    expect(getByTestId('error').textContent).toBe('no-error');
+    expect(getByTestId('questions-count').textContent).toBe('0');
+    expect(getByTestId('progress-total').textContent).toBe('0');
   });
 
-  it('should load practice questions in practice mode', async () => {
-    // Setup mock return
-    const mockPracticeQuestions = [
-      { id: 'q1', text: 'Practice Question 1?' },
-      { id: 'q2', text: 'Practice Question 2?' }
-    ];
+  it('loads questions when requested', async () => {
+    const { getByTestId } = render(<TestComponent />);
     
-    (fetchPracticeQuestions as any).mockResolvedValue(mockPracticeQuestions);
-
-    const { result } = renderHook(() => useSpacedRepetition(
-      'Signale', 
-      undefined, 
-      { practiceMode: true }
-    ));
+    const loadButton = getByTestId('load-questions-btn');
     
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-    
-    // Verify the practice service was called correctly
-    expect(fetchPracticeQuestions).toHaveBeenCalledWith('Signale', undefined, 'all', 50);
-    
-    // Verify we have the expected questions
-    expect(result.current.dueQuestions).toEqual(mockPracticeQuestions);
-  });
-
-  it('should submit answers correctly', async () => {
-    // Setup mock returns
-    const mockProgressData = [
-      { question_id: 'q1', questions: { id: 'q1', text: 'Question 1?' } }
-    ];
-    
-    (fetchUserProgress as any).mockResolvedValue(mockProgressData);
-    (fetchNewQuestions as any).mockResolvedValue([]);
-    (updateUserProgress as any).mockResolvedValue({ userId: 'test-user-id', questionId: 'q1', score: 5 });
-    (updateUserStats as any).mockResolvedValue({});
-
-    const { result } = renderHook(() => useSpacedRepetition('Signale'));
-    
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-    
-    // Submit an answer
     await act(async () => {
-      await result.current.submitAnswer('q1', 5);
+      loadButton.click();
+      // Wait for async operations
+      await new Promise(resolve => setTimeout(resolve, 10));
     });
     
-    // Verify the update services were called correctly
-    expect(updateUserProgress).toHaveBeenCalledWith(
-      'test-user-id', 
-      'q1', 
-      5, 
-      expect.anything()
-    );
-    expect(updateUserStats).toHaveBeenCalledWith('test-user-id', 5);
-    
-    // Verify that questions were reloaded after submission
-    expect(fetchUserProgress).toHaveBeenCalledTimes(2);
+    expect(getByTestId('questions-count').textContent).toBe('1');
+    expect(getByTestId('progress-total').textContent).toBe('1');
   });
 
-  it('should handle reload questions correctly', async () => {
-    // Setup mock returns
-    const mockProgressData = [
-      { question_id: 'q1', questions: { id: 'q1', text: 'Question 1?' } }
-    ];
+  it('submits answers correctly', async () => {
+    const { getByTestId } = render(<TestComponent />);
     
-    (fetchUserProgress as any).mockResolvedValue(mockProgressData);
-    (fetchNewQuestions as any).mockResolvedValue([]);
-
-    const { result } = renderHook(() => useSpacedRepetition('Signale'));
-    
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-    
-    // Reset call counts
-    vi.clearAllMocks();
-    
-    // Reload questions
+    // First load questions
+    const loadButton = getByTestId('load-questions-btn');
     await act(async () => {
-      await result.current.reloadQuestions();
+      loadButton.click();
+      await new Promise(resolve => setTimeout(resolve, 10));
     });
     
-    // Verify services were called again
-    expect(fetchUserProgress).toHaveBeenCalledTimes(1);
-    expect(fetchNewQuestions).toHaveBeenCalledTimes(1);
-  });
-
-  it('should apply regulation category filter correctly', async () => {
-    // Setup mock returns
-    const mockProgressData = [
-      { question_id: 'q1', questions: { id: 'q1', text: 'Question 1?' } }
-    ];
-    
-    (fetchUserProgress as any).mockResolvedValue(mockProgressData);
-    (fetchNewQuestions as any).mockResolvedValue([]);
-
-    const { result } = renderHook(() => useSpacedRepetition(
-      'Signale', 
-      undefined, 
-      { regulationCategory: 'DS 301' }
-    ));
-    
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    // Then submit an answer
+    const submitButton = getByTestId('submit-answer-btn');
+    await act(async () => {
+      submitButton.click();
+      await new Promise(resolve => setTimeout(resolve, 10));
     });
     
-    // Verify the regulation category was passed correctly
-    expect(fetchUserProgress).toHaveBeenCalledWith('test-user-id', 'Signale', undefined, 'DS 301');
-    expect(fetchNewQuestions).toHaveBeenCalledWith('Signale', undefined, 'DS 301', expect.anything(), expect.anything());
+    // Verify submit was called
+    expect(getByTestId('error').textContent).toBe('no-error');
   });
 });

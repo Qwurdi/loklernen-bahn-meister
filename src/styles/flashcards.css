@@ -1,4 +1,3 @@
-
 /* ===== Flashcard Styles - Main Import File ===== */
 
 /* Import all flashcard related styles */
@@ -6,6 +5,7 @@
 @import './card-animations.css';
 @import './card-ui-elements.css';
 @import './flashcard-layout.css';
+@import './enhanced-animations.css';
 
 /* Multiple Choice Answer Styles */
 .mc-option {
@@ -74,4 +74,3 @@
 .hint-reveal {
   animation: fadeIn 0.3s ease;
 }
-

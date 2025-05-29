@@ -1,34 +1,48 @@
+import React, { useState, useEffect } from 'react';
 
-import * as React from "react"
+// Define breakpoints for consistency throughout the app
+export const BREAKPOINTS = {
+  sm: 640,   // Small devices
+  md: 768,   // Medium devices (tablets)
+  lg: 1024,  // Large devices (desktops)
+  xl: 1280,  // Extra large devices
+};
 
-const MOBILE_BREAKPOINT = 768
+export const useMediaQuery = (query: string): boolean => {
+  const [matches, setMatches] = useState(false);
 
-export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
+  useEffect(() => {
+    // Initialize match state
+    const media = window.matchMedia(query);
+    setMatches(media.matches);
+    
+    // Create event listener for changes
+    const listener = () => setMatches(media.matches);
+    media.addEventListener('change', listener);
+    
+    // Cleanup listener on unmount
+    return () => media.removeEventListener('change', listener);
+  }, [query]);
 
-  React.useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    };
-    
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    
-    // Add event listener for resize events
-    window.addEventListener('resize', checkMobile);
-    
-    // Add event listener for media query changes
-    mql.addEventListener("change", checkMobile);
-    
-    // Set initial value
-    checkMobile();
-    
-    // Cleanup
-    return () => {
-      window.removeEventListener('resize', checkMobile);
-      mql.removeEventListener("change", checkMobile);
-    }
-  }, [])
+  return matches;
+};
 
-  // Return false during SSR, true when mobile, false when desktop
-  return isMobile === undefined ? false : !!isMobile
-}
+// Custom hooks for specific breakpoints
+export const useIsMobile = (): boolean => {
+  return useMediaQuery(`(max-width: ${BREAKPOINTS.md - 1}px)`);
+};
+
+export const useIsTablet = (): boolean => {
+  return useMediaQuery(`(min-width: ${BREAKPOINTS.md}px) and (max-width: ${BREAKPOINTS.lg - 1}px)`);
+};
+
+export const useIsDesktop = (): boolean => {
+  return useMediaQuery(`(min-width: ${BREAKPOINTS.lg}px)`);
+};
+
+// Hook for detecting motion preferences
+export const usePrefersReducedMotion = (): boolean => {
+  return useMediaQuery('(prefers-reduced-motion: reduce)');
+};
+
+export default useIsMobile;

@@ -26,9 +26,8 @@ export default function FlashcardContent({
 }: FlashcardContentProps) {
   const isMobile = useIsMobile();
   
-  // Apply PWA-specific styles for mobile
   const containerClasses = isMobile 
-    ? 'flex flex-col h-full w-full overflow-hidden' // Full height for PWA-like experience with no scrolling
+    ? 'flex flex-col h-full w-full overflow-hidden'
     : 'space-y-6';
   
   return (

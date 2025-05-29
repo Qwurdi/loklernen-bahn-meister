@@ -1,13 +1,17 @@
 
+import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { 
-  fetchCategories, 
-  fetchCategoriesByParent, 
-  createCategory, 
-  updateCategory, 
-  deleteCategory, 
-  Category 
-} from "@/api/categories";
+import {
+  fetchCategories,
+  fetchCategoriesByParent,
+  createCategory, // Changed from addCategory
+  updateCategory,
+  deleteCategory,
+  Category,
+  // Removed NewCategory and UpdateCategory imports
+  signalSubCategories,
+  betriebsdienstSubCategories
+} from "@/api/categories/index";
 import { QuestionCategory } from "@/types/questions";
 import { toast } from "sonner";
 
@@ -24,7 +28,7 @@ export function useCategories() {
   };
 
   const createCategoryMutation = useMutation({
-    mutationFn: createCategory,
+    mutationFn: createCategory, // Ensured this uses createCategory
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success("Kategorie erfolgreich erstellt");

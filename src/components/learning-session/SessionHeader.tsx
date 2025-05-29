@@ -2,11 +2,10 @@
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, List } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { QuestionCategory } from "@/types/questions";
 
 interface SessionHeaderProps {
   sessionTitle: string;
-  categoryParam: QuestionCategory;
+  categoryParam: string | null;
   isMobile: boolean;
 }
 

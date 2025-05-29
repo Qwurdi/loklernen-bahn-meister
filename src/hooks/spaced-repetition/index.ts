@@ -1,3 +1,10 @@
 
 export { useSpacedRepetition } from './useSpacedRepetition';
-export type { UserProgress, SpacedRepetitionOptions, SpacedRepetitionResult } from './types';
+export type { 
+  SessionQuestion, 
+  SessionOptions, 
+  SessionProgress, 
+  SpacedRepetitionState, 
+  SpacedRepetitionActions, 
+  SpacedRepetitionHook 
+} from '@/types/spaced-repetition';

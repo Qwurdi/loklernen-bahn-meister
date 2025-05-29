@@ -1,6 +1,5 @@
-
 import React, { useEffect, useState } from "react";
-import { fetchCategoriesByParent, signalSubCategories } from "@/api/categories";
+import { fetchCategoriesByParent, signalSubCategories } from "@/api/categories/index";
 import CategoryGrid from "./CategoryGrid";
 import { RegulationFilterType } from "@/types/regulation";
 

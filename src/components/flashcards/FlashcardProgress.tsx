@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { memo } from "react";
 import { Progress } from "@/components/ui/progress";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -10,7 +10,7 @@ interface FlashcardProgressProps {
   remainingToday: number;
 }
 
-export default function FlashcardProgress({
+const FlashcardProgress = memo(function FlashcardProgress({
   currentIndex,
   totalCards,
   correctCount,
@@ -56,7 +56,6 @@ export default function FlashcardProgress({
           <p className="text-sm font-medium mb-1">Fortschritt</p>
           <div className="flex items-center gap-2">
             <Progress value={progressPercentage} className="h-2" />
-            {/* Percentage removed */}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             Karte {currentIndex + 1} von {totalCards}
@@ -71,7 +70,6 @@ export default function FlashcardProgress({
               className="h-2" 
               indicatorClassName={correctPercentage > 70 ? "bg-green-500" : correctPercentage > 40 ? "bg-yellow-500" : "bg-red-500"}
             />
-            {/* Percentage removed */}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             {correctCount} richtig beantwortet
@@ -88,4 +86,14 @@ export default function FlashcardProgress({
       </div>
     </div>
   );
-}
+}, (prevProps, nextProps) => {
+  // Custom comparison function for memo optimization
+  return (
+    prevProps.currentIndex === nextProps.currentIndex &&
+    prevProps.totalCards === nextProps.totalCards &&
+    prevProps.correctCount === nextProps.correctCount &&
+    prevProps.remainingToday === nextProps.remainingToday
+  );
+});
+
+export default FlashcardProgress;

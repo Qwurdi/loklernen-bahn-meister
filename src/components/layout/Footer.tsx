@@ -1,5 +1,6 @@
 
-import { Link } from "react-router-dom";
+import SafeLink from "@/components/navigation/SafeLink";
+import { ROUTES } from "@/constants/routes";
 
 export default function Footer() {
   return (
@@ -21,19 +22,19 @@ export default function Footer() {
               <h4 className="text-sm font-medium text-white">Lernen</h4>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <Link to="/signale" className="text-gray-400 transition-colors hover:text-white">
+                  <SafeLink to={ROUTES.CARDS} className="text-gray-400 transition-colors hover:text-white">
                     Signale
-                  </Link>
+                  </SafeLink>
                 </li>
                 <li>
-                  <Link to="/betriebsdienst" className="text-gray-400 transition-colors hover:text-white">
+                  <SafeLink to={ROUTES.CARDS} className="text-gray-400 transition-colors hover:text-white">
                     Betriebsdienst
-                  </Link>
+                  </SafeLink>
                 </li>
                 <li>
-                  <Link to="/fortschritt" className="text-gray-400 transition-colors hover:text-white">
+                  <SafeLink to={ROUTES.PROGRESS} className="text-gray-400 transition-colors hover:text-white">
                     Mein Fortschritt
-                  </Link>
+                  </SafeLink>
                 </li>
               </ul>
             </div>
@@ -41,19 +42,19 @@ export default function Footer() {
               <h4 className="text-sm font-medium text-white">Rechtliches</h4>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <Link to="/datenschutz" className="text-gray-400 transition-colors hover:text-white">
+                  <SafeLink to={ROUTES.PRIVACY} className="text-gray-400 transition-colors hover:text-white">
                     Datenschutz
-                  </Link>
+                  </SafeLink>
                 </li>
                 <li>
-                  <Link to="/impressum" className="text-gray-400 transition-colors hover:text-white">
+                  <SafeLink to={ROUTES.IMPRINT} className="text-gray-400 transition-colors hover:text-white">
                     Impressum
-                  </Link>
+                  </SafeLink>
                 </li>
                 <li>
-                  <Link to="/agb" className="text-gray-400 transition-colors hover:text-white">
+                  <SafeLink to={ROUTES.TERMS} className="text-gray-400 transition-colors hover:text-white">
                     AGB
-                  </Link>
+                  </SafeLink>
                 </li>
               </ul>
             </div>

@@ -164,10 +164,21 @@ LokLernen ist eine mobile Begleiter-App im Duolingo/Fahrschule-Stil, die (angehe
 - Einhaltung der React-Muster für Leistung und Wartbarkeit
 - Mobile-First-Design für alle UI-Komponenten
 
-### Tests
-- Komponententests mit Jest und React Testing Library
-- Integration von Vitest für schnelles Testing-Feedback
+### Testing-Standards
+- Vitest als Test-Framework mit standardisierter Konfiguration
+- **Ausschließliche Verwendung von Vitest-Globals** - niemals direkte Imports von 'vitest'
+- Konsistente Dateinamenskonventionen: `*.test.tsx` oder `*.test.ts`
+- Umfassende Test-Setup in `src/test/setup.ts`
 - Tests für kritische Geschäftslogik (z.B. Spaced-Repetition-Algorithmus)
+- Integration von React Testing Library für Komponententests
+- Mockstrategien für externe Abhängigkeiten
+- Detaillierte Testrichtlinien in `src/test/README.md`
+
+### Testing-Konfiguration
+- Vitest-Konfiguration in `vitest.config.ts` mit Globals aktiviert
+- Test-Setup-Datei für globale Mocks und Konfiguration
+- TypeScript-Deklarationen für Vitest-Globals in `src/vite-env.d.ts`
+- Coverage-Konfiguration für Testabdeckung
 
 ### Beitragsprozess
 - Code-Review vor Merge in den Hauptbranch
@@ -219,6 +230,13 @@ LokLernen ist eine mobile Begleiter-App im Duolingo/Fahrschule-Stil, die (angehe
 - Persistenz der Benutzereinstellung im localStorage und der Datenbank
 - Synchronisierung zwischen verschiedenen Geräten
 - Filterlogik für regelwerk-spezifische Inhalte
+
+### Standardisierte Test-Architektur
+- Vitest als primäres Test-Framework
+- Globale Test-Konfiguration mit aktivierten Globals
+- Einheitliche Mock-Patterns für externe Abhängigkeiten
+- Umfassende Test-Utilities und Helper-Funktionen
+- Coverage-Reporting und Performance-Metriken
 
 ## 8. Zukünftige Roadmap
 
@@ -277,3 +295,10 @@ LokLernen ist eine mobile Begleiter-App im Duolingo/Fahrschule-Stil, die (angehe
 - `CardStack` - Kern-UI für das Karteikartensystem
 - `FlashcardPage` - Hauptseite für das Lernen mit Karteikarten
 - `LearningSessionPage` - Strukturierte Lernsitzungen mit Fortschrittsverfolgung
+
+### Testing-Framework
+- **Vitest-Globals**: Verwende immer globale Funktionen (`describe`, `it`, `expect`, `vi`)
+- **Test-Setup**: Zentrale Konfiguration in `src/test/setup.ts`
+- **Mock-Patterns**: Konsistente Strategien für externe Abhängigkeiten
+- **Coverage**: Mindestens 80% Testabdeckung für kritische Geschäftslogik
+- **Dokumentation**: Vollständige Testrichtlinien in `src/test/README.md`

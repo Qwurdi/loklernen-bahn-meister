@@ -2,11 +2,12 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Question } from '@/types/questions';
 import { motion, AnimatePresence } from 'framer-motion';
-import CardItem from './CardItem';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
+import UnifiedCard from '@/components/flashcard/unified/UnifiedCard';
+import { CardConfig, CardEventHandlers } from '@/types/flashcard';
 import EmptyStackMessage from './EmptyStackMessage';
 import StackProgress from './StackProgress';
 
-// Update interface to use generics
 interface CardStackProps<T extends Question = Question> {
   questions: T[];
   onAnswer: (questionId: string, score: number) => Promise<void>;
@@ -15,7 +16,6 @@ interface CardStackProps<T extends Question = Question> {
   setCurrentIndex: (index: number) => void;
 }
 
-// Add the generic type parameter to the component
 export default function CardStack<T extends Question = Question>({ 
   questions, 
   onAnswer, 
@@ -25,11 +25,11 @@ export default function CardStack<T extends Question = Question>({
 }: CardStackProps<T>) {
   const [direction, setDirection] = useState<'left' | 'right' | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  const { regulationPreference } = useUserPreferences();
   const stackRef = useRef<HTMLDivElement>(null);
 
   // Preload the next few images
   useEffect(() => {
-    // Preload the next 3 cards' images (if they exist)
     for (let i = 1; i <= 3; i++) {
       const preloadIndex = currentIndex + i;
       if (preloadIndex < questions.length) {
@@ -42,39 +42,32 @@ export default function CardStack<T extends Question = Question>({
     }
   }, [currentIndex, questions]);
 
-  const handleSwipe = useCallback(async (direction: 'left' | 'right') => {
+  const handleAnswer = useCallback(async (score: number) => {
     if (isAnimating || currentIndex >= questions.length) return;
     
     setIsAnimating(true);
-    setDirection(direction);
+    setDirection(score >= 4 ? 'right' : 'left');
     
     const currentQuestion = questions[currentIndex];
-    const score = direction === 'right' ? 5 : 1; // Right = known (5), Left = not known (1)
     
-    // Process the answer - using optimized submitAnswer that doesn't reload
     await onAnswer(currentQuestion.id, score);
     
-    // Short delay to let animation complete
     setTimeout(() => {
-      // Move to next question or complete session
       if (currentIndex < questions.length - 1) {
         setCurrentIndex(currentIndex + 1);
       } else {
         onComplete();
       }
       
-      // Reset animation state
       setDirection(null);
       setIsAnimating(false);
     }, 300);
   }, [currentIndex, questions, onAnswer, onComplete, setCurrentIndex, isAnimating]);
 
-  // If no questions are available
   if (questions.length === 0) {
     return <EmptyStackMessage />;
   }
 
-  // If we've reached the end of the stack
   if (currentIndex >= questions.length) {
     return <EmptyStackMessage isCompleted={true} />;
   }
@@ -83,6 +76,23 @@ export default function CardStack<T extends Question = Question>({
   const hasNextCard = currentIndex < questions.length - 1;
   const nextCard = hasNextCard ? questions[currentIndex + 1] : null;
   
+  const cardConfig: CardConfig = {
+    question: currentCard,
+    regulationPreference,
+    displayMode: 'stack',
+    interactionMode: 'swipe',
+    enableSwipe: true,
+    enableKeyboard: false,
+    showHints: true,
+    autoFlip: false
+  };
+
+  const cardHandlers: CardEventHandlers = {
+    onFlip: () => {},
+    onAnswer: handleAnswer,
+    onNext: () => {}
+  };
+
   return (
     <div className="stack-container h-full w-full relative overflow-hidden" ref={stackRef}>
       <StackProgress 
@@ -93,7 +103,7 @@ export default function CardStack<T extends Question = Question>({
       
       <div className="cards-wrapper h-full w-full flex items-center justify-center pt-8 pb-16">
         <AnimatePresence mode="popLayout">
-          {/* Next card in stack (shown partially underneath) */}
+          {/* Next card in stack */}
           {hasNextCard && !isAnimating && (
             <motion.div 
               key={`next-${nextCard.id}`}
@@ -104,9 +114,13 @@ export default function CardStack<T extends Question = Question>({
               transition={{ duration: 0.2 }}
             >
               <div className="opacity-60 pointer-events-none">
-                <CardItem 
-                  question={nextCard}
-                  isPreview={true}
+                <UnifiedCard 
+                  config={{
+                    ...cardConfig,
+                    question: nextCard
+                  }}
+                  handlers={cardHandlers}
+                  className="w-[90vw] max-w-md aspect-[3/4]"
                 />
               </div>
             </motion.div>
@@ -123,10 +137,10 @@ export default function CardStack<T extends Question = Question>({
             }
             transition={{ type: "spring", stiffness: 200, damping: 20 }}
           >
-            <CardItem 
-              question={currentCard}
-              onSwipe={handleSwipe}
-              swipeDisabled={isAnimating}
+            <UnifiedCard 
+              config={cardConfig}
+              handlers={cardHandlers}
+              className="w-[90vw] max-w-md aspect-[3/4]"
             />
           </motion.div>
         </AnimatePresence>

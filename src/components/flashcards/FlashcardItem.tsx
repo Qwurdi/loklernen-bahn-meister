@@ -1,9 +1,10 @@
 
-import React, { useState, useEffect } from "react";
+import React, { memo } from "react";
 import { Question } from "@/types/questions";
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { useIsMobile } from "@/hooks/use-mobile";
-import FlashcardItemMobile from "./FlashcardItemMobile";
-import FlashcardItemDesktop from "./FlashcardItemDesktop";
+import UnifiedCard from '@/components/flashcard/unified/UnifiedCard';
+import { CardConfig, CardEventHandlers } from '@/types/flashcard';
 
 interface FlashcardItemProps {
   question: Question;
@@ -12,91 +13,46 @@ interface FlashcardItemProps {
   showAnswer?: boolean;
 }
 
-export default function FlashcardItem({ 
+const FlashcardItem = memo(function FlashcardItem({ 
   question, 
   onAnswer, 
   onNext,
   showAnswer = false
 }: FlashcardItemProps) {
-  const [flipped, setFlipped] = useState(showAnswer);
-  const [answered, setAnswered] = useState(false);
+  const { regulationPreference } = useUserPreferences();
   const isMobile = useIsMobile();
 
-  // Reset state when question changes
-  useEffect(() => {
-    setFlipped(showAnswer);
-    setAnswered(false);
-  }, [question, showAnswer]);
-
-  // Handle keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (flipped && !answered) {
-        if (e.key === "ArrowLeft" || e.key === "n" || e.key === "N") {
-          handleNotKnown();
-        } else if (e.key === "ArrowRight" || e.key === "y" || e.key === "Y") {
-          handleKnown();
-        }
-      } else if (!flipped) {
-        if (e.key === " " || e.key === "Enter") {
-          e.preventDefault();
-          handleShowAnswer();
-        }
-      }
-    };
-
-    if (!isMobile) {
-      window.addEventListener("keydown", handleKeyDown);
-      return () => window.removeEventListener("keydown", handleKeyDown);
-    }
-  }, [flipped, answered, question, isMobile]);
-
-  const handleShowAnswer = () => {
-    setFlipped(true);
+  const cardConfig: CardConfig = {
+    question,
+    regulationPreference,
+    displayMode: 'single',
+    interactionMode: isMobile ? 'swipe' : 'keyboard',
+    enableSwipe: isMobile,
+    enableKeyboard: !isMobile,
+    showHints: true,
+    autoFlip: showAnswer
   };
-  
-  const handleKnown = () => {
-    setAnswered(true);
-    onAnswer(5); // Score 5 for "Gewusst"
-    
-    // Small delay to see the selection before moving on
-    setTimeout(() => {
-      onNext();
-    }, 300);
+
+  const cardHandlers: CardEventHandlers = {
+    onFlip: () => {},
+    onAnswer: (score: number) => {
+      onAnswer(score);
+      setTimeout(() => {
+        onNext();
+      }, 300);
+    },
+    onNext
   };
-  
-  const handleNotKnown = () => {
-    setAnswered(true);
-    onAnswer(1); // Score 1 for "Nicht gewusst" (resets the card)
-    
-    // Small delay to see the selection before moving on
-    setTimeout(() => {
-      onNext();
-    }, 300);
-  };
-  
-  // Render the appropriate component based on device type
-  if (isMobile) {
-    return (
-      <FlashcardItemMobile 
-        question={question}
-        flipped={flipped}
-        answered={answered}
-        onShowAnswer={handleShowAnswer}
-        onKnown={handleKnown}
-        onNotKnown={handleNotKnown}
-      />
-    );
-  }
-  
+
   return (
-    <FlashcardItemDesktop
-      question={question}
-      flipped={flipped}
-      answered={answered}
-      onShowAnswer={handleShowAnswer}
-      onKnown={handleKnown}
-      onNotKnown={handleNotKnown}
-    />
+    <div className={isMobile ? "h-full w-full px-3 touch-none" : "mx-auto max-w-md"}>
+      <UnifiedCard
+        config={cardConfig}
+        handlers={cardHandlers}
+        className={`relative ${isMobile ? 'w-full h-full min-h-[500px]' : 'max-w-md mx-auto min-h-[500px]'}`}
+      />
+    </div>
   );
-}
+});
+
+export default FlashcardItem;

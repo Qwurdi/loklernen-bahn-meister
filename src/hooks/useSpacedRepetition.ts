@@ -1,5 +1,9 @@
 
-// This file is now just re-exporting from the new structure
-// to maintain backward compatibility for existing imports
-export { useSpacedRepetition } from './spaced-repetition';
-export type { UserProgress, SpacedRepetitionOptions, SpacedRepetitionResult } from './spaced-repetition/types';
+// Clean architecture implementation - single source of truth
+export { useSpacedRepetition } from './spaced-repetition/useSpacedRepetition';
+export type { 
+  SessionQuestion, 
+  SessionOptions, 
+  SessionProgress, 
+  SpacedRepetitionHook 
+} from '@/types/spaced-repetition';

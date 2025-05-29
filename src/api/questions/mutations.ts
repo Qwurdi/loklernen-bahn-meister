@@ -14,6 +14,9 @@ export async function createQuestion(question: CreateQuestionDTO) {
   // Convert Answer[] to a JSON structure compatible with Supabase
   const supabaseAnswers = question.answers.map(prepareAnswerForStorage);
 
+  // Process hint if it exists
+  const processedHint = question.hint ? prepareContentForStorage(question.hint) : null;
+
   const { data, error } = await supabase
     .from('questions')
     .insert([{
@@ -26,13 +29,54 @@ export async function createQuestion(question: CreateQuestionDTO) {
       answers: supabaseAnswers,
       created_by: question.created_by,
       regulation_category: question.regulation_category,
-      hint: question.hint
+      hint: processedHint
     }])
     .select()
     .single();
     
   if (error) throw error;
   return transformQuestion(data);
+}
+
+/**
+ * Updates an existing question
+ */
+export async function updateQuestion(id: string, updates: Partial<Question>) {
+  const processedUpdates: any = { ...updates };
+  
+  if (updates.text) {
+    processedUpdates.text = prepareContentForStorage(updates.text);
+  }
+  
+  if (updates.hint) {
+    processedUpdates.hint = prepareContentForStorage(updates.hint);
+  }
+  
+  if (updates.answers) {
+    processedUpdates.answers = updates.answers.map(prepareAnswerForStorage);
+  }
+
+  const { data, error } = await supabase
+    .from('questions')
+    .update(processedUpdates)
+    .eq('id', id)
+    .select()
+    .single();
+    
+  if (error) throw error;
+  return transformQuestion(data);
+}
+
+/**
+ * Deletes a question
+ */
+export async function deleteQuestion(id: string) {
+  const { error } = await supabase
+    .from('questions')
+    .delete()
+    .eq('id', id);
+    
+  if (error) throw error;
 }
 
 /**
@@ -69,6 +113,9 @@ export async function duplicateQuestion(originalQuestion: Question): Promise<Que
     // Convert answers to proper format
     const supabaseAnswers: Json = duplicateData.answers.map(prepareAnswerForStorage);
 
+    // Process hint if it exists
+    const processedHint = duplicateData.hint ? prepareContentForStorage(duplicateData.hint) : null;
+
     const { data, error } = await supabase
       .from('questions')
       .insert([{
@@ -81,7 +128,7 @@ export async function duplicateQuestion(originalQuestion: Question): Promise<Que
         answers: supabaseAnswers,
         created_by: duplicateData.created_by,
         regulation_category: duplicateData.regulation_category,
-        hint: duplicateData.hint
+        hint: processedHint
       }])
       .select()
       .single();

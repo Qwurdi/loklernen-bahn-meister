@@ -12,6 +12,7 @@ export type Database = {
       categories: {
         Row: {
           color: string | null
+          content_type: string | null
           created_at: string | null
           description: string | null
           icon: string | null
@@ -20,10 +21,13 @@ export type Database = {
           isPro: boolean
           name: string
           parent_category: string
+          path: string | null
+          requiresAuth: boolean | null
           updated_at: string | null
         }
         Insert: {
           color?: string | null
+          content_type?: string | null
           created_at?: string | null
           description?: string | null
           icon?: string | null
@@ -32,10 +36,13 @@ export type Database = {
           isPro?: boolean
           name: string
           parent_category: string
+          path?: string | null
+          requiresAuth?: boolean | null
           updated_at?: string | null
         }
         Update: {
           color?: string | null
+          content_type?: string | null
           created_at?: string | null
           description?: string | null
           icon?: string | null
@@ -44,6 +51,8 @@ export type Database = {
           isPro?: boolean
           name?: string
           parent_category?: string
+          path?: string | null
+          requiresAuth?: boolean | null
           updated_at?: string | null
         }
         Relationships: []
@@ -52,6 +61,7 @@ export type Database = {
         Row: {
           answers: Json
           category: Database["public"]["Enums"]["question_category"]
+          content_version: string | null
           created_at: string
           created_by: string
           difficulty: number
@@ -61,6 +71,7 @@ export type Database = {
           question_type: Database["public"]["Enums"]["question_type"]
           regulation_category: string | null
           revision: number
+          status: string | null
           sub_category: string
           text: string
           updated_at: string
@@ -68,6 +79,7 @@ export type Database = {
         Insert: {
           answers: Json
           category: Database["public"]["Enums"]["question_category"]
+          content_version?: string | null
           created_at?: string
           created_by: string
           difficulty: number
@@ -77,6 +89,7 @@ export type Database = {
           question_type: Database["public"]["Enums"]["question_type"]
           regulation_category?: string | null
           revision?: number
+          status?: string | null
           sub_category: string
           text: string
           updated_at?: string
@@ -84,6 +97,7 @@ export type Database = {
         Update: {
           answers?: Json
           category?: Database["public"]["Enums"]["question_category"]
+          content_version?: string | null
           created_at?: string
           created_by?: string
           difficulty?: number
@@ -93,6 +107,7 @@ export type Database = {
           question_type?: Database["public"]["Enums"]["question_type"]
           regulation_category?: string | null
           revision?: number
+          status?: string | null
           sub_category?: string
           text?: string
           updated_at?: string
@@ -164,6 +179,7 @@ export type Database = {
       user_stats: {
         Row: {
           created_at: string
+          editor_view_preference: string | null
           last_activity_date: string
           regulation_preference: string | null
           signals_mastered: number
@@ -176,6 +192,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          editor_view_preference?: string | null
           last_activity_date?: string
           regulation_preference?: string | null
           signals_mastered?: number
@@ -188,6 +205,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          editor_view_preference?: string | null
           last_activity_date?: string
           regulation_preference?: string | null
           signals_mastered?: number
@@ -208,6 +226,27 @@ export type Database = {
       calculate_next_review: {
         Args: { box_num: number }
         Returns: string
+      }
+      get_latest_progress_by_box: {
+        Args: { p_user_id: string; p_box_number: number }
+        Returns: {
+          id: string
+          user_id: string
+          question_id: string
+          last_score: number
+          box_number: number
+          last_reviewed_at: string
+          next_review_at: string
+          ease_factor: number
+          interval_days: number
+          repetition_count: number
+          correct_count: number
+          incorrect_count: number
+          streak: number
+          created_at: string
+          updated_at: string
+          questions: Json
+        }[]
       }
     }
     Enums: {

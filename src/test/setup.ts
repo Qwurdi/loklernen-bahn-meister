@@ -1,6 +1,5 @@
 
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
 
 // Mock global objects that might be undefined in test environment
 Object.defineProperty(window, 'matchMedia', {

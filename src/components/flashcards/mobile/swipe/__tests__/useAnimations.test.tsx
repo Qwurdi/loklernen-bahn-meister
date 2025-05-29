@@ -1,5 +1,4 @@
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { useAnimations } from '../useAnimations';
 
 describe('useAnimations Hook', () => {

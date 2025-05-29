@@ -16,6 +16,14 @@ declare module 'vitest' {
     toBeChecked(): T
     toHaveFocus(): T
     toHaveAttribute(attr: string, value?: string): T
+    toHaveStyle(style: string | object): T
+    toBeEmptyDOMElement(): T
+    toBeInvalid(): T
+    toBeValid(): T
+    toBeRequired(): T
+    toBePartiallyChecked(): T
+    toHaveDisplayValue(value: string | RegExp | (string | RegExp)[]): T
+    toHaveErrorMessage(text: string | RegExp): T
   }
   
   interface AsymmetricMatchersContaining {
@@ -29,6 +37,14 @@ declare module 'vitest' {
     toBeChecked(): any
     toHaveFocus(): any
     toHaveAttribute(attr: string, value?: string): any
+    toHaveStyle(style: string | object): any
+    toBeEmptyDOMElement(): any
+    toBeInvalid(): any
+    toBeValid(): any
+    toBeRequired(): any
+    toBePartiallyChecked(): any
+    toHaveDisplayValue(value: string | RegExp | (string | RegExp)[]): any
+    toHaveErrorMessage(text: string | RegExp): any
   }
 }
 

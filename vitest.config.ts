@@ -12,6 +12,19 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     typecheck: {
       tsconfig: './tsconfig.json'
+    },
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        'src/test/',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/index.ts'
+      ]
     }
   },
   resolve: {

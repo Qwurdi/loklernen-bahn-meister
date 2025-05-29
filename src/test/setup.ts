@@ -29,3 +29,26 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
   unobserve: vi.fn(),
   disconnect: vi.fn(),
 }));
+
+// Mock navigator.vibrate for haptic feedback tests
+Object.defineProperty(navigator, 'vibrate', {
+  value: vi.fn().mockImplementation(() => true),
+  writable: true
+});
+
+// Mock URL.createObjectURL for file upload tests
+global.URL.createObjectURL = vi.fn();
+global.URL.revokeObjectURL = vi.fn();
+
+// Mock fetch for API tests
+global.fetch = vi.fn();
+
+// Mock console methods to reduce noise in tests
+global.console = {
+  ...console,
+  log: vi.fn(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+};

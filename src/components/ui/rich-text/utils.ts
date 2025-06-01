@@ -33,7 +33,7 @@ export function tiptapToStructured(htmlContent: string): StructuredContent {
           
           nodes.push({
             type: 'list',
-            content: listItems,
+            content: listItems.map(item => item.content).join(''),
             attrs: {
               ordered: listType === 'ol'
             }
@@ -51,6 +51,7 @@ export function tiptapToStructured(htmlContent: string): StructuredContent {
   });
   
   return {
+    type: 'document',
     nodes: nodes.length > 0 ? nodes : [{ type: 'paragraph', content: '' }],
     version: '1.0.0',
   };
@@ -139,10 +140,8 @@ export function structuredToHtml(content: StructuredContent): string {
       
       case 'list':
         const listType = node.attrs?.ordered ? 'ol' : 'ul';
-        const listItems = Array.isArray(node.content) 
-          ? node.content.map(item => `<li>${formatTextWithMarks(item)}</li>`).join('')
-          : '';
-        return `<${listType}>${listItems}</${listType}>`;
+        const listItems = node.content || '';
+        return `<${listType}><li>${listItems}</li></${listType}>`;
       
       case 'code':
         return `<pre><code>${node.content}</code></pre>`;
@@ -155,11 +154,9 @@ export function structuredToHtml(content: StructuredContent): string {
 
 // Apply marks to text content
 export function formatTextWithMarks(node: TextNode): string {
-  if (typeof node.content !== 'string') {
-    return '';
-  }
+  const textContent = node.content || node.text || '';
   
-  let formattedText = node.content;
+  let formattedText = textContent;
   
   // Apply marks if they exist
   if (node.marks && node.marks.length > 0) {

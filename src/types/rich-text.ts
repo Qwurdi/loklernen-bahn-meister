@@ -1,6 +1,6 @@
 
 export interface RichTextContent {
-  type: 'text' | 'paragraph' | 'heading';
+  type: 'text' | 'paragraph' | 'heading' | 'list' | 'list-item' | 'code';
   content?: string;
   children?: RichTextContent[];
 }
@@ -9,12 +9,16 @@ export interface StructuredContent {
   type: string;
   content?: any;
   children?: StructuredContent[];
+  nodes?: TextNode[];
+  version?: string;
 }
 
 export interface TextNode {
-  type: 'text';
-  text: string;
+  type: 'text' | 'paragraph' | 'heading' | 'list' | 'list-item' | 'code';
+  content?: string;
+  text?: string;
   marks?: Mark[];
+  attrs?: Record<string, any>;
 }
 
 export interface Mark {
@@ -32,9 +36,19 @@ export function getTextValue(content: any): string {
       return content.content;
     }
     
+    if (content.text) {
+      return content.text;
+    }
+    
     if (content.children && Array.isArray(content.children)) {
       return content.children
         .map((child: any) => getTextValue(child))
+        .join(' ');
+    }
+    
+    if (content.nodes && Array.isArray(content.nodes)) {
+      return content.nodes
+        .map((node: any) => getTextValue(node))
         .join(' ');
     }
   }

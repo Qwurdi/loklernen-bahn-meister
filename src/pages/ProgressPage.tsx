@@ -6,7 +6,7 @@ export function ProgressPage() {
     <div className="space-y-6">
       <h1 className="text-headline-large">Fortschritt</h1>
       <p className="text-body-large text-gray-600">
-        Detaillierte Statistiken und Lernanalysen.
+        Hier wird dein Lernfortschritt angezeigt.
       </p>
       <div className="material-card p-6">
         <p className="text-body-medium text-gray-500">

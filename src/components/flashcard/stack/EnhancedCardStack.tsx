@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Question } from '@/types/questions';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
@@ -6,7 +5,7 @@ import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { useVisualFeedback } from '@/hooks/useVisualFeedback';
 import { CardConfig, CardEventHandlers } from '@/types/flashcard';
-import UnifiedCard from '@/components/flashcard/unified/UnifiedCard';
+import { UnifiedCard } from '@/components/flashcard/unified/UnifiedCard';
 
 interface EnhancedCardStackProps {
   questions: Question[];

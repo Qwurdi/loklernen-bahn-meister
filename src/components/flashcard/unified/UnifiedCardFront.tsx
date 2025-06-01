@@ -17,6 +17,7 @@ export function UnifiedCardFront({
   regulationPreference 
 }: UnifiedCardFrontProps) {
   const questionText = getTextValue(question.text);
+  const hintText = question.hint ? getTextValue(question.hint) : '';
   
   return (
     <div className="p-6 h-full flex flex-col">
@@ -49,10 +50,10 @@ export function UnifiedCardFront({
         )}
 
         {/* Hint */}
-        {showHints && question.hint && (
+        {showHints && hintText && (
           <div className="mt-4 p-3 bg-gray-50 rounded-lg border-l-4 border-[#3F00FF]">
             <p className="text-sm text-gray-700">
-              💡 <strong>Tipp:</strong> {question.hint}
+              💡 <strong>Tipp:</strong> {hintText}
             </p>
           </div>
         )}

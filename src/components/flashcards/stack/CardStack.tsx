@@ -3,7 +3,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Question } from '@/types/questions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
-import UnifiedCard from '@/components/flashcard/unified/UnifiedCard';
+import { UnifiedCard } from '@/components/flashcard/unified/UnifiedCard';
 import { CardConfig, CardEventHandlers } from '@/types/flashcard';
 import EmptyStackMessage from './EmptyStackMessage';
 import StackProgress from './StackProgress';

@@ -3,7 +3,7 @@ import React, { memo } from "react";
 import { Question } from "@/types/questions";
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { useIsMobile } from "@/hooks/use-mobile";
-import UnifiedCard from '@/components/flashcard/unified/UnifiedCard';
+import { UnifiedCard } from '@/components/flashcard/unified/UnifiedCard';
 import { CardConfig, CardEventHandlers } from '@/types/flashcard';
 
 interface FlashcardItemProps {

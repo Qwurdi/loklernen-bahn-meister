@@ -3,6 +3,7 @@ import React from 'react';
 import { Question } from '@/types/questions';
 import { Button } from '@/components/ui/button';
 import { getTextValue } from '@/types/rich-text';
+import { cn } from '@/lib/utils';
 
 interface UnifiedCardBackProps {
   question: Question;

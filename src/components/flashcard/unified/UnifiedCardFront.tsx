@@ -3,6 +3,7 @@ import React from 'react';
 import { Question } from '@/types/questions';
 import { RegulationFilterType } from '@/types/regulation';
 import { getTextValue } from '@/types/rich-text';
+import { cn } from '@/lib/utils';
 
 interface UnifiedCardFrontProps {
   question: Question;

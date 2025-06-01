@@ -1,131 +1,129 @@
 
 import React from 'react';
 import { Question } from '@/types/questions';
-import { RegulationFilterType } from '@/types/regulation';
 import { Button } from '@/components/ui/button';
-import { Check, X } from 'lucide-react';
-import { useDynamicTextSize } from '@/hooks/useDynamicTextSize';
-import { SafeRichText } from '@/components/ui/rich-text/SafeRichText';
-import ZoomableImage from '@/components/common/ZoomableImage';
-import MultipleChoiceQuestion from '@/components/flashcards/MultipleChoice';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { getTextValue } from '@/types/rich-text';
 
 interface UnifiedCardBackProps {
   question: Question;
-  regulationPreference: RegulationFilterType;
   isAnswered: boolean;
-  isMultipleChoice: boolean;
+  canAnswer: boolean;
+  showButtons: boolean;
   onAnswer: (score: number) => void;
 }
 
-export default function UnifiedCardBack({
-  question,
-  regulationPreference,
-  isAnswered,
-  isMultipleChoice,
-  onAnswer
+export function UnifiedCardBack({ 
+  question, 
+  isAnswered, 
+  canAnswer, 
+  showButtons, 
+  onAnswer 
 }: UnifiedCardBackProps) {
-  const isMobile = useIsMobile();
-  const answerTextClass = useDynamicTextSize(
-    question?.answers?.[0]?.text || '', 
-    'answer'
-  );
+  const renderAnswer = () => {
+    if (question.question_type === 'open') {
+      return (
+        <div className="space-y-3">
+          <h3 className="text-title-large font-medium text-gray-900">Antwort:</h3>
+          <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+            <p className="text-body-large text-gray-800 leading-relaxed">
+              {getTextValue(question.answers[0]?.text || '')}
+            </p>
+          </div>
+        </div>
+      );
+    }
 
-  const handleMCAnswer = (isCorrect: boolean) => {
-    onAnswer(isCorrect ? 5 : 1);
+    // Multiple Choice
+    return (
+      <div className="space-y-3">
+        <h3 className="text-title-large font-medium text-gray-900">Antworten:</h3>
+        <div className="space-y-2">
+          {question.answers.map((answer, index) => (
+            <div
+              key={index}
+              className={cn(
+                "p-3 rounded-lg border",
+                answer.isCorrect
+                  ? "bg-green-50 border-green-200"
+                  : "bg-gray-50 border-gray-200"
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <span className={cn(
+                  "w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold",
+                  answer.isCorrect
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-400 text-white"
+                )}>
+                  {String.fromCharCode(65 + index)}
+                </span>
+                <p className="text-body-large">{getTextValue(answer.text)}</p>
+                {answer.isCorrect && (
+                  <span className="ml-auto text-green-600 text-sm font-medium">
+                    ✓ Richtig
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   return (
-    <>
-      <div className="bg-blue-50 px-3 py-1 rounded-full text-xs text-blue-600 self-start mb-2">
-        {isMultipleChoice ? "Wähle die richtige Antwort" : "Antwort"}
+    <div className="p-6 h-full flex flex-col">
+      {/* Answer Content */}
+      <div className="flex-1">
+        {renderAnswer()}
       </div>
-      
-      {isMultipleChoice ? (
-        <div className="flex-1 overflow-hidden">
-          <MultipleChoiceQuestion 
-            question={question} 
-            onAnswer={handleMCAnswer} 
-            isMobile={isMobile}
-          />
-        </div>
-      ) : (
-        <>
-          <div className="flex-1 overflow-y-auto pb-4">
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-4">
-              <div className={`${answerTextClass} font-medium text-blue-800`}>
-                <SafeRichText content={question?.answers?.[0]?.text || ''} />
-              </div>
-            </div>
-            
-            {question?.image_url && (
-              <div className="flex items-center justify-center">
-                {isMobile ? (
-                  <img
-                    src={question.image_url}
-                    alt="Signal"
-                    className="max-h-[200px] object-contain"
-                  />
-                ) : (
-                  <ZoomableImage
-                    src={question.image_url}
-                    alt="Signal"
-                    containerClassName="w-full max-w-[200px] mx-auto mb-6"
-                  />
-                )}
-              </div>
-            )}
+
+      {/* Self-Assessment Buttons */}
+      {showButtons && canAnswer && !isAnswered && (
+        <div className="mt-6 pt-4 border-t border-gray-200">
+          <p className="text-sm text-gray-600 mb-4 text-center">
+            Wie sicher warst du bei der Antwort?
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onAnswer(1)}
+              className="border-red-300 text-red-700 hover:bg-red-50"
+            >
+              😔 Unsicher
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onAnswer(3)}
+              className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
+            >
+              🤔 Ok
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onAnswer(5)}
+              className="border-green-300 text-green-700 hover:bg-green-50"
+            >
+              😊 Sicher
+            </Button>
           </div>
-
-          {!isAnswered && (
-            <>
-              {isMobile ? (
-                <div className="flex gap-3 mt-auto">
-                  <Button 
-                    variant="outline" 
-                    className="flex-1 border-red-200 text-red-700 hover:bg-red-50"
-                    onClick={() => onAnswer(1)}
-                  >
-                    <X className="h-4 w-4 mr-2" />
-                    Nicht gewusst
-                  </Button>
-                  <Button 
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                    onClick={() => onAnswer(5)}
-                  >
-                    <Check className="h-4 w-4 mr-2" />
-                    Gewusst
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex gap-4 justify-center mt-auto pt-4 border-t border-gray-100">
-                  <Button 
-                    variant="outline" 
-                    className="border-red-200 text-red-700 hover:bg-red-50"
-                    onClick={() => onAnswer(1)}
-                  >
-                    <X className="h-4 w-4 mr-2" />
-                    Nicht gewusst
-                  </Button>
-                  <Button 
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                    onClick={() => onAnswer(5)}
-                  >
-                    <Check className="h-4 w-4 mr-2" />
-                    Gewusst
-                  </Button>
-                </div>
-              )}
-
-              {!isMobile && (
-                <div className="text-xs text-gray-500 text-center mt-2">
-                  Tastatur: ← Nicht gewusst | → Gewusst
-                </div>
-              )}
-            </>
-          )}
-        </>
+        </div>
       )}
-    </>
+
+      {/* Answered State */}
+      {isAnswered && (
+        <div className="mt-6 pt-4 border-t border-gray-200">
+          <div className="text-center">
+            <p className="text-sm text-gray-600 mb-2">Antwort bewertet!</p>
+            <p className="text-xs text-gray-500">
+              Diese Karte wird entsprechend deiner Bewertung wiederholt.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

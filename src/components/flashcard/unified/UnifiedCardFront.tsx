@@ -2,89 +2,84 @@
 import React from 'react';
 import { Question } from '@/types/questions';
 import { RegulationFilterType } from '@/types/regulation';
-import { Button } from '@/components/ui/button';
-import { Lightbulb } from 'lucide-react';
-import { useDynamicTextSize } from '@/hooks/useDynamicTextSize';
-import { SafeRichText } from '@/components/ui/rich-text/SafeRichText';
-import ZoomableImage from '@/components/common/ZoomableImage';
-import HintButton from '@/components/flashcards/HintButton';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { getTextValue } from '@/types/rich-text';
 
 interface UnifiedCardFrontProps {
   question: Question;
-  regulationPreference: RegulationFilterType;
   showHints: boolean;
-  onShowAnswer: () => void;
+  regulationPreference: RegulationFilterType;
 }
 
-export default function UnifiedCardFront({
-  question,
-  regulationPreference,
-  showHints,
-  onShowAnswer
+export function UnifiedCardFront({ 
+  question, 
+  showHints, 
+  regulationPreference 
 }: UnifiedCardFrontProps) {
-  const isMobile = useIsMobile();
-  const questionTextClass = useDynamicTextSize(question.text, 'question');
-  const isMultipleChoice = question.question_type === "MC_single" || question.question_type === "MC_multi";
-
+  const questionText = getTextValue(question.text);
+  
   return (
-    <>
-      <div className="bg-blue-50 px-3 py-1 rounded-full text-xs text-blue-600 self-start mb-2">
-        {isMultipleChoice ? "Multiple Choice" : question.sub_category}
+    <div className="p-6 h-full flex flex-col">
+      {/* Category Badge */}
+      <div className="flex items-center justify-between mb-4">
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-ultramarine text-white">
+          {question.sub_category}
+        </span>
+        <span className="text-xs text-gray-500">
+          {question.question_type === 'open' ? 'Offene Frage' : 'Multiple Choice'}
+        </span>
       </div>
-      
-      <div className={`${questionTextClass} font-medium mb-4 text-gray-900`}>
-        <SafeRichText content={question.text} />
-      </div>
-      
-      {question.image_url && (
-        <div className="flex-1 flex items-center justify-center mb-4">
-          {isMobile ? (
-            <img 
-              src={question.image_url} 
-              alt="Question" 
-              className="max-h-full object-contain rounded-md"
-            />
-          ) : (
-            <ZoomableImage
-              src={question.image_url}
-              alt="Signal"
-              containerClassName="w-full max-w-[200px]" 
-            />
-          )}
-        </div>
-      )}
-      
-      {showHints && (
-        <div className="mb-3">
-          <HintButton 
-            hint={question.hint}
-            question={question.text}
-            answers={question.answers}
-            minimal={isMobile}
-          />
-        </div>
-      )}
-      
-      {isMobile && (
-        <div className="text-xs text-gray-500 text-center mb-2">
-          Tippe auf die Karte oder den Button, um die Antwort zu sehen
-        </div>
-      )}
-      
-      <Button 
-        className="w-full bg-gradient-to-r from-loklernen-ultramarine to-blue-600 hover:from-blue-700 hover:to-loklernen-ultramarine text-white"
-        onClick={onShowAnswer}
-      >
-        <Lightbulb className="h-4 w-4 mr-2" />
-        {isMultipleChoice ? "Optionen anzeigen" : "Signal anzeigen"}
-      </Button>
 
-      {!isMobile && (
-        <div className="text-xs text-gray-500 text-center mt-2">
-          Drücke die Leertaste, um die Antwort anzuzeigen
+      {/* Question Content */}
+      <div className="flex-1 flex flex-col justify-center">
+        <h2 className="text-headline-medium mb-4 text-gray-900 leading-relaxed">
+          {questionText}
+        </h2>
+
+        {/* Question Image */}
+        {question.image_url && (
+          <div className="mb-4">
+            <img
+              src={question.image_url}
+              alt="Fragenbild"
+              className="w-full h-48 object-contain rounded-lg bg-gray-100"
+              loading="lazy"
+            />
+          </div>
+        )}
+
+        {/* Hint */}
+        {showHints && question.hint && (
+          <div className="mt-4 p-3 bg-gray-50 rounded-lg border-l-4 border-[#3F00FF]">
+            <p className="text-sm text-gray-700">
+              💡 <strong>Tipp:</strong> {question.hint}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Difficulty Indicator */}
+      <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+        <div className="flex items-center gap-1">
+          {Array.from({ length: 5 }, (_, i) => (
+            <div
+              key={i}
+              className={cn(
+                "w-2 h-2 rounded-full",
+                i < question.difficulty
+                  ? "bg-gradient-ultramarine"
+                  : "bg-gray-300"
+              )}
+            />
+          ))}
+          <span className="ml-2 text-xs text-gray-600">
+            Schwierigkeit {question.difficulty}/5
+          </span>
         </div>
-      )}
-    </>
+        
+        <span className="text-xs text-gray-500">
+          Zum Umdrehen antippen
+        </span>
+      </div>
+    </div>
   );
 }

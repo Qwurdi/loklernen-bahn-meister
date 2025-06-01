@@ -1,35 +1,53 @@
 
 @import './base.css';
-@import './components.css';
+@import './material-design-2.css';
 @import './animations.css';
-@import './mobile.css';
-@import './flashcards.css';
-@import './material-design.css';
 
-/* Main CSS entry point - additional global styles can be added here */
-html {
-  scroll-behavior: smooth;
-}
-
-@media (prefers-reduced-motion) {
-  html {
-    scroll-behavior: auto;
+/* Enhanced Tailwind utilities for Material Design */
+@layer utilities {
+  /* Gradient utilities */
+  .bg-gradient-ultramarine {
+    background: linear-gradient(135deg, #3F00FF 0%, #5080FF 100%);
+  }
+  
+  .bg-gradient-sapphire {
+    background: linear-gradient(135deg, #0F52BA 0%, #3F00FF 100%);
+  }
+  
+  /* Text gradient utilities */
+  .text-gradient-ultramarine {
+    background: linear-gradient(135deg, #3F00FF 0%, #5080FF 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }
 
-/* Enhanced body styles for Material Design */
-body {
+/* Global font improvements */
+html {
+  scroll-behavior: smooth;
   font-feature-settings: 'rlig' 1, 'calt' 1;
+}
+
+body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Flashcard mode enhancements */
-body.flashcard-mode {
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  touch-action: none;
+/* Focus improvements for accessibility */
+*:focus-visible {
+  outline: 2px solid #3F00FF;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Enhanced Material Design card styles */
+.material-card {
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.material-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
 }

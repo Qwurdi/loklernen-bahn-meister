@@ -2,32 +2,28 @@
 import { Question } from '@/types/questions';
 import { RegulationFilterType } from '@/types/regulation';
 
-// Core flashcard state management
+export type InteractionMode = 'swipe' | 'keyboard' | 'tap' | 'buttons';
+export type DisplayMode = 'single' | 'stack' | 'grid';
+
 export interface FlashcardState {
   isFlipped: boolean;
   isAnswered: boolean;
   isAnimating: boolean;
   swipeEnabled: boolean;
+  swipeDirection?: 'left' | 'right' | null;
 }
 
-// Interaction modes
-export type InteractionMode = 'tap' | 'swipe' | 'buttons' | 'keyboard';
-
-// Card display modes
-export type CardDisplayMode = 'single' | 'stack' | 'preview';
-
-// Answer feedback types
 export interface AnswerFeedback {
   score: number;
   isCorrect: boolean;
   timestamp: number;
+  responseTime?: number;
 }
 
-// Unified card configuration
 export interface CardConfig {
   question: Question;
   regulationPreference: RegulationFilterType;
-  displayMode: CardDisplayMode;
+  displayMode: DisplayMode;
   interactionMode: InteractionMode;
   enableSwipe: boolean;
   enableKeyboard: boolean;
@@ -35,40 +31,27 @@ export interface CardConfig {
   autoFlip: boolean;
 }
 
-// Card event handlers
 export interface CardEventHandlers {
   onFlip: () => void;
   onAnswer: (score: number) => void;
-  onNext: () => void;
+  onNext?: () => void;
   onPrevious?: () => void;
-  onHint?: () => void;
 }
 
-// Animation configuration
-export interface AnimationConfig {
-  flipDuration: number;
-  swipeThreshold: number;
-  springConfig: {
-    tension: number;
-    friction: number;
-  };
+export interface SessionConfig {
+  questions: Question[];
+  sessionType: 'practice' | 'review' | 'exam';
+  regulationPreference: RegulationFilterType;
+  adaptiveDifficulty: boolean;
+  interactionMode: InteractionMode;
 }
 
-// Default configurations
-export const DEFAULT_ANIMATION_CONFIG: AnimationConfig = {
-  flipDuration: 600,
-  swipeThreshold: 100,
-  springConfig: {
-    tension: 300,
-    friction: 30
-  }
-};
-
-export const DEFAULT_CARD_CONFIG: Partial<CardConfig> = {
-  displayMode: 'single',
-  interactionMode: 'tap',
-  enableSwipe: true,
-  enableKeyboard: true,
-  showHints: true,
-  autoFlip: false
-};
+export interface SessionStats {
+  questionsAnswered: number;
+  correctAnswers: number;
+  currentStreak: number;
+  longestStreak: number;
+  averageConfidence: number;
+  timeSpent: number;
+  sessionStartTime: number;
+}

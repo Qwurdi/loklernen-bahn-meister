@@ -1,12 +1,11 @@
 
 import React from 'react';
-import { Card } from '@/components/ui/card';
-import { CardConfig, CardEventHandlers, DEFAULT_CARD_CONFIG } from '@/types/flashcard';
+import { CardConfig, CardEventHandlers } from '@/types/flashcard';
 import { useUnifiedCardState } from '@/hooks/flashcard/useUnifiedCardState';
 import { useUnifiedInteractions } from '@/hooks/flashcard/useUnifiedInteractions';
-import { useIsMobile } from '@/hooks/use-mobile';
-import UnifiedCardFront from './UnifiedCardFront';
-import UnifiedCardBack from './UnifiedCardBack';
+import { UnifiedCardFront } from './UnifiedCardFront';
+import { UnifiedCardBack } from './UnifiedCardBack';
+import { cn } from '@/lib/utils';
 
 interface UnifiedCardProps {
   config: CardConfig;
@@ -14,85 +13,74 @@ interface UnifiedCardProps {
   className?: string;
 }
 
-export default function UnifiedCard({
-  config,
-  handlers,
-  className = ''
-}: UnifiedCardProps) {
-  const isMobile = useIsMobile();
-  const mergedConfig = { ...DEFAULT_CARD_CONFIG, ...config };
-
+export function UnifiedCard({ config, handlers, className }: UnifiedCardProps) {
   const { state, actions, computed } = useUnifiedCardState({
     question: config.question,
     autoReset: true
   });
 
   const interactions = useUnifiedInteractions({
-    mode: mergedConfig.interactionMode!,
+    mode: config.interactionMode,
     enabled: true,
-    canFlip: computed.canFlip && !state.isFlipped,
+    canFlip: computed.canFlip,
     canAnswer: computed.canAnswer,
     onFlip: () => {
       actions.flip();
       handlers.onFlip();
     },
-    onAnswer: (score: number) => {
+    onAnswer: (score) => {
       actions.answer(score);
       handlers.onAnswer(score);
     },
     onNext: handlers.onNext
   });
 
-  const handleCardClick = () => {
-    if (interactions.tapEnabled && !state.isFlipped && computed.canFlip) {
-      actions.flip();
-      handlers.onFlip();
-    }
-  };
-
-  const cardClasses = `
-    relative transition-all duration-300 ease-out
-    ${isMobile ? 'w-full h-full min-h-[500px]' : 'max-w-md mx-auto min-h-[500px]'}
-    ${state.isAnimating ? 'pointer-events-none' : ''}
-    ${className}
-  `.trim();
-
   return (
-    <Card 
-      className={cardClasses}
-      onClick={handleCardClick}
-    >
-      <div className="p-4 h-full flex flex-col">
-        {!state.isFlipped ? (
+    <div className={cn("relative w-full max-w-md mx-auto", className)}>
+      <div 
+        className={cn(
+          "material-card card-flip perspective-1000 min-h-[400px] relative cursor-pointer",
+          state.isFlipped && "flipped",
+          state.isAnimating && "pointer-events-none"
+        )}
+        onClick={() => {
+          if (interactions.tapEnabled && computed.canFlip) {
+            actions.flip();
+            handlers.onFlip();
+          }
+        }}
+        data-testid="unified-card"
+      >
+        {/* Front Side - Question */}
+        <div className="card-face">
           <UnifiedCardFront
             question={config.question}
+            showHints={config.showHints}
             regulationPreference={config.regulationPreference}
-            showHints={mergedConfig.showHints!}
-            onShowAnswer={() => {
-              actions.flip();
-              handlers.onFlip();
-            }}
           />
-        ) : (
+        </div>
+
+        {/* Back Side - Answer */}
+        <div className="card-face card-back">
           <UnifiedCardBack
             question={config.question}
-            regulationPreference={config.regulationPreference}
             isAnswered={state.isAnswered}
-            isMultipleChoice={computed.isMultipleChoice}
-            onAnswer={(score: number) => {
+            canAnswer={computed.canAnswer}
+            showButtons={interactions.buttonsEnabled}
+            onAnswer={(score) => {
               actions.answer(score);
               handlers.onAnswer(score);
             }}
           />
-        )}
+        </div>
       </div>
-      
-      {/* Keyboard hints for desktop */}
+
+      {/* Keyboard Instructions */}
       {interactions.keyboardEnabled && (
-        <div className="absolute bottom-2 right-2 text-xs text-gray-400 bg-white/80 rounded px-2 py-1">
-          {!state.isFlipped ? 'Leertaste: Antwort' : '← Nein | → Ja'}
+        <div className="mt-4 text-center text-sm text-gray-600">
+          <p>Leertaste: Umdrehen • ← Falsch • → Richtig</p>
         </div>
       )}
-    </Card>
+    </div>
   );
 }
